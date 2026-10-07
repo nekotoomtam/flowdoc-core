@@ -7,8 +7,8 @@ and PDF API. Shared MVP scope and status belong to Project Control's
 `docs/domains/flowdoc-export-mvp-r2-runtime-plan-2026-10-07.md`.
 
 The package validates templates, prepares typed data and composes bound TextBlock
-and simple table graphs. Its PDF engine currently renders TextBlocks only; table
-layout is subsequent work. There is no HTTP server or database here.
+and simple table graphs. Its PDF engine renders TextBlocks and simple tables
+with whole-line row continuation. There is no HTTP server or database here.
 
 ## Template and data API
 
@@ -110,8 +110,9 @@ if (engine.ok) {
 fixtures in `fixtures/pdf/` are runnable examples. They contain book page/style
 settings and an ordered node graph, not measured coordinates. Only A4 portrait
 or landscape, mm/pt margins, paragraph TextBlocks, text/line-break inlines and
-Sarabun normal/bold/italic combinations are supported in this slice. Table nodes,
-unresolved tags, custom geometry and unrecognized props return LAYOUT_FAILED.
+Sarabun normal/bold/italic combinations are supported in this slice. Simple tables
+use declared fixed-width columns; nested/merged tables, unresolved tags, custom
+geometry and unrecognized props return LAYOUT_FAILED.
 All root nodes need sourceMap entries. Input is copied before asynchronous work.
 
 Adjacent text leaves form a paragraph; CRLF/CR becomes LF. Explicit newlines and
@@ -126,6 +127,24 @@ either returns a resource failure. Package initialization checks resources; file
 should remain immutable for an engine's lifetime. No global cross-job text cache.
 Current PDF font CIDs are limited to 65535 per font per document; exceeding that
 returns PDF_RENDER_FAILED. High-volume queueing is a later Service concern.
+
+Tables have one optional header row and 4 pt cell padding with 0.5 pt black
+borders. Column widths must fit the page; text must fit the remaining cell width.
+The tallest cell determines row height. Multiple TextBlocks per cell flow in
+order. `allowBreak:true` continues at measured whole-line boundaries, retaining
+row identity; finished cells remain blank on later fragments. `allowBreak:false`
+moves the row intact, or returns LAYOUT_FAILED if it exceeds the usable page.
+`repeatHeaderRows:true` repeats the header on continuation pages. The header
+stays with at least the next body line; impossible header/body combinations fail
+instead of producing blank pages. An empty collection renders only its header.
+Page breaks do not mutate the composed graph. Row/column merging, configurable
+cell styling and nested tables remain outside this MVP slice.
+
+`fixtures/table/` contains raw template/short/empty/long requests. Its body style
+uses 12 pt text / 20 pt lines, providing enough room for measured Sarabun Thai ink;
+the older R1 design fixture's illustrative 18 pt setting is not a fit guarantee.
+The installed consumer generates `table-short.pdf`, `table-empty.pdf` and
+`table-long.pdf`, plus expected text and resolved graphs for inspection.
 
 `npm run check:package` also creates `bound-text.pdf`, `four-styles.pdf` and `overflow.pdf` with
 expected text and result metadata in the artifact directory. Inspect extracted

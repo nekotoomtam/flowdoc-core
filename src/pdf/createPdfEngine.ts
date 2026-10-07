@@ -9,7 +9,8 @@ import type {ExportResources} from '../runtime/exportResources.js';
 import {probeRuntime} from '../runtime/probeRuntime.js';
 import {createTextRuntime} from '../runtime/textRuntime.js';
 import {subsetFonts} from '../runtime/subsetFonts.js';
-import {textFlow,LayoutError} from '../layout/textFlow.js';
+import {LayoutError} from '../layout/textFlow.js';
+import {documentFlow} from '../layout/documentFlow.js';
 import type {TextRuntime} from '../layout/textFlow.js';
 import {writePdf} from './writePdf.js';
 export interface PdfArtifact {bytes:Uint8Array;mediaType:'application/pdf';pageCount:number}
@@ -24,7 +25,7 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
   let temp:string|undefined,result:Result<PdfArtifact>,stage='resource';
   try {
    temp=await mkdtemp(join(resources.tempRoot,'flowdoc-pdf-'));
-   const draw=await textFlow(document,deps.runtime);
+   const draw=await documentFlow(document,deps.runtime);
    const fonts=await deps.subset(draw,resources,temp);
    stage='writer';const bytes=deps.write(draw,fonts);
    result={ok:true,value:{bytes,mediaType:'application/pdf',pageCount:draw.pages.length},warnings:[]};

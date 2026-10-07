@@ -219,6 +219,11 @@ function appendText(content, page, command, usages, resolvedRuns) {
 }
 function buildPageContent(page, usages, resolvedRuns) {
     const content = createPageContent(page);
+    for (const border of page.borders ?? []) {
+        content.push('q', `${colorOperands(border.color)} RG`, `${formatNumber(border.widthPt)} w`,
+            `${formatNumber(border.x1Pt)} ${formatNumber(page.heightPt-border.y1Pt)} m`,
+            `${formatNumber(border.x2Pt)} ${formatNumber(page.heightPt-border.y2Pt)} l S`, 'Q');
+    }
     for (const command of page.commands)
         appendText(content, page, command, usages, resolvedRuns);
     return Buffer.from(content.join('\n')+'\n', 'ascii');

@@ -1,3 +1,5 @@
+import {validateGraph} from '../template/validateGraph.js';
+import {isJson} from '../template/checks.js';
 import type { Issue } from '../result.js';
 
 const object=(v:unknown):v is Record<string,any> => !!v && typeof v==='object' && !Array.isArray(v);
@@ -8,28 +10,17 @@ function keys(v:Record<string,unknown>,allowed:string[]) {return Object.keys(v).
 export function validateResolvedDocument(input:unknown):Issue[] {
  const issues:Issue[]=[];
  const fail=(path:string,nodeId?:string)=>issues.push({code:'LAYOUT_FAILED',path,message:'Invalid or unsupported resolved document value',...(nodeId?{nodeId}:{})});
- if(!object(input)){fail('document');return issues;}
+ if(!isJson(input)||!object(input)){fail('document');return issues;}
  const d=input;
  if(!keys(d,['schemaVersion','nodeModelVersion','template','book','styles','rootIds','nodes','sourceMap'])||d.schemaVersion!==1||d.nodeModelVersion!==4)fail('document');
  if(!object(d.template)||!keys(d.template,['templateId','docKey','version'])||!name(d.template.templateId)||!name(d.template.docKey)||!Number.isInteger(d.template.version)||d.template.version<1)fail('template');
  issues.push(...validateBookStyles(d));
  if(!object(d.styles))return issues;
  if(!Array.isArray(d.rootIds)||d.rootIds.length===0||!d.rootIds.every(name)||!object(d.nodes)||!object(d.sourceMap)){fail('graph');return issues;}
- const ids=new Set<string>();
- const unique=(id:unknown,path:string)=>{if(!name(id)||ids.has(id as string))fail(path);else ids.add(id as string);};
- if(new Set(d.rootIds).size!==d.rootIds.length||Object.keys(d.nodes).length!==d.rootIds.length||d.rootIds.some((id:string)=>!Object.hasOwn(d.nodes,id)))fail('rootIds');
- for(const [id,n] of Object.entries(d.nodes)){
-  unique(id,'nodes.'+id);
-  if(!object(n)||!keys(n,['id','type','role','props','children'])||n.id!==id||n.type!=='text-block'||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,['textStyleId','sizing'])||!name(n.props.textStyleId)||!Object.hasOwn(d.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail('nodes.'+id,id);continue;}
-  if(n.props.sizing!==undefined&&(!object(n.props.sizing)||!keys(n.props.sizing,['mode'])||n.props.sizing.mode!=='content'))fail('nodes.'+id+'.props',id);
-  for(const c of n.children){
-   if(!object(c)){fail('nodes.'+id+'.children',id);continue;}
-   unique(c.id,'nodes.'+id+'.children');
-   if(c.type==='text'){
-    if(!keys(c,['id','type','text'])||typeof c.text!=='string'||!c.text.length||/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/u.test(c.text)||!c.text.isWellFormed())fail('nodes.'+id+'.children',id);
-   }else if(c.type!=='line-break'||!keys(c,['id','type']))fail('nodes.'+id+'.children',id);
-  }
- }
+ const empty={type:'object' as const,fields:{}};
+ issues.push(...validateGraph({rootIds:d.rootIds,nodes:d.nodes},{styles:d.styles,globalSchema:empty,localSchema:empty,repeats:[],resolved:true},'document').map(i=>({...i,code:'LAYOUT_FAILED'})));
+ const ids=new Set<string>(Object.keys(d.nodes));
+ for(const n of Object.values(d.nodes))if(object(n)&&n.type==='text-block'&&Array.isArray(n.children))for(const c of n.children)if(object(c)&&typeof c.id==='string')ids.add(c.id);
  for(const [id,s] of Object.entries(d.sourceMap)){
   if(!ids.has(id)||!object(s)||!keys(s,['contentIndex','format','sourceId','itemIndex'])||!Number.isInteger(s.contentIndex)||s.contentIndex<0||!name(s.format)||!name(s.sourceId)||(s.itemIndex!==undefined&&(!Number.isInteger(s.itemIndex)||s.itemIndex<0)))fail('sourceMap.'+id);
  }

@@ -29,3 +29,14 @@ it('rejects unsupported nodes before native work',async()=>{
  const malformed:any=document();malformed.nodes.t.props.textStyleId={toString:null,valueOf:null};
  await expect(engine.generatePdf(JSON.parse(JSON.stringify(malformed)))).resolves.toMatchObject({ok:false,issues:[{code:'LAYOUT_FAILED'}]});
 });
+it('preserves node identity for malformed graph properties',async()=>{
+ const r=await setup(),engine=createEngine(r,{runtime:fakeRuntime,subset:async()=>{throw Error('must not run');},write:()=>new Uint8Array()});
+ const bad:any=document();bad.nodes.t.props.extra=true;
+ await expect(engine.generatePdf(bad)).resolves.toMatchObject({ok:false,issues:[{code:'LAYOUT_FAILED',nodeId:'t'}]});
+});
+it('returns structured failures for deep invalid graphs',async()=>{
+ const r=await setup(),engine=createEngine(r,{runtime:fakeRuntime,subset:async()=>{throw Error('must not run');},write:()=>new Uint8Array()});
+ const deep:any=document();deep.nodes={};deep.rootIds=['n0'];deep.sourceMap={n0:{contentIndex:0,format:'bad',sourceId:'n0'}};
+ for(let i=0;i<10000;i++)deep.nodes['n'+i]={id:'n'+i,type:'table-cell',props:{},childIds:i<9999?['n'+(i+1)]:[]};
+ await expect(engine.generatePdf(deep)).resolves.toMatchObject({ok:false,issues:expect.arrayContaining([expect.objectContaining({code:'LAYOUT_FAILED'})])});
+});

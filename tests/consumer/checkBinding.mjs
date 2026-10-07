@@ -14,7 +14,8 @@ assert.deepEqual(graph.nodes['content-1~table'].rowIds,['content-1~header','cont
 assert.equal(graph.nodes['content-1~rtr~item-0'].children[0].text,'ไม่ระบุ');
 const ids=Object.values(graph.nodes).flatMap(n=>[n.id,...n.type==='text-block'?n.children.map(c=>c.id):[]]);
 assert.equal(new Set(ids).size,ids.length);assert.deepEqual(Object.keys(graph.sourceMap).sort(),ids.sort());
-const rejected=await engine.generatePdf(graph);assert.equal(rejected.ok,false);assert.equal(rejected.issues[0].code,'LAYOUT_FAILED');
+const unsupported=structuredClone(graph);unsupported.nodes['content-1~table'].props.mergedCells=true;
+const rejected=await engine.generatePdf(unsupported);assert.equal(rejected.ok,false);assert.equal(rejected.issues[0].code,'LAYOUT_FAILED');
 const template=unwrap(validateTemplate(await readFile('/consumer/binding-template.json','utf8')));
 const input=await load('binding-request'),before=JSON.stringify(input);
 const prepared=unwrap(prepareGeneration(template,input));assert.equal(prepared.warnings.length,1);assert.equal(prepared.warnings[0].code,'UNKNOWN_VARIABLE');
@@ -28,5 +29,5 @@ await writeFile('/consumer/output/bound-text.pdf',pdf.bytes);await writeFile('/c
 await writeFile('/consumer/output/srs.composed.json',JSON.stringify(graph,null,2));
 await writeFile('/consumer/output/binding.prepared.json',JSON.stringify(prepared,null,2));
 assert.deepEqual(await readdir('/consumer/temp'),[]);
-const result={status:'PASS',pageCount:pdf.pageCount,bytes:pdf.bytes.length,sha256:createHash('sha256').update(pdf.bytes).digest('hex'),checks:['installed root APIs','raw template registration','A/B/A table graph','default binding','unique IDs and complete sourceMap','table rendering rejected','JSON persisted prepared input','global/local text A/B/A PDF','newline binding','warnings excluded','required input rejected','immutable request','temp cleanup']};
+const result={status:'PASS',pageCount:pdf.pageCount,bytes:pdf.bytes.length,sha256:createHash('sha256').update(pdf.bytes).digest('hex'),checks:['installed root APIs','raw template registration','A/B/A table graph','default binding','unique IDs and complete sourceMap','unsupported table properties rejected','JSON persisted prepared input','global/local text A/B/A PDF','newline binding','warnings excluded','required input rejected','immutable request','temp cleanup']};
 await writeFile('/consumer/output/binding-result.json',JSON.stringify(result,null,2)+'\n');

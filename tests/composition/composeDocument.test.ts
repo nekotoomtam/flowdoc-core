@@ -16,7 +16,7 @@ it('composes independent A/B/A graphs, exact text and complete source mapping',(
  expect(new Set(all).size).toBe(all.length);expect(Object.keys(d.sourceMap).sort()).toEqual(all.sort());
  expect(d.sourceMap['content-1~remark~item-0~part-0']).toEqual({contentIndex:1,format:'requirement-list',sourceId:'remark',itemIndex:0});
  expect(JSON.stringify(p)).toBe(before);expect(d.nodes[d.rootIds[0]!]).not.toBe(d.nodes[d.rootIds[2]!]);
- expect(validateResolvedDocument(d).length).toBeGreaterThan(0); // Graph support is not PDF table capability.
+ expect(validateResolvedDocument(d)).toEqual([]);
 });
 it.each([0,1,4])('expands %i rows including multiple text children',count=>{
  const {v,p}=setup((t,q)=>{q.content=[q.content[1]];q.content[0].data.items=Array.from({length:count},(_,i)=>({code:String(i),detail:'item'}));const f=t.formats['requirement-list'];f.fragment.nodes.rc.childIds.push('extra');f.fragment.nodes.extra={...structuredClone(f.fragment.nodes.rtc),id:'extra',children:[{id:'extra-inline',type:'field-ref',scope:'item',key:'code'}]};});

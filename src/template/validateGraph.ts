@@ -3,7 +3,8 @@ import type {ObjectSchema,Fragment,Repeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
 export interface GraphContext {styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
- const issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_TEMPLATE',p));
+ let currentNode:string|undefined;
+ const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
  if(!object(input)||!keys(input,['rootIds','nodes'])||!Array.isArray(input.rootIds)||!object(input.nodes)){fail(path);return issues;}
  const nodes=input.nodes,ids=new Set<string>(),parents=new Map<string,number>(),edges=new Map<string,string[]>();
  const validId=(id:unknown):id is string=>name(id)&&(ctx.resolved===true||!id.includes('~'));
@@ -20,6 +21,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
   repeatItems.set(r.rowTemplateId,field.items);
  }
  for(const [id,n] of Object.entries(nodes)){
+  currentNode=id;
   const p=path+'.nodes.'+id;unique(id,p);
   if(!object(n)||n.id!==id){fail(p);continue;}
   let children:string[]=[];
@@ -49,18 +51,25 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
   edges.set(id,children);
   for(const cid of children){if(!own(nodes,cid))fail(p+'.references');parents.set(cid,(parents.get(cid)??0)+1);}
  }
+ currentNode=undefined;
  const roots=refs(input.rootIds,path+'.rootIds');if(!roots.length)fail(path+'.rootIds');
  for(const id of roots){parents.set(id,(parents.get(id)??0)+1);if(!own(nodes,id)||!['text-block','table'].includes(nodes[id]?.type))fail(path+'.rootIds');}
- for(const id of Object.keys(nodes))if(parents.get(id)!==1)fail(path+'.nodes.'+id+'.parent');
+ for(const id of Object.keys(nodes))if(parents.get(id)!==1)fail(path+'.nodes.'+id+'.parent',id);
  const active=new Set<string>(),visited=new Set<string>();
- const visit=(id:string,item?:ObjectSchema)=>{
-  if(active.has(id)){fail(path+'.nodes.'+id+'.cycle');return;}if(visited.has(id))return;active.add(id);visited.add(id);
-  if(repeatItems.has(id))item=repeatItems.get(id);
-  const n=nodes[id];if(n?.type==='text-block'&&Array.isArray(n.children))for(const c of n.children){if(c?.type!=='field-ref')continue;
-   const schema=c.scope==='global'?ctx.globalSchema:c.scope==='local'?ctx.localSchema:item;
-   if(!schema||typeof c.key!=='string'||!own(schema.fields,c.key)||schema.fields[c.key]?.type!=='string')fail(path+'.nodes.'+id+'.children');
+ const visit=(root:string)=>{
+  const pending:{id:string;item:ObjectSchema|undefined;leave:boolean}[]=[{id:root,item:undefined,leave:false}];
+  while(pending.length){
+   const step=pending.pop()!,id=step.id;
+   if(step.leave){active.delete(id);continue;}
+   if(active.has(id)){fail(path+'.nodes.'+id+'.cycle',id);continue;}if(visited.has(id))continue;active.add(id);visited.add(id);
+   const item=repeatItems.get(id)??step.item,n=nodes[id];
+   if(n?.type==='text-block'&&Array.isArray(n.children))for(const c of n.children){if(c?.type!=='field-ref')continue;
+    const schema=c.scope==='global'?ctx.globalSchema:c.scope==='local'?ctx.localSchema:item;
+    if(!schema||typeof c.key!=='string'||!own(schema.fields,c.key)||schema.fields[c.key]?.type!=='string')fail(path+'.nodes.'+id+'.children',id);
+   }
+   pending.push({id,item,leave:true});
+   for(const cid of [...(edges.get(id)??[])].reverse())pending.push({id:cid,item,leave:false});
   }
-  for(const cid of edges.get(id)??[])visit(cid,item);active.delete(id);
  };
  for(const id of roots)visit(id);
  for(const id of Object.keys(nodes))if(!visited.has(id)){fail(path+'.nodes.'+id+'.orphan');visit(id);}
