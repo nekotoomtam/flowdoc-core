@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 WORKDIR /consumer
 COPY package.json package-lock.json flowdoc-core.tgz ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
-COPY checkResources.mjs checkPdf.mjs expected-package.json *.resolved.json ./
+COPY checkResources.mjs checkPdf.mjs checkBinding.mjs expected-package.json *.resolved.json srs-*.json binding-*.json ./
 RUN mkdir /consumer/temp /consumer/output && chown -R 10001:10001 /consumer
 USER 10001:10001
-CMD ["sh","-c","node checkResources.mjs > output/resource-result.json && node checkPdf.mjs"]
+CMD ["sh","-c","node checkResources.mjs > output/resource-result.json && node checkPdf.mjs && node checkBinding.mjs"]

@@ -6,8 +6,52 @@ Owner: flowdoc-core. This README describes this package's local build and resour
 and PDF API. Shared MVP scope and status belong to Project Control's
 `docs/domains/flowdoc-export-mvp-r2-runtime-plan-2026-10-07.md`.
 
-The package exposes a resolved-TextBlock PDF engine. Template/data binding and
-table flow are subsequent work; there is no HTTP server or database here.
+The package validates templates, prepares typed data and composes bound TextBlock
+and simple table graphs. Its PDF engine currently renders TextBlocks only; table
+layout is subsequent work. There is no HTTP server or database here.
+
+## Template and data API
+
+```ts
+import {validateTemplate, prepareGeneration, composeDocument} from '@flowdoc/core';
+const registered = validateTemplate(rawTemplateJson);
+if (!registered.ok) throw new Error(JSON.stringify(registered.issues));
+const prepared = prepareGeneration(registered.value, requestJson);
+if (!prepared.ok) throw new Error(JSON.stringify(prepared.issues));
+const composed = composeDocument(registered.value, prepared.value);
+// Pass composed.value to engine.value.generatePdf only after composed.ok.
+// Preserve prepared.warnings in the caller's job/status record.
+```
+
+Use raw JSON text when registering templates: duplicate decoded property names
+are rejected. Already parsed objects are accepted, but keys previously discarded
+by JSON.parse cannot be recovered. Future Service registration must retain this
+raw-text boundary. The returned definition is a detached frozen copy with a
+canonical SHA-256 fingerprint (including template identity/version). It is not
+authentication. Preparation pins this definition; it never selects a version.
+
+Fields are strings or one level of arrays of string-field objects. Required
+missing fields fail even with defaults; optional absent fields use their declared
+default or `""`/`[]`. Supplied wrong types/null fail without coercion. Unknown
+business fields are ignored with warnings; unknown formats are skipped. At least
+one accepted invocation is required. Envelope properties are strict. Examples in
+the template must validate without either errors or warnings.
+
+Persist PreparedInput as JSON if needed and keep the original request separately.
+Composition rechecks its pin, complete normalized data, index order and coverage.
+It applies no replacement defaults to a corrupted prepared snapshot. Optional
+absent/no-default strings normalize to empty even with allowEmpty=false; that
+canonical empty value is valid when a prepared snapshot is read back. This
+snapshot check is structural validation, not proof of who wrote the values.
+
+Formats contain independent text/table graphs. Table repeats replace one source
+row with zero or more rows, using explicit global/local/item scopes. Generated
+IDs and sourceMap preserve original request indices, including skipped entries.
+Each invocation owns its nodes/data; no mutable defaults or outputs are shared.
+Newline values become line-break leaves, empty values create no text leaves, and
+all text inherits its parent TextBlock style. No expression evaluator is used.
+`fixtures/srs-basic/` demonstrates a text/table/text request;
+`fixtures/binding-text/` demonstrates the text-only PDF path.
 
 ## Local development
 
@@ -83,7 +127,7 @@ should remain immutable for an engine's lifetime. No global cross-job text cache
 Current PDF font CIDs are limited to 65535 per font per document; exceeding that
 returns PDF_RENDER_FAILED. High-volume queueing is a later Service concern.
 
-`npm run check:package` also creates `four-styles.pdf` and `overflow.pdf` with
+`npm run check:package` also creates `bound-text.pdf`, `four-styles.pdf` and `overflow.pdf` with
 expected text and result metadata in the artifact directory. Inspect extracted
 text, embedded fonts and rendered pages before claiming visual acceptance; the
 consumer command alone does not perform the host Poppler/visual review.

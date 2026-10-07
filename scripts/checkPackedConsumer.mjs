@@ -12,7 +12,8 @@ docker(['build','--platform','linux/amd64','-f','Dockerfile.package','--target',
 const tarball=join(output,`flowdoc-core-${corePackage.version}.tgz`);if(!existsSync(tarball))throw Error('Missing package artifact');
 const checksum=createHash('sha256').update(readFileSync(tarball)).digest('hex');
 const context=mkdtempSync(join(tmpdir(),'flowdoc-packed-consumer-'));
-for(const file of ['package.json','checkResources.mjs','checkPdf.mjs'])copyFileSync(join(root,'tests/consumer',file),join(context,file));
+for(const file of ['package.json','checkResources.mjs','checkPdf.mjs','checkBinding.mjs'])copyFileSync(join(root,'tests/consumer',file),join(context,file));
+for(const [fixture,prefix] of [['srs-basic','srs'],['binding-text','binding']])for(const kind of ['template','request'])copyFileSync(join(root,'fixtures',fixture,kind+'.json'),join(context,prefix+'-'+kind+'.json'));
 for(const name of ['four-styles','overflow'])copyFileSync(join(root,'fixtures/pdf',name+'.resolved.json'),join(context,name+'.resolved.json'));
 writeFileSync(join(context,'expected-package.json'),JSON.stringify({name:corePackage.name,version:corePackage.version}));
 copyFileSync(tarball,join(context,'flowdoc-core.tgz'));
@@ -33,7 +34,8 @@ if(state.ExitCode!==0)throw Error(`Consumer failed; retained container ${contain
 docker(['cp',container+':/consumer/output/.',output]);
 const resourceResult=JSON.parse(readFileSync(join(output,'resource-result.json'),'utf8'));
 const pdfResult=JSON.parse(readFileSync(join(output,'pdf-result.json'),'utf8'));
-if(resourceResult.status!=='PASS'||pdfResult.status!=='PASS')throw Error('Consumer failed');
-writeFileSync(join(output,'result.json'),JSON.stringify({tarball,checksum,imageId,network:'none',mounts:[],resourceResult,pdfResult},null,2)+'\n');
+const bindingResult=JSON.parse(readFileSync(join(output,'binding-result.json'),'utf8'));
+if(resourceResult.status!=='PASS'||pdfResult.status!=='PASS'||bindingResult.status!=='PASS')throw Error('Consumer failed');
+writeFileSync(join(output,'result.json'),JSON.stringify({tarball,checksum,imageId,network:'none',mounts:[],resourceResult,pdfResult,bindingResult},null,2)+'\n');
 docker(['rm',container]);
-console.log(JSON.stringify({output,...pdfResult}));
+console.log(JSON.stringify({output,...pdfResult,bindingResult}));

@@ -9,12 +9,27 @@ export function freeze<T>(v:T):T {if(v&&typeof v==='object'){for(const x of Obje
 export function canonical(v:unknown):string {if(Array.isArray(v))return '['+v.map(canonical).join(',')+']';if(object(v))return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';return JSON.stringify(v);}
 // Parsed-object callers still have to supply JSON values, not getters, sparse arrays,
 // cycles or class instances. Read descriptors before reading property values.
-export function isJson(v:unknown,ancestors=new Set<object>()):boolean {
- if(v===null||typeof v==='boolean'||typeof v==='string')return true;
- if(typeof v==='number')return Number.isFinite(v);
- if(typeof v!=='object'||(!Array.isArray(v)&&!object(v))||ancestors.has(v))return false;
- ancestors.add(v);
- const ds=Object.getOwnPropertyDescriptors(v),ks=Reflect.ownKeys(ds);
- const valid=ks.every(k=>typeof k==='string'&&(Array.isArray(v)&&k==='length'||(ds[k]!.enumerable&&'value' in ds[k]!&&isJson(ds[k]!.value,ancestors))))&&(!Array.isArray(v)||Object.keys(v).length===v.length);
- ancestors.delete(v);return valid;
+export function isJson(input:unknown):boolean {
+ const ancestors=new Set<object>();
+ const pending:{value:unknown;leave?:boolean}[]=[{value:input}];
+ while(pending.length){
+  const {value:v,leave}=pending.pop()!;
+  if(leave){ancestors.delete(v as object);continue;}
+  if(v===null||typeof v==='boolean'||typeof v==='string')continue;
+  if(typeof v==='number'){if(!Number.isFinite(v))return false;continue;}
+  if(typeof v!=='object'||(!Array.isArray(v)&&!object(v))||ancestors.has(v))return false;
+  const ds=Object.getOwnPropertyDescriptors(v);
+  if(Array.isArray(v)){
+   const indices=Object.keys(v);
+   if(indices.length!==v.length||!indices.every(k=>Number.isSafeInteger(Number(k))&&Number(k)>=0&&Number(k)<v.length&&String(Number(k))===k))return false;
+  }
+  ancestors.add(v);pending.push({value:v,leave:true});
+  for(const k of Reflect.ownKeys(ds)){
+   if(typeof k!=='string')return false;
+   if(Array.isArray(v)&&k==='length')continue;
+   const d=ds[k]!;if(!d.enumerable||!('value' in d))return false;
+   pending.push({value:d.value});
+  }
+ }
+ return true;
 }
