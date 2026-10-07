@@ -20,7 +20,9 @@ export async function textFlow(document:ResolvedDocument,runtime:TextRuntime):Pr
  const addPage=()=>{const p={widthPt,heightPt,backgroundColor:'FFFFFF',commands:[]} as DrawPage;pages.push(p);return p;};
  let current=addPage(),y=top,serial=0;
  for(const id of document.rootIds){
-  const node=document.nodes[id]!,style=document.styles[node.props.textStyleId]!;
+  const node=document.nodes[id]!;
+  if(node.type!=='text-block')throw new LayoutError(id,'Unsupported node type');
+  const style=document.styles[node.props.textStyleId]!;
   const fontId=style.fontWeight==='bold'?(style.fontStyle==='italic'?'font-bold-italic':'font-bold'):(style.fontStyle==='italic'?'font-italic':'font-regular');
   const size=style.fontSize.value,lineHeight=style.lineHeightPt;
   if(lineHeight>bottom-top+epsilon)throw new LayoutError(id,'Line height exceeds page content area');

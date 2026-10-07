@@ -4,3 +4,8 @@ export type {PdfEngine,PdfArtifact} from './pdf/createPdfEngine.js';
 export type {ResolvedDocument,TextBlock,TextInline,TextStyle,SourceEntry,Length} from './composition/resolvedDocument.js';
 export type { ExportResources, ResourceOptions, FontResource } from './runtime/exportResources.js';
 export type { Result, Issue } from './result.js';
+export {validateTemplate} from './template/validateTemplate.js';
+export {prepareGeneration} from './data/prepareGeneration.js';
+export type {TemplateDefinition,ValidatedTemplate,Format,Fragment,Repeat,ObjectSchema,StringField,ArrayField,FieldRef,TemplateNode} from './template/types.js';
+export type {PreparedInput,PreparedData} from './data/types.js';
+export type {DocumentNode,Table,TableRow,TableCell} from './composition/resolvedDocument.js';

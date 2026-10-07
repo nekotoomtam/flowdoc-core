@@ -9,9 +9,13 @@ export interface TextBlock {
   props:{textStyleId:string;sizing?:{mode:'content'}};children:TextInline[];
 }
 export interface SourceEntry {contentIndex:number;format:string;sourceId:string;itemIndex?:number}
+export interface Table {id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean};columns:{width:Length}[];rowIds:string[]}
+export interface TableRow {id:string;type:'table-row';props:{allowBreak:boolean};cellIds:string[]}
+export interface TableCell {id:string;type:'table-cell';props:Record<string,never>;childIds:string[]}
+export type DocumentNode=TextBlock|Table|TableRow|TableCell;
 export interface ResolvedDocument {
   schemaVersion:1;nodeModelVersion:4;template:{templateId:string;docKey:string;version:number};
   book:{contentSlot:'body';page:{size:'A4';orientation:'portrait'|'landscape';margin:{top:Length;right:Length;bottom:Length;left:Length}}};
-  styles:Record<string,TextStyle>;rootIds:string[];nodes:Record<string,TextBlock>;sourceMap:Record<string,SourceEntry>;
+  styles:Record<string,TextStyle>;rootIds:string[];nodes:Record<string,DocumentNode>;sourceMap:Record<string,SourceEntry>;
 }
 export function toPt(length:Length):number {return length.unit==='mm'?length.value*72/25.4:length.value;}
