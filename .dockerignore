@@ -1,0 +1,10 @@
+.git
+node_modules
+dist
+artifacts
+coverage
+native/target
+runtime/linux-x64
+resources.json
+.env
+*.tgz

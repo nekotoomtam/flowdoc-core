@@ -1,0 +1,18 @@
+{
+  "name": "@flowdoc/core",
+  "version": "0.1.0-dev.1",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": { "node": ">=24.15.0 <25" },
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist", "runtime/linux-x64", "runtime/python", "runtime/requirements.txt", "assets/fonts", "resources.json", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "build:native": "node scripts/buildNative.mjs",
+    "build:resources": "node scripts/buildResourceManifest.mjs",
+    "check:package": "node scripts/checkPackedConsumer.mjs"
+  },
+  "devDependencies": { "@types/node": "24.10.0", "typescript": "6.0.3", "vitest": "4.1.9" }
+}

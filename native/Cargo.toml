@@ -1,0 +1,17 @@
+[package]
+name = "flowdoc-rustybuzz-smoke"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "flowdoc_text_engine"
+crate-type = ["cdylib", "rlib"]
+path = "src/lib.rs"
+
+[dependencies]
+rustybuzz = "=0.20.1"
+wasm-bindgen = "0.2"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+icu_segmenter = "=2.2.0"

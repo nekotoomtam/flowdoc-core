@@ -1,0 +1,7 @@
+{
+  "name": "flowdoc-packed-consumer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": { "@flowdoc/core": "file:flowdoc-core.tgz" }
+}
