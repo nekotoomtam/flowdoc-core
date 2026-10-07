@@ -62,8 +62,11 @@ fn main() {
         .zip(positions.iter())
         .enumerate()
         .map(|(index, (info, position))| {
+            let ink = face.glyph_bounding_box(rustybuzz::ttf_parser::GlyphId(info.glyph_id as u16))
+                .map(|b| format!("{{\"xMin\":{},\"xMax\":{},\"yMin\":{},\"yMax\":{}}}", b.x_min, b.x_max, b.y_min, b.y_max))
+                .unwrap_or_else(|| "null".to_string());
             format!(
-                "{{\"index\":{index},\"glyphId\":{},\"cluster\":{},\"xAdvance\":{},\"yAdvance\":{},\"xOffset\":{},\"yOffset\":{}}}",
+                "{{\"index\":{index},\"glyphId\":{},\"cluster\":{},\"xAdvance\":{},\"yAdvance\":{},\"xOffset\":{},\"yOffset\":{},\"ink\":{ink}}}",
                 info.glyph_id,
                 info.cluster,
                 position.x_advance,
@@ -76,7 +79,7 @@ fn main() {
         .join(",");
 
     println!(
-        "{{\"source\":\"{}\",\"shaperRevision\":\"{}\",\"fontId\":\"{}\",\"fontPath\":\"{}\",\"text\":\"{}\",\"textByteLength\":{},\"textScalarCount\":{},\"unitsPerEm\":{},\"glyphCount\":{},\"glyphs\":[{}]}}",
+        "{{\"source\":\"{}\",\"shaperRevision\":\"{}\",\"fontId\":\"{}\",\"fontPath\":\"{}\",\"text\":\"{}\",\"textByteLength\":{},\"textScalarCount\":{},\"unitsPerEm\":{},\"ascent\":{},\"descent\":{},\"glyphCount\":{},\"glyphs\":[{}]}}",
         SOURCE,
         SHAPER_REVISION,
         escape_json(font_id),
@@ -85,6 +88,8 @@ fn main() {
         text.len(),
         text.chars().count(),
         face.units_per_em(),
+        face.ascender(),
+        face.descender(),
         infos.len(),
         glyphs,
     );

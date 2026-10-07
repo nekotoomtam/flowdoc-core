@@ -33,7 +33,8 @@ const segmentation=JSON.parse((await exec(r.segmenterPath,[text])).stdout);
 assert.ok(segmentation.breakByteOffsets.every(n=>boundaries.has(n)));
 await assert.rejects(import('@flowdoc/core/dist/runtime/loadResources.js'),{code:'ERR_PACKAGE_PATH_NOT_EXPORTED'});
 const pkg=JSON.parse(await readFile('/consumer/node_modules/@flowdoc/core/package.json','utf8'));
-assert.equal(pkg.version,'0.1.0-dev.1');
+const expected=JSON.parse(await readFile('/consumer/expected-package.json','utf8'));
+assert.equal(pkg.version,expected.version);assert.equal(pkg.name,expected.name);
 assert.ok((await readdir('/consumer/node_modules/@flowdoc/core/dist')).includes('index.d.ts'));
 for(const forbidden of ['src','tests','native','node_modules','.env','Dockerfile.package']){
   await assert.rejects(stat('/consumer/node_modules/@flowdoc/core/'+forbidden),{code:'ENOENT'});

@@ -3,11 +3,11 @@
 ## Authority Boundary
 
 Owner: flowdoc-core. This README describes this package's local build and resource
-API. Shared MVP scope and status belong to Project Control's
+and PDF API. Shared MVP scope and status belong to Project Control's
 `docs/domains/flowdoc-export-mvp-r2-runtime-plan-2026-10-07.md`.
 
-This foundation exposes resource loading only. Template binding, layout and the
-public PDF engine are subsequent work; there is no HTTP server or database here.
+The package exposes a resolved-TextBlock PDF engine. Template/data binding and
+table flow are subsequent work; there is no HTTP server or database here.
 
 ## Local development
 
@@ -39,7 +39,7 @@ if (!result.ok) {
   console.error(result.issues);
 } else {
   const resources = result.value;
-  // Explicit absolute executable/helper/font paths for future internal adapters.
+  // Explicit absolute executable/helper/font paths for engine initialization.
 }
 ```
 
@@ -50,7 +50,45 @@ Initialize once per engine instance, not for every glyph or page. Failures retur
 are not public API. The subset helper is internal and requires explicit inputs
 and separate output paths; it preserves source font bytes and glyph IDs.
 
-## Reused inputs
+## PDF API
+
+```ts
+import { createPdfEngine, type ResolvedDocument } from '@flowdoc/core';
+// After a successful loadBundledResources call:
+const engine = await createPdfEngine(resources);
+if (engine.ok) {
+  const pdf = await engine.value.generatePdf(resolvedDocument);
+  // pdf.value contains bytes/mediaType/pageCount only when pdf.ok is true.
+}
+```
+
+`resolvedDocument` follows the exported `ResolvedDocument` type. Repository
+fixtures in `fixtures/pdf/` are runnable examples. They contain book page/style
+settings and an ordered node graph, not measured coordinates. Only A4 portrait
+or landscape, mm/pt margins, paragraph TextBlocks, text/line-break inlines and
+Sarabun normal/bold/italic combinations are supported in this slice. Table nodes,
+unresolved tags, custom geometry and unrecognized props return LAYOUT_FAILED.
+All root nodes need sourceMap entries. Input is copied before asynchronous work.
+
+Adjacent text leaves form a paragraph; CRLF/CR becomes LF. Explicit newlines and
+empty TextBlocks consume line height. ICU boundaries determine wrapping; a long
+unbreakable segment uses measured whole graphemes. Text ink must fit the configured
+width and line height or generation fails. The overflowing whole line moves to
+the next page. No font fallback or clipping is used to hide unsupported content.
+
+Each generation uses a separate temporary directory and cleans it on success or
+failure. Child processes have a 30-second timeout and 16-MiB output cap; exceeding
+either returns a resource failure. Package initialization checks resources; files
+should remain immutable for an engine's lifetime. No global cross-job text cache.
+Current PDF font CIDs are limited to 65535 per font per document; exceeding that
+returns PDF_RENDER_FAILED. High-volume queueing is a later Service concern.
+
+`npm run check:package` also creates `four-styles.pdf` and `overflow.pdf` with
+expected text and result metadata in the artifact directory. Inspect extracted
+text, embedded fonts and rendered pages before claiming visual acceptance; the
+consumer command alone does not perform the host Poppler/visual review.
+
+## Reused implementation
 
 Native source/Cargo.lock and the subset algorithm were extracted from
 `flowdoc-vnext-core` commit `fa76c74356e5cfc9296f6a86c0bfac690e8416f6` through

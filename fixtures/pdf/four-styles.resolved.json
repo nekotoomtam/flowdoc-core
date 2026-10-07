@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "nodeModelVersion": 4,
+  "template": {
+    "templateId": "pdf-fixture",
+    "docKey": "pdf-fixture",
+    "version": 1
+  },
+  "book": {
+    "contentSlot": "body",
+    "page": {
+      "size": "A4",
+      "orientation": "portrait",
+      "margin": {
+        "top": {
+          "value": 20,
+          "unit": "mm"
+        },
+        "right": {
+          "value": 20,
+          "unit": "mm"
+        },
+        "bottom": {
+          "value": 20,
+          "unit": "mm"
+        },
+        "left": {
+          "value": 20,
+          "unit": "mm"
+        }
+      }
+    }
+  },
+  "styles": {
+    "Regularheading": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "normal",
+      "fontStyle": "normal",
+      "fontSize": {
+        "value": 18,
+        "unit": "pt"
+      },
+      "lineHeightPt": 32
+    },
+    "Regularbody": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "normal",
+      "fontStyle": "normal",
+      "fontSize": {
+        "value": 14,
+        "unit": "pt"
+      },
+      "lineHeightPt": 25
+    },
+    "Boldheading": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "bold",
+      "fontStyle": "normal",
+      "fontSize": {
+        "value": 18,
+        "unit": "pt"
+      },
+      "lineHeightPt": 32
+    },
+    "Boldbody": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "bold",
+      "fontStyle": "normal",
+      "fontSize": {
+        "value": 14,
+        "unit": "pt"
+      },
+      "lineHeightPt": 25
+    },
+    "Italicheading": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "normal",
+      "fontStyle": "italic",
+      "fontSize": {
+        "value": 18,
+        "unit": "pt"
+      },
+      "lineHeightPt": 32
+    },
+    "Italicbody": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "normal",
+      "fontStyle": "italic",
+      "fontSize": {
+        "value": 14,
+        "unit": "pt"
+      },
+      "lineHeightPt": 25
+    },
+    "BoldItalicheading": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "bold",
+      "fontStyle": "italic",
+      "fontSize": {
+        "value": 18,
+        "unit": "pt"
+      },
+      "lineHeightPt": 32
+    },
+    "BoldItalicbody": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "bold",
+      "fontStyle": "italic",
+      "fontSize": {
+        "value": 14,
+        "unit": "pt"
+      },
+      "lineHeightPt": 25
+    }
+  },
+  "rootIds": [
+    "heading0",
+    "body0",
+    "heading1",
+    "body1",
+    "heading2",
+    "body2",
+    "heading3",
+    "body3"
+  ],
+  "nodes": {
+    "heading0": {
+      "id": "heading0",
+      "type": "text-block",
+      "role": {
+        "role": "paragraph"
+      },
+      "props": {
+        "textStyleId": "Regularheading",
+        "sizing": {
+          "mode": "content"
+        }
+      },
+      "children": [
+        {
+          "id": "heading0-text",
+          "type": "text",
+          "text": "Sarabun Regular | ทดสอบฟอนต์ภาษาไทย"
+        }
+      ]
+    },
+    "body0": {
+      "id": "body0",
+      "type": "text-block",
+      "role": {
+        "role": "paragraph"
+      },
+      "props": {
+        "textStyleId": "Regularbody",
+        "sizing": {
+          "mode": "content"
+        }
+      },
+      "children": [
+        {
+          "id": "body0-text",
+          "type": "text",
+          "text": "ทดสอบการจัดข้อความภาษาไทย สำหรับเอกสารโครงการ ระบบต้องแสดงสระและวรรณยุกต์อย่างถูกต้อง พร้อมข้อความภาษาอังกฤษ FlowDoc และตัวเลข 0123456789 เมื่อข้อความยาวเกินพื้นที่ ระบบจะตัดบรรทัดโดยใช้ขนาดตัวอักษรจากฟอนต์จริง"
+        }
+      ]
+    },
+    "heading1": {
+      "id": "heading1",
+      "type": "text-block",
+      "role": {
+        "role": "paragraph"
+      },
+      "props": {
+        "textStyleId": "Boldheading",
+        "sizing": {
+          "mode": "content"
+        }
+      },
+      "children": [
+        {
+          "id": "heading1-text",
+          "type": "text",
+          "text": "Sarabun Bold | ทดสอบฟอนต์ภาษาไทย"
+        }
+      ]
+    },
+    "body1": {
+      "id": "body1",
+      "type": "text-block",
+      "role": {
+        "role": "paragraph"
+      },
+      "props": {
+        "textStyleId": "Boldbody",
+        "sizing": {
+          "mode": "content"
+        }
+      },
+      "children": [
+        {
+          "id": "body1-text",
+          "type": "text",
+          "text": "ทดสอบการจัดข้อความภาษาไทย สำหรับเอกสารโครงการ ระบบต้องแสดงสระและวรรณยุกต์อย่างถูกต้อง พร้อมข้อความภาษาอังกฤษ FlowDoc และตัวเลข 0123456789 เมื่อข้อความยาวเกินพื้นที่ ระบบจะตัดบรรทัดโดยใช้ขนาดตัวอักษรจากฟอนต์จริง"
+        }
+      ]
+    },
+    "heading2": {
+      "id": "heading2",
+      "type": "text-block",
+      "role": {
+        "role": "paragraph"
+      },
+      "props": {
+        "textStyleId": "Italicheading",
+        "sizing": {
+          "mode": "content"
+        }
+      },
+      "children": [
+        {
+          "id": "heading2-text",
+          "type": "text",
+          "text": "Sarabun Italic | ทดสอบฟอนต์ภาษาไทย"
+        }
+      ]
+    },
+    "body2": {
+      "id": "body2",
+      "type": "text-block",
+      "role": {
+        "role": "paragraph"
+      },
+      "props": {
+        "textStyleId": "Italicbody",
+        "sizing": {
+          "mode": "content"
+        }
+      },
+      "children": [
+        {
+          "id": "body2-text",
+          "type": "text",
+          "text": "ทดสอบการจัดข้อความภาษาไทย สำหรับเอกสารโครงการ ระบบต้องแสดงสระและวรรณยุกต์อย่างถูกต้อง พร้อมข้อความภาษาอังกฤษ FlowDoc และตัวเลข 0123456789 เมื่อข้อความยาวเกินพื้นที่ ระบบจะตัดบรรทัดโดยใช้ขนาดตัวอักษรจากฟอนต์จริง"
+        }
+      ]
+    },
+    "heading3": {
+      "id": "heading3",
+      "type": "text-block",
+      "role": {
+        "role": "paragraph"
+      },
+      "props": {
+        "textStyleId": "BoldItalicheading",
+        "sizing": {
+          "mode": "content"
+        }
+      },
+      "children": [
+        {
+          "id": "heading3-text",
+          "type": "text",
+          "text": "Sarabun BoldItalic | ทดสอบฟอนต์ภาษาไทย"
+        }
+      ]
+    },
+    "body3": {
+      "id": "body3",
+      "type": "text-block",
+      "role": {
+        "role": "paragraph"
+      },
+      "props": {
+        "textStyleId": "BoldItalicbody",
+        "sizing": {
+          "mode": "content"
+        }
+      },
+      "children": [
+        {
+          "id": "body3-text",
+          "type": "text",
+          "text": "ทดสอบการจัดข้อความภาษาไทย สำหรับเอกสารโครงการ ระบบต้องแสดงสระและวรรณยุกต์อย่างถูกต้อง พร้อมข้อความภาษาอังกฤษ FlowDoc และตัวเลข 0123456789 เมื่อข้อความยาวเกินพื้นที่ ระบบจะตัดบรรทัดโดยใช้ขนาดตัวอักษรจากฟอนต์จริง"
+        }
+      ]
+    }
+  },
+  "sourceMap": {
+    "heading0": {
+      "contentIndex": 0,
+      "format": "note",
+      "sourceId": "heading0"
+    },
+    "body0": {
+      "contentIndex": 1,
+      "format": "note",
+      "sourceId": "body0"
+    },
+    "heading1": {
+      "contentIndex": 2,
+      "format": "note",
+      "sourceId": "heading1"
+    },
+    "body1": {
+      "contentIndex": 3,
+      "format": "note",
+      "sourceId": "body1"
+    },
+    "heading2": {
+      "contentIndex": 4,
+      "format": "note",
+      "sourceId": "heading2"
+    },
+    "body2": {
+      "contentIndex": 5,
+      "format": "note",
+      "sourceId": "body2"
+    },
+    "heading3": {
+      "contentIndex": 6,
+      "format": "note",
+      "sourceId": "heading3"
+    },
+    "body3": {
+      "contentIndex": 7,
+      "format": "note",
+      "sourceId": "body3"
+    }
+  }
+}
