@@ -247,6 +247,7 @@ function assemblePdf(contract, usages, imageUsages, pageContents) {
         nextId += 6;
         return ids;
     });
+    const imageIds = imageUsages.map(image => {const id = nextId++; const mask = image.alpha ? nextId++ : null; return {id,mask};});
     const infoId = nextId;
     objects.set(catalogId, plainObject(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`));
     objects.set(pagesId, plainObject(`<< /Type /Pages /Kids [${pageObjectIds.map((pageId) => `${pageId} 0 R`).join(" ")}] /Count ${contract.pages.length} >>`));
@@ -259,7 +260,8 @@ function assemblePdf(contract, usages, imageUsages, pageContents) {
         const fontResources = usages.map((usage, index) => (pageFontIds.has(usage.asset.fontId)
             ? `/${usage.pdfResourceName} ${fontObjectIds[index].type0} 0 R`
             : null)).filter((value) => value != null).join(" ");
-        const resources = `/Resources << /Font << ${fontResources} >> >>`;
+        const imageResources = imageUsages.map((image,index)=>`/${image.name} ${imageIds[index].id} 0 R`).join(" ");
+        const resources = `/Resources << /Font << ${fontResources} >>${imageUsages.length ? ` /XObject << ${imageResources} >>` : ""} >>`;
         objects.set(pageId, plainObject([
             "<< /Type /Page",
             `/Parent ${pagesId} 0 R`,
@@ -304,6 +306,7 @@ function assemblePdf(contract, usages, imageUsages, pageContents) {
         objects.set(ids.toUnicode, streamObject("", toUnicodeCMap(usage)));
         objects.set(ids.cidToGid, streamObject("", cidToGidMap(usage)));
     });
+    imageUsages.forEach((image,index)=>{const ids=imageIds[index];objects.set(ids.id,streamObject(`/Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /${image.filter}${ids.mask ? ` /SMask ${ids.mask} 0 R` : ""}`,image.bytes));if(ids.mask)objects.set(ids.mask,streamObject(`/Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode`,image.alpha));});
     objects.set(infoId, plainObject("<< /Title (FlowDoc Document) /Producer (FlowDoc Core) >>"));
     const header = Buffer.from("%PDF-1.7\n%\xE2\xE3\xCF\xD3\n", "binary");
     const parts = [header];

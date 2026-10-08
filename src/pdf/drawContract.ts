@@ -8,6 +8,7 @@ export interface GlyphRun {
   bounds: {xPt:number;yPt:number;widthPt:number;heightPt:number}; glyphs: Glyph[];
 }
 export interface Border {x1Pt:number;y1Pt:number;x2Pt:number;y2Pt:number;widthPt:number;color:string;nodeId:string}
-export interface DrawPage {widthPt:number;heightPt:number;backgroundColor:string;commands:GlyphRun[];borders?:Border[]}
+export interface DrawImage {resourceId:string;nodeId:string;xPt:number;yPt:number;widthPt:number;heightPt:number}
+export interface DrawPage {widthPt:number;heightPt:number;backgroundColor:string;commands:GlyphRun[];borders?:Border[];images?:DrawImage[]}
 export interface DrawDocument {pages:DrawPage[]}
 export interface PdfFontResource {fontId:string;subsetBytes:Uint8Array;subsetPrefix:string;postScriptName:string}

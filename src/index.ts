@@ -10,3 +10,5 @@ export {composeDocument} from './composition/composeDocument.js';
 export type {TemplateDefinition,ValidatedTemplate,Format,Fragment,Repeat,ObjectSchema,StringField,ArrayField,FieldRef,TemplateNode} from './template/types.js';
 export type {PreparedInput,PreparedData} from './data/types.js';
 export type {DocumentNode,Table,TableRow,TableCell} from './composition/resolvedDocument.js';
+export type {ImageBlock} from './composition/resolvedDocument.js';
+export type {PreparedPdfImage,PdfImageResources} from './pdf/imageResources.js';

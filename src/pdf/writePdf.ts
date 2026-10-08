@@ -1,9 +1,15 @@
 import { createHash } from 'node:crypto';
 import { parseSfnt, unicodeAssignments, buildPageContent, assemblePdf } from './primitives.js';
 import type { DrawDocument, PdfFontResource } from './drawContract.js';
+import {deflateSync} from 'node:zlib';
+import {validateImageResources} from './imageResources.js';
+import type {PdfImageResources} from './imageResources.js';
 
 interface ResolvedGlyph {cid:number;glyphId:number;width:number;unicode:string;offsetX:number}
-export function writePdf(draw: DrawDocument, resources: PdfFontResource[]): Uint8Array {
+export function writePdf(draw: DrawDocument, resources: PdfFontResource[],images:PdfImageResources={}): Uint8Array {
+  validateImageResources(images);
+  const imageIds=[...new Set(draw.pages.flatMap(p=>(p.images??[]).map(i=>i.resourceId)))];
+  const imageUsages=imageIds.map((id,index)=>{const r=Object.hasOwn(images,id)?images[id]:undefined;if(!r)throw Error('Missing image resource');return {id,name:`Im${index+1}`,width:r.width,height:r.height,filter:r.kind==='jpeg'?'DCTDecode':'FlateDecode',bytes:r.kind==='jpeg'?r.bytes:deflateSync(r.bytes),alpha:r.kind==='rgb'&&r.alpha?deflateSync(r.alpha):undefined};});
   const used = new Set(draw.pages.flatMap(p=>p.commands.map(c=>c.fontId)));
   if(new Set(resources.map(r=>r.fontId)).size!==resources.length)throw Error('Duplicate font');
   const usages = [...used].map((fontId,index)=>{
@@ -24,6 +30,11 @@ export function writePdf(draw: DrawDocument, resources: PdfFontResource[]): Uint
     });
     runs.set(command.id,resolved);
   }
-  const fingerprint='sha256:'+createHash('sha256').update(JSON.stringify(draw)).digest('hex');
-  return assemblePdf({...draw,fingerprint},usages,[],draw.pages.map(p=>buildPageContent(p,usages,runs)));
+  const identity=createHash('sha256').update(JSON.stringify(draw));
+  for(const image of imageUsages){identity.update(image.bytes);if(image.alpha)identity.update(image.alpha);}
+  const fingerprint='sha256:'+identity.digest('hex');
+  return assemblePdf({...draw,fingerprint},usages,imageUsages,draw.pages.map(p=>{
+   const imageContent=(p.images??[]).map(i=>{if(![i.xPt,i.yPt,i.widthPt,i.heightPt].every(Number.isFinite)||i.widthPt<=0||i.heightPt<=0)throw Error('Invalid image geometry');return `q ${i.widthPt} 0 0 ${i.heightPt} ${i.xPt} ${p.heightPt-i.yPt-i.heightPt} cm /${imageUsages.find(r=>r.id===i.resourceId)!.name} Do Q\n`;}).join('');
+   return Buffer.concat([buildPageContent(p,usages,runs),Buffer.from(imageContent,'ascii')]);
+  }));
 }
