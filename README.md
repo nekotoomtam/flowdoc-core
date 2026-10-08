@@ -53,6 +53,18 @@ all text inherits its parent TextBlock style. No expression evaluator is used.
 `fixtures/srs-basic/` demonstrates a text/table/text request;
 `fixtures/binding-text/` demonstrates the text-only PDF path.
 
+## Release branches
+
+Version 0.1.0 is the first local export package release. `release` contains one
+snapshot commit per accepted version; annotated `v<version>` tags identify those
+commits and must not be moved. Development history remains on development branches.
+The initial release snapshot has its own root; later releases must parent the
+previous release commit and include only the reviewed candidate tree. Record the
+development source commit in each release commit and verify tree equality. Do not
+merge unrelated histories blindly. Build and verify the package before tagging;
+never overwrite a released package under the same version. Service pins its exact
+tarball and checksum. This local release is not a public registry publication.
+
 ## Local development
 
 Use Node 24 and `npm ci`, then `npm run build` and `npm test`. The resource runtime
