@@ -1,5 +1,5 @@
 import type {Issue} from '../result.js';
-import type {ObjectSchema,StringField,ArrayField} from '../template/types.js';
+import type {ObjectSchema,StringField,ArrayField,ImageField} from '../template/types.js';
 import type {PreparedData} from './types.js';
 import {object,own,text,issue} from '../template/checks.js';
 export type ValueMode='request'|'prepared';
@@ -18,12 +18,17 @@ export function validateValues(schema:ObjectSchema,input:unknown,path:string,iss
   if(!own(data,key)){
    if(mode==='prepared'||field.required){issues.push(issue(mode==='prepared'?'INVALID_DATA':'MISSING_REQUIRED',p));continue;}
    if(own(field,'default'))out[key]=validateField(field,structuredClone(field.default),p,issues,warnings,mode);
-   else out[key]=field.type==='string'?'':[];
+   else out[key]=field.type==='array'?[]:'';
   }else out[key]=validateField(field,data[key],p,issues,warnings,mode);
  }
  return out;
 }
-export function validateField(field:StringField|ArrayField,value:unknown,path:string,issues:Issue[],warnings:Issue[],mode:ValueMode='request'):string|Record<string,string>[] {
+export function validateField(field:StringField|ArrayField|ImageField,value:unknown,path:string,issues:Issue[],warnings:Issue[],mode:ValueMode='request'):string|Record<string,string>[] {
+ if(field.type==='image'){
+  if(typeof value!=='string'){issues.push({...issue('TYPE_MISMATCH',path),expectedType:'image',actualType:actualType(value)});return '';}
+  if(!(value===''&&!field.required)&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value))issues.push(issue('INVALID_DATA',path));
+  return value;
+ }
  if(field.type==='string'){
   if(typeof value!=='string'){issues.push({...issue('TYPE_MISMATCH',path),expectedType:'string',actualType:actualType(value)});return '';}
   const canonicalEmpty=mode==='prepared'&&!field.required&&!own(field,'default')&&value==='';

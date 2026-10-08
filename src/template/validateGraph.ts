@@ -35,8 +35,10 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
     else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key'])||!['global','local','item'].includes(c.scope)||!name(c.key)||c.key.includes('.'))fail(cp);}
     else fail(cp);
    }
-  }else if(n.type==='image'&&ctx.images&&ctx.resolved){
-   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['width','height','resourceId'])||!name(n.props.resourceId)||n.props.resourceId.length>128){fail(p);continue;}
+  }else if(n.type==='image'&&ctx.images){
+   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['width','height',ctx.resolved?'resourceId':'source'])){fail(p);continue;}
+   if(ctx.resolved){if(typeof n.props.resourceId!=='string'||n.props.resourceId.length>128)fail(p+'.props.resourceId');}
+   else {const s=n.props.source;const schema=s?.scope==='global'?ctx.globalSchema:s?.scope==='local'?ctx.localSchema:undefined;if(!object(s)||!keys(s,['scope','key'])||!name(s.key)||!schema||!own(schema.fields,s.key)||schema.fields[s.key]?.type!=='image')fail(p+'.props.source');}
    for(const key of ['width','height']){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<=0)fail(p+'.props.'+key);}
   }else if(n.type==='table'){
    if(!keys(n,['id','type','props','columns','rowIds'])||!object(n.props)||!keys(n.props,['headerRowCount','repeatHeaderRows'])||!Number.isInteger(n.props.headerRowCount)||n.props.headerRowCount<0||n.props.headerRowCount>1||typeof n.props.repeatHeaderRows!=='boolean'||!Array.isArray(n.columns)||!n.columns.length){fail(p);continue;}
@@ -56,7 +58,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
  }
  currentNode=undefined;
  const roots=refs(input.rootIds,path+'.rootIds');if(!roots.length)fail(path+'.rootIds');
- for(const id of roots){parents.set(id,(parents.get(id)??0)+1);if(!own(nodes,id)||!['text-block','table',...(ctx.images&&ctx.resolved?['image']:[])].includes(nodes[id]?.type))fail(path+'.rootIds');}
+ for(const id of roots){parents.set(id,(parents.get(id)??0)+1);if(!own(nodes,id)||!['text-block','table',...(ctx.images?['image']:[])].includes(nodes[id]?.type))fail(path+'.rootIds');}
  for(const id of Object.keys(nodes))if(parents.get(id)!==1)fail(path+'.nodes.'+id+'.parent',id);
  const active=new Set<string>(),visited=new Set<string>();
  const visit=(root:string)=>{
