@@ -15,3 +15,12 @@ const {validateTemplate,prepareGeneration,composeDocument}=await import('@flowdo
 const ref='01a11aa0-c9e6-780a-ae76-834fad559f4d';
 const t={schemaVersion:1,nodeModelVersion:5,templateId:'image-binding',docKey:'image-binding',version:1,name:'Image binding',book:d.book,styles:d.styles,globalSchema:{type:'object',fields:{photo:{type:'image',required:true}}},formats:{photo:{inputSchema:{type:'object',fields:{}},fragment:{rootIds:['p'],nodes:{p:{id:'p',type:'image',props:{width:{value:100,unit:'pt'},height:{value:100,unit:'pt'},source:{scope:'global',key:'photo'}}}}},repeats:[]}},examples:[]};
 const valid=validateTemplate(t);assert(valid.ok,JSON.stringify(valid));const prepared=prepareGeneration(valid.value,{docKey:t.docKey,data:{photo:ref},content:[{format:'photo',data:{}}]});assert(prepared.ok,JSON.stringify(prepared));const composed=composeDocument(valid.value,prepared.value);assert(composed.ok,JSON.stringify(composed));const bound=await engine.value.generatePdf(composed.value,{[ref]:map.jpeg});assert(bound.ok,JSON.stringify(bound));assert.equal(bound.warnings.length,0);await writeFile('/consumer/output/bound-image.pdf',bound.value.bytes);
+const pt=l=>l.unit==='mm'?l.value*72/25.4:l.value;
+const left=pt(t.book.page.margin.left),right=210*72/25.4-pt(t.book.page.margin.right);
+for(const [align,x] of [['left',left],['center',left+(right-left-100)/2],['right',right-100]]){
+ t.formats.photo.fragment.nodes.p.props.align=align;const v=validateTemplate(t);assert(v.ok);
+ const p=prepareGeneration(v.value,{docKey:t.docKey,data:{photo:ref},content:[{format:'photo',data:{}}]});assert(p.ok);const c=composeDocument(v.value,p.value);assert(c.ok);assert.equal(Object.values(c.value.nodes)[0].props.align,align);
+ const pdf=await engine.value.generatePdf(c.value,{[ref]:map.jpeg});assert(pdf.ok);
+ const placement=Buffer.from(pdf.value.bytes).toString('latin1').match(/q 100 0 0 50 ([\d.]+) /);assert(placement);assert(Math.abs(Number(placement[1])-x)<0.001);
+ await writeFile('/consumer/output/alignment-'+align+'.pdf',pdf.value.bytes);
+}

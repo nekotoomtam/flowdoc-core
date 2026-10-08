@@ -70,7 +70,8 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
   if(fw>available+epsilon||fh>bottom-top+epsilon)throw new LayoutError(id,'Image frame exceeds printable page');
   if(y+fh>bottom+epsilon)nextPage();
   const image=Object.hasOwn(images,n.props.resourceId)?images[n.props.resourceId]:undefined;
-  if(image){const scale=Math.min(fw/image.width,fh/image.height),iw=image.width*scale,ih=image.height*scale;current.images??=[];current.images.push({nodeId:id,resourceId:n.props.resourceId,xPt:left+(fw-iw)/2,yPt:y+(fh-ih)/2,widthPt:iw,heightPt:ih});}
+  const frameLeft=left+(n.props.align==='right'?available-fw:n.props.align==='center'?(available-fw)/2:0);
+  if(image){const scale=Math.min(fw/image.width,fh/image.height),iw=image.width*scale,ih=image.height*scale;current.images??=[];current.images.push({nodeId:id,resourceId:n.props.resourceId,xPt:frameLeft+(fw-iw)/2,yPt:y+(fh-ih)/2,widthPt:iw,heightPt:ih});}
   y+=fh;
  }else throw new LayoutError(id,'Unsupported root');}
  return {pages};

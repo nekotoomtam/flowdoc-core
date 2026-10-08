@@ -12,7 +12,7 @@ export interface SourceEntry {contentIndex:number;format:string;sourceId:string;
 export interface Table {id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean};columns:{width:Length}[];rowIds:string[]}
 export interface TableRow {id:string;type:'table-row';props:{allowBreak:boolean};cellIds:string[]}
 export interface TableCell {id:string;type:'table-cell';props:Record<string,never>;childIds:string[]}
-export interface ImageBlock {id:string;type:'image';props:{width:Length;height:Length;resourceId:string}}
+export interface ImageBlock {id:string;type:'image';props:{width:Length;height:Length;align?:'left'|'center'|'right';resourceId:string}}
 export type DocumentNode=TextBlock|Table|TableRow|TableCell|ImageBlock;
 export interface ResolvedDocument {
   schemaVersion:1;nodeModelVersion:4|5;template:{templateId:string;docKey:string;version:number};

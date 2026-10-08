@@ -36,7 +36,8 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
     else fail(cp);
    }
   }else if(n.type==='image'&&ctx.images){
-   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['width','height',ctx.resolved?'resourceId':'source'])){fail(p);continue;}
+   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['width','height','align',ctx.resolved?'resourceId':'source'])){fail(p);continue;}
+   if(own(n.props,'align')&&!['left','center','right'].includes(n.props.align))fail(p+'.props.align');
    if(ctx.resolved){if(typeof n.props.resourceId!=='string'||n.props.resourceId.length>128)fail(p+'.props.resourceId');}
    else {const s=n.props.source;const schema=s?.scope==='global'?ctx.globalSchema:s?.scope==='local'?ctx.localSchema:undefined;if(!object(s)||!keys(s,['scope','key'])||!name(s.key)||!schema||!own(schema.fields,s.key)||schema.fields[s.key]?.type!=='image')fail(p+'.props.source');}
    for(const key of ['width','height']){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<=0)fail(p+'.props.'+key);}

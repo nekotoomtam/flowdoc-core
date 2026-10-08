@@ -5,7 +5,7 @@ export interface ArrayField {type:'array';required?:boolean;default?:Record<stri
 export interface ObjectSchema<F=StringField|ArrayField|ImageField> {type:'object';fields:Record<string,F>}
 export interface FieldRef {id:string;type:'field-ref';scope:'global'|'local'|'item';key:string}
 export type TemplateTextBlock=Omit<TextBlock,'children'>&{children:(TextInline|FieldRef)[]};
-export type TemplateImageBlock=Omit<ImageBlock,'props'>&{props:{width:ImageBlock['props']['width'];height:ImageBlock['props']['height'];source:{scope:'global'|'local';key:string}}};
+export type TemplateImageBlock=Omit<ImageBlock,'props'>&{props:{width:ImageBlock['props']['width'];height:ImageBlock['props']['height'];align?:ImageBlock['props']['align'];source:{scope:'global'|'local';key:string}}};
 export type TemplateNode=TemplateTextBlock|Table|TableRow|TableCell|TemplateImageBlock;
 export interface Fragment {rootIds:string[];nodes:Record<string,TemplateNode>}
 export interface Repeat {tableId:string;rowTemplateId:string;source:{scope:'global'|'local';key:string}}
