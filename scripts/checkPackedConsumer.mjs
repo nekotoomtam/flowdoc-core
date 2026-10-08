@@ -1,0 +1,43 @@
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, copyFileSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const corePackage=JSON.parse(readFileSync(join(root,'package.json'),'utf8'));
+function docker(args){return execFileSync('docker',args,{cwd:root,encoding:'utf8',stdio:['ignore','pipe','inherit'],maxBuffer:8*1024*1024});}
+const runId=Date.now().toString();const output=join(root,'artifacts',runId);mkdirSync(output,{recursive:true});
+docker(['build','--platform','linux/amd64','-f','Dockerfile.package','--target','artifact','--output',`type=local,dest=${output}`,'.']);
+const tarball=join(output,`flowdoc-core-${corePackage.version}.tgz`);if(!existsSync(tarball))throw Error('Missing package artifact');
+const checksum=createHash('sha256').update(readFileSync(tarball)).digest('hex');
+const context=mkdtempSync(join(tmpdir(),'flowdoc-packed-consumer-'));
+for(const file of ['package.json','checkResources.mjs','checkPdf.mjs','checkBinding.mjs','checkTable.mjs'])copyFileSync(join(root,'tests/consumer',file),join(context,file));
+for(const kind of ['template','short','empty','long'])copyFileSync(join(root,'fixtures/table',kind+'.json'),join(context,'table-'+kind+'.json'));
+for(const [fixture,prefix] of [['srs-basic','srs'],['binding-text','binding']])for(const kind of ['template','request'])copyFileSync(join(root,'fixtures',fixture,kind+'.json'),join(context,prefix+'-'+kind+'.json'));
+for(const name of ['four-styles','overflow'])copyFileSync(join(root,'fixtures/pdf',name+'.resolved.json'),join(context,name+'.resolved.json'));
+writeFileSync(join(context,'expected-package.json'),JSON.stringify({name:corePackage.name,version:corePackage.version}));
+copyFileSync(tarball,join(context,'flowdoc-core.tgz'));
+copyFileSync(join(root,'runtime/requirements.txt'),join(context,'requirements.txt'));
+copyFileSync(join(root,'Dockerfile.consumer'),join(context,'Dockerfile'));
+// Lock only this immutable tarball; Core has no npm runtime dependencies in this slice.
+const pkg=JSON.parse(readFileSync(join(context,'package.json'),'utf8'));
+const lock={name:pkg.name,version:pkg.version,lockfileVersion:3,requires:true,packages:{'':pkg,'node_modules/@flowdoc/core':{version:corePackage.version,resolved:'file:flowdoc-core.tgz',integrity:'sha512-'+createHash('sha512').update(readFileSync(tarball)).digest('base64'),license:corePackage.license,engines:corePackage.engines}}};
+writeFileSync(join(context,'package-lock.json'),JSON.stringify(lock,null,2)+'\n');
+copyFileSync(join(context,'package-lock.json'),join(output,'consumer-package-lock.json'));
+const tag='flowdoc-core-consumer:'+runId;
+docker(['build','--platform','linux/amd64','-t',tag,context]);
+const imageId=docker(['image','inspect',tag,'--format','{{.Id}}']).trim();
+const container=docker(['create','--network','none',imageId]).trim();
+try{docker(['start','--attach',container]);}catch{throw Error(`Consumer failed; retained container ${container}`);}
+const state=JSON.parse(docker(['inspect',container,'--format','{{json .State}}']));
+if(state.ExitCode!==0)throw Error(`Consumer failed; retained container ${container}`);
+docker(['cp',container+':/consumer/output/.',output]);
+const resourceResult=JSON.parse(readFileSync(join(output,'resource-result.json'),'utf8'));
+const pdfResult=JSON.parse(readFileSync(join(output,'pdf-result.json'),'utf8'));
+const bindingResult=JSON.parse(readFileSync(join(output,'binding-result.json'),'utf8'));
+const tableResult=JSON.parse(readFileSync(join(output,'table-result.json'),'utf8'));
+if(resourceResult.status!=='PASS'||pdfResult.status!=='PASS'||bindingResult.status!=='PASS'||tableResult.status!=='PASS')throw Error('Consumer failed');
+writeFileSync(join(output,'result.json'),JSON.stringify({tarball,checksum,imageId,network:'none',mounts:[],resourceResult,pdfResult,bindingResult,tableResult},null,2)+'\n');
+docker(['rm',container]);
+console.log(JSON.stringify({output,...pdfResult,bindingResult,tableResult}));

@@ -1,0 +1,27 @@
+{
+  "docKey": "srs-table-trial",
+  "version": 1,
+  "data": {
+    "projectName": "SRS ทดลองตาราง"
+  },
+  "content": [
+    {
+      "format": "section-note",
+      "data": {
+        "text": "ข้อความก่อนตาราง"
+      }
+    },
+    {
+      "format": "requirement-list",
+      "data": {
+        "items": []
+      }
+    },
+    {
+      "format": "section-note",
+      "data": {
+        "text": "ข้อความหลังตาราง"
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "docKey": "binding-text",
+  "version": 1,
+  "data": {
+    "projectName": "FlowDoc ทดสอบการแทนตัวแปร",
+    "projectNmae": "this warning must not appear"
+  },
+  "content": [
+    {
+      "format": "note",
+      "data": {
+        "text": "ขอบเขตการทำงาน\nสร้างเอกสารจากโครงและข้อมูล"
+      }
+    },
+    {
+      "format": "remark",
+      "data": {}
+    },
+    {
+      "format": "note",
+      "data": {
+        "text": "รายการสุดท้ายใช้โครงเดิมและข้อมูลคนละชุด"
+      }
+    }
+  ]
+}

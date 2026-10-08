@@ -1,0 +1,32 @@
+{
+  "docKey": "srs-basic",
+  "version": 1,
+  "data": {
+    "projectName": "ระบบจัดการเอกสาร"
+  },
+  "content": [
+    {
+      "format": "section-note",
+      "data": {
+        "text": "ขอบเขตการทำงาน"
+      }
+    },
+    {
+      "format": "requirement-list",
+      "data": {
+        "items": [
+          {
+            "code": "REQ-001",
+            "detail": "สร้าง PDF ได้"
+          }
+        ]
+      }
+    },
+    {
+      "format": "section-note",
+      "data": {
+        "text": "รายละเอียดหลังตาราง"
+      }
+    }
+  ]
+}
