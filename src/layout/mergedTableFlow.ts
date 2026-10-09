@@ -47,15 +47,20 @@ export async function mergedTableFlow(d:ResolvedDocument,t:Table,runtime:TextRun
  let from=0,first=true;
  while(true){let g=geometry();if(from>=g.ys.at(-1)!-eps)break;
   const hh=first||t.props.repeatHeaderRows?headerHeight:0,capacity=s.bottom-s.y-hh;
-  const full=s.bottom-s.top-hh;
+  const full=s.bottom-s.top-(t.props.repeatHeaderRows?headerHeight:0);
   for(const [i,id] of rowIds.entries()){const r=d.nodes[id];if(r?.type==='table-row'&&!r.props.allowBreak&&g.heights[i]!>full+eps)throw new LayoutError(id,'Protected row exceeds page');}
   for(const c of body)for(const l of c.lines)if(!l.drawn&&l.line.heightPt+2*pad>full+eps)throw new LayoutError(c.id,'Next whole line cannot fit with header');
   let cut=Math.min(g.ys.at(-1)!,from+capacity);
+  const pending=body.flatMap(c=>c.lines.filter(l=>!l.drawn).map(l=>({start:g.ys[c.row]!+l.offset,end:g.ys[c.row]!+l.offset+l.line.heightPt})));
+  // Carry the final line with trailing padding rather than create an empty
+  // continuation page. Preserve padding instead of clipping the cell rectangle.
+  if(cut<g.ys.at(-1)!-eps&&pending.length&&pending.every(l=>l.end<=cut+eps))cut=Math.min(cut,Math.max(...pending.map(l=>l.start)));
+
   // A protected logical row may move, but a spanning cell is not an indivisible group.
   for(let i=0;i<rowIds.length;i++){const r=d.nodes[rowIds[i]!];if(r?.type==='table-row'&&!r.props.allowBreak&&cut>g.ys[i]!+eps&&cut<g.ys[i+1]!-eps)cut=g.ys[i]!;}
-  const pending=body.flatMap(c=>c.lines.filter(l=>!l.drawn).map(l=>({start:g.ys[c.row]!+l.offset,end:g.ys[c.row]!+l.offset+l.line.heightPt})));
+
   const hasLine=pending.some(l=>l.start>=from-eps&&l.end<=cut+eps);
-  const startsHere=pending.some(l=>l.start<cut-eps);
+  const startsHere=pending.some(l=>l.start<cut+pad+eps);
   if(cut<=from+eps||(!hasLine&&startsHere)){
    if(s.y>s.top+eps){s.nextPage();continue;}throw new LayoutError(t.id,'Merged row made no progress');
   }
