@@ -26,6 +26,7 @@ export function expandRows(format:Format,global:PreparedData,local:PreparedData,
    }
    nodes[id]={...structuredClone(source),id,rowIds};
   }else if(source.type==='table-row')nodes[id]={...structuredClone(source),id,cellIds:source.cellIds.map(cid=>clone(cid,itemIndex,item,repeatId))};
+  else if(source.type==='area')throw Error('Area expansion not yet wired');
   else {
    const repeat=cellRepeats.get(sourceId),childIds:string[]=[];
    for(let c=0;c<source.childIds.length;c++){

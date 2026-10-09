@@ -1,6 +1,6 @@
 import {validateLink} from '../composition/linkContract.js';
 import type {Issue} from '../result.js';
-import type {ObjectSchema,StringField,ArrayField,ImageField,LinkField} from '../template/types.js';
+import type {ObjectSchema,StringField,ArrayField,ImageField,LinkField,AreaField} from '../template/types.js';
 import type {PreparedData,PreparedItem} from './types.js';
 import {object,own,text,issue} from '../template/checks.js';
 export type ValueMode='request'|'prepared';
@@ -24,7 +24,8 @@ export function validateValues(schema:ObjectSchema,input:unknown,path:string,iss
  }
  return out;
 }
-export function validateField(field:StringField|ArrayField|ImageField|LinkField,value:unknown,path:string,issues:Issue[],warnings:Issue[],mode:ValueMode='request'):PreparedData[string] {
+export function validateField(field:StringField|ArrayField|ImageField|LinkField|AreaField,value:unknown,path:string,issues:Issue[],warnings:Issue[],mode:ValueMode='request'):PreparedData[string] {
+ if(field.type==='area'){issues.push(issue('INVALID_DATA',path));return [];}
  if(field.type==='link'){
   if(mode==='prepared'&&value===''&&!field.required&&!own(field,'default'))return '';
   if(!validateLink(value)){issues.push(issue('INVALID_DATA',path));return '';}

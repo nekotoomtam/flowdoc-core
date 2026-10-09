@@ -18,7 +18,7 @@ export interface ImageBlock {id:string;type:'image';props:{width:Length;height:L
 export interface ContentsBlock {id:string;type:'table-of-contents';props:{textStyleId:string}}
 export type DocumentNode=TextBlock|Table|TableRow|TableCell|ImageBlock|ContentsBlock;
 export interface ResolvedDocument {
-  schemaVersion:1;nodeModelVersion:4|5|6|7|8|9|10;template:{templateId:string;docKey:string;version:number};
+  schemaVersion:1;nodeModelVersion:4|5|6|7|8|9|10|11;template:{templateId:string;docKey:string;version:number};
   book:{contentSlot:'body';page:{size:'A4';orientation:'portrait'|'landscape';margin:{top:Length;right:Length;bottom:Length;left:Length}}};
   styles:Record<string,TextStyle>;rootIds:string[];nodes:Record<string,DocumentNode>;sourceMap:Record<string,SourceEntry>;
 }

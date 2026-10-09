@@ -1,3 +1,4 @@
+import {validateAreas} from './areas.js';
 import {createHash} from 'node:crypto';
 import type {Result,Issue} from '../result.js';
 import type {TemplateDefinition,ValidatedTemplate} from './types.js';
@@ -13,19 +14,20 @@ export function validateTemplate(input:unknown):Result<ValidatedTemplate>{
   if(typeof input==='string'){const r=readTemplateJson(input);if(!r.ok)return r;input=r.value;}
   if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_TEMPLATE','template')],warnings:[]};
   const t=structuredClone(input);
-  if(!keys(t,['schemaVersion','nodeModelVersion','templateId','docKey','version','name','book','globalSchema','styles','formats','examples'])||t.schemaVersion!==1||![4,5,6,7,8,9,10].includes(t.nodeModelVersion))fail('template');
+  if(!keys(t,['schemaVersion','nodeModelVersion','templateId','docKey','version','name','book','globalSchema','styles','formats','examples',...(t.nodeModelVersion>=11?['areaFormats']:[])])||t.schemaVersion!==1||![4,5,6,7,8,9,10,11].includes(t.nodeModelVersion))fail('template');
   for(const k of ['templateId','docKey','name'])if(!name(t[k]))fail(k);
   if(!Number.isInteger(t.version)||t.version<1)fail('version');
   issues.push(...validateBookStyles(t).map(i=>({...i,code:'INVALID_TEMPLATE'})));
-  const globalOk=validateSchemas(t.globalSchema,'globalSchema',issues,false,t.nodeModelVersion>=5,t.nodeModelVersion>=7,t.nodeModelVersion>=10);
+  const globalOk=validateSchemas(t.globalSchema,'globalSchema',issues,false,t.nodeModelVersion>=5,t.nodeModelVersion>=7,t.nodeModelVersion>=10,t.nodeModelVersion>=11);
   if(!object(t.formats)||!Object.keys(t.formats).length)fail('formats');else for(const [key,f] of Object.entries(t.formats)){
    const p='formats.'+key;
    if(!name(key)||!object(f)||!keys(f,['label','description','inputSchema','fragment','repeats',...(t.nodeModelVersion>=10?['cellRepeats']:[])])){fail(p);continue;}
    for(const k of ['label','description'])if(Object.hasOwn(f,k)&&typeof f[k]!=='string')fail(p+'.'+k);
-   const localOk=validateSchemas(f.inputSchema,p+'.inputSchema',issues,false,t.nodeModelVersion>=5,t.nodeModelVersion>=7,t.nodeModelVersion>=10);
+   const localOk=validateSchemas(f.inputSchema,p+'.inputSchema',issues,false,t.nodeModelVersion>=5,t.nodeModelVersion>=7,t.nodeModelVersion>=10,t.nodeModelVersion>=11);
    if(!Array.isArray(f.repeats)||(own(f,'cellRepeats')&&!Array.isArray(f.cellRepeats)))fail(p+'.repeats');
-   else if(globalOk&&localOk&&object(t.styles))issues.push(...validateGraph(f.fragment,{styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,repeats:f.repeats,images:t.nodeModelVersion>=5,merged:t.nodeModelVersion>=6,links:t.nodeModelVersion>=7,contents:t.nodeModelVersion>=8,cellContent:t.nodeModelVersion>=9,itemImages:t.nodeModelVersion>=10,cellRepeats:f.cellRepeats},p+'.fragment'));
+   else if(globalOk&&localOk&&object(t.styles))issues.push(...validateGraph(f.fragment,{styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,repeats:f.repeats,images:t.nodeModelVersion>=5,merged:t.nodeModelVersion>=6,links:t.nodeModelVersion>=7,contents:t.nodeModelVersion>=8,cellContent:t.nodeModelVersion>=9,itemImages:t.nodeModelVersion>=10,cellRepeats:f.cellRepeats,areas:t.nodeModelVersion>=11},p+'.fragment'));
   }
+  if(!issues.length&&t.nodeModelVersion>=11)issues.push(...validateAreas(t as TemplateDefinition));
   if(!Array.isArray(t.examples))fail('examples');
   if(issues.length)return {ok:false,issues,warnings:[]};
   const definition=t as TemplateDefinition,fingerprint=createHash('sha256').update(canonical(t)).digest('hex');

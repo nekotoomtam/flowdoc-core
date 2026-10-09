@@ -13,7 +13,7 @@ export function validateResolvedDocument(input:unknown):Issue[] {
  const fail=(path:string,nodeId?:string)=>issues.push({code:'LAYOUT_FAILED',path,message:'Invalid or unsupported resolved document value',...(nodeId?{nodeId}:{})});
  if(!isJson(input)||!object(input)){fail('document');return issues;}
  const d=input;
- if(!keys(d,['schemaVersion','nodeModelVersion','template','book','styles','rootIds','nodes','sourceMap'])||d.schemaVersion!==1||![4,5,6,7,8,9,10].includes(d.nodeModelVersion))fail('document');
+ if(!keys(d,['schemaVersion','nodeModelVersion','template','book','styles','rootIds','nodes','sourceMap'])||d.schemaVersion!==1||![4,5,6,7,8,9,10,11].includes(d.nodeModelVersion))fail('document');
  if(!object(d.template)||!keys(d.template,['templateId','docKey','version'])||!name(d.template.templateId)||!name(d.template.docKey)||!Number.isInteger(d.template.version)||d.template.version<1)fail('template');
  issues.push(...validateBookStyles(d));
  if(!object(d.styles))return issues;

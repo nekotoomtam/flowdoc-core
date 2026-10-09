@@ -17,3 +17,6 @@ export type {BoundLink} from './composition/linkContract.js';
 export type {LinkField,ScalarBinding,TemplateLink,TemplateInline} from './template/types.js';
 
 export type {ContentsBlock} from './composition/resolvedDocument.js';
+
+export {readGenerationJson} from './data/readGenerationJson.js';
+export type {AreaField,AreaEntry,AreaFormat,TemplateArea} from './template/types.js';
