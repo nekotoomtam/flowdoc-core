@@ -9,7 +9,7 @@ export interface TextBlock {
   id:string;type:'text-block';role:{role:'paragraph'};
   props:{textStyleId:string;sizing?:{mode:'content'};anchorId?:string;toc?:{level:number}};children:TextInline[];
 }
-export interface SourceEntry {contentIndex:number;format:string;sourceId:string;itemIndex?:number;repeatId?:string}
+export interface SourceEntry {contentIndex:number;format:string;sourceId:string;itemIndex?:number;repeatId?:string;areaId?:string;areaEntryIndex?:number;areaFormatId?:string}
 export interface Table {id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean};columns:{width:Length}[];rowIds:string[]}
 export interface TableRow {id:string;type:'table-row';props:{allowBreak:boolean};cellIds:string[]}
 export type CellPadding=Partial<Record<'top'|'right'|'bottom'|'left',Length>>;

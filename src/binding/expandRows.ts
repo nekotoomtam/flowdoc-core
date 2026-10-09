@@ -1,11 +1,14 @@
+import type {AreaIndex} from '../template/areas.js';
+import {expandArea} from './expandAreas.js';
+export interface ExpansionOptions {areaIndex?:AreaIndex;prefix?:string;areaOrigin?:{areaId:string;areaEntryIndex:number;areaFormatId:string}}
 import type {Format} from '../template/types.js';
 import type {PreparedData,PreparedItem} from '../data/types.js';
 import type {DocumentNode,SourceEntry} from '../composition/resolvedDocument.js';
 import {bindInlines,resolveScalar} from './bindInlines.js';
 // Clone only reachable subtrees. A repeated row replaces its source row; no
 // template descendants survive when its collection is empty.
-export function expandRows(format:Format,global:PreparedData,local:PreparedData,contentIndex:number,formatKey:string,nodes:Record<string,DocumentNode>,sourceMap:Record<string,SourceEntry>):string[]{
- const prefix=`content-${contentIndex}~`,origin={contentIndex,format:formatKey};
+export function expandRows(format:Format,global:PreparedData,local:PreparedData,contentIndex:number,formatKey:string,nodes:Record<string,DocumentNode>,sourceMap:Record<string,SourceEntry>,options:ExpansionOptions={}):string[]{
+ const prefix=options.prefix??`content-${contentIndex}~`,origin={contentIndex,format:formatKey,...options.areaOrigin};
  const repeats=new Map(format.repeats.map(r=>[r.rowTemplateId,r]));
  const cellRepeats=new Map((format.cellRepeats??[]).map(r=>[r.cellId,r]));
  const clone=(sourceId:string,itemIndex?:number,item:PreparedItem={},repeatId?:string):string=>{
@@ -26,12 +29,12 @@ export function expandRows(format:Format,global:PreparedData,local:PreparedData,
    }
    nodes[id]={...structuredClone(source),id,rowIds};
   }else if(source.type==='table-row')nodes[id]={...structuredClone(source),id,cellIds:source.cellIds.map(cid=>clone(cid,itemIndex,item,repeatId))};
-  else if(source.type==='area')throw Error('Area expansion not yet wired');
+  else if(source.type==='area')throw Error('Area must expand as a child sequence');
   else {
    const repeat=cellRepeats.get(sourceId),childIds:string[]=[];
    for(let c=0;c<source.childIds.length;c++){
     const cid=source.childIds[c]!;
-    if(!repeat||cid!==repeat.childTemplateIds[0])childIds.push(clone(cid,itemIndex,item,repeatId));
+    if(!repeat||cid!==repeat.childTemplateIds[0])childIds.push(...children(cid,itemIndex,item,repeatId));
     else {
      const items=(repeat.source.scope==='global'?global:local)[repeat.source.key] as PreparedItem[];
      items.forEach((value,i)=>{for(const child of repeat.childTemplateIds)childIds.push(clone(child,i,value,repeat.id));});
@@ -42,5 +45,10 @@ export function expandRows(format:Format,global:PreparedData,local:PreparedData,
   }
   return id;
  };
- return format.fragment.rootIds.map(id=>clone(id));
+ const children=(id:string,itemIndex?:number,item:PreparedItem={},repeatId?:string):string[]=>{
+  const n=format.fragment.nodes[id]!;if(n.type!=='area')return [clone(id,itemIndex,item,repeatId)];
+  if(!options.areaIndex)throw Error('Missing area index');
+  return expandArea({index:options.areaIndex,areaId:n.props.areaId,global,local,contentIndex,formatKey,nodes,sourceMap});
+ };
+ return format.fragment.rootIds.flatMap(id=>children(id));
 }

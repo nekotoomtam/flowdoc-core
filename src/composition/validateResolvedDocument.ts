@@ -23,7 +23,8 @@ export function validateResolvedDocument(input:unknown):Issue[] {
  const ids=new Set<string>(Object.keys(d.nodes));
  for(const n of Object.values(d.nodes))if(object(n)&&n.type==='text-block'&&Array.isArray(n.children))for(const c of n.children)if(object(c)&&typeof c.id==='string')ids.add(c.id);
  for(const [id,s] of Object.entries(d.sourceMap)){
-  if(!ids.has(id)||!object(s)||!keys(s,['contentIndex','format','sourceId','itemIndex',...(d.nodeModelVersion>=10?['repeatId']:[])])||!Number.isInteger(s.contentIndex)||s.contentIndex<0||!name(s.format)||!name(s.sourceId)||(s.itemIndex!==undefined&&(!Number.isInteger(s.itemIndex)||s.itemIndex<0))||(s.repeatId!==undefined&&(!name(s.repeatId)||s.repeatId.includes('~')||s.itemIndex===undefined)))fail('sourceMap.'+id);
+  if(object(s)&&['areaId','areaEntryIndex','areaFormatId'].some(k=>Object.hasOwn(s,k))&&(!name(s.areaId)||s.areaId.includes('~')||!name(s.areaFormatId)||s.areaFormatId.includes('~')||!Number.isSafeInteger(s.areaEntryIndex)||s.areaEntryIndex<0))fail('sourceMap.'+id);
+  if(!ids.has(id)||!object(s)||!keys(s,['contentIndex','format','sourceId','itemIndex',...(d.nodeModelVersion>=10?['repeatId']:[]),...(d.nodeModelVersion>=11?['areaId','areaEntryIndex','areaFormatId']:[])])||!Number.isInteger(s.contentIndex)||s.contentIndex<0||!name(s.format)||!name(s.sourceId)||(s.itemIndex!==undefined&&(!Number.isInteger(s.itemIndex)||s.itemIndex<0))||(s.repeatId!==undefined&&(!name(s.repeatId)||s.repeatId.includes('~')||s.itemIndex===undefined)))fail('sourceMap.'+id);
  }
  for(const id of d.rootIds)if(!Object.hasOwn(d.sourceMap,id))fail('sourceMap.'+id);
  if(!issues.length&&d.nodeModelVersion>=7)issues.push(...validateDestinations(d as import('./resolvedDocument.js').ResolvedDocument));

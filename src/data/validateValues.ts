@@ -1,3 +1,5 @@
+import type {AreaIndex} from '../template/areas.js';
+import {prepareAreaValue} from './prepareAreas.js';
 import {validateLink} from '../composition/linkContract.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,StringField,ArrayField,ImageField,LinkField,AreaField} from '../template/types.js';
@@ -5,7 +7,7 @@ import type {PreparedData,PreparedItem} from './types.js';
 import {object,own,text,issue} from '../template/checks.js';
 export type ValueMode='request'|'prepared';
 export const actualType=(v:unknown)=>v===null?'null':Array.isArray(v)?'array':typeof v==='undefined'?'null':typeof v as 'string'|'number'|'boolean'|'object'|'array'|'null';
-export function validateValues(schema:ObjectSchema,input:unknown,path:string,issues:Issue[],warnings:Issue[],mode:ValueMode='request',missing=false):PreparedData {
+export function validateValues(schema:ObjectSchema,input:unknown,path:string,issues:Issue[],warnings:Issue[],mode:ValueMode='request',missing=false,areaIndex?:AreaIndex):PreparedData {
  const out:PreparedData=Object.create(null);
  if(missing){issues.push(issue('MISSING_REQUIRED',path));}
  else if(!object(input)){issues.push({...issue('TYPE_MISMATCH',path),expectedType:'object',actualType:actualType(input)});return out;}
@@ -16,6 +18,7 @@ export function validateValues(schema:ObjectSchema,input:unknown,path:string,iss
  }
  for(const [key,field] of Object.entries(schema.fields)){
   const p=path+'.'+key;
+  if(field.type==='area'){if(!areaIndex)issues.push(issue('INVALID_DATA',p));else out[key]=prepareAreaValue(areaIndex,field.areaId,data[key],p,issues,warnings,!own(data,key),mode);continue;}
   if(!own(data,key)){
    if(mode==='prepared'||field.required){issues.push(issue(mode==='prepared'?'INVALID_DATA':'MISSING_REQUIRED',p));continue;}
    if(own(field,'default'))out[key]=validateField(field,structuredClone(field.default),p,issues,warnings,mode);
