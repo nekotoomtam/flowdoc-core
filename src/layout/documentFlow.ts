@@ -1,3 +1,4 @@
+import {cellTableFlow} from './cellTableFlow.js';
 import {collectContents} from '../composition/contents.js';
 import {measureContents} from './measureContents.js';
 import {mergedTableFlow} from './mergedTableFlow.js';
@@ -32,6 +33,18 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
   return {id:row.id,allowBreak:row.props.allowBreak,cells,height:Math.max(0,...cells.map(c=>c.lines.reduce((sum,l)=>sum+l.heightPt,0)))+2*pad};
  };
  const table=async(t:Table)=>{
+  if(d.nodeModelVersion>=9){
+   await cellTableFlow(d,t,runtime,{top,bottom,left,availableWidth:available,get y(){return y;},set y(v){y=v;},nextPage,
+    emitItem(item,x,at,width){
+     if(item.kind==='text-line'){emitLine(item.line,x,at);return;}
+     const image=Object.hasOwn(images,item.resourceId)?images[item.resourceId]:undefined;
+     if(!image)return;
+     const fw=item.frameWidth,fh=item.heightPt,scale=Math.min(fw/image.width,fh/image.height),iw=image.width*scale,ih=image.height*scale;
+     const frameLeft=x+(item.align==='right'?width-fw:item.align==='center'?(width-fw)/2:0);
+     current.images??=[];current.images.push({nodeId:item.nodeId,resourceId:item.resourceId,xPt:frameLeft+(fw-iw)/2,yPt:at+(fh-ih)/2,widthPt:iw,heightPt:ih});
+    },border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId){current.borders??=[];current.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,widthPt:0.5,color:'000000'});}
+   });return;
+  }
   if(d.nodeModelVersion>=6&&t.rowIds.some(rid=>{const r=d.nodes[rid];return r?.type==='table-row'&&r.cellIds.some(cid=>{const c=d.nodes[cid];return c?.type==='table-cell'&&Object.keys(c.props).length>0;});})){
    await mergedTableFlow(d,t,runtime,{top,bottom,left,availableWidth:available,get y(){return y;},set y(v){y=v;},nextPage,emitLine,border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId){current.borders??=[];current.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,widthPt:0.5,color:'000000'});}});return;
   }
