@@ -12,13 +12,14 @@ export function resolveLinkGeometry(document:ResolvedDocument,draw:DrawDocument)
   if(!run.links?.length)continue;
   let cursor=run.bounds.xPt;
   const areas=new Map<string,LinkAnnotation>();
-  for(const glyph of run.glyphs){
+  for(const [glyphIndex,glyph] of run.glyphs.entries()){
    const start=(run.sourceStart??0)+glyph.clusterStartOffset,end=(run.sourceStart??0)+glyph.clusterEndOffset;
    const owners=run.links.filter(s=>s.start<end&&s.end>start);
    if(owners.length>1)throw new LayoutError(run.nodeId,'Ambiguous link ownership of a shaped cluster');
    const owner=owners[0];
    if(owner){
-    const left=Math.min(cursor,cursor+glyph.offsetXPt),right=Math.max(cursor+glyph.advancePt,cursor+glyph.offsetXPt+glyph.advancePt);
+    const ink=run.glyphInkBoundsPt?.[glyphIndex];
+    const left=Math.min(cursor,cursor+(ink?.left??glyph.offsetXPt)),right=Math.max(cursor+glyph.advancePt,cursor+(ink?.right??(glyph.offsetXPt+glyph.advancePt)));
     const previous=areas.get(owner.id);
     if(previous){const x=Math.min(previous.rect.xPt,left);previous.rect.widthPt=Math.max(previous.rect.xPt+previous.rect.widthPt,right)-x;previous.rect.xPt=x;}
     else areas.set(owner.id,{nodeId:run.nodeId,linkId:owner.id,rect:{xPt:left,yPt:run.bounds.yPt,widthPt:right-left,heightPt:run.bounds.heightPt},destination:owner.link.type==='reference'?{type:'internal',target:owner.link.target}:{type:'external',url:owner.link.type==='url'?owner.link.value:owner.link.url}});

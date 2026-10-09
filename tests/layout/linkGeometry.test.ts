@@ -1,3 +1,4 @@
+import {decodeShape} from '../../src/runtime/textRuntime.js';
 import {mergedDoc} from '../helpers/merged.js';
 import {documentFlow} from '../../src/layout/documentFlow.js';
 import {it,expect} from 'vitest';
@@ -34,3 +35,5 @@ it('keeps the first physical copy of a repeated destination and leaves legacy da
 });
 
 it('preserves clickable lines through merged cell continuation and repeated headers',async()=>{const d=mergedDoc(100);d.nodeModelVersion=7;d.nodes.at.props.anchorId='cell';d.nodes.at.children=[{id:'linked',type:'link',text:Array.from({length:100},(_,i)=>'A'+i).join('\n'),url:'https://example.com'}];const draw=await documentFlow(d,fakeRuntime);resolveLinkGeometry(d,draw);expect(draw.pages.length).toBeGreaterThan(2);expect(draw.pages.flatMap(p=>p.annotations??[])).toHaveLength(100);expect(draw.anchors?.cell?.pageIndex).toBe(0);});
+
+it('includes actual glyph ink bearings, not only advance or offset',async()=>{const d:any=make();d.styles.body.fontSize.value=10;d.nodes.t.children=[{id:'link',type:'url',value:'https://x.test'}];const runtime={...fakeRuntime,async shape(text:string){return decodeShape({shaperRevision:'rustybuzz-0.20.1',unitsPerEm:1000,ascent:800,descent:-200,glyphs:[{glyphId:1,cluster:0,xAdvance:500,yAdvance:0,xOffset:0,yOffset:0,ink:{xMin:-100,xMax:700,yMin:-200,yMax:800}}]},text,10);}};const draw=await textFlow(d,runtime);resolveLinkGeometry(d,draw);const rect=draw.pages[0]!.annotations![0]!.rect;expect(rect.xPt).toBeCloseTo(20*72/25.4);expect(rect.widthPt).toBeCloseTo(8);});

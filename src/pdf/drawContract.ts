@@ -8,7 +8,7 @@ export interface Glyph {
 export interface GlyphRun {
   id: string; nodeId: string; kind: 'glyph-run'; text: string; fontId: string;
   fontSizePt: number; lineHeightPt: number; baselineOffsetPt: number; color: string;
-  sourceStart?:number; links?:LinkSpan[];
+  sourceStart?:number; links?:LinkSpan[]; glyphInkBoundsPt?:({left:number;right:number}|null)[];
   bounds: {xPt:number;yPt:number;widthPt:number;heightPt:number}; glyphs: Glyph[];
 }
 export interface Border {x1Pt:number;y1Pt:number;x2Pt:number;y2Pt:number;widthPt:number;color:string;nodeId:string}

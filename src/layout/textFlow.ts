@@ -3,7 +3,7 @@ import { toPt } from '../composition/resolvedDocument.js';
 import type { ResolvedDocument } from '../composition/resolvedDocument.js';
 import type { DrawDocument, DrawPage, Glyph } from '../pdf/drawContract.js';
 
-export interface ShapedText {glyphs:Glyph[];ascentPt:number;descentPt:number;inkLeftPt?:number;inkRightPt?:number}
+export interface ShapedText {glyphs:Glyph[];ascentPt:number;descentPt:number;inkLeftPt?:number;inkRightPt?:number;glyphInkBoundsPt?:({left:number;right:number}|null)[]}
 export interface TextRuntime {
  breaks(text:string):Promise<number[]>;
  shape(text:string,fontId:string,sizePt:number):Promise<ShapedText>;
