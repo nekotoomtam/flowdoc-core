@@ -13,7 +13,7 @@ export function validateResolvedDocument(input:unknown):Issue[] {
  const fail=(path:string,nodeId?:string)=>issues.push({code:'LAYOUT_FAILED',path,message:'Invalid or unsupported resolved document value',...(nodeId?{nodeId}:{})});
  if(!isJson(input)||!object(input)){fail('document');return issues;}
  const d=input;
- if(!keys(d,['schemaVersion','nodeModelVersion','template','book','styles','rootIds','nodes','sourceMap'])||d.schemaVersion!==1||![4,5,6,7,8,9].includes(d.nodeModelVersion))fail('document');
+ if(!keys(d,['schemaVersion','nodeModelVersion','template','book','styles','rootIds','nodes','sourceMap'])||d.schemaVersion!==1||![4,5,6,7,8,9,10].includes(d.nodeModelVersion))fail('document');
  if(!object(d.template)||!keys(d.template,['templateId','docKey','version'])||!name(d.template.templateId)||!name(d.template.docKey)||!Number.isInteger(d.template.version)||d.template.version<1)fail('template');
  issues.push(...validateBookStyles(d));
  if(!object(d.styles))return issues;
@@ -23,7 +23,7 @@ export function validateResolvedDocument(input:unknown):Issue[] {
  const ids=new Set<string>(Object.keys(d.nodes));
  for(const n of Object.values(d.nodes))if(object(n)&&n.type==='text-block'&&Array.isArray(n.children))for(const c of n.children)if(object(c)&&typeof c.id==='string')ids.add(c.id);
  for(const [id,s] of Object.entries(d.sourceMap)){
-  if(!ids.has(id)||!object(s)||!keys(s,['contentIndex','format','sourceId','itemIndex'])||!Number.isInteger(s.contentIndex)||s.contentIndex<0||!name(s.format)||!name(s.sourceId)||(s.itemIndex!==undefined&&(!Number.isInteger(s.itemIndex)||s.itemIndex<0)))fail('sourceMap.'+id);
+  if(!ids.has(id)||!object(s)||!keys(s,['contentIndex','format','sourceId','itemIndex',...(d.nodeModelVersion>=10?['repeatId']:[])])||!Number.isInteger(s.contentIndex)||s.contentIndex<0||!name(s.format)||!name(s.sourceId)||(s.itemIndex!==undefined&&(!Number.isInteger(s.itemIndex)||s.itemIndex<0))||(s.repeatId!==undefined&&(!name(s.repeatId)||s.repeatId.includes('~')||s.itemIndex===undefined)))fail('sourceMap.'+id);
  }
  for(const id of d.rootIds)if(!Object.hasOwn(d.sourceMap,id))fail('sourceMap.'+id);
  if(!issues.length&&d.nodeModelVersion>=7)issues.push(...validateDestinations(d as import('./resolvedDocument.js').ResolvedDocument));
