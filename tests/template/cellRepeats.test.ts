@@ -41,3 +41,9 @@ it('accepts global array binding and rejects null arrays',()=>{
  const r:any=cellRepeatRequest();r.data={evidenceList:[{photo}]};r.content[0].data={};expect(prepareGeneration(valid(t),r).ok).toBe(true);
  r.data.evidenceList=null;expect(prepareGeneration(valid(t),r).ok).toBe(false);
 });
+
+it('does not accept even empty cellRepeats in model9, preserves legacy empty item schema',()=>{
+ const t=cellRepeatTemplate(),f=t.formats.merged;t.nodeModelVersion=9;f.cellRepeats=[];f.fragment.nodes.photo.props.source={scope:'local',key:'photo'};f.inputSchema.fields.photo={type:'image'};f.fragment.nodes.caption.children=[];f.inputSchema.fields.evidenceList.items.fields={};
+ expect(validateTemplate(t).ok).toBe(false);delete f.cellRepeats;expect(validateTemplate(t).ok).toBe(true);
+});
+it('rejects a second repeat on the same cell even with a distinct repeat ID',()=>{const t=cellRepeatTemplate(),f=t.formats.merged;f.cellRepeats.push({...structuredClone(f.cellRepeats[0]),id:'different'});expect(validateTemplate(t).ok).toBe(false);});
