@@ -1,3 +1,5 @@
+import {collectContents} from '../composition/contents.js';
+import {measureContents} from './measureContents.js';
 import {mergedTableFlow} from './mergedTableFlow.js';
 import {toPt} from '../composition/resolvedDocument.js';
 import type {ResolvedDocument,Table,TableRow} from '../composition/resolvedDocument.js';
@@ -15,6 +17,8 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  if(d.rootIds.every(id=>d.nodes[id]?.type==='text-block'))return textFlow(d,runtime);
  const page=d.book.page,[w,h]=page.orientation==='portrait'?[210,297]:[297,210];
  const widthPt=w!*72/25.4,heightPt=h!*72/25.4,left=toPt(page.margin.left),top=toPt(page.margin.top),bottom=heightPt-toPt(page.margin.bottom),available=widthPt-left-toPt(page.margin.right);
+ const contentsSlots:NonNullable<DrawDocument['contentsSlots']>=[];
+ const entries=d.rootIds.some(id=>d.nodes[id]?.type==='table-of-contents')?collectContents(d):[];
  const pages:DrawPage[]=[];let current!:DrawPage,y=top,serial=0;
  const nextPage=()=>{current={widthPt,heightPt,backgroundColor:'FFFFFF',commands:[]};pages.push(current);y=top;};nextPage();
  const emitLine=(line:MeasuredLine,x:number,at:number)=>{if(line.run)current.commands.push({...line.run,id:`run-${serial++}`,bounds:{...line.run.bounds,xPt:x+line.run.bounds.xPt,yPt:at}});};
@@ -69,6 +73,15 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
   for(const line of await measureBlock(id,available)){
    if(line.heightPt>bottom-top+epsilon)throw new LayoutError(id,'Line exceeds page height');if(y+line.heightPt>bottom+epsilon)nextPage();emitLine(line,left,y);y+=line.heightPt;
   }
+ }else if(n?.type==='table-of-contents'){
+  for(const measured of await measureContents(n,entries,d.styles[n.props.textStyleId]!,available,runtime)){
+   const {line,xOffsetPt,numberSlot}=measured;
+   if(line.heightPt>bottom-top+epsilon)throw new LayoutError(n.id,'Contents line exceeds page height');
+   if(y+line.heightPt>bottom+epsilon)nextPage();
+   emitLine(line,left+xOffsetPt,y);
+   if(numberSlot)contentsSlots.push({nodeId:n.id,...numberSlot,pageIndex:pages.length-1,xPt:left+available-numberSlot.widthPt,yPt:y});
+   y+=line.heightPt;
+  }
  }else if(n?.type==='image'){
   const fw=toPt(n.props.width),fh=toPt(n.props.height);
   if(fw>available+epsilon||fh>bottom-top+epsilon)throw new LayoutError(id,'Image frame exceeds printable page');
@@ -78,5 +91,5 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
   if(image){const scale=Math.min(fw/image.width,fh/image.height),iw=image.width*scale,ih=image.height*scale;current.images??=[];current.images.push({nodeId:id,resourceId:n.props.resourceId,xPt:frameLeft+(fw-iw)/2,yPt:y+(fh-ih)/2,widthPt:iw,heightPt:ih});}
   y+=fh;
  }else throw new LayoutError(id,'Unsupported root');}
- return {pages};
+ return {pages,...(contentsSlots.length?{contentsSlots}:{})};
 }
