@@ -1,3 +1,4 @@
+import {resolveLinkGeometry} from '../layout/linkGeometry.js';
 import {mkdtemp,rm,readFile,access} from 'node:fs/promises';
 import {constants} from 'node:fs';
 import {join} from 'node:path';
@@ -31,6 +32,7 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
   try {
    temp=await mkdtemp(join(resources.tempRoot,'flowdoc-pdf-'));
    const draw=await documentFlow(document,deps.runtime,images);
+   resolveLinkGeometry(document,draw);
    const fonts=await deps.subset(draw,resources,temp);
    stage='writer';const bytes=deps.write(draw,fonts,images);
    result={ok:true,value:{bytes,mediaType:'application/pdf',pageCount:draw.pages.length},warnings};
