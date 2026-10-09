@@ -209,3 +209,18 @@ PDF hit areas follow existing glyph clusters and line/page placement, including
 wrapped labels and repeated table headers. Adjacent links sharing an inseparable
 cluster fail rather than choosing an ambiguous destination. Text styling is
 unchanged. Automatic contents lists and DOCX links are outside this package slice.
+
+## Contents (model 8, development 0.1.5)
+
+Mark TextBlocks with `props.toc: {level: 1}` (initial levels 1–3) and a unique
+`anchorId`. Insert one root `table-of-contents` with `props.textStyleId`. Bound
+visible titles, including TextBlocks in cells, follow authored document order.
+Titles and their actual physical page numbers link to the first positioned heading.
+Three levels are an initial validation limit; the stored level is numeric.
+
+Contents use 12 pt indentation per level, a 12 pt gap and a fixed 36 pt number
+column. Page numbers are filled after one pagination; a number that does not fit
+fails. Model 8 documents with a contents node also receive temporary bottom-right
+physical page numbers (regular 10 pt / 14 pt line box, bottom margin at least 18 pt).
+No alternate numbering, generic footer controls or automatic heading inference.
+See `fixtures/contents/template.json`. Existing models 4–7 retain their behavior.
