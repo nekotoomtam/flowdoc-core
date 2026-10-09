@@ -12,3 +12,6 @@ export type {PreparedInput,PreparedData} from './data/types.js';
 export type {DocumentNode,Table,TableRow,TableCell} from './composition/resolvedDocument.js';
 export type {ImageBlock} from './composition/resolvedDocument.js';
 export type {PreparedPdfImage,PdfImageResources} from './pdf/imageResources.js';
+
+export type {BoundLink} from './composition/linkContract.js';
+export type {LinkField,ScalarBinding,TemplateLink,TemplateInline} from './template/types.js';

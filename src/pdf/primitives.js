@@ -248,6 +248,7 @@ function assemblePdf(contract, usages, imageUsages, pageContents) {
         return ids;
     });
     const imageIds = imageUsages.map(image => {const id = nextId++; const mask = image.alpha ? nextId++ : null; return {id,mask};});
+    const annotationIds=contract.pages.map(page=>(page.annotations??[]).map(()=>nextId++));
     const infoId = nextId;
     objects.set(catalogId, plainObject(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`));
     objects.set(pagesId, plainObject(`<< /Type /Pages /Kids [${pageObjectIds.map((pageId) => `${pageId} 0 R`).join(" ")}] /Count ${contract.pages.length} >>`));
@@ -267,9 +268,17 @@ function assemblePdf(contract, usages, imageUsages, pageContents) {
             `/Parent ${pagesId} 0 R`,
             `/MediaBox [0 0 ${formatNumber(page.widthPt)} ${formatNumber(page.heightPt)}]`,
             resources,
-            `/Contents ${contentId} 0 R >>`,
+            `/Contents ${contentId} 0 R${annotationIds[pageIndex].length ? ` /Annots [${annotationIds[pageIndex].map(id=>`${id} 0 R`).join(" ")}]` : ""} >>`,
         ].join(" ")));
         objects.set(contentId, streamObject("", pageContents[pageIndex]));
+        (page.annotations??[]).forEach((a,index)=>{
+            const r=a.rect,d=a.destination;
+            const rect=[r.xPt,page.heightPt-r.yPt-r.heightPt,r.xPt+r.widthPt,page.heightPt-r.yPt].map(formatNumber).join(' ');
+            let action;
+            if(d.type==='external')action=`/A << /S /URI /URI <${Buffer.from(new URL(d.url).href,'utf8').toString('hex').toUpperCase()}> >>`;
+            else {const dest=contract.anchors[d.target];action=`/Dest [${pageObjectIds[dest.pageIndex]} 0 R /XYZ ${formatNumber(dest.xPt)} ${formatNumber(contract.pages[dest.pageIndex].heightPt-dest.yPt)} null]`;}
+            objects.set(annotationIds[pageIndex][index],plainObject(`<< /Type /Annot /Subtype /Link /Rect [${rect}] /Border [0 0 0] ${action} >>`));
+        });
     });
     usages.forEach((usage, index) => {
         const ids = fontObjectIds[index];

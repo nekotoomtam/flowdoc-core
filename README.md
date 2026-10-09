@@ -190,3 +190,22 @@ Italic and BoldItalic ship with their SIL Open Font License in `assets/fonts/OFL
 The derivative subset helper uses explicit output names rather than the source
 font's reserved family name. Runtime packaging currently targets the pinned Debian
 Bookworm images only; other platforms are not claimed as verified.
+
+## Model 7 links and destinations
+
+Model 7 retains image and merged-cell support and adds inline `url` (value),
+`link` (text/url) and `reference` (text/target) commands. External destinations
+accept absolute HTTP/HTTPS URLs without credentials or control characters.
+TextBlock `props.anchorId` identifies the first nonblank positioned line, including
+inside cells; duplicate/missing or entirely empty destinations fail export.
+
+A `link` schema field accepts one of those command objects without an inline id.
+It can also occur in an array item schema. A field-ref inserts the typed command;
+optional omission emits nothing, while supplied empty strings/null are invalid.
+String-valued command properties and anchorId also accept scoped string bindings
+`{scope:'global'|'local'|'item',key:'fieldName'}` in templates.
+
+PDF hit areas follow existing glyph clusters and line/page placement, including
+wrapped labels and repeated table headers. Adjacent links sharing an inseparable
+cluster fail rather than choosing an ambiguous destination. Text styling is
+unchanged. Automatic contents lists and DOCX links are outside this package slice.

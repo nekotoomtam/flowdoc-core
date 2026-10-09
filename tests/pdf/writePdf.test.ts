@@ -22,3 +22,12 @@ describe('private PDF writer',()=>{
     expect(()=>writePdf({pages:[{...draw.pages[0]!,commands:[{...run,glyphs:[{...run.glyphs[0]!,glyphId:65535}]}]}]},[resource])).toThrow(/glyph/i);
   });
 });
+
+it('writes escaped external URI actions and actual internal page references',()=>{
+ const d:any=structuredClone(draw);d.pages.push({...structuredClone(d.pages[0]),commands:[]});d.anchors={'บทที่สอง':{pageIndex:1,xPt:50,yPt:70}};
+ const rect={xPt:40,yPt:40,widthPt:100,heightPt:24};d.pages[0].annotations=[{nodeId:'text',linkId:'a',rect,destination:{type:'external',url:'https://example.com/a(b)?x=<test>'}},{nodeId:'text',linkId:'b',rect,destination:{type:'internal',target:'บทที่สอง'}}];
+ const text=Buffer.from(writePdf(d,[resource])).toString('latin1');expect(text).toContain('/Subtype /Link');expect(text).toContain('/Rect [40 777.89 140 801.89]');expect(text).toContain('/Dest [5 0 R /XYZ 50 771.89 null]');expect(text).toContain('/URI <'+Buffer.from(new URL('https://example.com/a(b)?x=<test>').href).toString('hex').toUpperCase()+'>');
+});
+it('rejects unsafe actions, missing destinations and nonfinite link geometry',()=>{
+ for(const change of ['url','rect','target','page']){const d:any=structuredClone(draw);d.anchors={dest:{pageIndex:0,xPt:20,yPt:30}};const a:any={nodeId:'text',linkId:'a',rect:{xPt:40,yPt:40,widthPt:10,heightPt:10},destination:{type:'internal',target:'dest'}};d.pages[0].annotations=[a];if(change==='url')a.destination={type:'external',url:'javascript:alert(1)'};if(change==='rect')a.rect.widthPt=NaN;if(change==='target')a.destination.target='missing';if(change==='page')d.anchors.dest.pageIndex=10;expect(()=>writePdf(d,[resource])).toThrow();}
+});
