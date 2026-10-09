@@ -12,6 +12,7 @@ export function expandRows(format:Format,global:PreparedData,local:PreparedData,
   const id=prefix+sourceId+(itemIndex===undefined?'':`~item-${itemIndex}`);
   sourceMap[id]={...origin,sourceId,...itemIndex===undefined?{}:{itemIndex}};
   if(source.type==='text-block')nodes[id]={...structuredClone(source),id,props:{...structuredClone(source.props),...(source.props.anchorId===undefined?{}:{anchorId:resolveScalar(source.props.anchorId,{global,local,item})})} as import('../composition/resolvedDocument.js').TextBlock['props'],children:bindInlines(source.children,{global,local,item},prefix,itemIndex,origin,sourceMap)};
+  else if(source.type==='table-of-contents')nodes[id]={...structuredClone(source),id};
   else if(source.type==='image'){const scope=source.props.source.scope==='global'?global:local;nodes[id]={id,type:'image',props:{width:structuredClone(source.props.width),height:structuredClone(source.props.height),...(source.props.align===undefined?{}:{align:source.props.align}),resourceId:scope[source.props.source.key] as string}};}
   else if(source.type==='table'){
    const rowIds:string[]=[];

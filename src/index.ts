@@ -15,3 +15,5 @@ export type {PreparedPdfImage,PdfImageResources} from './pdf/imageResources.js';
 
 export type {BoundLink} from './composition/linkContract.js';
 export type {LinkField,ScalarBinding,TemplateLink,TemplateInline} from './template/types.js';
+
+export type {ContentsBlock} from './composition/resolvedDocument.js';

@@ -3,7 +3,7 @@ import type {DrawDocument,LinkAnnotation} from '../pdf/drawContract.js';
 import {LayoutError} from './textFlow.js';
 // Layout has already fixed line/page positions. Never reshape slices here.
 export function resolveLinkGeometry(document:ResolvedDocument,draw:DrawDocument):void {
- if(document.nodeModelVersion!==7)return;
+ if(document.nodeModelVersion<7)return;
  const targets=new Map(Object.values(document.nodes).filter(n=>n.type==='text-block'&&n.props.anchorId!==undefined).map(n=>[n.id,(n as import('../composition/resolvedDocument.js').TextBlock).props.anchorId!]));
  const anchors:NonNullable<DrawDocument['anchors']>=Object.create(null);
  for(const [pageIndex,page] of draw.pages.entries())for(const run of page.commands){

@@ -7,16 +7,17 @@ export interface TextStyle {
 export type TextInline={id:string;type:'text';text:string}|{id:string;type:'line-break'}|({id:string}&BoundLink);
 export interface TextBlock {
   id:string;type:'text-block';role:{role:'paragraph'};
-  props:{textStyleId:string;sizing?:{mode:'content'};anchorId?:string};children:TextInline[];
+  props:{textStyleId:string;sizing?:{mode:'content'};anchorId?:string;toc?:{level:number}};children:TextInline[];
 }
 export interface SourceEntry {contentIndex:number;format:string;sourceId:string;itemIndex?:number}
 export interface Table {id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean};columns:{width:Length}[];rowIds:string[]}
 export interface TableRow {id:string;type:'table-row';props:{allowBreak:boolean};cellIds:string[]}
 export interface TableCell {id:string;type:'table-cell';props:{columnIndex?:number;rowSpan?:number;colSpan?:number};childIds:string[]}
 export interface ImageBlock {id:string;type:'image';props:{width:Length;height:Length;align?:'left'|'center'|'right';resourceId:string}}
-export type DocumentNode=TextBlock|Table|TableRow|TableCell|ImageBlock;
+export interface ContentsBlock {id:string;type:'table-of-contents';props:{textStyleId:string}}
+export type DocumentNode=TextBlock|Table|TableRow|TableCell|ImageBlock|ContentsBlock;
 export interface ResolvedDocument {
-  schemaVersion:1;nodeModelVersion:4|5|6|7;template:{templateId:string;docKey:string;version:number};
+  schemaVersion:1;nodeModelVersion:4|5|6|7|8;template:{templateId:string;docKey:string;version:number};
   book:{contentSlot:'body';page:{size:'A4';orientation:'portrait'|'landscape';margin:{top:Length;right:Length;bottom:Length;left:Length}}};
   styles:Record<string,TextStyle>;rootIds:string[];nodes:Record<string,DocumentNode>;sourceMap:Record<string,SourceEntry>;
 }
