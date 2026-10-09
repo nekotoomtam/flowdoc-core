@@ -32,8 +32,9 @@ export function validatePreparedInput(template:ValidatedTemplate,input:unknown):
  const warnedSkips=new Set<number>();
  if(!Array.isArray(p.warnings))fail('warnings');else for(const [i,w] of p.warnings.entries()){
   const path=`warnings[${i}]`;
-  if(!object(w)||!keys(w,['code','path','message','action','contentIndex','format'])||!name(w.path)||!name(w.message)){fail(path);continue;}
+  if(!object(w)||!keys(w,['code','path','message','action','contentIndex','format',...(w.code==='AREA_ENTRY_SKIPPED'&&areaIndex?['expectedType','actualType']:[])])||!name(w.path)||!name(w.message)){fail(path);continue;}
   if(w.code==='AREA_ENTRY_SKIPPED'&&areaIndex){
+   if((own(w,'expectedType')||own(w,'actualType'))&&(!['string','image','array','object'].includes(w.expectedType)||!['string','number','boolean','object','array','null'].includes(w.actualType)))fail(path);
    const prefix=[...areaSkips].find(p=>w.path===p||w.path.startsWith(p+'.'));
    if(w.action!=='skipped'||!prefix)fail(path);else warnedAreas.add(prefix);
    if(own(w,'contentIndex')||own(w,'format')){if(!index(w.contentIndex)||accepted.get(w.contentIndex)!==w.format||!w.path.startsWith(`content[${w.contentIndex}].data.`))fail(path);}

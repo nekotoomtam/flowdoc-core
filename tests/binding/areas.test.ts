@@ -3,6 +3,16 @@ import {validateTemplate,prepareGeneration,composeDocument} from '../../src/inde
 import {areaTemplate} from '../helpers/areas.js';
 import {cellRepeatTemplate,photo} from '../helpers/cellRepeats.js';
 
+it('preserves wrong-type skip diagnostics through persisted composition',()=>{
+ const t=validateTemplate(areaTemplate());if(!t.ok)throw Error('template');
+ const p=prepareGeneration(t.value,{docKey:'merged',data:{},content:[{format:'merged',data:{details:[{format:'description',data:{text:3}},{format:'notice',data:{}}]}}]});
+ expect(p.ok).toBe(true);if(!p.ok)return;
+ const d=composeDocument(t.value,JSON.parse(JSON.stringify(p.value)));
+ expect(d.ok,JSON.stringify(d)).toBe(true);
+ expect(d.warnings[0]).toMatchObject({code:'AREA_ENTRY_SKIPPED',expectedType:'string',actualType:'number'});
+ const forged:any=structuredClone(p.value);forged.warnings[0].actualType={bad:true};expect(composeDocument(t.value,forged).ok).toBe(false);
+});
+
 it('keeps global, entry and repeated item scopes separate inside a root area',()=>{
  const raw=areaTemplate(),sub=cellRepeatTemplate().formats.merged;
  raw.globalSchema.fields.caption={type:'string'};
