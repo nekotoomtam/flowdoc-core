@@ -2,6 +2,7 @@ import {it,expect,vi} from 'vitest';
 import {document,fakeRuntime} from '../helpers/document.js';
 import {documentFlow} from '../../src/layout/documentFlow.js';
 import * as grid from '../../src/composition/tableGrid.js';
+import {cellTableFlow} from '../../src/layout/cellTableFlow.js';
 import {mergedDoc} from '../helpers/merged.js';
 export function cellDoc():any{
  const d:any=document();d.nodeModelVersion=9;d.rootIds=['table'];d.sourceMap={table:{contentIndex:0,format:'cell',sourceId:'table'}};
@@ -33,3 +34,16 @@ it('prepares each table once per layout pass despite multiple pages and repeated
  try{const r=await documentFlow(d,fakeRuntime);expect(r.pages.length).toBeGreaterThan(2);expect(spy).toHaveBeenCalledTimes(1);}finally{spy.mockRestore();}
 });
 it('supports fully empty zero-padding cells without stalling',async()=>{const d=cellDoc();d.nodes.cell.childIds=[];d.nodes.cell.props.padding=Object.fromEntries(['top','right','bottom','left'].map(s=>[s,{value:0,unit:'pt'}]));const r=await documentFlow(d,fakeRuntime);expect(r.pages).toHaveLength(1);});
+it('rejects huge empty-cell padding without producing blank pages',async()=>{
+ const d=cellDoc();d.nodes.cell.childIds=[];d.nodes.cell.props.padding={top:{value:1000000,unit:'pt'}};let pages=0;
+ const sink={top:0,bottom:700,left:0,availableWidth:440,y:0,nextPage(){if(++pages>3)throw Error('loop guard');this.y=0;},emitItem(){},border(){}};
+ await expect(cellTableFlow(d,d.nodes.table,fakeRuntime,sink)).rejects.toThrow(/padding/i);expect(pages).toBe(0);
+});
+it('retains header when all body cells are empty with zero vertical padding',async()=>{
+ const d=cellDoc();d.nodes.cell.childIds=[];d.nodes.cell.props.padding={top:{value:0,unit:'pt'},bottom:{value:0,unit:'pt'}};
+ d.nodes.table.props.headerRowCount=1;d.nodes.table.rowIds.unshift('header');d.nodes.header={id:'header',type:'table-row',props:{allowBreak:false},cellIds:['head-cell']};
+ d.nodes['head-cell']={id:'head-cell',type:'table-cell',props:{},childIds:['pic']};
+ const r=await documentFlow(d,fakeRuntime,images);expect(r.pages[0]!.images).toHaveLength(1);expect(r.pages[0]!.borders!.length).toBeGreaterThan(0);
+});
+
+it('identifies the oversized image node in diagnostics',async()=>{const d=cellDoc();d.nodes.pic.props.height.value=1000;await expect(documentFlow(d,fakeRuntime,images)).rejects.toMatchObject({nodeId:'pic'});});

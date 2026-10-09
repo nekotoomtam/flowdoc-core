@@ -17,6 +17,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
  const cells:Cell[]=[];
  for(const c of grid.cells){const n=d.nodes[c.id];if(n?.type!=='table-cell')throw new LayoutError(c.id,'Expected cell');
   const padding=resolveCellPadding(n.props.padding),contentWidth=xs[c.column+c.colSpan]!-xs[c.column]!-padding.left-padding.right;
+  if(Object.values(padding).some(v=>!Number.isFinite(v)||v<0))throw new LayoutError(c.id,'Invalid converted cell padding');
   if(!Number.isFinite(contentWidth)||contentWidth<=0)throw new LayoutError(c.id,'Cell padding leaves no content width');
   let offset=padding.top;const lines:Cell['lines']=[];
   for(const line of await measureCellContent(d,n.childIds,contentWidth,runtime)){lines.push({line,offset,drawn:false});offset+=line.heightPt;}
@@ -45,13 +46,15 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
    for(const [lo,hi] of e.segments.slice(1)){if(lo<=b+eps)b=Math.max(b,hi);else{emit();a=lo;b=hi;}}emit();}
  };
  const drawHeader=()=>{for(const c of headerCells)for(const l of c.lines)l.drawn=false;paint(headerCells,[0,headerHeight],0,headerHeight,s.y);s.y+=headerHeight;};
- if(!rowIds.length){if(s.y+headerHeight>s.bottom+eps)s.nextPage();if(headerCount)drawHeader();return;}
+ const fullBodyHeight=s.bottom-s.top-(t.props.repeatHeaderRows?headerHeight:0);
+ for(const c of body)if(c.padding.top+c.padding.bottom>fullBodyHeight+eps)throw new LayoutError(c.id,'Cell padding exceeds printable page');
+ if(!rowIds.length||geometry().ys.at(-1)!<=eps){if(s.y+headerHeight>s.bottom+eps)s.nextPage();if(headerCount)drawHeader();return;}
  let from=0,first=true;
  while(true){let g=geometry();if(from>=g.ys.at(-1)!-eps)break;
   const hh=first||t.props.repeatHeaderRows?headerHeight:0,capacity=s.bottom-s.y-hh;
   const full=s.bottom-s.top-(t.props.repeatHeaderRows?headerHeight:0);
   for(const [i,id] of rowIds.entries()){const r=d.nodes[id];if(r?.type==='table-row'&&!r.props.allowBreak&&g.heights[i]!>full+eps)throw new LayoutError(id,'Protected row exceeds page');}
-  for(const c of body)for(const l of c.lines)if(!l.drawn&&l.line.heightPt+c.padding.top+c.padding.bottom>full+eps)throw new LayoutError(c.id,'Next whole line cannot fit with header');
+  for(const c of body)for(const l of c.lines)if(!l.drawn&&l.line.heightPt+c.padding.top+c.padding.bottom>full+eps)throw new LayoutError(l.line.nodeId,l.line.kind==='image-frame'?'Image frame cannot fit with table header and padding':'Next whole line cannot fit with header');
   let cut=Math.min(g.ys.at(-1)!,from+capacity);
   const pending=body.flatMap(c=>c.lines.filter(l=>!l.drawn).map(l=>({start:g.ys[c.row]!+l.offset,end:g.ys[c.row]!+l.offset+l.line.heightPt+c.padding.bottom})));
   // Carry the final line with trailing padding rather than create an empty

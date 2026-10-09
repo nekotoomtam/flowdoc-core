@@ -70,7 +70,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    if(object(n.props)&&own(n.props,'padding')){
     const padding=n.props.padding;
     if(!ctx.cellContent||!object(padding)||!keys(padding,['top','right','bottom','left']))fail(p+'.props.padding');
-    else for(const [side,v] of Object.entries(padding))if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<0)fail(p+'.props.padding.'+side);
+    else for(const [side,v] of Object.entries(padding))if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<0||!Number.isFinite(toPt(v as any)))fail(p+'.props.padding.'+side);
    }
    children=refs(n.childIds,p+'.childIds');for(const cid of children)if(!own(nodes,cid)||!['text-block',...(ctx.cellContent?['image']:[])].includes(nodes[cid]?.type))fail(p+'.childIds');
   }else fail(p+'.type');

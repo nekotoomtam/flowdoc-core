@@ -48,6 +48,7 @@ it.each(['missing','duplicate','parent','nested'])('rejects bad child topology %
  expect(validateTemplate(t).ok).toBe(false);
 });
 it('retains contents in model 9',()=>{const d=contentsDocument();d.nodeModelVersion=9;expect(validateResolvedDocument(d)).toEqual([]);});
+it('rejects padding whose unit conversion overflows',()=>{const t=cellTemplate();t.formats.merged.fragment.nodes.a.props.padding={top:{value:1e308,unit:'mm'}};expect(validateTemplate(t).ok).toBe(false);});
 it('rejects padding consuming the complete combined cell width at template validation',()=>{
  const t=cellTemplate();t.formats.merged.fragment.nodes.b.props.padding={left:{value:280,unit:'pt'}};
  const r=validateTemplate(t);expect(r.ok).toBe(false);if(!r.ok)expect(r.issues.some(i=>i.nodeId==='b'&&i.path.includes('padding'))).toBe(true);
