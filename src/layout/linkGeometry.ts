@@ -1,14 +1,22 @@
 import type {ResolvedDocument} from '../composition/resolvedDocument.js';
 import type {DrawDocument,LinkAnnotation} from '../pdf/drawContract.js';
 import {LayoutError} from './textFlow.js';
-// Layout has already fixed line/page positions. Never reshape slices here.
-export function resolveLinkGeometry(document:ResolvedDocument,draw:DrawDocument):void {
- if(document.nodeModelVersion<7)return;
+export function indexDestinations(document:ResolvedDocument,draw:DrawDocument):NonNullable<DrawDocument['anchors']>{
+ if(document.nodeModelVersion<7)return Object.create(null);
  const targets=new Map(Object.values(document.nodes).filter(n=>n.type==='text-block'&&n.props.anchorId!==undefined).map(n=>[n.id,(n as import('../composition/resolvedDocument.js').TextBlock).props.anchorId!]));
  const anchors:NonNullable<DrawDocument['anchors']>=Object.create(null);
  for(const [pageIndex,page] of draw.pages.entries())for(const run of page.commands){
   const anchor=targets.get(run.nodeId);
   if(anchor!==undefined&&!Object.hasOwn(anchors,anchor)&&run.text.trim())anchors[anchor]={pageIndex,xPt:run.bounds.xPt,yPt:run.bounds.yPt};
+ }
+ for(const [id,anchor] of targets)if(!Object.hasOwn(anchors,anchor))throw new LayoutError(id,'Destination has no nonempty positioned line');
+ return anchors;
+}
+// Layout has already fixed line/page positions. Never reshape slices here.
+export function resolveLinkGeometry(document:ResolvedDocument,draw:DrawDocument,provided?:NonNullable<DrawDocument['anchors']>):void {
+ if(document.nodeModelVersion<7)return;
+ const anchors=provided??indexDestinations(document,draw);
+ for(const page of draw.pages)for(const run of page.commands){
   if(!run.links?.length)continue;
   let cursor=run.bounds.xPt;
   const areas=new Map<string,LinkAnnotation>();
@@ -29,7 +37,6 @@ export function resolveLinkGeometry(document:ResolvedDocument,draw:DrawDocument)
   const nonempty=[...areas.values()].filter(a=>a.rect.widthPt>0);
   if(nonempty.length)(page.annotations??=[]).push(...nonempty);
  }
- for(const [id,anchor] of targets)if(!Object.hasOwn(anchors,anchor))throw new LayoutError(id,'Destination has no nonempty positioned line');
- if(targets.size)draw.anchors=anchors;
+ if(Object.keys(anchors).length)draw.anchors=anchors;
  for(const page of draw.pages)for(const a of page.annotations??[])if(a.destination.type==='internal'&&!Object.hasOwn(anchors,a.destination.target))throw new LayoutError(a.nodeId,'Missing positioned destination');
 }

@@ -1,4 +1,6 @@
-import {resolveLinkGeometry} from '../layout/linkGeometry.js';
+import {fillContentsNumbers} from '../layout/fillContentsNumbers.js';
+import {appendPageNumbers} from '../layout/pageNumbers.js';
+import {indexDestinations,resolveLinkGeometry} from '../layout/linkGeometry.js';
 import {mkdtemp,rm,readFile,access} from 'node:fs/promises';
 import {constants} from 'node:fs';
 import {join} from 'node:path';
@@ -32,7 +34,10 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
   try {
    temp=await mkdtemp(join(resources.tempRoot,'flowdoc-pdf-'));
    const draw=await documentFlow(document,deps.runtime,images);
-   resolveLinkGeometry(document,draw);
+   const anchors=indexDestinations(document,draw);
+   await fillContentsNumbers(draw,anchors,deps.runtime);
+   await appendPageNumbers(document,draw,deps.runtime);
+   resolveLinkGeometry(document,draw,anchors);
    const fonts=await deps.subset(draw,resources,temp);
    stage='writer';const bytes=deps.write(draw,fonts,images);
    result={ok:true,value:{bytes,mediaType:'application/pdf',pageCount:draw.pages.length},warnings};
