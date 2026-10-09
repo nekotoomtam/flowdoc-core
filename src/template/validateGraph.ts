@@ -1,7 +1,9 @@
+import {resolveTableGrid,TableGridError} from '../composition/tableGrid.js';
+import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean}
+export interface GraphContext {styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -45,17 +47,23 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    if(!keys(n,['id','type','props','columns','rowIds'])||!object(n.props)||!keys(n.props,['headerRowCount','repeatHeaderRows'])||!Number.isInteger(n.props.headerRowCount)||n.props.headerRowCount<0||n.props.headerRowCount>1||typeof n.props.repeatHeaderRows!=='boolean'||!Array.isArray(n.columns)||!n.columns.length){fail(p);continue;}
    for(const c of n.columns)if(!object(c)||!keys(c,['width'])||!object(c.width)||!keys(c.width,['unit','value'])||!['mm','pt'].includes(c.width.unit)||typeof c.width.value!=='number'||!Number.isFinite(c.width.value)||c.width.value<=0)fail(p+'.columns');
    children=refs(n.rowIds,p+'.rowIds');if(n.props.headerRowCount>children.length)fail(p+'.props.headerRowCount');
-   for(const rid of children){const row=own(nodes,rid)?nodes[rid]:null;if(!object(row)||row.type!=='table-row'||!Array.isArray(row.cellIds)||row.cellIds.length!==n.columns.length)fail(p+'.rowIds');}
+   for(const rid of children){const row=own(nodes,rid)?nodes[rid]:null;if(!object(row)||row.type!=='table-row'||!Array.isArray(row.cellIds)||(!ctx.merged&&row.cellIds.length!==n.columns.length))fail(p+'.rowIds');}
   }else if(n.type==='table-row'){
    if(!keys(n,['id','type','props','cellIds'])||!object(n.props)||!keys(n.props,['allowBreak'])||typeof n.props.allowBreak!=='boolean')fail(p);
-   children=refs(n.cellIds,p+'.cellIds');if(!children.length)fail(p+'.cellIds');
+   children=refs(n.cellIds,p+'.cellIds');if(!children.length&&!ctx.merged)fail(p+'.cellIds');
    for(const cid of children)if(!own(nodes,cid)||nodes[cid]?.type!=='table-cell')fail(p+'.cellIds');
   }else if(n.type==='table-cell'){
-   if(!keys(n,['id','type','props','childIds'])||!object(n.props)||!keys(n.props,[]))fail(p);
+   if(!keys(n,['id','type','props','childIds'])||!object(n.props)||!keys(n.props,ctx.merged?['columnIndex','rowSpan','colSpan']:[]))fail(p);
    children=refs(n.childIds,p+'.childIds');for(const cid of children)if(!own(nodes,cid)||nodes[cid]?.type!=='text-block')fail(p+'.childIds');
   }else fail(p+'.type');
   edges.set(id,children);
   for(const cid of children){if(!own(nodes,cid))fail(p+'.references');parents.set(cid,(parents.get(cid)??0)+1);}
+ }
+
+ if(ctx.merged&&issues.length===0)for(const n of Object.values(nodes))if(n.type==='table'){
+  try{const grid=resolveTableGrid(n as Table,nodes as Record<string,DocumentNode>);
+   for(const c of grid.cells)if(c.rowSpan>1&&grid.rowIds.slice(c.row,c.row+c.rowSpan).some(id=>repeatItems.has(id)))fail(path+'.nodes.'+c.id+'.props.rowSpan',c.id);
+  }catch(e){if(e instanceof TableGridError)fail(path+'.nodes.'+e.nodeId+'.'+e.property,e.nodeId);else fail(path+'.nodes.'+n.id,n.id);}
  }
  currentNode=undefined;
  const roots=refs(input.rootIds,path+'.rootIds');if(!roots.length)fail(path+'.rootIds');

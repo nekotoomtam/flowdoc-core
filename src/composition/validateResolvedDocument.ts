@@ -12,13 +12,13 @@ export function validateResolvedDocument(input:unknown):Issue[] {
  const fail=(path:string,nodeId?:string)=>issues.push({code:'LAYOUT_FAILED',path,message:'Invalid or unsupported resolved document value',...(nodeId?{nodeId}:{})});
  if(!isJson(input)||!object(input)){fail('document');return issues;}
  const d=input;
- if(!keys(d,['schemaVersion','nodeModelVersion','template','book','styles','rootIds','nodes','sourceMap'])||d.schemaVersion!==1||![4,5].includes(d.nodeModelVersion))fail('document');
+ if(!keys(d,['schemaVersion','nodeModelVersion','template','book','styles','rootIds','nodes','sourceMap'])||d.schemaVersion!==1||![4,5,6].includes(d.nodeModelVersion))fail('document');
  if(!object(d.template)||!keys(d.template,['templateId','docKey','version'])||!name(d.template.templateId)||!name(d.template.docKey)||!Number.isInteger(d.template.version)||d.template.version<1)fail('template');
  issues.push(...validateBookStyles(d));
  if(!object(d.styles))return issues;
  if(!Array.isArray(d.rootIds)||d.rootIds.length===0||!d.rootIds.every(name)||!object(d.nodes)||!object(d.sourceMap)){fail('graph');return issues;}
  const empty={type:'object' as const,fields:{}};
- issues.push(...validateGraph({rootIds:d.rootIds,nodes:d.nodes},{styles:d.styles,globalSchema:empty,localSchema:empty,repeats:[],resolved:true,images:d.nodeModelVersion===5},'document').map(i=>({...i,code:'LAYOUT_FAILED'})));
+ issues.push(...validateGraph({rootIds:d.rootIds,nodes:d.nodes},{styles:d.styles,globalSchema:empty,localSchema:empty,repeats:[],resolved:true,images:d.nodeModelVersion>=5,merged:d.nodeModelVersion===6},'document').map(i=>({...i,code:'LAYOUT_FAILED'})));
  const ids=new Set<string>(Object.keys(d.nodes));
  for(const n of Object.values(d.nodes))if(object(n)&&n.type==='text-block'&&Array.isArray(n.children))for(const c of n.children)if(object(c)&&typeof c.id==='string')ids.add(c.id);
  for(const [id,s] of Object.entries(d.sourceMap)){

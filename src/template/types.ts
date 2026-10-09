@@ -11,7 +11,7 @@ export interface Fragment {rootIds:string[];nodes:Record<string,TemplateNode>}
 export interface Repeat {tableId:string;rowTemplateId:string;source:{scope:'global'|'local';key:string}}
 export interface Format {label?:string;description?:string;inputSchema:ObjectSchema;fragment:Fragment;repeats:Repeat[]}
 export interface TemplateDefinition {
- schemaVersion:1;nodeModelVersion:4|5;templateId:string;docKey:string;version:number;name:string;
+ schemaVersion:1;nodeModelVersion:4|5|6;templateId:string;docKey:string;version:number;name:string;
  book:ResolvedDocument['book'];styles:ResolvedDocument['styles'];globalSchema:ObjectSchema;
  formats:Record<string,Format>;examples:{name:string;request:unknown}[];
 }
