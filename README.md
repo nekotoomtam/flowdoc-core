@@ -163,6 +163,23 @@ expected text and result metadata in the artifact directory. Inspect extracted
 text, embedded fonts and rendered pages before claiming visual acceptance; the
 consumer command alone does not perform the host Poppler/visual review.
 
+## Merged tables (model 6)
+
+Development model 6 adds explicitly placed merged table cells. For a table using
+explicit placement, every cell supplies zero-based `columnIndex`; `rowSpan` and
+`colSpan` default to 1. Covered slots have no placeholder nodes. Fully covered
+rows may have empty `cellIds`; intentional empty cells have empty `childIds`.
+Overlaps, holes, out-of-bounds spans, mixed placement, header/body crossing and
+rowspans touching repeated rows are rejected. Horizontal merging in repeated
+rows is supported. Model 4/5 retain their ordinary-table contract.
+
+Merged cells measure text at combined column width. Vertical span height deficits
+extend only the final covered row. Whole lines continue across pages under the
+same logical cell; a protected row remains intact. This does not add images,
+nested tables or column containers inside cells. The packed consumer additionally
+produces `merged-short.pdf` and `merged-long.pdf` for visual inspection.
+
+
 ## Reused implementation
 
 Native source/Cargo.lock and the subset algorithm were extracted from
