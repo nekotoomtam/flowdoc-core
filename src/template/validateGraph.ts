@@ -1,3 +1,4 @@
+import {toPt} from '../composition/resolvedDocument.js';
 import {MAX_CONTENTS_LEVEL,contentsTitle} from '../composition/contents.js';
 import {validateLink} from '../composition/linkContract.js';
 import {resolveTableGrid,TableGridError} from '../composition/tableGrid.js';
@@ -5,7 +6,7 @@ import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean}
+export interface GraphContext {styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -65,8 +66,13 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    children=refs(n.cellIds,p+'.cellIds');if(!children.length&&!ctx.merged)fail(p+'.cellIds');
    for(const cid of children)if(!own(nodes,cid)||nodes[cid]?.type!=='table-cell')fail(p+'.cellIds');
   }else if(n.type==='table-cell'){
-   if(!keys(n,['id','type','props','childIds'])||!object(n.props)||!keys(n.props,ctx.merged?['columnIndex','rowSpan','colSpan']:[]))fail(p);
-   children=refs(n.childIds,p+'.childIds');for(const cid of children)if(!own(nodes,cid)||nodes[cid]?.type!=='text-block')fail(p+'.childIds');
+   if(!keys(n,['id','type','props','childIds'])||!object(n.props)||!keys(n.props,[...(ctx.merged?['columnIndex','rowSpan','colSpan']:[]),...(ctx.cellContent?['padding']:[])]))fail(p);
+   if(object(n.props)&&own(n.props,'padding')){
+    const padding=n.props.padding;
+    if(!ctx.cellContent||!object(padding)||!keys(padding,['top','right','bottom','left']))fail(p+'.props.padding');
+    else for(const [side,v] of Object.entries(padding))if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<0)fail(p+'.props.padding.'+side);
+   }
+   children=refs(n.childIds,p+'.childIds');for(const cid of children)if(!own(nodes,cid)||!['text-block',...(ctx.cellContent?['image']:[])].includes(nodes[cid]?.type))fail(p+'.childIds');
   }else fail(p+'.type');
   edges.set(id,children);
   for(const cid of children){if(!own(nodes,cid))fail(p+'.references');parents.set(cid,(parents.get(cid)??0)+1);}
@@ -74,6 +80,12 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
 
  if(ctx.merged&&issues.length===0)for(const n of Object.values(nodes))if(n.type==='table'){
   try{const grid=resolveTableGrid(n as Table,nodes as Record<string,DocumentNode>);
+   if(ctx.cellContent)for(const c of grid.cells){
+    const padding=nodes[c.id].props.padding;
+    const width=(n as Table).columns.slice(c.column,c.column+c.colSpan).reduce((sum,column)=>sum+toPt(column.width),0);
+    const left=padding?.left===undefined?4:toPt(padding.left),right=padding?.right===undefined?4:toPt(padding.right);
+    if(!Number.isFinite(width-left-right)||width-left-right<=0)fail(path+'.nodes.'+c.id+'.props.padding',c.id);
+   }
    for(const c of grid.cells)if(c.rowSpan>1&&grid.rowIds.slice(c.row,c.row+c.rowSpan).some(id=>repeatItems.has(id)))fail(path+'.nodes.'+c.id+'.props.rowSpan',c.id);
   }catch(e){if(e instanceof TableGridError)fail(path+'.nodes.'+e.nodeId+'.'+e.property,e.nodeId);else fail(path+'.nodes.'+n.id,n.id);}
  }

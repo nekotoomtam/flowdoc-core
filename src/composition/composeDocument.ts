@@ -12,7 +12,7 @@ export function composeDocument(template:ValidatedTemplate,input:PreparedInput):
  const document:ResolvedDocument={schemaVersion:1,nodeModelVersion:t.nodeModelVersion,template:{templateId:t.templateId,docKey:t.docKey,version:t.version},book:structuredClone(t.book),styles:structuredClone(t.styles),rootIds:[],nodes:Object.create(null),sourceMap:Object.create(null)};
  for(const entry of p.content)document.rootIds.push(...expandRows(t.formats[entry.format]!,p.data,entry.data,entry.originalIndex,entry.format,document.nodes,document.sourceMap));
  const empty={type:'object' as const,fields:{}};
- const issues=validateGraph({rootIds:document.rootIds,nodes:document.nodes},{styles:document.styles,globalSchema:empty,localSchema:empty,repeats:[],resolved:true,images:t.nodeModelVersion>=5,merged:t.nodeModelVersion>=6,links:t.nodeModelVersion>=7,contents:t.nodeModelVersion===8});
+ const issues=validateGraph({rootIds:document.rootIds,nodes:document.nodes},{styles:document.styles,globalSchema:empty,localSchema:empty,repeats:[],resolved:true,images:t.nodeModelVersion>=5,merged:t.nodeModelVersion>=6,links:t.nodeModelVersion>=7,contents:t.nodeModelVersion>=8,cellContent:t.nodeModelVersion>=9});
  if(!issues.length&&t.nodeModelVersion>=7)issues.push(...validateDestinations(document));
  return issues.length?{ok:false,issues:issues.map(i=>({...i,code:'INVALID_DATA'})),warnings:checked.warnings}:{ok:true,value:document,warnings:checked.warnings};
 }

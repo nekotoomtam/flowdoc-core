@@ -8,7 +8,7 @@ export function resolveTableGrid(table:Table,nodes:Record<string,DocumentNode>):
  table.rowIds.forEach((rid,row)=>{
   const r=nodes[rid];if(r?.type!=='table-row')return bad(rid,'row');
   r.cellIds.forEach((id,index)=>{const c=nodes[id];if(c?.type!=='table-cell')return bad(id,'cell');
-   const props=c.props;const placed=Object.keys(props).length>0;
+   const props=c.props;const placed=['columnIndex','rowSpan','colSpan'].some(key=>Object.hasOwn(props,key));
    if(placed)explicit=true;else implicit=true;
    const column=placed?props.columnIndex:index,rs=props.rowSpan===undefined?1:props.rowSpan,cs=props.colSpan===undefined?1:props.colSpan;
    if(!Number.isSafeInteger(column)||column!<0||!Number.isSafeInteger(rs)||rs<1||!Number.isSafeInteger(cs)||cs<1)return bad(id,'span');
