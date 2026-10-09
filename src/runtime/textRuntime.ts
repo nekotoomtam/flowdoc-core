@@ -26,7 +26,7 @@ export function decodeShape(raw:any,text:string,sizePt:number):ShapedText{
   cursor+=g.xAdvance*scale;
   return {glyphId:g.glyphId,advancePt:g.xAdvance*scale,offsetXPt:g.xOffset*scale,offsetYPt:g.yOffset*scale,clusterStartOffset:offsets.get(g.cluster)!,clusterEndOffset:offsets.get(starts[starts.indexOf(g.cluster)+1]??Buffer.byteLength(text))!};
  });
- return {glyphs,ascentPt:top,descentPt:bottom,inkLeftPt:left,inkRightPt:right};
+ return {glyphs,ascentPt:top,descentPt:bottom,inkLeftPt:left,inkRightPt:right,glyphInkBoundsPt:raw.glyphs.map((g:any)=>g.ink?{left:(g.xOffset+g.ink.xMin)*scale,right:(g.xOffset+g.ink.xMax)*scale}:null)};
 }
 export function createTextRuntime(resources:ExportResources):TextRuntime{
  return {

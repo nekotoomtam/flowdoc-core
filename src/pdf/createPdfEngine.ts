@@ -1,3 +1,6 @@
+import {fillContentsNumbers} from '../layout/fillContentsNumbers.js';
+import {appendPageNumbers} from '../layout/pageNumbers.js';
+import {indexDestinations,resolveLinkGeometry} from '../layout/linkGeometry.js';
 import {mkdtemp,rm,readFile,access} from 'node:fs/promises';
 import {constants} from 'node:fs';
 import {join} from 'node:path';
@@ -13,22 +16,31 @@ import {LayoutError} from '../layout/textFlow.js';
 import {documentFlow} from '../layout/documentFlow.js';
 import type {TextRuntime} from '../layout/textFlow.js';
 import {writePdf} from './writePdf.js';
+import {validateImageResources,snapshotImageResources} from './imageResources.js';
+import type {PdfImageResources} from './imageResources.js';
 export interface PdfArtifact {bytes:Uint8Array;mediaType:'application/pdf';pageCount:number}
-export interface PdfEngine {generatePdf(document:ResolvedDocument):Promise<Result<PdfArtifact>>}
+export interface PdfEngine {generatePdf(document:ResolvedDocument,images?:PdfImageResources):Promise<Result<PdfArtifact>>}
 interface Dependencies {runtime:TextRuntime;subset:typeof subsetFonts;write:typeof writePdf}
 const fail=(code:string,message:string):Result<never>=>({ok:false,issues:[{code,path:'document',message}],warnings:[]});
 export function createEngine(resources:ExportResources,deps:Dependencies):PdfEngine{
- return {async generatePdf(input){
+ return {async generatePdf(input,imageInput={}){
   const issues=validateResolvedDocument(input);if(issues.length)return {ok:false,issues,warnings:[]};
   // Snapshot before the first await so caller mutation cannot change a running job.
   const document=structuredClone(input);
+  let images:PdfImageResources;
+  try{validateImageResources(imageInput);images=snapshotImageResources(imageInput);}catch{return fail('INVALID_IMAGE_RESOURCE','Prepared image resources are invalid or exceed the memory budget');}
+  const warnings=Object.values(document.nodes).filter(n=>n.type==='image'&&!Object.hasOwn(images,n.props.resourceId)).map(n=>({code:'IMAGE_UNAVAILABLE',path:'nodes.'+n.id,nodeId:n.id,message:'Image unavailable; authored frame retained'}));
   let temp:string|undefined,result:Result<PdfArtifact>,stage='resource';
   try {
    temp=await mkdtemp(join(resources.tempRoot,'flowdoc-pdf-'));
-   const draw=await documentFlow(document,deps.runtime);
+   const draw=await documentFlow(document,deps.runtime,images);
+   const anchors=indexDestinations(document,draw);
+   await fillContentsNumbers(draw,anchors,deps.runtime);
+   await appendPageNumbers(document,draw,deps.runtime);
+   resolveLinkGeometry(document,draw,anchors);
    const fonts=await deps.subset(draw,resources,temp);
-   stage='writer';const bytes=deps.write(draw,fonts);
-   result={ok:true,value:{bytes,mediaType:'application/pdf',pageCount:draw.pages.length},warnings:[]};
+   stage='writer';const bytes=deps.write(draw,fonts,images);
+   result={ok:true,value:{bytes,mediaType:'application/pdf',pageCount:draw.pages.length},warnings};
   }catch(error){
    if(error instanceof LayoutError){const source=document.sourceMap[error.nodeId];result={ok:false,issues:[{code:'LAYOUT_FAILED',path:'nodes.'+error.nodeId,nodeId:error.nodeId,message:error.message,...(source?{contentIndex:source.contentIndex,format:source.format}:{})}],warnings:[]};}
    else result=fail(stage==='writer'?'PDF_RENDER_FAILED':'RESOURCE_UNAVAILABLE',stage==='writer'?'PDF writing failed':'Text or font runtime failed');

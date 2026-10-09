@@ -1,0 +1,9 @@
+import {it,expect} from 'vitest';
+import {contentsDocument} from '../helpers/contents.js';
+import {fakeRuntime} from '../helpers/document.js';
+import {documentFlow} from '../../src/layout/documentFlow.js';
+const left=20*72/25.4;
+it('places levels arithmetically with fixed page-number slots',async()=>{const draw=await documentFlow(contentsDocument(),fakeRuntime);const lines=draw.pages[0]!.commands.filter(c=>c.nodeId==='toc');expect(lines.map(c=>Math.round(c.bounds.xPt-left))).toEqual([0,12,24]);expect(draw.contentsSlots).toHaveLength(3);expect(new Set(draw.contentsSlots!.map(s=>s.xPt)).size).toBe(1);expect(draw.contentsSlots!.every(s=>s.widthPt===36)).toBe(true);});
+it('wraps long titles and preserves one first-line slot across page splits',async()=>{const d=contentsDocument(1,'หัวข้อยาว '.repeat(700));const draw=await documentFlow(d,fakeRuntime);expect(draw.pages.length).toBeGreaterThan(2);expect(draw.contentsSlots).toHaveLength(1);expect(draw.contentsSlots![0]!.pageIndex).toBe(0);const toc=draw.pages.flatMap(p=>p.commands).filter(c=>c.nodeId==='toc');expect(toc.length).toBeGreaterThan(40);expect(toc.every(c=>c.links?.[0]?.link.type==='reference')).toBe(true);});
+it('places contents after content, handles several contents pages and empty lists',async()=>{const d=contentsDocument(100);d.rootIds.push(d.rootIds.shift());const draw=await documentFlow(d,fakeRuntime);expect(draw.contentsSlots).toHaveLength(100);expect(draw.contentsSlots![0]!.pageIndex).toBeGreaterThan(0);const empty=await documentFlow(contentsDocument(0),fakeRuntime);expect(empty.pages).toHaveLength(1);expect(empty.pages[0]!.commands).toEqual([]);expect(empty.contentsSlots??[]).toEqual([]);});
+it('rejects insufficient title width instead of consuming the number column',async()=>{const d=contentsDocument();d.book.page.margin.right={value:210-20-45*25.4/72,unit:'mm'};await expect(documentFlow(d,fakeRuntime)).rejects.toThrow();});

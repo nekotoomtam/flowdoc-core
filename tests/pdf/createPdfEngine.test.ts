@@ -1,4 +1,6 @@
-import {it,expect,afterEach} from 'vitest';
+import {contentsDocument} from '../helpers/contents.js';
+import * as flow from '../../src/layout/documentFlow.js';
+import {it,expect,afterEach,vi} from 'vitest';
 import {mkdtemp,readdir,rm,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
@@ -39,4 +41,9 @@ it('returns structured failures for deep invalid graphs',async()=>{
  const deep:any=document();deep.nodes={};deep.rootIds=['n0'];deep.sourceMap={n0:{contentIndex:0,format:'bad',sourceId:'n0'}};
  for(let i=0;i<10000;i++)deep.nodes['n'+i]={id:'n'+i,type:'table-cell',props:{},childIds:i<9999?['n'+(i+1)]:[]};
  await expect(engine.generatePdf(deep)).resolves.toMatchObject({ok:false,issues:expect.arrayContaining([expect.objectContaining({code:'LAYOUT_FAILED'})])});
+});
+
+it('lays out contents exactly once and fills linked numbers before subsetting',async()=>{
+ const spy=vi.spyOn(flow,'documentFlow'),r=await setup();let seen=false;
+ try{const engine=createEngine(r,{runtime:fakeRuntime,subset:async(draw)=>{seen=true;expect(draw.contentsSlots).toBeUndefined();expect(draw.anchors?.h0).toBeDefined();expect(draw.pages[0]!.commands.some(c=>c.id==='contents-number-0')).toBe(true);expect(draw.pages[0]!.commands.at(-1)!.id).toBe('page-number-0');return [];},write:()=>new Uint8Array([1])});expect((await engine.generatePdf(contentsDocument(3))).ok).toBe(true);expect(seen).toBe(true);expect(spy).toHaveBeenCalledTimes(1);}finally{spy.mockRestore();}
 });

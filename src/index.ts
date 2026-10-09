@@ -7,6 +7,13 @@ export type { Result, Issue } from './result.js';
 export {validateTemplate} from './template/validateTemplate.js';
 export {prepareGeneration} from './data/prepareGeneration.js';
 export {composeDocument} from './composition/composeDocument.js';
-export type {TemplateDefinition,ValidatedTemplate,Format,Fragment,Repeat,ObjectSchema,StringField,ArrayField,FieldRef,TemplateNode} from './template/types.js';
+export type {TemplateDefinition,ValidatedTemplate,Format,Fragment,Repeat,ObjectSchema,StringField,ImageField,TemplateImageBlock,ArrayField,FieldRef,TemplateNode} from './template/types.js';
 export type {PreparedInput,PreparedData} from './data/types.js';
 export type {DocumentNode,Table,TableRow,TableCell} from './composition/resolvedDocument.js';
+export type {ImageBlock} from './composition/resolvedDocument.js';
+export type {PreparedPdfImage,PdfImageResources} from './pdf/imageResources.js';
+
+export type {BoundLink} from './composition/linkContract.js';
+export type {LinkField,ScalarBinding,TemplateLink,TemplateInline} from './template/types.js';
+
+export type {ContentsBlock} from './composition/resolvedDocument.js';

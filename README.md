@@ -163,6 +163,23 @@ expected text and result metadata in the artifact directory. Inspect extracted
 text, embedded fonts and rendered pages before claiming visual acceptance; the
 consumer command alone does not perform the host Poppler/visual review.
 
+## Merged tables (model 6)
+
+Development model 6 adds explicitly placed merged table cells. For a table using
+explicit placement, every cell supplies zero-based `columnIndex`; `rowSpan` and
+`colSpan` default to 1. Covered slots have no placeholder nodes. Fully covered
+rows may have empty `cellIds`; intentional empty cells have empty `childIds`.
+Overlaps, holes, out-of-bounds spans, mixed placement, header/body crossing and
+rowspans touching repeated rows are rejected. Horizontal merging in repeated
+rows is supported. Model 4/5 retain their ordinary-table contract.
+
+Merged cells measure text at combined column width. Vertical span height deficits
+extend only the final covered row. Whole lines continue across pages under the
+same logical cell; a protected row remains intact. This does not add images,
+nested tables or column containers inside cells. The packed consumer additionally
+produces `merged-short.pdf` and `merged-long.pdf` for visual inspection.
+
+
 ## Reused implementation
 
 Native source/Cargo.lock and the subset algorithm were extracted from
@@ -173,3 +190,37 @@ Italic and BoldItalic ship with their SIL Open Font License in `assets/fonts/OFL
 The derivative subset helper uses explicit output names rather than the source
 font's reserved family name. Runtime packaging currently targets the pinned Debian
 Bookworm images only; other platforms are not claimed as verified.
+
+## Model 7 links and destinations
+
+Model 7 retains image and merged-cell support and adds inline `url` (value),
+`link` (text/url) and `reference` (text/target) commands. External destinations
+accept absolute HTTP/HTTPS URLs without credentials or control characters.
+TextBlock `props.anchorId` identifies the first nonblank positioned line, including
+inside cells; duplicate/missing or entirely empty destinations fail export.
+
+A `link` schema field accepts one of those command objects without an inline id.
+It can also occur in an array item schema. A field-ref inserts the typed command;
+optional omission emits nothing, while supplied empty strings/null are invalid.
+String-valued command properties and anchorId also accept scoped string bindings
+`{scope:'global'|'local'|'item',key:'fieldName'}` in templates.
+
+PDF hit areas follow existing glyph clusters and line/page placement, including
+wrapped labels and repeated table headers. Adjacent links sharing an inseparable
+cluster fail rather than choosing an ambiguous destination. Text styling is
+unchanged. Automatic contents lists and DOCX links are outside this package slice.
+
+## Contents (model 8, development 0.1.5)
+
+Mark TextBlocks with `props.toc: {level: 1}` (initial levels 1–3) and a unique
+`anchorId`. Insert one root `table-of-contents` with `props.textStyleId`. Bound
+visible titles, including TextBlocks in cells, follow authored document order.
+Titles and their actual physical page numbers link to the first positioned heading.
+Three levels are an initial validation limit; the stored level is numeric.
+
+Contents use 12 pt indentation per level, a 12 pt gap and a fixed 36 pt number
+column. Page numbers are filled after one pagination; a number that does not fit
+fails. Model 8 documents with a contents node also receive temporary bottom-right
+physical page numbers (regular 10 pt / 14 pt line box, bottom margin at least 18 pt).
+No alternate numbering, generic footer controls or automatic heading inference.
+See `fixtures/contents/template.json`. Existing models 4–7 retain their behavior.
