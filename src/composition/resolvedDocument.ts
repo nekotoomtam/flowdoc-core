@@ -1,12 +1,13 @@
+import type {BoundLink} from './linkContract.js';
 export interface Length {value:number;unit:'mm'|'pt'}
 export interface TextStyle {
   fontFamilyKey:'sarabun';fontWeight:'normal'|'bold';fontStyle?:'normal'|'italic';
   fontSize:{value:number;unit:'pt'};lineHeightPt:number;
 }
-export type TextInline={id:string;type:'text';text:string}|{id:string;type:'line-break'};
+export type TextInline={id:string;type:'text';text:string}|{id:string;type:'line-break'}|({id:string}&BoundLink);
 export interface TextBlock {
   id:string;type:'text-block';role:{role:'paragraph'};
-  props:{textStyleId:string;sizing?:{mode:'content'}};children:TextInline[];
+  props:{textStyleId:string;sizing?:{mode:'content'};anchorId?:string};children:TextInline[];
 }
 export interface SourceEntry {contentIndex:number;format:string;sourceId:string;itemIndex?:number}
 export interface Table {id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean};columns:{width:Length}[];rowIds:string[]}
@@ -15,7 +16,7 @@ export interface TableCell {id:string;type:'table-cell';props:{columnIndex?:numb
 export interface ImageBlock {id:string;type:'image';props:{width:Length;height:Length;align?:'left'|'center'|'right';resourceId:string}}
 export type DocumentNode=TextBlock|Table|TableRow|TableCell|ImageBlock;
 export interface ResolvedDocument {
-  schemaVersion:1;nodeModelVersion:4|5|6;template:{templateId:string;docKey:string;version:number};
+  schemaVersion:1;nodeModelVersion:4|5|6|7;template:{templateId:string;docKey:string;version:number};
   book:{contentSlot:'body';page:{size:'A4';orientation:'portrait'|'landscape';margin:{top:Length;right:Length;bottom:Length;left:Length}}};
   styles:Record<string,TextStyle>;rootIds:string[];nodes:Record<string,DocumentNode>;sourceMap:Record<string,SourceEntry>;
 }

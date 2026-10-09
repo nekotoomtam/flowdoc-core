@@ -28,7 +28,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
   return {id:row.id,allowBreak:row.props.allowBreak,cells,height:Math.max(0,...cells.map(c=>c.lines.reduce((sum,l)=>sum+l.heightPt,0)))+2*pad};
  };
  const table=async(t:Table)=>{
-  if(d.nodeModelVersion===6&&t.rowIds.some(rid=>{const r=d.nodes[rid];return r?.type==='table-row'&&r.cellIds.some(cid=>{const c=d.nodes[cid];return c?.type==='table-cell'&&Object.keys(c.props).length>0;});})){
+  if(d.nodeModelVersion>=6&&t.rowIds.some(rid=>{const r=d.nodes[rid];return r?.type==='table-row'&&r.cellIds.some(cid=>{const c=d.nodes[cid];return c?.type==='table-cell'&&Object.keys(c.props).length>0;});})){
    await mergedTableFlow(d,t,runtime,{top,bottom,left,availableWidth:available,get y(){return y;},set y(v){y=v;},nextPage,emitLine,border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId){current.borders??=[];current.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,widthPt:0.5,color:'000000'});}});return;
   }
   const widths=t.columns.map(c=>toPt(c.width));
