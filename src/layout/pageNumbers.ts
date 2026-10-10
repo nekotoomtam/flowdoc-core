@@ -9,11 +9,12 @@ export async function appendPageNumbers(document:ResolvedDocument,draw:DrawDocum
  if(!node)return;
  const style:TextStyle={fontFamilyKey:'sarabun',fontWeight:'normal',fontSize:{value:10,unit:'pt'},lineHeightPt:14};
  for(const [i,page] of draw.pages.entries()){
+ if(page.pageRole==='cover'||page.pageRole==='blank')continue;
  const section=(document.nodeModelVersion===12||document.nodeModelVersion===13)?document.sections!.find(s=>s.sectionId===page.sectionId):undefined;
  const margin=(section?.page??document.book.page).margin,bottom=toPt(margin.bottom),left=toPt(margin.left),right=toPt(margin.right);
  if(bottom<18)throw new LayoutError(section?.rootIds[0]??node.id,'Bottom margin must be at least 18 pt for page numbers');
 
-  const run=await measureNumber(node.id,String(i+1),style,page.widthPt-left-right,runtime);
+  const run=await measureNumber(node.id,String(page.countedPageNumber??i+1),style,page.widthPt-left-right,runtime);
   page.commands.push({...run,id:`page-number-${i}`,bounds:{...run.bounds,xPt:left+run.bounds.xPt,yPt:page.heightPt-bottom+(bottom-14)/2}});
  }
 }
