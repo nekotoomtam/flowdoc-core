@@ -7,9 +7,18 @@ import {join} from 'node:path';
 import {createEngine} from '../../src/pdf/createPdfEngine.js';
 import {document,fakeRuntime} from '../helpers/document.js';
 import type {ExportResources} from '../../src/runtime/exportResources.js';
+import {sectionTemplate,composed} from '../helpers/sections.js';
 const dirs:string[]=[];
 afterEach(async()=>{for(const d of dirs.splice(0))await rm(d,{recursive:true,force:true});});
 async function setup(){const tempRoot=await mkdtemp(join(tmpdir(),'flowdoc-engine-'));dirs.push(tempRoot);return {tempRoot,pythonExecutable:'python',shaperPath:'shaper',segmenterPath:'segmenter',subsetHelperPath:'subset',fonts:[]} as ExportResources;}
+it('attributes page-number space failure to the failing section rather than the TOC',async()=>{
+ const t=sectionTemplate(),f=t.sections[0].source.fragment;
+ f.rootIds=['toc'];f.nodes={toc:{id:'toc',type:'table-of-contents',props:{textStyleId:'body'}}};
+ t.formats['section-note'].fragment.nodes.note.props.anchorId='heading';t.formats['section-note'].fragment.nodes.note.props.toc={level:1};
+ t.pageLayouts.wide.page.margin.bottom={value:0,unit:'pt'};
+ const d=composed(t),engine=createEngine(await setup(),{runtime:fakeRuntime,subset:async()=>[],write:()=>new Uint8Array()});
+ const result=await engine.generatePdf(d);expect(result).toMatchObject({ok:false,issues:[{code:'LAYOUT_FAILED',sectionId:'main',nodeId:d.sections![1]!.rootIds[0]}]});
+});
 it('uses separate temporary directories for overlapping calls and cleans both',async()=>{
  const r=await setup(),seen:string[]=[];
  const engine=createEngine(r,{runtime:fakeRuntime,subset:async(_d,_r,temp)=>{seen.push(temp);await writeFile(join(temp,'test'),'x');await new Promise(resolve=>setTimeout(resolve,5));return [];},write:()=>new Uint8Array([1])});
@@ -47,3 +56,4 @@ it('lays out contents exactly once and fills linked numbers before subsetting',a
  const spy=vi.spyOn(flow,'documentFlow'),r=await setup();let seen=false;
  try{const engine=createEngine(r,{runtime:fakeRuntime,subset:async(draw)=>{seen=true;expect(draw.contentsSlots).toBeUndefined();expect(draw.anchors?.h0).toBeDefined();expect(draw.pages[0]!.commands.some(c=>c.id==='contents-number-0')).toBe(true);expect(draw.pages[0]!.commands.at(-1)!.id).toBe('page-number-0');return [];},write:()=>new Uint8Array([1])});expect((await engine.generatePdf(contentsDocument(3))).ok).toBe(true);expect(seen).toBe(true);expect(spy).toHaveBeenCalledTimes(1);}finally{spy.mockRestore();}
 });
+it('reports the owning band and section when a real bound header overflows',async()=>{const {bandTemplate}=await import('../helpers/bands.js');const {validateTemplate}=await import('../../src/template/validateTemplate.js');const {prepareGeneration}=await import('../../src/data/prepareGeneration.js');const {composeDocument}=await import('../../src/composition/composeDocument.js');const t=bandTemplate();t.header.sizing={mode:'fixed',height:{value:24,unit:'pt'}};const v=validateTemplate(t);if(!v.ok)throw Error(JSON.stringify(v));const p=prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:'body'},header:{projectName:'line\nline\nline'},footer:{projectName:'footer'},content:[]});if(!p.ok)throw Error(JSON.stringify(p));const d=composeDocument(v.value,p.value);if(!d.ok)throw Error(JSON.stringify(d));const engine=createEngine(await setup(),{runtime:fakeRuntime,subset:async()=>[],write:()=>new Uint8Array()});expect(await engine.generatePdf(d.value)).toMatchObject({ok:false,issues:[{sectionId:'intro',path:'header.nodes.band-header~title'}]});});

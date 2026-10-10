@@ -1,19 +1,22 @@
+import {authoredHosts} from './pageSections.js';
 import type {TemplateDefinition,AreaField,AreaFormat,Format} from './types.js';
 import type {Issue} from '../result.js';
 import {object,keys,name,issue,own} from './checks.js';
 import {validateSchemas} from './validateSchemas.js';
 import {validateGraph} from './validateGraph.js';
 import {validateValues} from '../data/validateValues.js';
-export interface AreaDefinition {scope:'global'|'local';hostFormat?:string;key:string;field:AreaField;formatsByKey:Map<string,{id:string;format:AreaFormat}>}
+export interface AreaDefinition {scope:'global'|'section'|'local';sectionId?:string|undefined;hostFormat?:string|undefined;key:string;field:AreaField;formatsByKey:Map<string,{id:string;format:AreaFormat}>}
 export interface AreaIndex {byId:Map<string,AreaDefinition>}
 export function buildAreaIndex(t:TemplateDefinition):AreaIndex {
  const byId=new Map<string,AreaDefinition>();
- const add=(fields:Record<string,any>,scope:'global'|'local',hostFormat?:string)=>{for(const [key,field] of Object.entries(fields))if(field.type==='area')byId.set(field.areaId,{scope,...(hostFormat===undefined?{}:{hostFormat}),key,field,formatsByKey:new Map()});};
- add(t.globalSchema.fields,'global');for(const [key,f] of Object.entries(t.formats))add(f.inputSchema.fields,'local',key);
+ const add=(fields:Record<string,any>,scope:'global'|'section'|'local',hostFormat?:string,sectionId?:string|undefined)=>{for(const [key,field] of Object.entries(fields))if(field.type==='area')byId.set(field.areaId,{scope,hostFormat,sectionId,key,field,formatsByKey:new Map()});};
+ add(t.globalSchema.fields,'global');
+ if((t.nodeModelVersion===15||t.nodeModelVersion===16))for(const s of t.sections){add(s.inputSchema.fields,'section',undefined,s.id);for(const [key,f] of Object.entries(s.formats))add(f.inputSchema.fields,'local',key,s.id);}
+ else for(const [key,f] of Object.entries(t.formats))add(f.inputSchema.fields,'local',key);
  for(const [id,f] of Object.entries(t.areaFormats??{}))byId.get(f.ownerAreaId)?.formatsByKey.set(f.key,{id,format:f});
  return {byId};
 }
-export function validateAreas(t:TemplateDefinition):Issue[]{
+export function validateAreas(t:import('./types.js').LegacyTemplateDefinition):Issue[]{
  const issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_TEMPLATE',p)),seen=new Set<string>();
  for(const schema of [t.globalSchema,...Object.values(t.formats).map(f=>f.inputSchema)])for(const field of Object.values(schema.fields))if(field.type==='area'){if(seen.has(field.areaId))fail('areaId');seen.add(field.areaId);}
  if(t.areaFormats!==undefined&&!object(t.areaFormats)){fail('areaFormats');return issues;}
@@ -25,14 +28,14 @@ export function validateAreas(t:TemplateDefinition):Issue[]{
   const owner=index.byId.get(f.ownerAreaId),nk=JSON.stringify([f.ownerAreaId,f.key]);if(!owner||names.has(nk))fail(p+'.ownerAreaId');names.add(nk);
   const schemaOk=validateSchemas(f.inputSchema,p+'.inputSchema',issues,false,true,true,true,false);
   if(!Array.isArray(f.repeats)||(f.cellRepeats!==undefined&&!Array.isArray(f.cellRepeats)))fail(p+'.repeats');
-  else if(schemaOk)issues.push(...validateGraph(f.fragment,{styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,repeats:f.repeats,images:true,merged:true,links:true,contents:true,cellContent:true,itemImages:true,cellRepeats:f.cellRepeats??[]},p+'.fragment'));
+  else if(schemaOk)issues.push(...validateGraph(f.fragment,{heightModes:t.nodeModelVersion>=13,styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,repeats:f.repeats,images:true,merged:true,links:true,contents:true,cellContent:true,itemImages:true,cellRepeats:f.cellRepeats??[]},p+'.fragment'));
  }
  const placements=new Map<string,number>();
- for(const [host,f] of Object.entries(t.formats)){
+ for(const {host,f,authored} of [...Object.entries(t.formats).map(([host,f])=>({host,f,authored:false})),...authoredHosts(t).map(([host,f])=>({host,f,authored:true}))]){
   const nodes=f.fragment.nodes as Record<string,any>;
   for(const n of Object.values(nodes))if(n.type==='area'){
    const id=n.props.areaId,p='formats.'+host+'.fragment.nodes.'+n.id,owner=index.byId.get(id);placements.set(id,(placements.get(id)??0)+1);
-   if(!owner||owner.scope==='local'&&owner.hostFormat!==host){fail(p);continue;}
+   if(!owner||owner.scope==='local'&&(authored||owner.hostFormat!==host)){fail(p);continue;}
    const cell=Object.values(nodes).find(c=>c.type==='table-cell'&&c.childIds.includes(n.id));
    if(cell){
     const row=Object.values(nodes).find(r=>r.type==='table-row'&&r.cellIds.includes(cell.id));

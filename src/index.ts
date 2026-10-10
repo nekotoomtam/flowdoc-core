@@ -20,3 +20,9 @@ export type {ContentsBlock} from './composition/resolvedDocument.js';
 
 export {readGenerationJson} from './data/readGenerationJson.js';
 export type {AreaField,AreaEntry,AreaFormat,TemplateArea} from './template/types.js';
+
+export type {Template15,Section15,BindingScope} from './template/types.js';
+export type {PreparedSection} from './data/types.js';
+
+export type {Template16,Section16,PageNumbering} from "./template/types.js";
+export type {SystemPageField} from "./composition/resolvedDocument.js";

@@ -6,10 +6,10 @@ Owner: flowdoc-core. This README describes this package's local build and resour
 and PDF API. Shared MVP scope and status belong to Project Control's
 `docs/domains/flowdoc-export-mvp-r2-runtime-plan-2026-10-07.md`.
 
-Development 0.1.8 validates templates, binds typed data and renders TextBlocks,
+Version 0.2.0 validates templates, binds typed data and renders TextBlocks,
 images, merged tables, cell repeats, Area subformats, links and contents to PDF.
 There is no HTTP server or database here. Start with the Thai
-[template guide](docs/template-guide.md) for model 4–11 contracts and examples.
+[template guide](docs/template-guide.md) for model 4–16 contracts and examples.
 
 ## Template and data API
 
@@ -36,7 +36,7 @@ Supported item types depend on the node model; see the template guide. Required
 missing fields fail even with defaults; optional absent fields use their declared
 default or `""`/`[]`. Supplied wrong types/null fail without coercion. Unknown
 business fields are ignored with warnings; unknown formats are skipped. At least
-one accepted invocation is required. Envelope properties are strict. Examples in
+one accepted invocation is required in legacy content-only models; newer authored sections can supply the document roots. Envelope properties are strict. Examples in
 the template must validate without either errors or warnings.
 
 Persist PreparedInput as JSON if needed and keep the original request separately.
@@ -230,3 +230,39 @@ fails. Model 8 documents with a contents node also receive temporary bottom-righ
 physical page numbers (regular 10 pt / 14 pt line box, bottom margin at least 18 pt).
 No alternate numbering, generic footer controls or automatic heading inference.
 See `fixtures/contents/template.json`. Existing models 4–7 retain their behavior.
+## Section-owned inputs (model 15)
+
+Model 15 declares each section with stable `id`, caller-facing `key`,
+`inputSchema`, `formats` and optional `header`/`footer`. Requests use shared
+`data` plus `sections.<key>.data/header/footer/content`. Section order comes
+from the template. Omitted objects use defaults/required rules; unknown section
+keys reject the complete request. Header/footer values belong to their own section.
+
+Bindings explicitly select `global`, `section`, `header`, `footer`, `local`
+or array `item` where allowed. There is no fallback between namespaces.
+Document-global Areas retain one placement, including after prepared-input reload.
+Invalid authored Area defaults fail template validation. Cover/blank exclusions,
+existing overflow limits and A4 portrait/landscape rules still apply.
+
+See `fixtures/section-ownership/{template,request}.json` and the packed
+`section-ownership.pdf` consumer output. Models 4–14 keep their prior contract;
+there is no automatic migration, DOCX or frontend adapter in this change.
+
+## System page fields (model 16)
+
+Creators place `{id,type:"system-page-field",field:"current"|"total",width}`
+inside header/footer TextBlocks. Width is a positive mm/pt slot; overflow fails
+with Section/node/field context. Callers still send only normal input values.
+
+Section `numbering` supports `continue` (default), `restart` with optional
+positive `startAt` (default 1), or `exclude`; visibility is `show` or `hide`.
+Total counts participating pages across the document. Cover is excluded/hidden;
+blank is counted/hidden by default. Hide preserves space and suppresses the entire
+TextBlock containing fields. No fields means no automatic footer number.
+TOC uses counted numbers even when the page hides them. Selected headings on
+excluded pages keep their clickable title and an empty number slot. Cover
+headings remain absent; duplicate/missing destinations remain invalid.
+
+See `fixtures/page-numbering`. After `npm run check:package`, inspect the PDFs
+and run `python tests/consumer/checkPageNumberingPdf.py <artifact-directory>`
+with pypdf available. This read-only artifact check is not a runtime dependency.

@@ -6,7 +6,7 @@ import {measureText} from './measureText.js';
 import type {MeasuredLine} from './measureText.js';
 import {LayoutError} from './textFlow.js';
 import type {TextRuntime} from './textFlow.js';
-export interface TablePageSink {top:number;bottom:number;left:number;availableWidth:number;y:number;nextPage():void;emitLine(line:MeasuredLine,x:number,y:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
+export interface TablePageSink {top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;nextPage():void;emitLine(line:MeasuredLine,x:number,y:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
 interface Cell extends GridCell {lines:{line:MeasuredLine;offset:number;drawn:boolean}[]}
 const pad=4,eps=1e-6;
 export async function mergedTableFlow(d:ResolvedDocument,t:Table,runtime:TextRuntime,s:TablePageSink):Promise<void>{

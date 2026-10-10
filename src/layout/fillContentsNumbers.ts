@@ -9,10 +9,14 @@ export async function measureNumber(nodeId:string,text:string,style:TextStyle,wi
  if(right-left>widthPt+1e-6||shaped.ascentPt+shaped.descentPt>style.lineHeightPt+1e-6)throw new LayoutError(nodeId,'Page number ink does not fit the reserved slot');
  return {nodeId,kind:'glyph-run',text,fontId,fontSizePt:style.fontSize.value,lineHeightPt:style.lineHeightPt,baselineOffsetPt:shaped.ascentPt+(style.lineHeightPt-shaped.ascentPt-shaped.descentPt)/2,color:'000000',bounds:{xPt:widthPt-right,yPt:0,widthPt:advance,heightPt:style.lineHeightPt},glyphs:shaped.glyphs,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{})};
 }
-export async function fillContentsNumbers(draw:DrawDocument,anchors:NonNullable<DrawDocument['anchors']>,runtime:TextRuntime):Promise<void>{
+export async function fillContentsNumbers(draw:DrawDocument,anchors:NonNullable<DrawDocument['anchors']>,runtime:TextRuntime,systemNumbers=false):Promise<void>{
  for(const [i,slot] of (draw.contentsSlots??[]).entries()){
   const target=anchors[slot.anchorId];if(!target)throw new LayoutError(slot.nodeId,'Missing contents destination');
-  const text=String(target.pageIndex+1),id=`contents-number-${i}`,run=await measureNumber(slot.nodeId,text,slot.style,slot.widthPt,runtime);
+  const page=draw.pages[target.pageIndex];
+  if(systemNumbers&&!page?.pageNumbering)throw new LayoutError(slot.nodeId,'Missing contents target numbering metadata');
+  // Excluded pages retain their title link and reserved number-column geometry.
+  if(systemNumbers&&page!.pageNumbering!.current===null)continue;
+  const text=String(systemNumbers?page!.pageNumbering!.current:page!.countedPageNumber??target.pageIndex+1),id=`contents-number-${i}`,run=await measureNumber(slot.nodeId,text,slot.style,slot.widthPt,runtime);
   draw.pages[slot.pageIndex]!.commands.push({...run,id,bounds:{...run.bounds,xPt:slot.xPt+run.bounds.xPt,yPt:slot.yPt},sourceStart:0,links:[{id,start:0,end:text.length,link:{type:'reference',text,target:slot.anchorId}}]});
  }
  delete draw.contentsSlots;

@@ -1,3 +1,4 @@
+import {prepareSections} from './prepareSections.js';
 import {buildAreaIndex} from '../template/areas.js';
 import type {Result,Issue} from '../result.js';
 import type {ValidatedTemplate,TemplateDefinition} from '../template/types.js';
@@ -9,12 +10,15 @@ export function prepareGeneration(template:ValidatedTemplate,input:unknown):Resu
 }
 // Registration examples use this operation without recursively registering a template.
 export function prepareWithDefinition(t:TemplateDefinition,fingerprint:string,input:unknown):Result<PreparedInput>{
+ if((t.nodeModelVersion===15||t.nodeModelVersion===16))return prepareSections(t,fingerprint,input);
  const issues:Issue[]=[],warnings:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_DATA',p));
  if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_DATA','request')],warnings};
- if(!keys(input,['docKey','version','data','content']))fail('request');
+ if(!keys(input,['docKey','version','data','content',...(t.nodeModelVersion===14?['header','footer']:[])]))fail('request');
  if(input.docKey!==t.docKey)fail('docKey');if(own(input,'version')&&input.version!==t.version)fail('version');
  const areaIndex=t.nodeModelVersion>=11?buildAreaIndex(t):undefined;
  const data=validateValues(t.globalSchema,input.data,'data',issues,warnings,'request',!own(input,'data'),areaIndex);
+ const bands:Pick<PreparedInput,'header'|'footer'>={};
+ if(t.nodeModelVersion===14)for(const k of ['header','footer'] as const){const def=t[k];if(def)bands[k]=validateValues(def.inputSchema,own(input,k)?input[k]:{},k,issues,warnings,'request',false);else if(own(input,k)){if(!object(input[k]))fail(k);else for(const key of Object.keys(input[k]))warnings.push({...issue('UNKNOWN_VARIABLE',k+'.'+key),action:'ignored'});}}
  const content:PreparedInput['content']=[],skippedContentIndices:number[]=[];
  if(!Array.isArray(input.content))fail('content');else input.content.forEach((entry:unknown,index:number)=>{
   const p=`content[${index}]`;
@@ -30,8 +34,9 @@ export function prepareWithDefinition(t:TemplateDefinition,fingerprint:string,in
   if(before===issues.length)content.push({originalIndex:index,format,data:local});
  });
  if(areaIndex)for(const a of areaIndex.byId.values())if(a.scope==='global'){const count=content.filter(c=>Object.values(t.formats[c.format]!.fragment.nodes).some(n=>n.type==='area'&&n.props.areaId===a.field.areaId)).length;if(count>1)fail('content');}
- if(!content.length)issues.push(issue('EMPTY_CONTENT','content','No accepted content'));
+ if((t.nodeModelVersion===12||t.nodeModelVersion===13||t.nodeModelVersion===14)&&!t.sections.some(s=>s.source.kind==='content')&&Array.isArray(input.content)&&input.content.length)fail('content');
+ if(!content.length&&((t.nodeModelVersion!==12&&t.nodeModelVersion!==13&&t.nodeModelVersion!==14)||!t.sections.some(s=>s.source.kind==='authored'||(t.nodeModelVersion>=13&&s.source.kind==='blank'))))issues.push(issue('EMPTY_CONTENT','content','No accepted content'));
  if(issues.length)return {ok:false,issues,warnings};
- const value:PreparedInput={schemaVersion:1,template:{templateId:t.templateId,docKey:t.docKey,version:t.version,fingerprint},data,content,originalContentCount:input.content.length,skippedContentIndices,warnings:structuredClone(warnings)};
+ const value:PreparedInput={...bands,schemaVersion:1,template:{templateId:t.templateId,docKey:t.docKey,version:t.version,fingerprint},data,content,originalContentCount:input.content.length,skippedContentIndices,warnings:structuredClone(warnings)};
  return {ok:true,value,warnings};
 }

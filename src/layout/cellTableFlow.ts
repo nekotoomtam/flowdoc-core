@@ -7,7 +7,7 @@ import type {MeasuredCellItem,PaddingPt} from './measureCellContent.js';
 
 import {LayoutError} from './textFlow.js';
 import type {TextRuntime} from './textFlow.js';
-export interface CellTablePageSink {top:number;bottom:number;left:number;availableWidth:number;y:number;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
+export interface CellTablePageSink {top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
 interface Cell extends GridCell {padding:PaddingPt;contentWidth:number;lines:{line:MeasuredCellItem;offset:number;drawn:boolean}[]}
 const eps=1e-6;
 export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRuntime,s:CellTablePageSink):Promise<void>{
@@ -27,7 +27,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
  const body=cells.filter(c=>c.row>=headerCount).map(c=>({...c,row:c.row-headerCount}));
  const rowIds=t.rowIds.slice(headerCount);
  const headerHeight=headerCount?Math.max(0,...headerCells.map(c=>(c.lines.at(-1)?.offset??c.padding.top)+(c.lines.at(-1)?.line.heightPt??0)+c.padding.bottom)):0;
- if(headerHeight>s.bottom-s.top+eps)throw new LayoutError(t.id,'Header exceeds page content height');
+ if(headerHeight>Math.max(s.bottom-s.top,s.nextCapacity??0)+eps)throw new LayoutError(t.id,'Header exceeds page content height');
  const geometry=()=>{const heights=rowIds.map(()=>0),ordered=[...body].sort((a,b)=>a.row+a.rowSpan-b.row-b.rowSpan||a.row-b.row||a.column-b.column);
   for(const c of ordered.filter(c=>c.rowSpan===1))heights[c.row]=Math.max(heights[c.row]!, (c.lines.at(-1)?.offset??c.padding.top)+(c.lines.at(-1)?.line.heightPt??0)+c.padding.bottom);
   for(const c of ordered.filter(c=>c.rowSpan>1)){const need=(c.lines.at(-1)?.offset??c.padding.top)+(c.lines.at(-1)?.line.heightPt??0)+c.padding.bottom,have=heights.slice(c.row,c.row+c.rowSpan).reduce((a,b)=>a+b,0);if(need>have)heights[c.row+c.rowSpan-1]!+=need-have;}
@@ -46,14 +46,14 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
    for(const [lo,hi] of e.segments.slice(1)){if(lo<=b+eps)b=Math.max(b,hi);else{emit();a=lo;b=hi;}}emit();}
  };
  const drawHeader=()=>{for(const c of headerCells)for(const l of c.lines)l.drawn=false;paint(headerCells,[0,headerHeight],0,headerHeight,s.y);s.y+=headerHeight;};
- const fullBodyHeight=s.bottom-s.top-(t.props.repeatHeaderRows?headerHeight:0);
+ const fullBodyHeight=Math.max(s.bottom-s.top,s.nextCapacity??0)-(t.props.repeatHeaderRows?headerHeight:0);
  for(const c of body)if(c.padding.top+c.padding.bottom>fullBodyHeight+eps)throw new LayoutError(c.id,'Cell padding exceeds printable page');
  if(!rowIds.length||geometry().ys.at(-1)!<=eps){if(s.y+headerHeight>s.bottom+eps)s.nextPage();if(headerCount)drawHeader();return;}
  let from=0,first=true;
  while(true){let g=geometry();if(from>=g.ys.at(-1)!-eps)break;
   const hh=first||t.props.repeatHeaderRows?headerHeight:0,capacity=s.bottom-s.y-hh;
-  const full=s.bottom-s.top-(t.props.repeatHeaderRows?headerHeight:0);
-  for(const [i,id] of rowIds.entries()){const r=d.nodes[id];if(r?.type==='table-row'&&!r.props.allowBreak&&g.heights[i]!>full+eps)throw new LayoutError(id,'Protected row exceeds page');}
+  const full=Math.max(s.bottom-s.top,s.nextCapacity??0)-(t.props.repeatHeaderRows?headerHeight:0);
+  for(const [i,id] of rowIds.entries()){const r=d.nodes[id];if(r?.type==='table-row'&&!r.props.allowBreak&&g.ys[i+1]!>from+eps&&g.heights[i]!>full+eps)throw new LayoutError(id,'Protected row exceeds page');}
   for(const c of body)for(const l of c.lines)if(!l.drawn&&l.line.heightPt+c.padding.top+c.padding.bottom>full+eps)throw new LayoutError(l.line.nodeId,l.line.kind==='image-frame'?'Image frame cannot fit with table header and padding':'Next whole line cannot fit with header');
   let cut=Math.min(g.ys.at(-1)!,from+capacity);
   const pending=body.flatMap(c=>c.lines.filter(l=>!l.drawn).map(l=>({start:g.ys[c.row]!+l.offset,end:g.ys[c.row]!+l.offset+l.line.heightPt+c.padding.bottom})));
@@ -67,7 +67,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
   const hasLine=pending.some(l=>l.start>=from-eps&&l.end<=cut+eps);
   const startsHere=pending.some(l=>l.start<cut+eps);
   if(cut<=from+eps||(!hasLine&&startsHere)){
-   if(s.y>s.top+eps){s.nextPage();continue;}throw new LayoutError(t.id,'Merged row made no progress');
+   if(s.y>s.top+eps||(s.nextCapacity??0)>s.bottom-s.top+eps){s.nextPage();continue;}throw new LayoutError(t.id,'Merged row made no progress');
   }
   // Keep each cell's next line whole. Carry its remaining offsets into the next
   // fragment; any resulting height deficit still belongs to its ending row.
