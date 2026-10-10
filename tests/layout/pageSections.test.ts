@@ -12,6 +12,13 @@ it('starts sections on new pages with independent dimensions and no duplicate te
  expect(r.pages[1]!.widthPt).toBeGreaterThan(r.pages[0]!.widthPt);
  expect(r.pages.flatMap(p=>p.commands).map(c=>c.text)).toEqual(['Demo','โครงการ Demo: Body','Demo']);
 });
+it('does not insert an extra page when the preceding section exactly fills its page',async()=>{
+ const t=sectionTemplate(),margin=t.pageLayouts.normal.page.margin;
+ margin.top={value:20,unit:'pt'};margin.bottom={value:297*72/25.4-20-t.styles.body.lineHeightPt,unit:'pt'};
+ const r=await documentFlow(composed(t),fakeRuntime);
+ expect(r.pages.map(p=>p.sectionId)).toEqual(['intro','main']);
+ expect(r.pages[0]!.commands[0]!.bounds.yPt).toBe(20);
+});
 it('uses global contents and cross-section destinations',async()=>{
  const t=sectionTemplate();const f=t.sections[0].source.fragment;
  f.rootIds=['toc'];f.nodes={toc:{id:'toc',type:'table-of-contents',props:{textStyleId:'body'}}};
