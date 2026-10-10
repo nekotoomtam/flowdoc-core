@@ -7,7 +7,7 @@ import {LayoutError} from './textFlow.js';
 export interface MeasuredLine {heightPt:number;run?:Omit<GlyphRun,'id'>}
 export async function measureText(node:TextBlock,style:TextStyle,available:number,runtime:TextRuntime):Promise<MeasuredLine[]>{
  let raw='',rawSpans:LinkSpan[]=[];
- for(const c of node.children){const start=raw.length;raw+=c.type==='text'?c.text:c.type==='line-break'?'\n':linkLabel(c);if(c.type==='url'||c.type==='link'||c.type==='reference')rawSpans.push({id:c.id,start,end:raw.length,link:c});}
+ for(const c of node.children){const start=raw.length;raw+=c.type==='system-page-field'?'':c.type==='text'?c.text:c.type==='line-break'?'\n':linkLabel(c);if(c.type==='url'||c.type==='link'||c.type==='reference')rawSpans.push({id:c.id,start,end:raw.length,link:c});}
  const normalizedOffset=(offset:number)=>raw.slice(0,offset).replace(/\r\n?/g,'\n').length;
  const spans=rawSpans.map(s=>({...s,start:normalizedOffset(s.start),end:normalizedOffset(s.end)}));
  const id=node.id,epsilon=1e-6,size=style.fontSize.value,lineHeight=style.lineHeightPt;

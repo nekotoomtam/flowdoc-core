@@ -6,7 +6,7 @@ import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat,CellRepeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
+export interface GraphContext {pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -63,6 +63,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    for(const [i,c] of n.children.entries()){
     const cp=p+`.children[${i}]`;if(!object(c)){fail(cp);continue;}unique(c.id,cp+'.id');
     if(c.type==='text'){if(!keys(c,['id','type','text'])||!text(c.text)||!c.text.length)fail(cp);}
+    else if(c.type==='system-page-field'){if(!ctx.pageFields||!keys(c,['id','type','field','width'])||!['current','total'].includes(c.field)||!object(c.width)||!keys(c.width,['value','unit'])||!['mm','pt'].includes(c.width.unit)||typeof c.width.value!=='number'||!Number.isFinite(c.width.value)||c.width.value<=0||!Number.isFinite(toPt(c.width as any)))fail(cp);}
     else if(c.type==='line-break'){if(!keys(c,['id','type']))fail(cp);}
     else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.'))fail(cp);}
     else if(ctx.links&&['url','link','reference'].includes(c.type)){

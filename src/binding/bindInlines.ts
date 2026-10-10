@@ -10,6 +10,7 @@ export function bindInlines(children:TemplateInline[],scopes:BindingScopes,prefi
   const base=prefix+child.id+(itemIndex===undefined?'':`~item-${itemIndex}`);
   const source:SourceEntry={...origin,sourceId:child.id,...itemIndex===undefined?{}:{itemIndex}};
   const add=(leaf:TextInline)=>{out.push(leaf);sourceMap[leaf.id]={...source};};
+  if(child.type==='system-page-field'){add({...structuredClone(child),id:base});continue;}
   if(child.type==='line-break'){add({id:base,type:'line-break'});continue;}
   if(child.type==='url'||child.type==='link'||child.type==='reference'){
    const command=Object.fromEntries(Object.entries(child).map(([key,value])=>[key,key==='id'?base:key==='type'?value:resolveScalar(value as ScalarBinding,scopes)]));

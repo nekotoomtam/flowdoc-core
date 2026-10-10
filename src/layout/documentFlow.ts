@@ -19,7 +19,7 @@ interface Row {id:string;allowBreak:boolean;cells:Cell[];height:number}
 const pad=4,epsilon=1e-6;
 export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images:PdfImageResources={}):Promise<DrawDocument>{
  // Preserve the established text-only drawing contract and exact PDF identity.
- if((d.nodeModelVersion!==12&&d.nodeModelVersion!==13&&d.nodeModelVersion!==14&&d.nodeModelVersion!==15)&&d.rootIds.every(id=>d.nodes[id]?.type==='text-block'))return textFlow(d,runtime);
+ if((d.nodeModelVersion!==12&&d.nodeModelVersion!==13&&d.nodeModelVersion!==14&&(d.nodeModelVersion!==15&&d.nodeModelVersion!==16))&&d.rootIds.every(id=>d.nodes[id]?.type==='text-block'))return textFlow(d,runtime);
  let widthPt=0,heightPt=0,left=0,top=0,bottom=0,available=0,innerTop=0,innerBottom=0;
  let modes:{headerMode?:BandMode;footerMode?:BandMode}={},bands:Partial<Record<'header'|'footer',MeasuredBand>>={};
  let activeBands:Pick<ResolvedDocument,'header'|'footer'>=d;
@@ -101,12 +101,12 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
    }
   }
  };
- const sections=(d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||d.nodeModelVersion===15)?d.sections!:[{role:undefined,sourceKind:undefined,sectionId:undefined,page:d.book.page,rootIds:d.rootIds}];
+ const sections=(d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||(d.nodeModelVersion===15||d.nodeModelVersion===16))?d.sections!:[{role:undefined,sourceKind:undefined,sectionId:undefined,page:d.book.page,rootIds:d.rootIds}];
  for(const section of sections){
- if((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||d.nodeModelVersion===15)&&!section.rootIds.length&&!(d.nodeModelVersion>=13&&(section.role==='cover'||section.sourceKind==='blank')))continue;
+ if((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||(d.nodeModelVersion===15||d.nodeModelVersion===16))&&!section.rootIds.length&&!(d.nodeModelVersion>=13&&(section.role==='cover'||section.sourceKind==='blank')))continue;
  sectionId=section.sectionId;sectionPageIndex=0;cover=d.nodeModelVersion>=13&&section.role==='cover';pageRole=cover?'cover':section.sourceKind==='blank'?'blank':'body';setPage(section.page);innerTop=top;innerBottom=bottom;modes=section as typeof modes;bands={};
- activeBands=d.nodeModelVersion===15?section as Pick<ResolvedDocument,'header'|'footer'>:d;
- if(d.nodeModelVersion>=14&&pageRole==='body')for(const k of ['header','footer'] as const){const b=activeBands[k];if(!b||modes[k==='header'?'headerMode':'footerMode']==='none')continue;const key=(d.nodeModelVersion===15?sectionId+':':'')+k+':'+available;let m=bandCache.get(key);if(!m){try{m=await measurePageBand(b,d.styles,available,runtime,images);}catch(e){if(e instanceof LayoutError)throw new LayoutError(e.nodeId,e.message,sectionId,k+'.nodes.'+e.nodeId);throw e;}bandCache.set(key,m);}bands[k]=m;}
+ activeBands=(d.nodeModelVersion===15||d.nodeModelVersion===16)?section as Pick<ResolvedDocument,'header'|'footer'>:d;
+ if(d.nodeModelVersion>=14&&pageRole==='body')for(const k of ['header','footer'] as const){const b=activeBands[k];if(!b||modes[k==='header'?'headerMode':'footerMode']==='none')continue;const key=((d.nodeModelVersion===15||d.nodeModelVersion===16)?sectionId+':':'')+k+':'+available;let m=bandCache.get(key);if(!m){try{m=await measurePageBand(b,d.styles,available,runtime,images);}catch(e){if(e instanceof LayoutError)throw new LayoutError(e.nodeId,e.message,sectionId,k+'.nodes.'+e.nodeId);throw e;}bandCache.set(key,m);}bands[k]=m;}
  nextPage();
  for(const id of section.rootIds){activeNode=id;const n=d.nodes[id];if(n?.type==='table')await table(n);else if(n?.type==='text-block'){
   if(n.props.heightMode==='fixed'){

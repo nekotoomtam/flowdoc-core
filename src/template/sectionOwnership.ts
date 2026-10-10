@@ -1,3 +1,4 @@
+import {validateNumbering} from './pageNumbering.js';
 import {createHash} from 'node:crypto';
 import {object,keys,name,own,isJson,issue,canonical,freeze} from './checks.js';
 import {validateSchemas} from './validateSchemas.js';
@@ -7,14 +8,14 @@ import {validateGraph} from './validateGraph.js';
 import {buildAreaIndex} from './areas.js';
 import {validateValues} from '../data/validateValues.js';
 import {prepareSections} from '../data/prepareSections.js';
-import type {Template15,Format,Section15,ValidatedTemplate,ObjectSchema} from './types.js';
+import type {ScopedTemplate,Format,Section15,ValidatedTemplate,ObjectSchema} from './types.js';
 import type {Issue,Result} from '../result.js';
 const empty:ObjectSchema={type:'object',fields:{}};
 export function validateOwnedTemplate(input:unknown):Result<ValidatedTemplate>{
  const issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_TEMPLATE',p));
  if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_TEMPLATE','template')],warnings:[]};
  const t=structuredClone(input) as any;
- if(!keys(t,['schemaVersion','nodeModelVersion','templateId','docKey','version','name','book','styles','globalSchema','examples','pageLayouts','sections','areaFormats'])||t.schemaVersion!==1||t.nodeModelVersion!==15)fail('template');
+ if(!keys(t,['schemaVersion','nodeModelVersion','templateId','docKey','version','name','book','styles','globalSchema','examples','pageLayouts','sections','areaFormats'])||t.schemaVersion!==1||(t.nodeModelVersion!==15&&t.nodeModelVersion!==16))fail('template');
  for(const k of ['templateId','docKey','name'])if(!name(t[k]))fail(k);
  if(!Number.isInteger(t.version)||t.version<1)fail('version');
  validateSchemas(t.globalSchema,'globalSchema',issues,false,true,true,true,true);
@@ -23,6 +24,7 @@ export function validateOwnedTemplate(input:unknown):Result<ValidatedTemplate>{
  const schemas:any[]=[t.globalSchema];
  for(const [i,s] of (Array.isArray(t.sections)?t.sections:[]).entries()){
   const p=`sections[${i}]`;if(!object(s)){fail(p);continue;}
+  if(t.nodeModelVersion===16)issues.push(...validateNumbering(s,p));
   if(!name(s.key)||s.key.includes('.')||seen.has(s.key))fail(p+'.key');else seen.add(s.key);
   validateSchemas(s.inputSchema,p+'.inputSchema',issues,false,true,true,true,true);schemas.push(s.inputSchema);
   if(!object(s.formats))fail(p+'.formats');else for(const [key,f] of Object.entries(s.formats)){
@@ -33,7 +35,7 @@ export function validateOwnedTemplate(input:unknown):Result<ValidatedTemplate>{
    if(!Array.isArray(f.repeats)||(own(f,'cellRepeats')&&!Array.isArray(f.cellRepeats)))fail(fp+'.repeats');
    else if(!issues.length)issues.push(...validateOwnedGraph(t,s as unknown as Section15,f as unknown as Format,fp));
   }
-  for(const k of ['header','footer'])if(own(s,k)&&!issues.length)issues.push(...validatePageBand(s[k],t.styles,p+'.'+k,false,{global:t.globalSchema,section:s.inputSchema,[k]:s[k]?.inputSchema}));
+  for(const k of ['header','footer'])if(own(s,k)&&!issues.length)issues.push(...validatePageBand(s[k],t.styles,p+'.'+k,false,{global:t.globalSchema,section:s.inputSchema,[k]:s[k]?.inputSchema},p,t.nodeModelVersion===16));
  }
  if(issues.length)return {ok:false,issues,warnings:[]};
  issues.push(...validatePageSections(t));
@@ -50,8 +52,8 @@ export function validateOwnedTemplate(input:unknown):Result<ValidatedTemplate>{
  }
  return issues.length?{ok:false,issues,warnings:[]}:{ok:true,value:freeze({definition:t,fingerprint}),warnings:[]};
 }
-function validateOwnedGraph(t:Template15,s:Section15,f:Format,path:string,areas=true):Issue[]{return validateGraph(f.fragment,{styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,scopeSchemas:{global:t.globalSchema,section:s.inputSchema,local:f.inputSchema},repeats:f.repeats,cellRepeats:f.cellRepeats??[],heightModes:true,images:true,merged:true,links:true,contents:true,cellContent:true,itemImages:true,areas},path+'.fragment');}
-function validateOwnedAreas(t:Template15):Issue[]{
+function validateOwnedGraph(t:ScopedTemplate,s:Section15,f:Format,path:string,areas=true):Issue[]{return validateGraph(f.fragment,{styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,scopeSchemas:{global:t.globalSchema,section:s.inputSchema,local:f.inputSchema},repeats:f.repeats,cellRepeats:f.cellRepeats??[],heightModes:true,images:true,merged:true,links:true,contents:true,cellContent:true,itemImages:true,areas},path+'.fragment');}
+function validateOwnedAreas(t:ScopedTemplate):Issue[]{
  const issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_TEMPLATE',p)),index=buildAreaIndex(t),placements=new Map<string,{section:Section15;count:number}>();
  for(const s of t.sections)for(const [host,f] of [...Object.entries(s.formats),...(s.source.kind==='authored'?[['',s.source] as const]:[])])for(const n of Object.values(f.fragment.nodes))if(n.type==='area'){
   const a=index.byId.get(n.props.areaId),p=`sections.${s.key}.area.${n.props.areaId}`;

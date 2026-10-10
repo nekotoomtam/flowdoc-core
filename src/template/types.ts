@@ -40,4 +40,8 @@ export interface PageBandDefinition {inputSchema:ObjectSchema<StringField|ImageF
 
 export interface Section15 extends TemplateSection {key:string;inputSchema:ObjectSchema;formats:Record<string,Format>;header?:PageBandDefinition;footer?:PageBandDefinition}
 export type Template15=Omit<TemplateBase,'header'|'footer'|'formats'>&{nodeModelVersion:15;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:Section15[]};
-export type TemplateDefinition=LegacyTemplateDefinition|Template15;
+export interface Section16 extends Section15 {numbering?:PageNumbering}
+export type Template16=Omit<Template15,"nodeModelVersion"|"sections">&{nodeModelVersion:16;sections:Section16[]};
+export type ScopedTemplate=Template15|Template16;
+export type TemplateDefinition=LegacyTemplateDefinition|ScopedTemplate;
+export type PageNumbering={mode:"continue";visibility?:"show"|"hide"}|{mode:"restart";startAt?:number;visibility?:"show"|"hide"}|{mode:"exclude";visibility?:"show"|"hide"};

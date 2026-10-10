@@ -4,7 +4,7 @@ import {LayoutError} from '../layout/textFlow.js';
 // Current model support ceiling; indentation and stored level stay numeric.
 export const MAX_CONTENTS_LEVEL=3;
 export interface ContentsEntry {nodeId:string;anchorId:string;level:number;title:string}
-export const contentsTitle=(node:TextBlock):string=>node.children.map(c=>c.type==='text'?c.text:c.type==='line-break'?' ':linkLabel(c)).join('').replace(/\s+/gu,' ').trim();
+export const contentsTitle=(node:TextBlock):string=>node.children.map(c=>c.type==='system-page-field'?'':c.type==='text'?c.text:c.type==='line-break'?' ':linkLabel(c)).join('').replace(/\s+/gu,' ').trim();
 export function collectContents(document:ResolvedDocument):ContentsEntry[]{
  const roots=document.nodeModelVersion>=13?document.sections!.filter(s=>s.role!=='cover').flatMap(s=>s.rootIds):document.rootIds;
  const result:ContentsEntry[]=[],pending=[...roots].reverse();

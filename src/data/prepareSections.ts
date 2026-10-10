@@ -1,11 +1,11 @@
-import type {Template15,Section15,ValidatedTemplate} from '../template/types.js';
+import type {ScopedTemplate,Section15,ValidatedTemplate} from '../template/types.js';
 import type {PreparedInput,PreparedSection} from './types.js';
 import type {Result,Issue} from '../result.js';
 import {object,keys,own,isJson,name,issue,canonical} from '../template/checks.js';
 import {buildAreaIndex} from '../template/areas.js';
 import {validateValues} from './validateValues.js';
 import {validatePreparedInput} from '../composition/validatePreparedInput.js';
-export function prepareSections(t:Template15,fingerprint:string,input:unknown):Result<PreparedInput>{
+export function prepareSections(t:ScopedTemplate,fingerprint:string,input:unknown):Result<PreparedInput>{
  const issues:Issue[]=[],warnings:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_DATA',p));
  if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_DATA','request')],warnings};
  if(!keys(input,['docKey','version','data','sections']))fail('request');
@@ -34,8 +34,8 @@ export function prepareSections(t:Template15,fingerprint:string,input:unknown):R
  return {ok:true,value:{schemaVersion:1,template:{templateId:t.templateId,docKey:t.docKey,version:t.version,fingerprint},data,sections,content:[],originalContentCount:0,skippedContentIndices:[],warnings:structuredClone(warnings)},warnings};
 }
 // Reuse legacy index/warning integrity checks with a scoped view, never a persisted conversion.
-function proxy(t:Template15,s?:Section15):any {const base={...t,nodeModelVersion:14,globalSchema:s?.inputSchema??t.globalSchema,formats:s?.formats??{},sections:[{id:'validate',source:{kind:'authored',fragment:{rootIds:[],nodes:{}},repeats:[]} },...(s?.source.kind==='content'?[{id:'content',source:{kind:'content'}}]:[])]};delete (base as any).header;delete (base as any).footer;return {...base,...(s?.header?{header:s.header}:{}),...(s?.footer?{footer:s.footer}:{})};}
-export function validatePreparedSections(template:ValidatedTemplate&{definition:Template15},input:unknown):Result<PreparedInput>{
+function proxy(t:ScopedTemplate,s?:Section15):any {const base={...t,nodeModelVersion:14,globalSchema:s?.inputSchema??t.globalSchema,formats:s?.formats??{},sections:[{id:'validate',source:{kind:'authored',fragment:{rootIds:[],nodes:{}},repeats:[]} },...(s?.source.kind==='content'?[{id:'content',source:{kind:'content'}}]:[])]};delete (base as any).header;delete (base as any).footer;return {...base,...(s?.header?{header:s.header}:{}),...(s?.footer?{footer:s.footer}:{})};}
+export function validatePreparedSections(template:ValidatedTemplate&{definition:ScopedTemplate},input:unknown):Result<PreparedInput>{
  const t=template.definition,index=buildAreaIndex(t),issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_DATA',p));
  if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_DATA','prepared')],warnings:[]};
  const p=input;

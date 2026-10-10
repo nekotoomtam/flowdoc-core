@@ -6,7 +6,7 @@ import type {PreparedInput} from '../data/types.js';
 import {object,keys,own,name,isJson,issue} from '../template/checks.js';
 import {validateValues} from '../data/validateValues.js';
 export function validatePreparedInput(template:ValidatedTemplate,input:unknown):Result<PreparedInput>{
- if(template.definition.nodeModelVersion===15)return validatePreparedSections(template as import('../template/types.js').ValidatedTemplate&{definition:import('../template/types.js').Template15},input);
+ if((template.definition.nodeModelVersion===15||template.definition.nodeModelVersion===16))return validatePreparedSections(template as import('../template/types.js').ValidatedTemplate&{definition:import('../template/types.js').ScopedTemplate},input);
  const issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_DATA',p));
  if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_DATA','prepared')],warnings:[]};
  const p=input,t=template.definition,areaIndex=t.nodeModelVersion>=11?buildAreaIndex(t):undefined;
