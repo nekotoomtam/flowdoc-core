@@ -29,7 +29,7 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
   const document=structuredClone(input);
   let images:PdfImageResources;
   try{validateImageResources(imageInput);images=snapshotImageResources(imageInput);}catch{return fail('INVALID_IMAGE_RESOURCE','Prepared image resources are invalid or exceed the memory budget');}
-  const warnings=Object.values(document.nodes).filter(n=>n.type==='image'&&!Object.hasOwn(images,n.props.resourceId)).map(n=>({code:'IMAGE_UNAVAILABLE',path:'nodes.'+n.id,nodeId:n.id,message:'Image unavailable; authored frame retained'}));
+  const warnings=[...Object.values(document.nodes),...Object.values(document.header?.nodes??{}),...Object.values(document.footer?.nodes??{})].filter(n=>n.type==='image'&&!Object.hasOwn(images,n.props.resourceId)).map(n=>({code:'IMAGE_UNAVAILABLE',path:'nodes.'+n.id,nodeId:n.id,message:'Image unavailable; authored frame retained'}));
   let temp:string|undefined,result:Result<PdfArtifact>,stage='resource';
   try {
    temp=await mkdtemp(join(resources.tempRoot,'flowdoc-pdf-'));
@@ -42,7 +42,7 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
    stage='writer';const bytes=deps.write(draw,fonts,images);
    result={ok:true,value:{bytes,mediaType:'application/pdf',pageCount:draw.pages.length},warnings};
   }catch(error){
-   if(error instanceof LayoutError){const source=document.sourceMap[error.nodeId];result={ok:false,issues:[{code:'LAYOUT_FAILED',path:'nodes.'+error.nodeId,nodeId:error.nodeId,message:error.message,...(source?.origin==='authored'?{sectionId:source.sectionId}:source?{contentIndex:source.contentIndex,format:source.format,...(source.sectionId?{sectionId:source.sectionId}:{})}:{})}],warnings:[]};}
+   if(error instanceof LayoutError){const source=document.sourceMap[error.nodeId];result={ok:false,issues:[{code:'LAYOUT_FAILED',path:error.path??'nodes.'+error.nodeId,...(error.sectionId?{sectionId:error.sectionId}:{}),nodeId:error.nodeId,message:error.message,...(source?.origin==='authored'?{sectionId:source.sectionId}:source?{contentIndex:source.contentIndex,format:source.format,...(source.sectionId?{sectionId:source.sectionId}:{})}:{})}],warnings:[]};}
    else result=fail(stage==='writer'?'PDF_RENDER_FAILED':'RESOURCE_UNAVAILABLE',stage==='writer'?'PDF writing failed':'Text or font runtime failed');
   }finally{
    if(temp)try{await rm(temp,{recursive:true,force:true});}catch{result=fail('RESOURCE_UNAVAILABLE','Temporary output cleanup failed');}
