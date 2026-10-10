@@ -1,8 +1,8 @@
-# คู่มือสร้างแม่แบบ FlowDoc Core 0.1.9
+# คู่มือสร้างแม่แบบ FlowDoc Core 0.1.10
 
 ## Authority Boundary
 
-Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.1.9 รองรับ
+Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.1.10 รองรับ
 ไม่ใช่ roadmap หรือการรับรอง release สถานะร่วมและข้อจำกัดที่ตกลงอยู่ใน
 flowdoc-project-control `docs/domains/flowdoc-export-node-structure-draft-2026-10-09.md`
 วิธี import/publish และเรียก HTTP อยู่ใน [คู่มือ Service](../../flowdoc-service/docs/usage.md)
@@ -256,3 +256,33 @@ Resolved sections เก็บ page ที่ normalize แล้วและ ro
 เลขหน้าชั่วคราวจากสารบัญยังเป็นเลขหน้าจริง และทุกส่วนต้องมีขอบล่างอย่างน้อย18pt
 เมื่อใช้เลขหน้าชั่วคราวนี้ ยังไม่มี cover role, fixed-height, คำสั่งหน้าเปล่า,
 หัวท้าย หรือการเริ่มนับเลขหน้าใหม่ใน model12 รอบนี้
+
+## Model13: ปก กล่องจองความสูง และหน้าเปล่า
+
+ใช้ `nodeModelVersion:13` ร่วมกับ pageLayouts/sections แบบ model12
+กำหนด `role:"cover"` ที่ section แรกเท่านั้นและใช้ authored source
+ปกเกิดหนึ่งหน้าเสมอแม้ไม่มี root; ปกล้นหยุดด้วย LAYOUT_FAILED พร้อมต้นทาง
+หัวข้อทุกระดับบนปกไม่เข้าสารบัญอัตโนมัติ แต่ anchor บนปกยังเป็นปลายทางลิงก์ได้
+
+TextBlock ที่เป็น root โดยตรงบนปกใช้ props ต่อไปนี้ได้:
+
+```json
+{"textStyleId":"body","heightMode":"fixed","height":{"value":30,"unit":"mm"},"verticalAlign":"center"}
+```
+
+height ต้องมากกว่า0 หน่วย mm/pt, verticalAlign เป็น top(default)/center/bottom
+กรอบว่างยังจองความสูง; explicit line-break ใช้พื้นที่บรรทัดตามปกติ
+ข้อความเกินกรอบหรือผลรวมเกินปกหยุดออก PDF ไม่ตัด/ย่อหรือดันไปหน้าต่อ
+fixed ไม่รองรับใน Area formats, cells, body หรือ content formats
+ไม่ส่ง heightMode หรือใช้ content เป็นการสูงตามเนื้อหาเดิม; ห้ามส่ง height/verticalAlign
+ร่วมกับ content และห้ามส่ง sizing เดิมร่วมกับ fixed
+
+แทรกหน้าเปล่าด้วย section `{"id":"blank-1","source":{"kind":"blank"}}`
+หนึ่ง section เท่ากับหนึ่งหน้า ไม่มี fragment; ใช้ pageLayoutId ตามปกติ
+body ว่างยังข้าม แต่ cover/blank ที่ประกาศชัดเจนไม่ข้าม
+ปกไม่นับเลข; หน้าถัดไปเริ่ม1 หน้า blank ถูกนับแต่ไม่วาดเลข
+เลขท้ายหน้าชั่วคราวยังเกิดเมื่อมี TOC และใช้เลขเดียวกับสารบัญ
+ลิงก์ใช้หน้าจริงเสมอ model4–12 คงพฤติกรรมเดิม
+
+ตัวอย่างครบ: fixtures/cover-pages/template.json และ request.json
+ขอบเขตการพัฒนาร่วมอยู่ใน Project Control docs/domains/flowdoc-page-system-r2-design-2026-10-10.md

@@ -18,3 +18,13 @@ it('rejects image and table continuation within a cover',async()=>{
  }
 });
 
+it('accepts the exact fixed boundary and rejects the next line without changing content mode',async()=>{
+ const t=fixture('one\ntwo','top',36);t.styles.body.lineHeightPt=18;
+ const d=composed(t),draw=await documentFlow(d,fakeRuntime);expect(draw.pages[0]!.commands.find(c=>c.text==='AFTER')!.bounds.yPt).toBeCloseTo(20*72/25.4+36);
+ t.sections[0].source.fragment.nodes.title.props.height.value=35.9;await expect(documentFlow(composed(t),fakeRuntime)).rejects.toBeDefined();
+ const ys=[];for(const text of ['one','one\ntwo']){const c=fixture(text),p=c.sections[0].source.fragment.nodes.title.props;delete p.height;delete p.verticalAlign;p.heightMode='content';ys.push((await documentFlow(composed(c),fakeRuntime)).pages[0]!.commands.find(c=>c.text==='AFTER')!.bounds.yPt);}expect(ys[1]!-ys[0]!).toBe(18);
+});
+it('uses equal frame space in mm and pt and keeps intentional first and last blank pages',async()=>{
+ const positions=[];for(const height of [{value:25.4,unit:'mm'},{value:72,unit:'pt'}]){const t=fixture('one');t.sections[0].source.fragment.nodes.title.props.height=height;positions.push((await documentFlow(composed(t),fakeRuntime)).pages[0]!.commands.find(c=>c.text==='AFTER')!.bounds.yPt);}expect(positions[0]).toBeCloseTo(positions[1]!);
+ const t=coverTemplate();t.sections=[{id:'first',source:{kind:'blank'}},t.sections[1],{id:'last',source:{kind:'blank'}}];const draw=await documentFlow(composed(t,[]),fakeRuntime);expect(draw.pages.map(p=>p.sectionId)).toEqual(['first','last']);expect(draw.pages.map(p=>p.countedPageNumber)).toEqual([1,2]);
+});
