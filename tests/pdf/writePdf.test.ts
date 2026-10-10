@@ -6,6 +6,26 @@ const resource = {fontId:'font-regular',subsetBytes:font,subsetPrefix:'FDTEST',p
 const run = {id:'run',nodeId:'text',kind:'glyph-run' as const,text:'ก',fontId:'font-regular',fontSizePt:14,lineHeightPt:24,baselineOffsetPt:18,color:'000000',bounds:{xPt:40,yPt:40,widthPt:100,heightPt:24},glyphs:[{glyphId:1,advancePt:8,offsetXPt:0,offsetYPt:0,clusterStartOffset:0,clusterEndOffset:1}]};
 const draw = {pages:[{widthPt:595.28,heightPt:841.89,backgroundColor:'FFFFFF',commands:[run]}]};
 describe('private PDF writer',()=>{
+  it('exports more than 65535 repeated glyph occurrences across pages',()=>{
+    const line={...run,text:'ก'.repeat(100),glyphs:Array.from({length:100},(_,i)=>({...run.glyphs[0]!,advancePt:4,clusterStartOffset:i,clusterEndOffset:i+1}))};
+    const pages=Array.from({length:700},(_,i)=>({...draw.pages[0]!,commands:[{...line,id:`repeat-${i}`}]}));
+    const pdf=Buffer.from(writePdf({pages},[resource])).toString('latin1');
+    expect(pdf).toContain('/Count 700');
+    expect((pdf.match(/<0001> <0E01>/g)??[]).length).toBe(1);
+    expect(pdf).not.toContain('<0002> <0E01>');
+  });
+  it('keeps distinct Unicode assignments and advances while reusing identical CIDs',()=>{
+    const commands=[run,{...run,id:'different-unicode',text:'ข'},{...run,id:'different-width',glyphs:[{...run.glyphs[0]!,advancePt:7}]},{...run,id:'repeat'}];
+    const pdf=Buffer.from(writePdf({pages:[{...draw.pages[0]!,commands}]},[resource])).toString('latin1');
+    expect(pdf).toContain('<0001> <0E01>');expect(pdf).toContain('<0002> <0E02>');expect(pdf).toContain('<0003> <0E01>');
+    expect(pdf).not.toContain('<0004> <0E01>');
+  });
+  it('preserves per-occurrence horizontal offsets when a CID is reused',()=>{
+    const shifted={...run,id:'shifted',glyphs:[{...run.glyphs[0]!,offsetXPt:2}]};
+    const pdf=Buffer.from(writePdf({pages:[{...draw.pages[0]!,commands:[run,shifted]}]},[resource])).toString('latin1');
+    expect(pdf).toContain('[-142.857143 <0001>] TJ');
+    expect(pdf).not.toContain('<0002> <0E01>');
+  });
   it('writes PDF objects, Unicode and valid byte xref offsets',()=>{
     const bytes=Buffer.from(writePdf(draw,[resource])); const text=bytes.toString('latin1');
     expect(text.startsWith('%PDF-1.7')).toBe(true);expect(text).toContain('/ToUnicode');expect(text).toContain('FEFF0E01');

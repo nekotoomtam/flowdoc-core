@@ -21,7 +21,7 @@ export function writePdf(draw: DrawDocument, resources: PdfFontResource[],images
   const usages = [...used].map((fontId,index)=>{
     const resource=resources.find(r=>r.fontId===fontId);
     if(!resource || !/^[A-Z]{6}$/.test(resource.subsetPrefix) || !/^[A-Za-z][A-Za-z0-9-]*$/.test(resource.postScriptName))throw Error('Invalid font resource');
-    return {asset:{fontId},resource,metrics:parseSfnt(resource.subsetBytes),pdfResourceName:`F${index+1}`,pdfBaseFontName:`${resource.subsetPrefix}+${resource.postScriptName}`,glyphs:[] as ResolvedGlyph[]};
+    return {asset:{fontId},resource,metrics:parseSfnt(resource.subsetBytes),pdfResourceName:`F${index+1}`,pdfBaseFontName:`${resource.subsetPrefix}+${resource.postScriptName}`,glyphs:[] as ResolvedGlyph[],cids:new Map<string,ResolvedGlyph>()};
   });
   const runs=new Map<string,ResolvedGlyph[]>();
   for(const page of draw.pages)for(const command of page.commands){
@@ -31,8 +31,13 @@ export function writePdf(draw: DrawDocument, resources: PdfFontResource[],images
     const resolved=command.glyphs.map((g,index)=>{
       if(!Number.isInteger(g.glyphId)||g.glyphId<=0||g.glyphId>=usage.metrics.numGlyphs)throw Error('Invalid subset glyph');
       const glyph={cid:usage.glyphs.length+1,glyphId:g.glyphId,width:Math.round(g.advancePt/command.fontSizePt*1000),unicode:assignments[index]!,offsetX:g.offsetXPt/command.fontSizePt*1000};
+      // CID mappings belong to the font; positioning belongs to each occurrence.
+      // Different Unicode clusters or PDF advances must never share a mapping.
+      const key=JSON.stringify([glyph.glyphId,glyph.width,glyph.unicode]);
+      const existing=usage.cids.get(key);
+      if(existing)return {...existing,offsetX:glyph.offsetX};
       if(glyph.cid>65535)throw Error('Font CID capacity exceeded');
-      usage.glyphs.push(glyph);return glyph;
+      usage.glyphs.push(glyph);usage.cids.set(key,glyph);return glyph;
     });
     runs.set(command.id,resolved);
   }
