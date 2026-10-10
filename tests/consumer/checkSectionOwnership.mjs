@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {readFile,writeFile} from 'node:fs/promises';
+import {validateTemplate,prepareGeneration,composeDocument,loadBundledResources,createPdfEngine} from '@flowdoc/core';
+const ok=r=>{assert(r.ok,JSON.stringify(r));return r.value;};
+const t=JSON.parse(await readFile('/consumer/section-ownership-template.json','utf8')),r=JSON.parse(await readFile('/consumer/section-ownership-request.json','utf8'));
+const v=ok(validateTemplate(t)),p=ok(prepareGeneration(v,r)),d=ok(composeDocument(v,JSON.parse(JSON.stringify(p))));
+assert.equal(d.sections.length,5);assert(d.sections[1].header);assert(JSON.stringify(d.sections[1].header).includes('HEADER contents'));assert(JSON.stringify(d.sections[4].header).includes('HEADER closing'));
+const images={'22222222-2222-4222-8222-222222222222':{kind:'rgb',width:2,height:1,bytes:new Uint8Array([20,90,160,40,150,210])}};
+const engine=ok(await createPdfEngine(ok(await loadBundledResources({pythonExecutable:'/usr/local/bin/python',tempRoot:'/consumer/temp'}))));
+const pdf=ok(await engine.generatePdf(d,images));assert(pdf.pageCount>=6);await writeFile('/consumer/output/section-ownership.pdf',pdf.bytes);
+await writeFile('/consumer/output/section-ownership-result.json',JSON.stringify({status:'PASS',fingerprint:v.fingerprint,pageCount:pdf.pageCount,visualAcceptance:'pending'},null,2));

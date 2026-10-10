@@ -70,6 +70,6 @@ function validateOwnedAreas(t:Template15):Issue[]{
   const valid=validateSchemas(f.inputSchema,p+'.inputSchema',issues,false,true,true,true,false);
   if(!Array.isArray(f.repeats)||(f.cellRepeats!==undefined&&!Array.isArray(f.cellRepeats)))fail(p+'.repeats');else if(valid)issues.push(...validateOwnedGraph(t,place.section,f,p,false));
  }
- for(const [id,a] of index.byId){if(placements.get(id)?.count!==1||!a.formatsByKey.size)fail('area.'+id);if(own(a.field,'default'))validateValues({type:'object',fields:{[a.key]:a.field}},{[a.key]:a.field.default},'area.'+id,issues,[],'request',false,index);}
+ for(const [id,a] of index.byId){if(placements.get(id)?.count!==1||!a.formatsByKey.size)fail('area.'+id);if(own(a.field,'default')){const errors:Issue[]=[],warnings:Issue[]=[];validateValues({type:'object',fields:{[a.key]:a.field}},{[a.key]:a.field.default},'area.'+id,errors,warnings,'request',false,index);issues.push(...[...errors,...warnings].map(i=>({...i,code:'INVALID_TEMPLATE'})));}}
  return issues;
 }

@@ -36,7 +36,7 @@ export function prepareSections(t:Template15,fingerprint:string,input:unknown):R
 // Reuse legacy index/warning integrity checks with a scoped view, never a persisted conversion.
 function proxy(t:Template15,s?:Section15):any {const base={...t,nodeModelVersion:14,globalSchema:s?.inputSchema??t.globalSchema,formats:s?.formats??{},sections:[{id:'validate',source:{kind:'authored',fragment:{rootIds:[],nodes:{}},repeats:[]} },...(s?.source.kind==='content'?[{id:'content',source:{kind:'content'}}]:[])]};delete (base as any).header;delete (base as any).footer;return {...base,...(s?.header?{header:s.header}:{}),...(s?.footer?{footer:s.footer}:{})};}
 export function validatePreparedSections(template:ValidatedTemplate&{definition:Template15},input:unknown):Result<PreparedInput>{
- const t=template.definition,issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_DATA',p));
+ const t=template.definition,index=buildAreaIndex(t),issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_DATA',p));
  if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_DATA','prepared')],warnings:[]};
  const p=input;
  if(!keys(p,['schemaVersion','template','data','sections','content','originalContentCount','skippedContentIndices','warnings'])||!object(p.sections)||!Array.isArray(p.warnings)||!Array.isArray(p.content)||p.content.length||p.originalContentCount!==0||!Array.isArray(p.skippedContentIndices)||p.skippedContentIndices.length)return {ok:false,issues:[issue('INVALID_DATA','prepared')],warnings:[]};
@@ -50,7 +50,9 @@ export function validatePreparedSections(template:ValidatedTemplate&{definition:
   const ws=v.warnings.map((w:any)=>{if(!object(w)||typeof w.path!=='string'||!w.path.startsWith(path+'.')){fail(path+'.warnings');return w;}return {...w,path:w.path.slice(path.length+1)};});
   const {key:_,...body}=v;
   const r=validatePreparedInput({definition:proxy(t,s),fingerprint:template.fingerprint},{...body,schemaVersion:p.schemaVersion,template:p.template,warnings:ws});
-  if(!r.ok)issues.push(...r.issues.map(i=>({...i,path:path+'.'+i.path})));collected.push(...v.warnings);
+  if(!r.ok)issues.push(...r.issues.map(i=>({...i,path:path+'.'+i.path})));
+  else for(const a of index.byId.values())if(a.scope!=='local'&&r.value.content.filter(c=>Object.values(s.formats[c.format]!.fragment.nodes).some(n=>n.type==='area'&&n.props.areaId===a.field.areaId)).length>1)fail(path+'.content');
+  collected.push(...v.warnings);
  }
  if(canonical(collected)!==canonical(p.warnings))fail('warnings');
  return issues.length?{ok:false,issues,warnings:[]}:{ok:true,value:structuredClone(p) as PreparedInput,warnings:structuredClone(p.warnings)};

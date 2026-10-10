@@ -230,3 +230,20 @@ fails. Model 8 documents with a contents node also receive temporary bottom-righ
 physical page numbers (regular 10 pt / 14 pt line box, bottom margin at least 18 pt).
 No alternate numbering, generic footer controls or automatic heading inference.
 See `fixtures/contents/template.json`. Existing models 4–7 retain their behavior.
+## Section-owned inputs (model 15)
+
+Model 15 declares each section with stable `id`, caller-facing `key`,
+`inputSchema`, `formats` and optional `header`/`footer`. Requests use shared
+`data` plus `sections.<key>.data/header/footer/content`. Section order comes
+from the template. Omitted objects use defaults/required rules; unknown section
+keys reject the complete request. Header/footer values belong to their own section.
+
+Bindings explicitly select `global`, `section`, `header`, `footer`, `local`
+or array `item` where allowed. There is no fallback between namespaces.
+Document-global Areas retain one placement, including after prepared-input reload.
+Invalid authored Area defaults fail template validation. Cover/blank exclusions,
+existing overflow limits and A4 portrait/landscape rules still apply.
+
+See `fixtures/section-ownership/{template,request}.json` and the packed
+`section-ownership.pdf` consumer output. Models 4–14 keep their prior contract;
+there is no automatic migration, DOCX or frontend adapter in this change.

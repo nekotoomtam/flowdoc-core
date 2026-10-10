@@ -31,3 +31,11 @@ it('rejects duplicate raw section keys, duplicate identity and illegal body scop
  const t=ownedTemplate();const json=JSON.stringify(t).replace('"key":"one"','"key":"one","key":"two"');expect(validateTemplate(json).ok).toBe(false);t.sections[1].id=t.sections[0].id;expect(validateTemplate(t).ok).toBe(false);t.sections[1].id='id-two';t.sections[0].source.fragment.nodes.title.children[1].scope='header';expect(validateTemplate(t).ok).toBe(false);
 });
 
+it('rejects forged repeated placement of document-global Area in scoped prepared content',()=>{
+ const t=ownedTemplate(),a=areaTemplate(),s=t.sections[0];t.globalSchema.fields.details=a.formats.merged.inputSchema.fields.details;t.areaFormats=a.areaFormats;s.source={kind:'content'};s.formats={same:{inputSchema:{type:'object',fields:{}},repeats:[],fragment:{rootIds:['area'],nodes:{area:{id:'area',type:'area',props:{areaId:'area-001'}}}}}};
+ const v=ok(validateTemplate(t)),r=ownedRequest(t);r.data.details=[{format:'description',data:{text:'ONE'}}];r.sections.one.content=[{format:'same',data:{}}];const p=ok(prepareGeneration(v,r));expect(composeDocument(v,p).ok).toBe(true);const input=p.sections['id-one'];input.content.push({...structuredClone(input.content[0]),originalIndex:1});input.originalContentCount=2;expect(composeDocument(v,p).ok).toBe(false);
+});
+
+it('rejects invalid authored Area defaults rather than skipping them at request time',()=>{
+ for(const entry of [{format:'TYPO',data:{}},{format:'description',data:{}}]){const t=ownedTemplate(),a=areaTemplate();t.areaFormats=a.areaFormats;t.sections[0].inputSchema.fields.details={...a.formats.merged.inputSchema.fields.details,default:[entry]};t.sections[0].source.fragment.rootIds.push('area');t.sections[0].source.fragment.nodes.area={id:'area',type:'area',props:{areaId:'area-001'}};expect(validateTemplate(t).ok).toBe(false);}
+});
