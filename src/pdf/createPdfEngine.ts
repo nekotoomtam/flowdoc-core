@@ -1,3 +1,4 @@
+import {fillPageFields} from '../layout/fillPageFields.js';
 import {fillContentsNumbers} from '../layout/fillContentsNumbers.js';
 import {appendPageNumbers} from '../layout/pageNumbers.js';
 import {indexDestinations,resolveLinkGeometry} from '../layout/linkGeometry.js';
@@ -35,7 +36,8 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
    temp=await mkdtemp(join(resources.tempRoot,'flowdoc-pdf-'));
    const draw=await documentFlow(document,deps.runtime,images);
    const anchors=indexDestinations(document,draw);
-   await fillContentsNumbers(draw,anchors,deps.runtime);
+   await fillContentsNumbers(draw,anchors,deps.runtime,document.nodeModelVersion===16);
+   await fillPageFields(draw,deps.runtime);
    await appendPageNumbers(document,draw,deps.runtime);
    resolveLinkGeometry(document,draw,anchors);
    const fonts=await deps.subset(draw,resources,temp);

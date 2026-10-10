@@ -1,3 +1,4 @@
+import type {PageFieldSlot} from '../pdf/drawContract.js';
 import {assignSystemPageNumbers} from './systemPageCounting.js';
 import {measurePageBand,selectPageBands,type MeasuredBand} from './pageBands.js';
 import type {BandMode} from '../template/types.js';
@@ -33,12 +34,13 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  let sectionId:string|undefined,sectionPageIndex=0,cover=false,activeNode='';let pageRole:'body'|'cover'|'blank'='body';
  const contentsSlots:NonNullable<DrawDocument['contentsSlots']>=[];
  const entries=d.rootIds.some(id=>d.nodes[id]?.type==='table-of-contents')?collectContents(d):[];
+ const pageFieldSlots:PageFieldSlot[]=[];let hideNumbers=false;
  const pages:DrawPage[]=[];let current!:DrawPage,y=top,serial=0;
  const geometry=(index:number)=>{const shown=selectPageBands(modes,pageRole,index),h=shown.header?bands.header:undefined,f=shown.footer?bands.footer:undefined,hspace=h?h.heightPt+(activeBands.header?.gap?toPt(activeBands.header.gap):0):0,fspace=f?f.heightPt+(activeBands.footer?.gap?toPt(activeBands.footer.gap):0):0;
   if(hspace+fspace>(innerBottom-innerTop)*.4+epsilon)throw new LayoutError((h?activeBands.header:activeBands.footer)?.rootIds[0]??activeNode,'Page bands exceed 40 percent of inner page height',sectionId,(h?'header':'footer')+'.sizing');return {top:innerTop+hspace,bottom:innerBottom-fspace,h,f};};
  const nextPage=()=>{if(cover&&sectionPageIndex>0)throw new LayoutError(activeNode,'Cover exceeds one page');const g=geometry(sectionPageIndex);top=g.top;bottom=g.bottom;
   current={...(d.nodeModelVersion>=13?{pageRole}:{}),widthPt,heightPt,backgroundColor:'FFFFFF',commands:[],...(sectionId===undefined?{}:{sectionId,sectionPageIndex:sectionPageIndex++})};pages.push(current);y=top;
-  for(const [kind,m,at] of [['header',g.h,innerTop],['footer',g.f,innerBottom-(g.f?.heightPt??0)]] as const){if(!m)continue;for(const run of m.commands)current.commands.push({...run,id:`${kind}-${pages.length}-${run.id}`,bounds:{...run.bounds,xPt:left+run.bounds.xPt,yPt:at+run.bounds.yPt}});if(m.images.length){current.images??=[];for(const image of m.images)current.images.push({...image,xPt:left+image.xPt,yPt:at+image.yPt});}}
+  for(const [kind,m,at] of [['header',g.h,innerTop],['footer',g.f,innerBottom-(g.f?.heightPt??0)]] as const){if(!m)continue;for(const run of m.commands)if(!hideNumbers||!m.numberBlocks.has(run.nodeId))current.commands.push({...run,id:`${kind}-${pages.length}-${run.id}`,bounds:{...run.bounds,xPt:left+run.bounds.xPt,yPt:at+run.bounds.yPt}});if(!hideNumbers)for(const slot of m.pageFields)pageFieldSlots.push({...slot,pageIndex:pages.length-1,sectionId:sectionId!,xPt:left+slot.xPt,yPt:at+slot.yPt});if(m.images.length){current.images??=[];for(const image of m.images)current.images.push({...image,xPt:left+image.xPt,yPt:at+image.yPt});}}
  };
  const ensureHeight=(height:number,id:string)=>{if(y+height>bottom+epsilon)nextPage();if(height>bottom-top+epsilon)throw new LayoutError(id,'Item exceeds page content height');};
 
@@ -105,6 +107,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  const sections=(d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||(d.nodeModelVersion===15||d.nodeModelVersion===16))?d.sections!:[{role:undefined,sourceKind:undefined,sectionId:undefined,page:d.book.page,rootIds:d.rootIds}];
  for(const section of sections){
  if((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||(d.nodeModelVersion===15||d.nodeModelVersion===16))&&!section.rootIds.length&&!(d.nodeModelVersion>=13&&(section.role==='cover'||section.sourceKind==='blank')))continue;
+ hideNumbers=d.nodeModelVersion===16&&"numbering" in section&&section.numbering?.visibility==='hide';
  sectionId=section.sectionId;sectionPageIndex=0;cover=d.nodeModelVersion>=13&&section.role==='cover';pageRole=cover?'cover':section.sourceKind==='blank'?'blank':'body';setPage(section.page);innerTop=top;innerBottom=bottom;modes=section as typeof modes;bands={};
  activeBands=(d.nodeModelVersion===15||d.nodeModelVersion===16)?section as Pick<ResolvedDocument,'header'|'footer'>:d;
  if(d.nodeModelVersion>=14&&pageRole==='body')for(const k of ['header','footer'] as const){const b=activeBands[k];if(!b||modes[k==='header'?'headerMode':'footerMode']==='none')continue;const key=((d.nodeModelVersion===15||d.nodeModelVersion===16)?sectionId+':':'')+k+':'+available;let m=bandCache.get(key);if(!m){try{m=await measurePageBand(b,d.styles,available,runtime,images);}catch(e){if(e instanceof LayoutError)throw new LayoutError(e.nodeId,e.message,sectionId,k+'.nodes.'+e.nodeId);throw e;}bandCache.set(key,m);}bands[k]=m;}
@@ -137,5 +140,5 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  }else throw new LayoutError(id,'Unsupported root');}
  }
  if(d.nodeModelVersion===16)assignSystemPageNumbers(d,{pages});else assignCountedPages({pages});
- return {pages,...(contentsSlots.length?{contentsSlots}:{})};
+ return {pages,...(pageFieldSlots.length?{pageFieldSlots}:{}),...(contentsSlots.length?{contentsSlots}:{})};
 }
