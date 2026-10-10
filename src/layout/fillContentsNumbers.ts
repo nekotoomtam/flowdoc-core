@@ -12,8 +12,11 @@ export async function measureNumber(nodeId:string,text:string,style:TextStyle,wi
 export async function fillContentsNumbers(draw:DrawDocument,anchors:NonNullable<DrawDocument['anchors']>,runtime:TextRuntime,systemNumbers=false):Promise<void>{
  for(const [i,slot] of (draw.contentsSlots??[]).entries()){
   const target=anchors[slot.anchorId];if(!target)throw new LayoutError(slot.nodeId,'Missing contents destination');
-  if(systemNumbers&&draw.pages[target.pageIndex]!.pageNumbering?.current==null)throw new LayoutError(slot.nodeId,'Contents target has no counted page number');
-  const text=String(draw.pages[target.pageIndex]!.countedPageNumber??target.pageIndex+1),id=`contents-number-${i}`,run=await measureNumber(slot.nodeId,text,slot.style,slot.widthPt,runtime);
+  const page=draw.pages[target.pageIndex];
+  if(systemNumbers&&!page?.pageNumbering)throw new LayoutError(slot.nodeId,'Missing contents target numbering metadata');
+  // Excluded pages retain their title link and reserved number-column geometry.
+  if(systemNumbers&&page!.pageNumbering!.current===null)continue;
+  const text=String(systemNumbers?page!.pageNumbering!.current:page!.countedPageNumber??target.pageIndex+1),id=`contents-number-${i}`,run=await measureNumber(slot.nodeId,text,slot.style,slot.widthPt,runtime);
   draw.pages[slot.pageIndex]!.commands.push({...run,id,bounds:{...run.bounds,xPt:slot.xPt+run.bounds.xPt,yPt:slot.yPt},sourceStart:0,links:[{id,start:0,end:text.length,link:{type:'reference',text,target:slot.anchorId}}]});
  }
  delete draw.contentsSlots;

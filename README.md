@@ -259,7 +259,9 @@ positive `startAt` (default 1), or `exclude`; visibility is `show` or `hide`.
 Total counts participating pages across the document. Cover is excluded/hidden;
 blank is counted/hidden by default. Hide preserves space and suppresses the entire
 TextBlock containing fields. No fields means no automatic footer number.
-TOC uses counted numbers; an excluded TOC destination fails explicitly.
+TOC uses counted numbers even when the page hides them. Selected headings on
+excluded pages keep their clickable title and an empty number slot. Cover
+headings remain absent; duplicate/missing destinations remain invalid.
 
 See `fixtures/page-numbering`. After `npm run check:package`, inspect the PDFs
 and run `python tests/consumer/checkPageNumberingPdf.py <artifact-directory>`
