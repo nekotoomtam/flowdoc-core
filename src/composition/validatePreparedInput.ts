@@ -10,12 +10,12 @@ export function validatePreparedInput(template:ValidatedTemplate,input:unknown):
  const p=input,t=template.definition,areaIndex=t.nodeModelVersion>=11?buildAreaIndex(t):undefined;
  if(!keys(p,['schemaVersion','template','data','content','originalContentCount','skippedContentIndices','warnings'])||p.schemaVersion!==1)fail('prepared');
  if(!object(p.template)||!keys(p.template,['templateId','docKey','version','fingerprint'])||p.template.templateId!==t.templateId||p.template.docKey!==t.docKey||p.template.version!==t.version||p.template.fingerprint!==template.fingerprint)fail('template');
- if(!Number.isSafeInteger(p.originalContentCount)||p.originalContentCount<(t.nodeModelVersion===12?0:1))fail('originalContentCount');
+ if(!Number.isSafeInteger(p.originalContentCount)||p.originalContentCount<((t.nodeModelVersion===12||t.nodeModelVersion===13)?0:1))fail('originalContentCount');
  validateValues(t.globalSchema,p.data,'data',issues,[],'prepared',false,areaIndex);
- if(t.nodeModelVersion===12&&!t.sections.some(s=>s.source.kind==='content')&&p.originalContentCount!==0)fail('content');
+ if((t.nodeModelVersion===12||t.nodeModelVersion===13)&&!t.sections.some(s=>s.source.kind==='content')&&p.originalContentCount!==0)fail('content');
  const seen=new Set<number>(),accepted=new Map<number,string>(),skipped=new Set<number>();let previous=-1;
  const index=(i:unknown)=>typeof i==='number'&&Number.isSafeInteger(i)&&i>=0&&i<p.originalContentCount;
- if(!Array.isArray(p.content)||(!p.content.length&&(t.nodeModelVersion!==12||!t.sections.some(s=>s.source.kind==='authored'))))fail('content');else for(const [i,c] of p.content.entries()){
+ if(!Array.isArray(p.content)||(!p.content.length&&((t.nodeModelVersion!==12&&t.nodeModelVersion!==13)||!t.sections.some(s=>s.source.kind==='authored'||(t.nodeModelVersion===13&&s.source.kind==='blank')))))fail('content');else for(const [i,c] of p.content.entries()){
   const path=`content[${i}]`;
   if(!object(c)||!keys(c,['originalIndex','format','data'])||!index(c.originalIndex)||c.originalIndex<=previous||seen.has(c.originalIndex)||!name(c.format)||!own(t.formats,c.format)){fail(path);continue;}
   previous=c.originalIndex;seen.add(c.originalIndex);accepted.set(c.originalIndex,c.format);

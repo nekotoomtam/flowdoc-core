@@ -15,7 +15,7 @@ interface Row {id:string;allowBreak:boolean;cells:Cell[];height:number}
 const pad=4,epsilon=1e-6;
 export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images:PdfImageResources={}):Promise<DrawDocument>{
  // Preserve the established text-only drawing contract and exact PDF identity.
- if(d.nodeModelVersion!==12&&d.rootIds.every(id=>d.nodes[id]?.type==='text-block'))return textFlow(d,runtime);
+ if((d.nodeModelVersion!==12&&d.nodeModelVersion!==13)&&d.rootIds.every(id=>d.nodes[id]?.type==='text-block'))return textFlow(d,runtime);
  let widthPt=0,heightPt=0,left=0,top=0,bottom=0,available=0;
  const setPage=(page:ResolvedDocument['book']['page'])=>{
   const [w,h]=page.orientation==='portrait'?[210,297]:[297,210];
@@ -87,9 +87,9 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
    }
   }
  };
- const sections=d.nodeModelVersion===12?d.sections!:[{sectionId:undefined,page:d.book.page,rootIds:d.rootIds}];
+ const sections=(d.nodeModelVersion===12||d.nodeModelVersion===13)?d.sections!:[{sectionId:undefined,page:d.book.page,rootIds:d.rootIds}];
  for(const section of sections){
- if(d.nodeModelVersion===12&&!section.rootIds.length)continue;
+ if((d.nodeModelVersion===12||d.nodeModelVersion===13)&&!section.rootIds.length)continue;
  sectionId=section.sectionId;sectionPageIndex=0;setPage(section.page);nextPage();
  for(const id of section.rootIds){const n=d.nodes[id];if(n?.type==='table')await table(n);else if(n?.type==='text-block'){
   for(const line of await measureBlock(id,available)){

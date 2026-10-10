@@ -15,12 +15,12 @@ export function validateTemplate(input:unknown):Result<ValidatedTemplate>{
   if(typeof input==='string'){const r=readTemplateJson(input);if(!r.ok)return r;input=r.value;}
   if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_TEMPLATE','template')],warnings:[]};
   const t=structuredClone(input);
-  if(!keys(t,['schemaVersion','nodeModelVersion','templateId','docKey','version','name','book','globalSchema','styles','formats','examples',...(t.nodeModelVersion>=11?['areaFormats']:[]),...(t.nodeModelVersion===12?['pageLayouts','sections']:[])])||t.schemaVersion!==1||![4,5,6,7,8,9,10,11,12].includes(t.nodeModelVersion))fail('template');
+  if(!keys(t,['schemaVersion','nodeModelVersion','templateId','docKey','version','name','book','globalSchema','styles','formats','examples',...(t.nodeModelVersion>=11?['areaFormats']:[]),...((t.nodeModelVersion===12||t.nodeModelVersion===13)?['pageLayouts','sections']:[])])||t.schemaVersion!==1||![4,5,6,7,8,9,10,11,12,13].includes(t.nodeModelVersion))fail('template');
   for(const k of ['templateId','docKey','name'])if(!name(t[k]))fail(k);
   if(!Number.isInteger(t.version)||t.version<1)fail('version');
-  issues.push(...(t.nodeModelVersion===12?validatePageSections(t):validateBookStyles(t)).map(i=>({...i,code:'INVALID_TEMPLATE'})));
+  issues.push(...((t.nodeModelVersion===12||t.nodeModelVersion===13)?validatePageSections(t):validateBookStyles(t)).map(i=>({...i,code:'INVALID_TEMPLATE'})));
   const globalOk=validateSchemas(t.globalSchema,'globalSchema',issues,false,t.nodeModelVersion>=5,t.nodeModelVersion>=7,t.nodeModelVersion>=10,t.nodeModelVersion>=11);
-  if(!object(t.formats)||(t.nodeModelVersion!==12&&!Object.keys(t.formats).length))fail('formats');else for(const [key,f] of Object.entries(t.formats)){
+  if(!object(t.formats)||((t.nodeModelVersion!==12&&t.nodeModelVersion!==13)&&!Object.keys(t.formats).length))fail('formats');else for(const [key,f] of Object.entries(t.formats)){
    const p='formats.'+key;
    if(!name(key)||!object(f)||!keys(f,['label','description','inputSchema','fragment','repeats',...(t.nodeModelVersion>=10?['cellRepeats']:[])])){fail(p);continue;}
    for(const k of ['label','description'])if(Object.hasOwn(f,k)&&typeof f[k]!=='string')fail(p+'.'+k);

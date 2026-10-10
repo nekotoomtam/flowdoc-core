@@ -27,6 +27,6 @@ interface TemplateBase {
  formats:Record<string,Format>;examples:{name:string;request:unknown}[];
 }
 export interface PageLayout {label?:string;page:ResolvedDocument['book']['page']}
-export interface TemplateSection {id:string;label?:string;pageLayoutId?:string;source:{kind:'content'}|({kind:'authored'}&Pick<Format,'fragment'|'repeats'|'cellRepeats'>)}
-export type TemplateDefinition=TemplateBase&({nodeModelVersion:4|5|6|7|8|9|10|11;book:ResolvedDocument['book']}|{nodeModelVersion:12;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:TemplateSection[]});
+export interface TemplateSection {role?:'body'|'cover';id:string;label?:string;pageLayoutId?:string;source:{kind:'blank'}|{kind:'content'}|({kind:'authored'}&Pick<Format,'fragment'|'repeats'|'cellRepeats'>)}
+export type TemplateDefinition=TemplateBase&({nodeModelVersion:4|5|6|7|8|9|10|11;book:ResolvedDocument['book']}|{nodeModelVersion:12|13;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:TemplateSection[]});
 export interface ValidatedTemplate {readonly definition:TemplateDefinition;readonly fingerprint:string}

@@ -7,7 +7,7 @@ export interface TextStyle {
 export type TextInline={id:string;type:'text';text:string}|{id:string;type:'line-break'}|({id:string}&BoundLink);
 export interface TextBlock {
   id:string;type:'text-block';role:{role:'paragraph'};
-  props:{textStyleId:string;sizing?:{mode:'content'};anchorId?:string;toc?:{level:number}};children:TextInline[];
+  props:{textStyleId:string;heightMode?:'content'|'fixed';height?:Length;verticalAlign?:'top'|'center'|'bottom';sizing?:{mode:'content'};anchorId?:string;toc?:{level:number}};children:TextInline[];
 }
 export type SourceOrigin={origin?:never;sectionId?:never;contentIndex:number;format:string}|{origin:'content';sectionId:string;contentIndex:number;format:string}|{origin:'authored';sectionId:string;contentIndex?:never;format?:never};
 export type SourceEntry=SourceOrigin&{sourceId:string;itemIndex?:number;repeatId?:string;areaId?:string;areaEntryIndex?:number;areaFormatId?:string}
@@ -19,9 +19,9 @@ export interface ImageBlock {id:string;type:'image';props:{width:Length;height:L
 export interface ContentsBlock {id:string;type:'table-of-contents';props:{textStyleId:string}}
 export type DocumentNode=TextBlock|Table|TableRow|TableCell|ImageBlock|ContentsBlock;
 export interface ResolvedDocument {
-  schemaVersion:1;nodeModelVersion:4|5|6|7|8|9|10|11|12;template:{templateId:string;docKey:string;version:number};
+  schemaVersion:1;nodeModelVersion:4|5|6|7|8|9|10|11|12|13;template:{templateId:string;docKey:string;version:number};
   book:{contentSlot:'body';page:{size:'A4';orientation:'portrait'|'landscape';margin:{top:Length;right:Length;bottom:Length;left:Length}}};
-  sections?:{sectionId:string;pageLayoutId:string;page:ResolvedDocument['book']['page'];rootIds:string[]}[];
+  sections?:{role?:'body'|'cover';sourceKind?:'content'|'authored'|'blank';sectionId:string;pageLayoutId:string;page:ResolvedDocument['book']['page'];rootIds:string[]}[];
   styles:Record<string,TextStyle>;rootIds:string[];nodes:Record<string,DocumentNode>;sourceMap:Record<string,SourceEntry>;
 }
 export function toPt(length:Length):number {return length.unit==='mm'?length.value*72/25.4:length.value;}

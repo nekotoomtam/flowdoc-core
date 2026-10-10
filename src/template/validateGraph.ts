@@ -6,7 +6,7 @@ import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat,CellRepeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
+export interface GraphContext {heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -47,7 +47,14 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
   if(!object(n)||n.id!==id){fail(p);continue;}
   let children:string[]=[];
   if(n.type==='text-block'){
-   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing','anchorId',...(ctx.contents?['toc']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
+   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing',...(ctx.heightModes?['heightMode','height','verticalAlign']:[]),'anchorId',...(ctx.contents?['toc']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
+   if(own(n.props,'heightMode')&&!['content','fixed'].includes(n.props.heightMode))fail(p+'.props.heightMode');
+   if(n.props.heightMode==='fixed'){
+    const h=n.props.height;
+    if(!ctx.fixedRootIds?.includes(id)||!object(h)||!keys(h,['value','unit'])||!['mm','pt'].includes(h.unit)||typeof h.value!=='number'||!Number.isFinite(h.value)||h.value<=0||!Number.isFinite(toPt(h as any)))fail(p+'.props.height');
+    if(own(n.props,'verticalAlign')&&!['top','center','bottom'].includes(n.props.verticalAlign))fail(p+'.props.verticalAlign');
+    if(own(n.props,'sizing'))fail(p+'.props.sizing');
+   }else if(own(n.props,'height')||own(n.props,'verticalAlign'))fail(p+'.props.height');
    if(own(n.props,'sizing')&&(!object(n.props.sizing)||!keys(n.props.sizing,['mode'])||n.props.sizing.mode!=='content'))fail(p+'.props.sizing');
    if(own(n.props,'anchorId')&&!(typeof n.props.anchorId==='string'?name(n.props.anchorId)&&!/[\x00-\x1f\x7f]/.test(n.props.anchorId):!ctx.resolved&&scalarRef(n.props.anchorId)))fail(p+'.props.anchorId');
    if(own(n.props,'toc')&&(!ctx.contents||!object(n.props.toc)||!keys(n.props.toc,['level'])||!Number.isInteger(n.props.toc.level)||n.props.toc.level<1||n.props.toc.level>MAX_CONTENTS_LEVEL||!own(n.props,'anchorId')))fail(p+'.props.toc');
