@@ -6,10 +6,10 @@ Owner: flowdoc-core. This README describes this package's local build and resour
 and PDF API. Shared MVP scope and status belong to Project Control's
 `docs/domains/flowdoc-export-mvp-r2-runtime-plan-2026-10-07.md`.
 
-Development 0.1.8 validates templates, binds typed data and renders TextBlocks,
+Version 0.2.0 validates templates, binds typed data and renders TextBlocks,
 images, merged tables, cell repeats, Area subformats, links and contents to PDF.
 There is no HTTP server or database here. Start with the Thai
-[template guide](docs/template-guide.md) for model 4–11 contracts and examples.
+[template guide](docs/template-guide.md) for model 4–16 contracts and examples.
 
 ## Template and data API
 
@@ -36,7 +36,7 @@ Supported item types depend on the node model; see the template guide. Required
 missing fields fail even with defaults; optional absent fields use their declared
 default or `""`/`[]`. Supplied wrong types/null fail without coercion. Unknown
 business fields are ignored with warnings; unknown formats are skipped. At least
-one accepted invocation is required. Envelope properties are strict. Examples in
+one accepted invocation is required in legacy content-only models; newer authored sections can supply the document roots. Envelope properties are strict. Examples in
 the template must validate without either errors or warnings.
 
 Persist PreparedInput as JSON if needed and keep the original request separately.

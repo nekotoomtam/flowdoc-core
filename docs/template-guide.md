@@ -1,12 +1,15 @@
-# คู่มือสร้างแม่แบบ FlowDoc Core 0.1.11
+# คู่มือสร้างแม่แบบ FlowDoc Core 0.2.0
 
 ## Authority Boundary
 
-Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.1.11 รองรับ
+Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.2.0 รองรับ
 ไม่ใช่ roadmap หรือการรับรอง release สถานะร่วมและข้อจำกัดที่ตกลงอยู่ใน
-flowdoc-project-control `docs/domains/flowdoc-export-node-structure-draft-2026-10-09.md`
+flowdoc-project-control `docs/domains/flowdoc-page-system-roadmap-2026-10-10.md`
 วิธี import/publish และเรียก HTTP อยู่ใน [คู่มือ Service](../../flowdoc-service/docs/usage.md)
 ชนิดข้อมูลฉบับโค้ดอยู่ใน [template/types.ts](../src/template/types.ts)
+
+แม่แบบใหม่ที่ต้องการระบบหน้าครบให้เริ่มจาก model16 ด้านท้ายคู่มือนี้
+หัวข้อ model4–14 อธิบายสัญญาเดิมเพื่ออ่านแม่แบบเก่า ไม่ใช่ข้อจำกัดของ model16
 
 ## 1. แม่แบบ ข้อมูล และเวอร์ชัน
 
@@ -38,7 +41,7 @@ flowdoc-project-control `docs/domains/flowdoc-export-node-structure-draft-2026-1
 | สารบัญ | [contents](../fixtures/contents/template.json) |
 
 อย่าเพิ่ม nodeModelVersion ให้แม่แบบเก่าอัตโนมัติ เพราะบางรุ่นกำหนดสัญญาต่างกัน
-รุ่น package 0.1.8 อ่าน model 4–11 ได้ แต่ใช้ความสามารถใหม่ต้องเลือกรุ่น model ที่รองรับ
+รุ่น package 0.2.0 อ่าน model 4–16 ได้ แต่ใช้ความสามารถใหม่ต้องเลือกรุ่น model ที่รองรับ
 
 | Model | สิ่งที่เพิ่ม |
 | --- | --- |
@@ -50,6 +53,11 @@ flowdoc-project-control `docs/domains/flowdoc-export-node-structure-draft-2026-1
 | 9 | TextBlock/Image หลายชิ้นในเซลล์และ padding รายด้าน |
 | 10 | image ใน array item และ cellRepeats |
 | 11 | area พร้อมโครงย่อยที่เป็นเจ้าของ |
+| 12 | pageLayouts และ sections |
+| 13 | ปก กล่องจองความสูง และหน้าเปล่า |
+| 14 | หัวท้ายแยกพื้นที่ |
+| 15 | ข้อมูลและหัวท้ายแยกตาม Section |
+| 16 | current/total และนโยบายเลขหน้าราย Section |
 
 หน้าปัจจุบันใช้ A4 แนวตั้งหรือแนวนอน margin หน่วย mm/pt และ contentSlot เป็น body
 ฟอนต์ที่แพ็กไว้คือ Sarabun Regular/Bold/Italic/BoldItalic อ้างผ่าน fontFamilyKey
@@ -204,7 +212,7 @@ URL รองรับ HTTP/HTTPS ตาม validation ไม่ใช่โค�
 ระดับปัจจุบัน 1–3 แล้วใส่ root `table-of-contents` หนึ่งตัวพร้อม textStyleId
 ทั้งชื่อและเลขหน้ากดไปหัวข้อได้ เลขหน้าเป็นหน้าจริงหลังจัดหน้า รวมหน้าสารบัญ
 มีเลขหน้าชั่วคราวล่างขวาเมื่อใช้สารบัญ; bottom margin ต้องไม่น้อยกว่า 18 pt
-ยังไม่มีรูปแบบหัวท้ายทั่วไป การยกเว้นหน้าปก หรือเริ่มเลขหน้าใหม่
+ข้อจำกัดข้างต้นเป็นของ model8; model13–16 เพิ่มปก หัวท้าย และนโยบายเลขหน้า
 
 ## 8. ตรวจแม่แบบก่อนใช้
 
@@ -309,3 +317,65 @@ content sizing เป็นค่าเริ่มต้น: สูงขั้
 หน่วย mm/pt; gap เริ่ม0. ความสูงพร้อม gap ของสองส่วนรวมกันไม่เกิน40%
 ของพื้นที่ภายใน margins ของหน้าที่แสดงจริง; overflow เป็น LAYOUT_FAILED.
 เลขหน้าชั่วคราวยังอยู่ในขอบล่างภายนอกพื้นที่ footer; ระบบเลขหน้าเต็มอยู่ใน R4.
+
+
+## เริ่มแม่แบบใหม่ด้วย model16: Section และเลขหน้า
+
+ตัวอย่างครบ: [แม่แบบ](../fixtures/page-numbering/template.json) และ
+[request](../fixtures/page-numbering/request.json). ใช้ `nodeModelVersion:16`.
+`book.defaultPageLayoutId` อ้างรูปแบบใน `pageLayouts`; แต่ละ section มี id คงที่
+และ key ที่ผู้เรียก API ใช้. เปลี่ยนแนวตั้ง/นอนโดยเลือก pageLayoutId ของ section.
+ทุก section ที่มีเนื้อหาเริ่มหน้าใหม่; section ที่ไม่มี root หลังขยายข้อมูลไม่สร้างหน้า.
+
+แต่ละ section มี inputSchema, formats และ header/footer ของตัวเอง.
+`data` ระดับเล่มเป็น global; request.sections.<key>.data คือ section,
+ส่วน header/footer ใน section เป็นข้อมูลหัวท้าย. ไม่มี fallback ข้ามชุด.
+ข้อความคงที่กับ field-ref อยู่รวมใน TextBlock ได้. ผู้เรียกไม่ส่งกราฟจัดหน้า.
+ปกใช้ข้อมูล global หรือ section ตาม scope ที่ผู้สร้างอ้าง และไม่แสดงหัวท้าย.
+
+```json
+{
+  "docKey": "page-numbering",
+  "version": 1,
+  "data": {"projectName": "ชื่อโครงการ"},
+  "sections": {
+    "body": {"data": {}, "header": {}, "footer": {}, "content": []}
+  }
+}
+```
+
+นี่เป็นรูป envelope เท่านั้น คีย์และค่าที่จำเป็นต้องตรง schema ของแม่แบบจริง.
+ใช้ request ตัวอย่างหรือ GET contract ของ Service เป็นฐานในการกรอก.
+Unknown section key ทำให้คำขอไม่ผ่าน; ลำดับ section มาจากแม่แบบเสมอ.
+Models4–14 ใช้ envelope เดิม ไม่แปลงอัตโนมัติเมื่ออัปเกรด package.
+
+ผู้สร้างใส่ใบข้อความพิเศษนี้ใน TextBlock ของหัว/ท้าย:
+
+```json
+{"id":"page-current","type":"system-page-field","field":"current","width":{"value":12,"unit":"mm"}}
+```
+
+เปลี่ยน field เป็น total เพื่อแสดงจำนวนหน้าที่ร่วมการนับทั้งเล่ม. ผู้เรียก API
+ไม่ส่งค่าระบบเหล่านี้. width ต้องเป็นบวก; ไม่พอวางตัวเลขให้ LAYOUT_FAILED
+ไม่มีการบีบตัวเลขหรือจัดหน้าใหม่เพื่อให้ผ่าน.
+
+Section numbering ใช้ `{ "mode":"continue", "visibility":"show" }` เป็นค่าเริ่มต้น.
+restart เริ่ม1 หรือ startAt ที่เป็นจำนวนเต็มบวก; exclude ไม่นับเลข.
+Cover ไม่นับ/ไม่แสดง; blank นับ/ซ่อนตามค่าเริ่มต้น. visibility hide คงพื้นที่
+แต่ซ่อนทั้ง TextBlock ที่มี system-page-field รวมข้อความประกอบในกล่องนั้น.
+ไม่มี field หมายถึงไม่มีเลขท้ายอัตโนมัติใน model16. current ใช้กับ exclude ไม่ได้.
+
+สารบัญใช้ TextBlock ที่กำหนด anchorId และ toc.level1–3. ปกไม่เข้าสารบัญ.
+หัวข้อในหน้าซ่อนเลขยังมีเลขนับในสารบัญ; หน้า exclude แสดงชื่อที่กดได้แต่ช่องเลขว่าง.
+ชื่อและเลขไปบรรทัดแรกของจุดหมายจริง รวมหัวตารางซ้ำและหัวข้อใน Area.
+เลขแสดงซ้ำจาก restart ไม่ทำให้ปลายทางสับสน. ชื่อยาวขึ้นหลายบรรทัด/หลายหน้าได้.
+เลขหัวข้อแบบ1.1/1.1.1 ยังไม่ได้สร้างอัตโนมัติในรุ่นนี้.
+
+## Compatibility และการอัปเกรด 0.2.0
+
+Package version, nodeModelVersion และ version ของแม่แบบเป็นคนละค่า.
+อัปเกรด package ไม่เปลี่ยนแม่แบบ model4–15 หรือ snapshot ที่ publish แล้ว.
+จะย้ายแม่แบบเก่าเป็น16 ต้องปรับ envelope/scopes/sections ให้ครบแล้ว validate
+และ publish เวอร์ชันใหม่. คู่มือเก่าแบบ content ระดับบนยังใช้กับ model เก่าตามเดิม.
+ยังไม่มี DOCX, frontend, ตารางซ้อน/Columnsในcell, TOCระดับ4ขึ้นไป,
+เลขโรมัน หรือการรับรองโหลดพร้อมกันระดับ production.
