@@ -1,8 +1,8 @@
-# คู่มือสร้างแม่แบบ FlowDoc Core 0.1.8
+# คู่มือสร้างแม่แบบ FlowDoc Core 0.1.9
 
 ## Authority Boundary
 
-Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.1.8 รองรับ
+Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.1.9 รองรับ
 ไม่ใช่ roadmap หรือการรับรอง release สถานะร่วมและข้อจำกัดที่ตกลงอยู่ใน
 flowdoc-project-control `docs/domains/flowdoc-export-node-structure-draft-2026-10-09.md`
 วิธี import/publish และเรียก HTTP อยู่ใน [คู่มือ Service](../../flowdoc-service/docs/usage.md)
@@ -219,3 +219,40 @@ validateTemplate → prepareGeneration → composeDocument → engine.generatePd
 การผ่าน schema ไม่ได้แปลว่าทุกขนาดภาพ/line height จะวางได้
 runtime PDF รองรับ Linux x64 ที่แพ็กไว้ ใช้ Service Docker สำหรับลองจาก Windows
 ไม่ต้องใช้ repo เก่าหรือแปลง Sarabun เป็น JavaScript ก่อนใช้งาน
+
+
+## 12. ส่วนของเล่มและรูปแบบหน้า (model12)
+
+ตัวอย่างเต็ม: [แม่แบบ](../fixtures/page-sections/template.json) และ
+[ข้อมูลเรียกใช้](../fixtures/page-sections/request.json).
+Model4–11 ยังคงใช้ book.page; model12 ใช้ book.defaultPageLayoutId อ้าง
+pageLayouts โดยแต่ละรูปแบบประกาศ page ครบ: A4, orientation และ margin สี่ด้าน
+หน่วย mm/pt ไม่ส่ง book.page คู่กับ defaultPageLayoutId
+
+sections เป็น array ตามลำดับของเล่ม แต่ละส่วนมี id คงที่, label optional,
+pageLayoutId optional (ไม่ส่งใช้อ้างอิง default) และ source:
+
+- kind: content รับ content จาก request มีได้ไม่เกินหนึ่งส่วน
+- kind: authored มี fragment/repeats/cellRepeats แบบเดิม ใช้ตัวแปร global
+  และ item ภายใน repeat; ไม่รับ local ของ section และไม่สร้าง inputSchema เพิ่ม
+
+ทุกส่วนที่มี root เริ่มหน้าใหม่ตามรูปแบบหน้าของส่วนนั้น ส่วนที่ไม่มี root หลัง
+Area[] ขยายจะไม่สร้างหน้า ทั้งเล่มไม่มี root ให้ EMPTY_CONTENT
+การตัดสินนี้ดู root ไม่ใช่หมึกที่มองเห็น: TextBlock ว่างหรือ table root ว่างที่ผู้สร้าง
+ประกาศยังคงพฤติกรรมของ node เดิม ไม่ตัดทิ้งเอง
+
+Request ยังเป็น docKey/version/data/content; ต้องส่ง content เป็น array เสมอ
+ส่ง [] ได้เมื่อส่วน authored ประกอบแล้วมี root; ถ้าไม่มี content section แต่ส่ง
+รายการ content มา จะถูกปฏิเสธ formats ว่างได้เฉพาะแม่แบบที่ไม่มี content section
+ผู้เรียกไม่ต้องส่ง sections/pageLayouts หรือกราฟ node
+
+global Area มีจุดวางเดียวรวมทั้ง authored sections และ formats รูปในส่วน authored
+ใช้ image variable เดิมและต้องเตรียม resource เช่นเดียวกับรูปใน content
+sourceMap model12 มี origin: content หรือ authored และ sectionId; authored ไม่มี
+contentIndex/format ปลอม ส่วน content เก็บ original index หลังข้ามรายการ
+Resolved sections เก็บ page ที่ normalize แล้วและ rootIds ซึ่งรวมกันตรงกับ rootIds เล่ม
+
+สารบัญและ anchor ยังอ้างทั้งเล่ม ลิงก์ข้ามส่วนจึงใช้หน้าจริงใน PDF
+เลขหน้าชั่วคราวจากสารบัญยังเป็นเลขหน้าจริง และทุกส่วนต้องมีขอบล่างอย่างน้อย18pt
+เมื่อใช้เลขหน้าชั่วคราวนี้ ยังไม่มี cover role, fixed-height, คำสั่งหน้าเปล่า,
+หัวท้าย หรือการเริ่มนับเลขหน้าใหม่ใน model12 รอบนี้

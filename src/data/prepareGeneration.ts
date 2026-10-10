@@ -30,7 +30,8 @@ export function prepareWithDefinition(t:TemplateDefinition,fingerprint:string,in
   if(before===issues.length)content.push({originalIndex:index,format,data:local});
  });
  if(areaIndex)for(const a of areaIndex.byId.values())if(a.scope==='global'){const count=content.filter(c=>Object.values(t.formats[c.format]!.fragment.nodes).some(n=>n.type==='area'&&n.props.areaId===a.field.areaId)).length;if(count>1)fail('content');}
- if(!content.length)issues.push(issue('EMPTY_CONTENT','content','No accepted content'));
+ if(t.nodeModelVersion===12&&!t.sections.some(s=>s.source.kind==='content')&&Array.isArray(input.content)&&input.content.length)fail('content');
+ if(!content.length&&(t.nodeModelVersion!==12||!t.sections.some(s=>s.source.kind==='authored')))issues.push(issue('EMPTY_CONTENT','content','No accepted content'));
  if(issues.length)return {ok:false,issues,warnings};
  const value:PreparedInput={schemaVersion:1,template:{templateId:t.templateId,docKey:t.docKey,version:t.version,fingerprint},data,content,originalContentCount:input.content.length,skippedContentIndices,warnings:structuredClone(warnings)};
  return {ok:true,value,warnings};

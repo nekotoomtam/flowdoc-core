@@ -1,10 +1,10 @@
 import type {BoundLink} from '../composition/linkContract.js';
-import type {TextInline,SourceEntry} from '../composition/resolvedDocument.js';
+import type {TextInline,SourceEntry,SourceOrigin} from '../composition/resolvedDocument.js';
 import type {TemplateInline,ScalarBinding} from '../template/types.js';
 import type {PreparedData,PreparedItem} from '../data/types.js';
 export interface BindingScopes {global:PreparedData;local:PreparedData;item:PreparedItem}
 export const resolveScalar=(value:ScalarBinding,scopes:BindingScopes):string=>typeof value==='string'?value:scopes[value.scope][value.key] as string;
-export function bindInlines(children:TemplateInline[],scopes:BindingScopes,prefix:string,itemIndex:number|undefined,origin:Omit<SourceEntry,'sourceId'|'itemIndex'>,sourceMap:Record<string,SourceEntry>):TextInline[]{
+export function bindInlines(children:TemplateInline[],scopes:BindingScopes,prefix:string,itemIndex:number|undefined,origin:SourceOrigin&Pick<SourceEntry,'repeatId'|'areaId'|'areaEntryIndex'|'areaFormatId'>,sourceMap:Record<string,SourceEntry>):TextInline[]{
  const out:TextInline[]=[];
  for(const child of children){
   const base=prefix+child.id+(itemIndex===undefined?'':`~item-${itemIndex}`);

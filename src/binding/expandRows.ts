@@ -1,14 +1,15 @@
 import type {AreaIndex} from '../template/areas.js';
 import {expandArea} from './expandAreas.js';
-export interface ExpansionOptions {areaIndex?:AreaIndex;prefix?:string;areaOrigin?:{areaId:string;areaEntryIndex:number;areaFormatId:string}}
+export interface ExpansionOptions {origin?:SourceOrigin|undefined;areaIndex?:AreaIndex;prefix?:string;areaOrigin?:{areaId:string;areaEntryIndex:number;areaFormatId:string}}
 import type {Format} from '../template/types.js';
 import type {PreparedData,PreparedItem} from '../data/types.js';
-import type {DocumentNode,SourceEntry} from '../composition/resolvedDocument.js';
+import type {DocumentNode,SourceEntry,SourceOrigin} from '../composition/resolvedDocument.js';
 import {bindInlines,resolveScalar} from './bindInlines.js';
 // Clone only reachable subtrees. A repeated row replaces its source row; no
 // template descendants survive when its collection is empty.
-export function expandRows(format:Format,global:PreparedData,local:PreparedData,contentIndex:number,formatKey:string,nodes:Record<string,DocumentNode>,sourceMap:Record<string,SourceEntry>,options:ExpansionOptions={}):string[]{
- const prefix=options.prefix??`content-${contentIndex}~`,origin={contentIndex,format:formatKey,...options.areaOrigin};
+export function expandRows(format:Format,global:PreparedData,local:PreparedData,contentIndex:number|undefined,formatKey:string|undefined,nodes:Record<string,DocumentNode>,sourceMap:Record<string,SourceEntry>,options:ExpansionOptions={}):string[]{
+ if(!options.origin&&(contentIndex===undefined||formatKey===undefined))throw Error('Missing content origin');
+ const prefix=options.prefix??`content-${contentIndex}~`,origin={...(options.origin??{contentIndex:contentIndex!,format:formatKey!}),...options.areaOrigin};
  const repeats=new Map(format.repeats.map(r=>[r.rowTemplateId,r]));
  const cellRepeats=new Map((format.cellRepeats??[]).map(r=>[r.cellId,r]));
  const clone=(sourceId:string,itemIndex?:number,item:PreparedItem={},repeatId?:string):string=>{
@@ -48,7 +49,7 @@ export function expandRows(format:Format,global:PreparedData,local:PreparedData,
  const children=(id:string,itemIndex?:number,item:PreparedItem={},repeatId?:string):string[]=>{
   const n=format.fragment.nodes[id]!;if(n.type!=='area')return [clone(id,itemIndex,item,repeatId)];
   if(!options.areaIndex)throw Error('Missing area index');
-  return expandArea({index:options.areaIndex,areaId:n.props.areaId,global,local,contentIndex,formatKey,nodes,sourceMap});
+  return expandArea({index:options.areaIndex,areaId:n.props.areaId,global,local,contentIndex,formatKey,nodes,sourceMap,prefix,origin:options.origin});
  };
  return format.fragment.rootIds.flatMap(id=>children(id));
 }

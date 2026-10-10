@@ -1,3 +1,4 @@
+import {authoredHosts} from './pageSections.js';
 import type {TemplateDefinition,AreaField,AreaFormat,Format} from './types.js';
 import type {Issue} from '../result.js';
 import {object,keys,name,issue,own} from './checks.js';
@@ -28,11 +29,11 @@ export function validateAreas(t:TemplateDefinition):Issue[]{
   else if(schemaOk)issues.push(...validateGraph(f.fragment,{styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,repeats:f.repeats,images:true,merged:true,links:true,contents:true,cellContent:true,itemImages:true,cellRepeats:f.cellRepeats??[]},p+'.fragment'));
  }
  const placements=new Map<string,number>();
- for(const [host,f] of Object.entries(t.formats)){
+ for(const {host,f,authored} of [...Object.entries(t.formats).map(([host,f])=>({host,f,authored:false})),...authoredHosts(t).map(([host,f])=>({host,f,authored:true}))]){
   const nodes=f.fragment.nodes as Record<string,any>;
   for(const n of Object.values(nodes))if(n.type==='area'){
    const id=n.props.areaId,p='formats.'+host+'.fragment.nodes.'+n.id,owner=index.byId.get(id);placements.set(id,(placements.get(id)??0)+1);
-   if(!owner||owner.scope==='local'&&owner.hostFormat!==host){fail(p);continue;}
+   if(!owner||owner.scope==='local'&&(authored||owner.hostFormat!==host)){fail(p);continue;}
    const cell=Object.values(nodes).find(c=>c.type==='table-cell'&&c.childIds.includes(n.id));
    if(cell){
     const row=Object.values(nodes).find(r=>r.type==='table-row'&&r.cellIds.includes(cell.id));

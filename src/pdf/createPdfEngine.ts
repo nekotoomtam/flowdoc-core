@@ -42,7 +42,7 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
    stage='writer';const bytes=deps.write(draw,fonts,images);
    result={ok:true,value:{bytes,mediaType:'application/pdf',pageCount:draw.pages.length},warnings};
   }catch(error){
-   if(error instanceof LayoutError){const source=document.sourceMap[error.nodeId];result={ok:false,issues:[{code:'LAYOUT_FAILED',path:'nodes.'+error.nodeId,nodeId:error.nodeId,message:error.message,...(source?{contentIndex:source.contentIndex,format:source.format}:{})}],warnings:[]};}
+   if(error instanceof LayoutError){const source=document.sourceMap[error.nodeId];result={ok:false,issues:[{code:'LAYOUT_FAILED',path:'nodes.'+error.nodeId,nodeId:error.nodeId,message:error.message,...(source?.origin==='authored'?{sectionId:source.sectionId}:source?{contentIndex:source.contentIndex,format:source.format,...(source.sectionId?{sectionId:source.sectionId}:{})}:{})}],warnings:[]};}
    else result=fail(stage==='writer'?'PDF_RENDER_FAILED':'RESOURCE_UNAVAILABLE',stage==='writer'?'PDF writing failed':'Text or font runtime failed');
   }finally{
    if(temp)try{await rm(temp,{recursive:true,force:true});}catch{result=fail('RESOURCE_UNAVAILABLE','Temporary output cleanup failed');}

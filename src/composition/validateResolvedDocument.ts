@@ -13,7 +13,7 @@ export function validateResolvedDocument(input:unknown):Issue[] {
  const fail=(path:string,nodeId?:string)=>issues.push({code:'LAYOUT_FAILED',path,message:'Invalid or unsupported resolved document value',...(nodeId?{nodeId}:{})});
  if(!isJson(input)||!object(input)){fail('document');return issues;}
  const d=input;
- if(!keys(d,['schemaVersion','nodeModelVersion','template','book','styles','rootIds','nodes','sourceMap'])||d.schemaVersion!==1||![4,5,6,7,8,9,10,11].includes(d.nodeModelVersion))fail('document');
+ if(!keys(d,['schemaVersion','nodeModelVersion','template','book','styles','rootIds','nodes','sourceMap',...(d.nodeModelVersion===12?['sections']:[])])||d.schemaVersion!==1||![4,5,6,7,8,9,10,11,12].includes(d.nodeModelVersion))fail('document');
  if(!object(d.template)||!keys(d.template,['templateId','docKey','version'])||!name(d.template.templateId)||!name(d.template.docKey)||!Number.isInteger(d.template.version)||d.template.version<1)fail('template');
  issues.push(...validateBookStyles(d));
  if(!object(d.styles))return issues;
@@ -24,8 +24,9 @@ export function validateResolvedDocument(input:unknown):Issue[] {
  for(const n of Object.values(d.nodes))if(object(n)&&n.type==='text-block'&&Array.isArray(n.children))for(const c of n.children)if(object(c)&&typeof c.id==='string')ids.add(c.id);
  for(const [id,s] of Object.entries(d.sourceMap)){
   if(object(s)&&['areaId','areaEntryIndex','areaFormatId'].some(k=>Object.hasOwn(s,k))&&(!name(s.areaId)||s.areaId.includes('~')||!name(s.areaFormatId)||s.areaFormatId.includes('~')||!Number.isSafeInteger(s.areaEntryIndex)||s.areaEntryIndex<0))fail('sourceMap.'+id);
-  if(!ids.has(id)||!object(s)||!keys(s,['contentIndex','format','sourceId','itemIndex',...(d.nodeModelVersion>=10?['repeatId']:[]),...(d.nodeModelVersion>=11?['areaId','areaEntryIndex','areaFormatId']:[])])||!Number.isInteger(s.contentIndex)||s.contentIndex<0||!name(s.format)||!name(s.sourceId)||(s.itemIndex!==undefined&&(!Number.isInteger(s.itemIndex)||s.itemIndex<0))||(s.repeatId!==undefined&&(!name(s.repeatId)||s.repeatId.includes('~')||s.itemIndex===undefined)))fail('sourceMap.'+id);
+  if(!ids.has(id)||!object(s)||!keys(s,['contentIndex','format','sourceId','itemIndex',...(d.nodeModelVersion>=10?['repeatId']:[]),...(d.nodeModelVersion>=11?['areaId','areaEntryIndex','areaFormatId']:[]),...(d.nodeModelVersion===12?['origin','sectionId']:[])])||!(d.nodeModelVersion===12&&s.origin==='authored'?s.contentIndex===undefined&&s.format===undefined:Number.isInteger(s.contentIndex)&&s.contentIndex>=0&&name(s.format))||!name(s.sourceId)||(s.itemIndex!==undefined&&(!Number.isInteger(s.itemIndex)||s.itemIndex<0))||(s.repeatId!==undefined&&(!name(s.repeatId)||s.repeatId.includes('~')||s.itemIndex===undefined)))fail('sourceMap.'+id);
  }
+ if(d.nodeModelVersion===12)validateSections(d,issues);
  for(const id of d.rootIds)if(!Object.hasOwn(d.sourceMap,id))fail('sourceMap.'+id);
  if(!issues.length&&d.nodeModelVersion>=7)issues.push(...validateDestinations(d as import('./resolvedDocument.js').ResolvedDocument));
  return issues;
@@ -52,4 +53,26 @@ export function validateBookStyles(d:Record<string,any>):Issue[]{
   if(!object(s)||!keys(s,['fontFamilyKey','fontWeight','fontStyle','fontSize','lineHeightPt'])||s.fontFamilyKey!=='sarabun'||!['normal','bold'].includes(s.fontWeight)||(s.fontStyle!==undefined&&!['normal','italic'].includes(s.fontStyle))||!object(s.fontSize)||!keys(s.fontSize,['value','unit'])||s.fontSize.unit!=='pt'||!number(s.fontSize.value)||!number(s.lineHeightPt))fail('styles.'+id);
  }
  return issues;
+}
+
+function validateSections(d:Record<string,any>,issues:Issue[]):void {
+ const fail=(path:string)=>issues.push({code:'LAYOUT_FAILED',path,message:'Invalid section membership or page'});
+ if(!Array.isArray(d.sections)||!d.sections.length){fail('sections');return;}
+ const seen=new Set<string>(),roots:string[]=[],members=new Map<string,string>();
+ for(const [i,s] of d.sections.entries()){
+  const p=`sections[${i}]`;
+  if(!object(s)||!keys(s,['sectionId','pageLayoutId','page','rootIds'])||!name(s.sectionId)||s.sectionId.includes('~')||seen.has(s.sectionId)||!name(s.pageLayoutId)||s.pageLayoutId.includes('~')||!Array.isArray(s.rootIds)||!s.rootIds.every(name)){fail(p);continue;}
+  seen.add(s.sectionId);roots.push(...s.rootIds);
+  issues.push(...validateBookStyles({book:{contentSlot:'body',page:s.page},styles:d.styles}).map(e=>({...e,path:p+'.'+e.path})));
+  const pending=[...s.rootIds],visited=new Set<string>();
+  while(pending.length){const id=pending.pop()!;if(visited.has(id)){fail(p+'.rootIds');continue;}visited.add(id);
+   if(members.has(id)){fail(p+'.rootIds');continue;}members.set(id,s.sectionId);
+   const n=d.nodes[id];if(!object(n))continue;
+   if(n.type==='text-block'&&Array.isArray(n.children))for(const c of n.children)if(object(c))members.set(c.id,s.sectionId);
+   for(const key of ['rowIds','cellIds','childIds'])if(Array.isArray(n[key]))pending.push(...n[key]);
+  }
+ }
+ if(JSON.stringify(roots)!==JSON.stringify(d.rootIds))fail('sections.rootIds');
+ for(const [id,s] of Object.entries(d.sourceMap))if(!object(s)||!['content','authored'].includes(s.origin)||members.get(id)!==s.sectionId)fail('sourceMap.'+id);
+ for(const id of members.keys())if(!Object.hasOwn(d.sourceMap,id))fail('sourceMap.'+id);
 }

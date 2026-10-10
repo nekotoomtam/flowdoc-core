@@ -15,13 +15,18 @@ interface Row {id:string;allowBreak:boolean;cells:Cell[];height:number}
 const pad=4,epsilon=1e-6;
 export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images:PdfImageResources={}):Promise<DrawDocument>{
  // Preserve the established text-only drawing contract and exact PDF identity.
- if(d.rootIds.every(id=>d.nodes[id]?.type==='text-block'))return textFlow(d,runtime);
- const page=d.book.page,[w,h]=page.orientation==='portrait'?[210,297]:[297,210];
- const widthPt=w!*72/25.4,heightPt=h!*72/25.4,left=toPt(page.margin.left),top=toPt(page.margin.top),bottom=heightPt-toPt(page.margin.bottom),available=widthPt-left-toPt(page.margin.right);
+ if(d.nodeModelVersion!==12&&d.rootIds.every(id=>d.nodes[id]?.type==='text-block'))return textFlow(d,runtime);
+ let widthPt=0,heightPt=0,left=0,top=0,bottom=0,available=0;
+ const setPage=(page:ResolvedDocument['book']['page'])=>{
+  const [w,h]=page.orientation==='portrait'?[210,297]:[297,210];
+  widthPt=w!*72/25.4;heightPt=h!*72/25.4;left=toPt(page.margin.left);top=toPt(page.margin.top);bottom=heightPt-toPt(page.margin.bottom);available=widthPt-left-toPt(page.margin.right);
+ };
+ setPage(d.book.page);
+ let sectionId:string|undefined,sectionPageIndex=0;
  const contentsSlots:NonNullable<DrawDocument['contentsSlots']>=[];
  const entries=d.rootIds.some(id=>d.nodes[id]?.type==='table-of-contents')?collectContents(d):[];
  const pages:DrawPage[]=[];let current!:DrawPage,y=top,serial=0;
- const nextPage=()=>{current={widthPt,heightPt,backgroundColor:'FFFFFF',commands:[]};pages.push(current);y=top;};nextPage();
+ const nextPage=()=>{current={widthPt,heightPt,backgroundColor:'FFFFFF',commands:[],...(sectionId===undefined?{}:{sectionId,sectionPageIndex:sectionPageIndex++})};pages.push(current);y=top;};
  const emitLine=(line:MeasuredLine,x:number,at:number)=>{if(line.run)current.commands.push({...line.run,id:`run-${serial++}`,bounds:{...line.run.bounds,xPt:x+line.run.bounds.xPt,yPt:at}});};
  const measureBlock=async(id:string,width:number)=>{const n=d.nodes[id];if(n?.type!=='text-block')throw new LayoutError(id,'Expected a TextBlock');return measureText(n,d.styles[n.props.textStyleId]!,width,runtime);};
  const measureRow=async(row:TableRow,widths:number[]):Promise<Row>=>{
@@ -82,7 +87,11 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
    }
   }
  };
- for(const id of d.rootIds){const n=d.nodes[id];if(n?.type==='table')await table(n);else if(n?.type==='text-block'){
+ const sections=d.nodeModelVersion===12?d.sections!:[{sectionId:undefined,page:d.book.page,rootIds:d.rootIds}];
+ for(const section of sections){
+ if(d.nodeModelVersion===12&&!section.rootIds.length)continue;
+ sectionId=section.sectionId;sectionPageIndex=0;setPage(section.page);nextPage();
+ for(const id of section.rootIds){const n=d.nodes[id];if(n?.type==='table')await table(n);else if(n?.type==='text-block'){
   for(const line of await measureBlock(id,available)){
    if(line.heightPt>bottom-top+epsilon)throw new LayoutError(id,'Line exceeds page height');if(y+line.heightPt>bottom+epsilon)nextPage();emitLine(line,left,y);y+=line.heightPt;
   }
@@ -104,5 +113,6 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
   if(image){const scale=Math.min(fw/image.width,fh/image.height),iw=image.width*scale,ih=image.height*scale;current.images??=[];current.images.push({nodeId:id,resourceId:n.props.resourceId,xPt:frameLeft+(fw-iw)/2,yPt:y+(fh-ih)/2,widthPt:iw,heightPt:ih});}
   y+=fh;
  }else throw new LayoutError(id,'Unsupported root');}
+ }
  return {pages,...(contentsSlots.length?{contentsSlots}:{})};
 }

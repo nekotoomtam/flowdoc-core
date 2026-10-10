@@ -7,9 +7,18 @@ import {join} from 'node:path';
 import {createEngine} from '../../src/pdf/createPdfEngine.js';
 import {document,fakeRuntime} from '../helpers/document.js';
 import type {ExportResources} from '../../src/runtime/exportResources.js';
+import {sectionTemplate,composed} from '../helpers/sections.js';
 const dirs:string[]=[];
 afterEach(async()=>{for(const d of dirs.splice(0))await rm(d,{recursive:true,force:true});});
 async function setup(){const tempRoot=await mkdtemp(join(tmpdir(),'flowdoc-engine-'));dirs.push(tempRoot);return {tempRoot,pythonExecutable:'python',shaperPath:'shaper',segmenterPath:'segmenter',subsetHelperPath:'subset',fonts:[]} as ExportResources;}
+it('attributes page-number space failure to the failing section rather than the TOC',async()=>{
+ const t=sectionTemplate(),f=t.sections[0].source.fragment;
+ f.rootIds=['toc'];f.nodes={toc:{id:'toc',type:'table-of-contents',props:{textStyleId:'body'}}};
+ t.formats['section-note'].fragment.nodes.note.props.anchorId='heading';t.formats['section-note'].fragment.nodes.note.props.toc={level:1};
+ t.pageLayouts.wide.page.margin.bottom={value:0,unit:'pt'};
+ const d=composed(t),engine=createEngine(await setup(),{runtime:fakeRuntime,subset:async()=>[],write:()=>new Uint8Array()});
+ const result=await engine.generatePdf(d);expect(result).toMatchObject({ok:false,issues:[{code:'LAYOUT_FAILED',sectionId:'main',nodeId:d.sections![1]!.rootIds[0]}]});
+});
 it('uses separate temporary directories for overlapping calls and cleans both',async()=>{
  const r=await setup(),seen:string[]=[];
  const engine=createEngine(r,{runtime:fakeRuntime,subset:async(_d,_r,temp)=>{seen.push(temp);await writeFile(join(temp,'test'),'x');await new Promise(resolve=>setTimeout(resolve,5));return [];},write:()=>new Uint8Array([1])});

@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 WORKDIR /consumer
 COPY package.json package-lock.json flowdoc-core.tgz ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
-COPY checkResources.mjs checkPdf.mjs checkBinding.mjs checkTable.mjs checkImages.mjs checkMergedTable.mjs checkLinks.mjs checkContents.mjs checkCellContent.mjs checkCellRepeats.mjs checkAreas.mjs cell-repeat-template.json area-template.json checkContentsResources.mjs contents-template.json links-template.json merged-template.json red.jpg expected-package.json *.resolved.json srs-*.json binding-*.json table-*.json ./
+COPY checkResources.mjs checkPdf.mjs checkBinding.mjs checkTable.mjs checkImages.mjs checkMergedTable.mjs checkLinks.mjs checkContents.mjs checkCellContent.mjs checkCellRepeats.mjs checkAreas.mjs checkPageSections.mjs page-sections-*.json cell-repeat-template.json area-template.json checkContentsResources.mjs contents-template.json links-template.json merged-template.json red.jpg expected-package.json *.resolved.json srs-*.json binding-*.json table-*.json ./
 RUN mkdir /consumer/temp /consumer/output && chown -R 10001:10001 /consumer
 USER 10001:10001
-CMD ["sh","-c","node checkResources.mjs > output/resource-result.json && node checkPdf.mjs && node checkBinding.mjs && node checkTable.mjs && node checkImages.mjs && node checkMergedTable.mjs && node checkLinks.mjs && node checkContents.mjs && node checkCellContent.mjs && node checkCellRepeats.mjs && node checkAreas.mjs && node checkContentsResources.mjs"]
+CMD ["sh","-c","node checkResources.mjs > output/resource-result.json && node checkPdf.mjs && node checkBinding.mjs && node checkTable.mjs && node checkImages.mjs && node checkMergedTable.mjs && node checkLinks.mjs && node checkContents.mjs && node checkCellContent.mjs && node checkCellRepeats.mjs && node checkAreas.mjs && node checkPageSections.mjs && node checkContentsResources.mjs"]

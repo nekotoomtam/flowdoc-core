@@ -20,10 +20,13 @@ export interface Repeat {tableId:string;rowTemplateId:string;source:{scope:'glob
 export interface CellRepeat {id:string;cellId:string;childTemplateIds:string[];source:{scope:'global'|'local';key:string}}
 export interface Format {label?:string;description?:string;inputSchema:ObjectSchema;fragment:Fragment;repeats:Repeat[];cellRepeats?:CellRepeat[]}
 export interface AreaFormat extends Format {key:string;ownerAreaId:string}
-export interface TemplateDefinition {
+interface TemplateBase {
  areaFormats?:Record<string,AreaFormat>;
- schemaVersion:1;nodeModelVersion:4|5|6|7|8|9|10|11;templateId:string;docKey:string;version:number;name:string;
- book:ResolvedDocument['book'];styles:ResolvedDocument['styles'];globalSchema:ObjectSchema;
+ schemaVersion:1;templateId:string;docKey:string;version:number;name:string;
+ styles:ResolvedDocument['styles'];globalSchema:ObjectSchema;
  formats:Record<string,Format>;examples:{name:string;request:unknown}[];
 }
+export interface PageLayout {label?:string;page:ResolvedDocument['book']['page']}
+export interface TemplateSection {id:string;label?:string;pageLayoutId?:string;source:{kind:'content'}|({kind:'authored'}&Pick<Format,'fragment'|'repeats'|'cellRepeats'>)}
+export type TemplateDefinition=TemplateBase&({nodeModelVersion:4|5|6|7|8|9|10|11;book:ResolvedDocument['book']}|{nodeModelVersion:12;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:TemplateSection[]});
 export interface ValidatedTemplate {readonly definition:TemplateDefinition;readonly fingerprint:string}
