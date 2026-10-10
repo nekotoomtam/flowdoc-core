@@ -26,7 +26,7 @@ export function validateAreas(t:TemplateDefinition):Issue[]{
   const owner=index.byId.get(f.ownerAreaId),nk=JSON.stringify([f.ownerAreaId,f.key]);if(!owner||names.has(nk))fail(p+'.ownerAreaId');names.add(nk);
   const schemaOk=validateSchemas(f.inputSchema,p+'.inputSchema',issues,false,true,true,true,false);
   if(!Array.isArray(f.repeats)||(f.cellRepeats!==undefined&&!Array.isArray(f.cellRepeats)))fail(p+'.repeats');
-  else if(schemaOk)issues.push(...validateGraph(f.fragment,{heightModes:t.nodeModelVersion===13,styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,repeats:f.repeats,images:true,merged:true,links:true,contents:true,cellContent:true,itemImages:true,cellRepeats:f.cellRepeats??[]},p+'.fragment'));
+  else if(schemaOk)issues.push(...validateGraph(f.fragment,{heightModes:t.nodeModelVersion>=13,styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,repeats:f.repeats,images:true,merged:true,links:true,contents:true,cellContent:true,itemImages:true,cellRepeats:f.cellRepeats??[]},p+'.fragment'));
  }
  const placements=new Map<string,number>();
  for(const {host,f,authored} of [...Object.entries(t.formats).map(([host,f])=>({host,f,authored:false})),...authoredHosts(t).map(([host,f])=>({host,f,authored:true}))]){

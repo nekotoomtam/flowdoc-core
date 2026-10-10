@@ -17,7 +17,7 @@ interface Row {id:string;allowBreak:boolean;cells:Cell[];height:number}
 const pad=4,epsilon=1e-6;
 export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images:PdfImageResources={}):Promise<DrawDocument>{
  // Preserve the established text-only drawing contract and exact PDF identity.
- if((d.nodeModelVersion!==12&&d.nodeModelVersion!==13)&&d.rootIds.every(id=>d.nodes[id]?.type==='text-block'))return textFlow(d,runtime);
+ if((d.nodeModelVersion!==12&&d.nodeModelVersion!==13&&d.nodeModelVersion!==14)&&d.rootIds.every(id=>d.nodes[id]?.type==='text-block'))return textFlow(d,runtime);
  let widthPt=0,heightPt=0,left=0,top=0,bottom=0,available=0;
  const setPage=(page:ResolvedDocument['book']['page'])=>{
   const [w,h]=page.orientation==='portrait'?[210,297]:[297,210];
@@ -28,7 +28,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  const contentsSlots:NonNullable<DrawDocument['contentsSlots']>=[];
  const entries=d.rootIds.some(id=>d.nodes[id]?.type==='table-of-contents')?collectContents(d):[];
  const pages:DrawPage[]=[];let current!:DrawPage,y=top,serial=0;
- const nextPage=()=>{if(cover&&sectionPageIndex>0)throw new LayoutError(activeNode,'Cover exceeds one page');current={...(d.nodeModelVersion===13?{pageRole}:{}),widthPt,heightPt,backgroundColor:'FFFFFF',commands:[],...(sectionId===undefined?{}:{sectionId,sectionPageIndex:sectionPageIndex++})};pages.push(current);y=top;};
+ const nextPage=()=>{if(cover&&sectionPageIndex>0)throw new LayoutError(activeNode,'Cover exceeds one page');current={...(d.nodeModelVersion>=13?{pageRole}:{}),widthPt,heightPt,backgroundColor:'FFFFFF',commands:[],...(sectionId===undefined?{}:{sectionId,sectionPageIndex:sectionPageIndex++})};pages.push(current);y=top;};
  const emitLine=(line:MeasuredLine,x:number,at:number)=>{if(line.run)current.commands.push({...line.run,id:`run-${serial++}`,bounds:{...line.run.bounds,xPt:x+line.run.bounds.xPt,yPt:at}});};
  const measureBlock=async(id:string,width:number)=>{const n=d.nodes[id];if(n?.type!=='text-block')throw new LayoutError(id,'Expected a TextBlock');return measureText(n,d.styles[n.props.textStyleId]!,width,runtime);};
  const measureRow=async(row:TableRow,widths:number[]):Promise<Row>=>{
@@ -89,10 +89,10 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
    }
   }
  };
- const sections=(d.nodeModelVersion===12||d.nodeModelVersion===13)?d.sections!:[{role:undefined,sourceKind:undefined,sectionId:undefined,page:d.book.page,rootIds:d.rootIds}];
+ const sections=(d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14)?d.sections!:[{role:undefined,sourceKind:undefined,sectionId:undefined,page:d.book.page,rootIds:d.rootIds}];
  for(const section of sections){
- if((d.nodeModelVersion===12||d.nodeModelVersion===13)&&!section.rootIds.length&&!(d.nodeModelVersion===13&&(section.role==='cover'||section.sourceKind==='blank')))continue;
- sectionId=section.sectionId;sectionPageIndex=0;cover=d.nodeModelVersion===13&&section.role==='cover';pageRole=cover?'cover':section.sourceKind==='blank'?'blank':'body';setPage(section.page);nextPage();
+ if((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14)&&!section.rootIds.length&&!(d.nodeModelVersion>=13&&(section.role==='cover'||section.sourceKind==='blank')))continue;
+ sectionId=section.sectionId;sectionPageIndex=0;cover=d.nodeModelVersion>=13&&section.role==='cover';pageRole=cover?'cover':section.sourceKind==='blank'?'blank':'body';setPage(section.page);nextPage();
  for(const id of section.rootIds){activeNode=id;const n=d.nodes[id];if(n?.type==='table')await table(n);else if(n?.type==='text-block'){
   if(n.props.heightMode==='fixed'){
    const measured=await measureFixedTextBlock(n,d.styles[n.props.textStyleId]!,available,runtime);

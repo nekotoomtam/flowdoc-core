@@ -21,12 +21,18 @@ export interface CellRepeat {id:string;cellId:string;childTemplateIds:string[];s
 export interface Format {label?:string;description?:string;inputSchema:ObjectSchema;fragment:Fragment;repeats:Repeat[];cellRepeats?:CellRepeat[]}
 export interface AreaFormat extends Format {key:string;ownerAreaId:string}
 interface TemplateBase {
+ header?:PageBandDefinition;footer?:PageBandDefinition;
  areaFormats?:Record<string,AreaFormat>;
  schemaVersion:1;templateId:string;docKey:string;version:number;name:string;
  styles:ResolvedDocument['styles'];globalSchema:ObjectSchema;
  formats:Record<string,Format>;examples:{name:string;request:unknown}[];
 }
 export interface PageLayout {label?:string;page:ResolvedDocument['book']['page']}
-export interface TemplateSection {role?:'body'|'cover';id:string;label?:string;pageLayoutId?:string;source:{kind:'blank'}|{kind:'content'}|({kind:'authored'}&Pick<Format,'fragment'|'repeats'|'cellRepeats'>)}
-export type TemplateDefinition=TemplateBase&({nodeModelVersion:4|5|6|7|8|9|10|11;book:ResolvedDocument['book']}|{nodeModelVersion:12|13;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:TemplateSection[]});
+export interface TemplateSection {headerMode?:BandMode;footerMode?:BandMode;role?:'body'|'cover';id:string;label?:string;pageLayoutId?:string;source:{kind:'blank'}|{kind:'content'}|({kind:'authored'}&Pick<Format,'fragment'|'repeats'|'cellRepeats'>)}
+export type TemplateDefinition=TemplateBase&({nodeModelVersion:4|5|6|7|8|9|10|11;book:ResolvedDocument['book']}|{nodeModelVersion:12|13|14;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:TemplateSection[]});
 export interface ValidatedTemplate {readonly definition:TemplateDefinition;readonly fingerprint:string}
+
+export type BandMode='all'|'first'|'continuation'|'none';
+export type BandSizing={mode:'content';minHeight?:import('../composition/resolvedDocument.js').Length;maxHeight?:import('../composition/resolvedDocument.js').Length}|{mode:'fixed';height:import('../composition/resolvedDocument.js').Length};
+export interface BandColumns {id:string;type:'columns';props:{gap?:import('../composition/resolvedDocument.js').Length};columns:{weight:number;childIds:string[]}[]}
+export interface PageBandDefinition {inputSchema:ObjectSchema<StringField|ImageField|LinkField>;fragment:{rootIds:string[];nodes:Record<string,TemplateTextBlock|TemplateImageBlock|BandColumns>};baseTextStyleId:string;sizing?:BandSizing;gap?:import('../composition/resolvedDocument.js').Length}

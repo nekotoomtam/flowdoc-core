@@ -19,9 +19,12 @@ export interface ImageBlock {id:string;type:'image';props:{width:Length;height:L
 export interface ContentsBlock {id:string;type:'table-of-contents';props:{textStyleId:string}}
 export type DocumentNode=TextBlock|Table|TableRow|TableCell|ImageBlock|ContentsBlock;
 export interface ResolvedDocument {
-  schemaVersion:1;nodeModelVersion:4|5|6|7|8|9|10|11|12|13;template:{templateId:string;docKey:string;version:number};
+  schemaVersion:1;nodeModelVersion:4|5|6|7|8|9|10|11|12|13|14;template:{templateId:string;docKey:string;version:number};
   book:{contentSlot:'body';page:{size:'A4';orientation:'portrait'|'landscape';margin:{top:Length;right:Length;bottom:Length;left:Length}}};
-  sections?:{role?:'body'|'cover';sourceKind?:'content'|'authored'|'blank';sectionId:string;pageLayoutId:string;page:ResolvedDocument['book']['page'];rootIds:string[]}[];
+  header?:ResolvedBand;footer?:ResolvedBand;
+  sections?:{headerMode?:import('../template/types.js').BandMode;footerMode?:import('../template/types.js').BandMode;role?:'body'|'cover';sourceKind?:'content'|'authored'|'blank';sectionId:string;pageLayoutId:string;page:ResolvedDocument['book']['page'];rootIds:string[]}[];
   styles:Record<string,TextStyle>;rootIds:string[];nodes:Record<string,DocumentNode>;sourceMap:Record<string,SourceEntry>;
 }
 export function toPt(length:Length):number {return length.unit==='mm'?length.value*72/25.4:length.value;}
+
+export interface ResolvedBand {rootIds:string[];nodes:Record<string,TextBlock|ImageBlock|import('../template/types.js').BandColumns>;sourceMap:Record<string,SourceEntry>;baseTextStyleId:string;sizing?:import('../template/types.js').BandSizing;gap?:Length}
