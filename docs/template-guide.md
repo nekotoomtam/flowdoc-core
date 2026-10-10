@@ -1,8 +1,8 @@
-# คู่มือสร้างแม่แบบ FlowDoc Core 0.1.10
+# คู่มือสร้างแม่แบบ FlowDoc Core 0.1.11
 
 ## Authority Boundary
 
-Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.1.10 รองรับ
+Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.1.11 รองรับ
 ไม่ใช่ roadmap หรือการรับรอง release สถานะร่วมและข้อจำกัดที่ตกลงอยู่ใน
 flowdoc-project-control `docs/domains/flowdoc-export-node-structure-draft-2026-10-09.md`
 วิธี import/publish และเรียก HTTP อยู่ใน [คู่มือ Service](../../flowdoc-service/docs/usage.md)
@@ -286,3 +286,26 @@ body ว่างยังข้าม แต่ cover/blank ที่ประ�
 
 ตัวอย่างครบ: fixtures/cover-pages/template.json และ request.json
 ขอบเขตการพัฒนาร่วมอยู่ใน Project Control docs/domains/flowdoc-page-system-r2-design-2026-10-10.md
+
+
+## หัวท้ายกระดาษ — model14
+
+ตัวอย่างครบ: fixtures/page-bands/template.json และ request.json.
+Template header/footer แต่ละชุดประกอบด้วย inputSchema, fragment,
+baseTextStyleId (style ที่มีอยู่), gap และ sizing แบบเลือกได้.
+request.header/request.footer แยกจาก request.data; ปกยังอ่าน data.
+field-ref scope global ภายในหัว/ท้ายอ่านชุดของพื้นที่นั้น ไม่ค้นข้ามไป data.
+ไม่ส่ง object ถือเป็น {} แล้วตรวจ required/default ตาม field.
+
+รองรับ TextBlock, Image และ Columns หนึ่งชั้นในหัวท้ายเท่านั้น.
+Columns มี props.gap และ columns:[{weight,childIds}]; weight เป็นบวกและแบ่ง
+ความกว้างที่เหลือหลัง gap. ลูกเป็นข้อความ/ภาพ วางบนลงล่าง ชิดบน.
+ไม่รองรับ Table, Area, repeat, anchor หรือ TOC heading ในหัวท้าย.
+
+section.headerMode/footerMode: all(default), first, continuation, none.
+Cover/blank ไม่แสดงหรือจองพื้นที่; section ว่างไม่สร้างหน้าเพราะหัวท้าย.
+content sizing เป็นค่าเริ่มต้น: สูงขั้นต่ำหนึ่งบรรทัดของ baseTextStyleId.
+เลือก minHeight/maxHeight ได้; fixed ใช้ height และห้ามใส่ min/max ร่วม.
+หน่วย mm/pt; gap เริ่ม0. ความสูงพร้อม gap ของสองส่วนรวมกันไม่เกิน40%
+ของพื้นที่ภายใน margins ของหน้าที่แสดงจริง; overflow เป็น LAYOUT_FAILED.
+เลขหน้าชั่วคราวยังอยู่ในขอบล่างภายนอกพื้นที่ footer; ระบบเลขหน้าเต็มอยู่ใน R4.
