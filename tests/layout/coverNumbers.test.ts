@@ -20,3 +20,7 @@ it('excludes cover headings while preserving anchors and uses one counted number
  expect(draw.pages[1]!.commands.find(c=>c.id==='contents-number-0')?.text).toBe('3');expect(draw.pages[3]!.commands.find(c=>c.id==='page-number-3')?.text).toBe('3');
  expect(draw.pages[3]!.annotations?.some(a=>a.destination.type==='internal'&&a.destination.target==='cover')).toBe(true);
 });
+it('omits cover headings inside cells without discarding their anchor',async()=>{
+ const t=coverTemplate(),f=t.sections[0].source.fragment;f.rootIds=['table'];f.nodes={table:{id:'table',type:'table',props:{headerRowCount:0,repeatHeaderRows:false},columns:[{width:{value:50,unit:'mm'}}],rowIds:['row']},row:{id:'row',type:'table-row',props:{allowBreak:true},cellIds:['cell']},cell:{id:'cell',type:'table-cell',props:{},childIds:['heading']},heading:{id:'heading',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body',toc:{level:1},anchorId:'cover-cell'},children:[{id:'leaf',type:'text',text:'Cover heading'}]}};
+ const d=composed(t),draw=await documentFlow(d,fakeRuntime);expect(collectContents(d)).toEqual([]);expect(indexDestinations(d,draw)['cover-cell']?.pageIndex).toBe(0);
+});

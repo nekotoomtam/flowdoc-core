@@ -26,7 +26,7 @@ export function validateTemplate(input:unknown):Result<ValidatedTemplate>{
    for(const k of ['label','description'])if(Object.hasOwn(f,k)&&typeof f[k]!=='string')fail(p+'.'+k);
    const localOk=validateSchemas(f.inputSchema,p+'.inputSchema',issues,false,t.nodeModelVersion>=5,t.nodeModelVersion>=7,t.nodeModelVersion>=10,t.nodeModelVersion>=11);
    if(!Array.isArray(f.repeats)||(own(f,'cellRepeats')&&!Array.isArray(f.cellRepeats)))fail(p+'.repeats');
-   else if(globalOk&&localOk&&object(t.styles))issues.push(...validateGraph(f.fragment,{styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,repeats:f.repeats,images:t.nodeModelVersion>=5,merged:t.nodeModelVersion>=6,links:t.nodeModelVersion>=7,contents:t.nodeModelVersion>=8,cellContent:t.nodeModelVersion>=9,itemImages:t.nodeModelVersion>=10,cellRepeats:f.cellRepeats,areas:t.nodeModelVersion>=11},p+'.fragment'));
+   else if(globalOk&&localOk&&object(t.styles))issues.push(...validateGraph(f.fragment,{heightModes:t.nodeModelVersion===13,styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,repeats:f.repeats,images:t.nodeModelVersion>=5,merged:t.nodeModelVersion>=6,links:t.nodeModelVersion>=7,contents:t.nodeModelVersion>=8,cellContent:t.nodeModelVersion>=9,itemImages:t.nodeModelVersion>=10,cellRepeats:f.cellRepeats,areas:t.nodeModelVersion>=11},p+'.fragment'));
   }
   if(!issues.length&&t.nodeModelVersion>=11)issues.push(...validateAreas(t as TemplateDefinition));
   if(!Array.isArray(t.examples))fail('examples');
