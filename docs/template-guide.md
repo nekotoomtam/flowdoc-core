@@ -1,0 +1,221 @@
+# คู่มือสร้างแม่แบบ FlowDoc Core 0.1.8
+
+## Authority Boundary
+
+Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.1.8 รองรับ
+ไม่ใช่ roadmap หรือการรับรอง release สถานะร่วมและข้อจำกัดที่ตกลงอยู่ใน
+flowdoc-project-control `docs/domains/flowdoc-export-node-structure-draft-2026-10-09.md`
+วิธี import/publish และเรียก HTTP อยู่ใน [คู่มือ Service](../../flowdoc-service/docs/usage.md)
+ชนิดข้อมูลฉบับโค้ดอยู่ใน [template/types.ts](../src/template/types.ts)
+
+## 1. แม่แบบ ข้อมูล และเวอร์ชัน
+
+แม่แบบกำหนดหน้ากระดาษ style ตัวแปร และรูปแบบเนื้อหาที่ใช้ซ้ำได้
+ผู้ใช้ API ส่งค่าและลำดับรายการเข้ามา ระบบ bind ค่าแล้ววัดและจัดหน้าเพื่อออก PDF
+ไม่ต้องส่งพิกัด ไม่ต้องสร้างกราฟ node ใหม่ทุกครั้ง
+
+| ส่วน | หน้าที่ |
+| --- | --- |
+| templateId | ตัวตนของแม่แบบ |
+| docKey | ชื่อที่ผู้เรียกใช้เลือกแม่แบบ |
+| version | เวอร์ชันเนื้อหาที่ publish แล้ว ไม่ใช่เวอร์ชัน package |
+| schemaVersion | รูปแบบ envelope ปัจจุบันเป็น 1 |
+| nodeModelVersion | ระดับความสามารถของกราฟ เลือกให้ตรงสิ่งที่ใช้ |
+| book / styles | หน้ากระดาษและรูปแบบข้อความ |
+| globalSchema | ตัวแปรกลางของเล่ม |
+| formats | รูปแบบหลักที่ผู้เรียกเรียงผ่าน content |
+| areaFormats | โครงย่อยที่แต่ละ area เป็นเจ้าของ ใน model 11 |
+| examples | ชุดตัวอย่าง request ที่ต้องผ่าน validation โดยไม่มี warning |
+
+ตัวอย่างเต็มที่เริ่มแก้ได้ทันที:
+
+| ต้องการ | ไฟล์ |
+| --- | --- |
+| ข้อความผสมตัวแปร | [binding-text](../fixtures/binding-text/template.json) |
+| ตารางและแถวตามรายการ | [table](../fixtures/table/template.json) |
+| รูปหลายรายการในเซลล์ | [cell-repeats](../fixtures/cell-repeats/template.json) |
+| Area และโครงย่อย | [areas](../fixtures/areas/template.json) |
+| สารบัญ | [contents](../fixtures/contents/template.json) |
+
+อย่าเพิ่ม nodeModelVersion ให้แม่แบบเก่าอัตโนมัติ เพราะบางรุ่นกำหนดสัญญาต่างกัน
+รุ่น package 0.1.8 อ่าน model 4–11 ได้ แต่ใช้ความสามารถใหม่ต้องเลือกรุ่น model ที่รองรับ
+
+| Model | สิ่งที่เพิ่ม |
+| --- | --- |
+| 4 | TextBlock, ตาราง, binding และแถวซ้ำ |
+| 5 | Image |
+| 6 | เซลล์รวม |
+| 7 | ลิงก์และจุดหมายภายในเอกสาร |
+| 8 | สารบัญ |
+| 9 | TextBlock/Image หลายชิ้นในเซลล์และ padding รายด้าน |
+| 10 | image ใน array item และ cellRepeats |
+| 11 | area พร้อมโครงย่อยที่เป็นเจ้าของ |
+
+หน้าปัจจุบันใช้ A4 แนวตั้งหรือแนวนอน margin หน่วย mm/pt และ contentSlot เป็น body
+ฟอนต์ที่แพ็กไว้คือ Sarabun Regular/Bold/Italic/BoldItalic อ้างผ่าน fontFamilyKey
+`sarabun` ตั้ง fontSize และ lineHeightPt ให้พอสำหรับวรรณยุกต์ไทย
+ตัวอย่าง 12 pt / lineHeightPt 20–22 เป็นจุดเริ่มตาม fixture ไม่ใช่ค่าที่ใช้ได้กับทุกขนาด
+ไม่มีการตัดตัวอักษรหรือใช้ฟอนต์อื่นเงียบ ๆ เมื่อพื้นที่ไม่พอ
+
+## 2. ข้อความกับตัวแปรใช้ร่วมกัน
+
+ตัวแปรเป็นส่วนหนึ่งของ TextBlock ได้ ไม่ต้องสร้าง node ทั้งก้อนให้ตัวแปรคำเดียว
+ตัวอย่างส่วน `children` ภายใน TextBlock:
+
+```json
+[
+  {"id":"leaf-001","type":"text","text":"โครงการ "},
+  {"id":"leaf-002","type":"field-ref","scope":"global","key":"projectName"},
+  {"id":"leaf-003","type":"text","text":" มีรายละเอียดดังนี้"}
+]
+```
+
+ประกาศ `projectName` ใน `globalSchema.fields` เช่น
+`{"type":"string","required":true,"allowEmpty":false}`
+`global` อ่าน data กลาง, `local` อ่าน data ของรูปแบบที่กำลังใช้ และ `item`
+อ่านรายการ array ในบริเวณ repeat ที่ประกาศไว้ ไม่มีการเดาข้าม scope
+ข้อความขึ้นบรรทัดด้วย newline ได้ ส่วน wrap ปกติใช้การวัดข้อความของ Core
+
+ID ของ node/leaf เป็นตัวตนโครงสร้าง ส่วน key เป็นชื่อข้อมูลที่ผู้เรียกส่งมา
+ตัวอย่าง `childIds: ["node-001", "node-002"]` อ้าง node ไม่ใช่ชื่อตัวแปร
+ลำดับ rootIds/childIds คือลำดับวางเนื้อหาในตำแหน่งนั้น
+
+## 3. ระบบ type และค่าที่ขาด
+
+| Type | ค่าที่ผู้เรียกส่ง |
+| --- | --- |
+| string | ข้อความ |
+| image | resource UUID จากขั้น upload ของ Service |
+| link | object คำสั่ง url/link/reference |
+| array | รายการ object ตาม items.fields ชั้นเดียว |
+| area | รายการ `{format, data}` ของโครงย่อยที่อนุญาต |
+
+`object` ใช้กับ schema envelope และ array item ไม่ใช่เปิด arbitrary nested object
+array item รองรับ string/link และ image ใน model 10 ขึ้นไป ไม่รองรับ array ซ้อน
+
+ลำดับตรวจค่าที่ไม่ส่งมา: required ขาดให้ fail แม้มี default;
+ถ้า optional ใช้ default ที่ประกาศ มิฉะนั้นข้อความเป็น `""` และรายการเป็น `[]`
+optional image/link ที่ไม่ส่งไม่แสดงเนื้อหานั้น
+ส่ง null หรือชนิดผิดไม่แปลงให้เป็น string อัตโนมัติ
+key ข้อมูลที่ไม่รู้จักแจ้ง warning ส่วนรูปแบบหลักที่ไม่รู้จักข้ามพร้อม warning
+ต้องมีรูปแบบหลักที่รับได้อย่างน้อยหนึ่งรายการ
+
+## 4. ตารางและเนื้อหาในเซลล์
+
+ประกาศความกว้างคอลัมน์ให้รวมแล้วอยู่ในพื้นที่พิมพ์ ใช้ Length `{value, unit}`
+หน่วย `pt` หรือ `mm` เซลล์วาง TextBlock/Image เรียงแนวตั้งตาม childIds
+ยังไม่มี Columns หรือตารางซ้อนในเซลล์ และภาพยังเป็น node แยก ไม่ใช่ inline ในข้อความ
+
+model 9 ขึ้นไปกำหนด padding แต่ละด้านได้ ด้านที่ไม่ระบุใช้ 4 pt
+ค่า 0 หมายถึงไม่เว้นจริง ๆ ไม่ถูกแทนด้วยค่าเริ่มต้น ดูรูปแบบ props ใน fixture
+ความสูงแถวตามเนื้อหาที่สูงที่สุดรวม padding ไม่ใช่ความสูงภาพต้นฉบับ
+
+เซลล์รวมใช้ columnIndex เริ่ม 0, rowSpan/colSpan เริ่มต้น 1
+หากใช้ explicit placement ให้ประกาศตำแหน่งทุกเซลล์ ไม่ใส่ placeholder ทับพื้นที่ที่ถูกรวม
+ต้องไม่มีช่องว่าง ทับกัน หรือ span เลยขอบ; rowSpan ห้ามข้ามหัวตารางหรือแตะแถวที่ repeat
+แนวนอนรวมภายในแถว repeat ได้
+
+`allowBreak:true` ต่อเนื้อหาข้ามหน้าตามจุดตัดที่วัดได้ ข้อความตัดทั้งบรรทัด
+ภาพไม่ถูกหั่นกลางรูป เซลล์ที่จบแล้วอาจว่างใน fragment หน้าถัดไป
+`allowBreak:false` ย้ายแถวทั้งแถว และ fail ถ้าแถวนั้นใหญ่เกินหนึ่งหน้าที่ใช้ได้
+`repeatHeaderRows:true` แสดงหัวตารางซ้ำตามสัญญาตาราง ไม่ใช่สร้างรายการธุรกิจใหม่
+หัวตาราง/ภาพที่ใหญ่จนวางไม่ได้เป็นข้อผิดพลาด ไม่ลดสเกลทั้งเอกสารเงียบ ๆ
+
+## 5. Array สำหรับรูปหลายรูปและรูปแบบคงที่
+
+ภาพหนึ่งตัวแปรยังหมายถึงภาพหนึ่งรูป หากต้องการหลายรูปประกาศ array ของ object:
+
+```json
+{"type":"array","items":{"type":"object","fields":{
+  "photo":{"type":"image","required":true},
+  "caption":{"type":"string"}
+}}}
+```
+
+ผู้เรียกส่ง `[{"photo":"resource UUID","caption":"คำบรรยาย"}, ...]`
+ผู้สร้างใช้ `repeats` เพื่อทำแถวซ้ำ หรือ `cellRepeats` เพื่อทำช่วง node ภายในเซลล์ซ้ำ
+เช่น photo → caption ต่อรายการ โดย binding ในช่วงนั้นใช้ scope item
+ดู [fixture cell-repeats](../fixtures/cell-repeats/template.json) สำหรับตำแหน่งประกาศ
+ขอบเขตช่วงและ ID จริง `[]` หมายถึงไม่มีรายการในช่วงซ้ำ
+
+Image กำหนด width/height ในแม่แบบและ source `{scope, key}`
+align เป็น left/center/right ของกรอบภาพในพื้นที่ที่รองรับ ค่าเริ่มต้น left
+ภาพรักษาสัดส่วนอยู่ในกรอบ ไม่ได้ทำ text wrap รอบรูป
+Service เตรียมภาพก่อนส่ง Core; Core ไม่โหลด URL หรือรับ Base64 แทน Service
+
+## 6. Area สำหรับรายการที่เลือกรูปแบบได้
+
+array เหมาะเมื่อทุกรายการมีโครงแบบเดียวกัน ส่วน area ใช้เมื่อแต่ละรายการเลือก
+โครงย่อยของตัวเองได้ เช่น ข้อความตายตัว ตามด้วยหลักฐานภาพและคำบรรยาย
+
+ประกาศใน fields ด้วย key ที่ผู้สร้างตั้ง เช่น:
+
+```json
+{"details":{"type":"area","areaId":"area-001"}}
+```
+
+เชื่อมจุดวางผ่าน areaId ตาม [fixture areas](../fixtures/areas/template.json)
+ไม่ผูกตำแหน่งด้วยชื่อ key แต่ละตัวแปรมีจุดวางหนึ่งจุด และมีโครงย่อยที่รองรับอย่างน้อยหนึ่งรูปแบบ
+นิยาม area เปล่าไม่ผ่าน validation; ข้อมูลตอนใช้งาน `details: []` ใช้ได้
+ถ้าเป็น local area รูปแบบหลักนั้นเรียกซ้ำได้ โดยข้อมูลของแต่ละครั้งแยกกัน
+global area ไม่ให้เรียก host ซ้ำหลายครั้งในเอกสารเดียว
+
+`areaFormats` ใช้ ID เป็น map key แต่แต่ละรายการมี key ที่ผู้เรียกใช้เลือก
+และ ownerAreaId ที่บอกเจ้าของ โครงย่อยต้องมี inputSchema แม้ fields ว่าง
+รูปแบบชื่อเดียวกันต่าง area ได้ แต่ชื่อซ้ำภายใน area เดียวไม่ได้
+ส่งข้อมูลดังนี้:
+
+```json
+{"details":[
+  {"format":"notice","data":{}},
+  {"format":"evidence","data":{"photo":"resource UUID","caption":"ผลทดสอบ"}}
+]}
+```
+
+local ภายในโครงย่อยอ่าน data ของรายการนั้น ไม่อ่านค่าของรูปแบบแม่โดยอัตโนมัติ
+ข้อมูลรายการย่อยผิดให้ข้ามพร้อม warning และตำแหน่งเดิมไว้ติดตาม
+แต่โครงแม่แบบผิด, required ของตัว area ขาด หรือส่งชนิดของตัว area ผิด เป็น error
+area ใช้ความกว้างจากพื้นที่เจ้าบ้าน ไม่กำหนดความกว้างอีกชุด
+ในเซลล์ โครงย่อยวาง TextBlock/Image; บริเวณรากใช้รูปแบบที่มีตารางได้
+ยังไม่รองรับ area ซ้อน โครงย่อยกลางแชร์หลาย area หรือ area ใน header/ช่วง repeat ที่ห้าม
+การลบ current area ฝั่ง Service เก็บกวาดสิ่งที่ area เป็นเจ้าของ; snapshot เก่าคงอยู่
+
+## 7. ลิงก์และสารบัญ
+
+ตัวแปร link ส่งคำสั่งหนึ่งในสามแบบ (ไม่มี inline id ในค่าตัวแปร):
+
+```json
+{"type":"url","value":"https://example.com"}
+```
+
+```json
+{"type":"link","text":"เปิดเว็บไซต์","url":"https://example.com"}
+```
+
+```json
+{"type":"reference","text":"ดูหัวข้อผลทดสอบ","target":"result-001"}
+```
+
+จุดหมายเป็น TextBlock `props.anchorId` ต้องไม่ซ้ำและมีข้อความที่วางจริง
+reference ไปบรรทัดแรกที่มีเนื้อหาของจุดหมายนั้น แม้หัวข้ออยู่ในเซลล์หรือข้ามหน้า
+URL รองรับ HTTP/HTTPS ตาม validation ไม่ใช่โค้ดหรือคำสั่งให้รัน
+
+สารบัญใช้ model 8 ขึ้นไป: กำหนด `props.toc: {level: 1}` ให้ TextBlock ที่มี anchorId
+ระดับปัจจุบัน 1–3 แล้วใส่ root `table-of-contents` หนึ่งตัวพร้อม textStyleId
+ทั้งชื่อและเลขหน้ากดไปหัวข้อได้ เลขหน้าเป็นหน้าจริงหลังจัดหน้า รวมหน้าสารบัญ
+มีเลขหน้าชั่วคราวล่างขวาเมื่อใช้สารบัญ; bottom margin ต้องไม่น้อยกว่า 18 pt
+ยังไม่มีรูปแบบหัวท้ายทั่วไป การยกเว้นหน้าปก หรือเริ่มเลขหน้าใหม่
+
+## 8. ตรวจแม่แบบก่อนใช้
+
+ใช้ public API จากราก package ตาม [README](../README.md#template-and-data-api):
+validateTemplate → prepareGeneration → composeDocument → engine.generatePdf
+ตรวจ ok และเก็บ warnings ของแต่ละขั้น ใช้ raw JSON text ตอน validate
+เพื่อจับ key ซ้ำก่อน JSON.parse ทิ้งข้อมูล ค่า PreparedInput ที่บันทึกไว้ไม่ใช่หลักฐานยืนยันผู้ส่ง
+และควรเก็บ request ต้นฉบับแยกสำหรับตรวจสอบ
+
+เริ่มตรวจจากแม่แบบเล็ก ข้อมูลว่างที่อนุญาต ข้อความไทยยาว และรายการหลายหน้าของรูปแบบนั้น
+ดู PDF จริงว่าตัวอักษรไม่ถูกตัด ลำดับรูป/คำบรรยายถูกต้อง และลิงก์ไปจุดหมายถูก
+การผ่าน schema ไม่ได้แปลว่าทุกขนาดภาพ/line height จะวางได้
+runtime PDF รองรับ Linux x64 ที่แพ็กไว้ ใช้ Service Docker สำหรับลองจาก Windows
+ไม่ต้องใช้ repo เก่าหรือแปลง Sarabun เป็น JavaScript ก่อนใช้งาน
