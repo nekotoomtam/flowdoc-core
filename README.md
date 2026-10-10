@@ -247,3 +247,20 @@ existing overflow limits and A4 portrait/landscape rules still apply.
 See `fixtures/section-ownership/{template,request}.json` and the packed
 `section-ownership.pdf` consumer output. Models 4–14 keep their prior contract;
 there is no automatic migration, DOCX or frontend adapter in this change.
+
+## System page fields (model 16)
+
+Creators place `{id,type:"system-page-field",field:"current"|"total",width}`
+inside header/footer TextBlocks. Width is a positive mm/pt slot; overflow fails
+with Section/node/field context. Callers still send only normal input values.
+
+Section `numbering` supports `continue` (default), `restart` with optional
+positive `startAt` (default 1), or `exclude`; visibility is `show` or `hide`.
+Total counts participating pages across the document. Cover is excluded/hidden;
+blank is counted/hidden by default. Hide preserves space and suppresses the entire
+TextBlock containing fields. No fields means no automatic footer number.
+TOC uses counted numbers; an excluded TOC destination fails explicitly.
+
+See `fixtures/page-numbering`. After `npm run check:package`, inspect the PDFs
+and run `python tests/consumer/checkPageNumberingPdf.py <artifact-directory>`
+with pypdf available. This read-only artifact check is not a runtime dependency.

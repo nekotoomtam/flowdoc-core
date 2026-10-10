@@ -9,7 +9,7 @@ export async function measurePageFieldText(node:TextBlock,style:TextStyle,width:
  const flush=async()=>{if(!pending.length)return;const chunk={...node,children:pending};let lines;
   if(width-x<1e-6)newline();
   try{lines=await measureText(chunk,style,width,runtime,width-x);}catch(e){if(x===0||!(e instanceof LayoutError)||!/whole grapheme/.test(e.message))throw e;newline();lines=await measureText(chunk,style,width,runtime);}
-  for(const [i,line] of lines.entries()){if(i)newline();if(line.run){commands.push({...line.run,id:`field-static-${serial++}`,bounds:{...line.run.bounds,xPt:x+line.run.bounds.xPt,yPt:y}});x+=line.run.bounds.xPt+line.run.bounds.widthPt;}}pending=[];
+  for(const [i,line] of lines.entries()){if(i)newline();if(line.run){commands.push({...line.run,id:`field-static-${serial++}`,bounds:{...line.run.bounds,xPt:x+line.run.bounds.xPt,yPt:y}});x+=line.occupiedWidthPt??(line.run.bounds.xPt+line.run.bounds.widthPt);}}pending=[];
  };
  for(const c of node.children){if(c.type==='system-page-field'){await flush();const w=toPt(c.width);if(w>width+1e-6)throw new LayoutError(node.id,'Page field slot exceeds band width',undefined,'children.'+c.id);if(x+w>width+1e-6)newline();slots.push({nodeId:node.id,fieldId:c.id,field:c.field,xPt:x,yPt:y,widthPt:w,style});x+=w;}
   else if(c.type==='line-break'){await flush();newline();}else pending.push(c);

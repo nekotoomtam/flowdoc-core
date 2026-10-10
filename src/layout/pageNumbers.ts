@@ -19,4 +19,3 @@ export async function appendPageNumbers(document:ResolvedDocument,draw:DrawDocum
   page.commands.push({...run,id:`page-number-${i}`,bounds:{...run.bounds,xPt:left+run.bounds.xPt,yPt:page.heightPt-bottom+(bottom-14)/2}});
  }
 }
-

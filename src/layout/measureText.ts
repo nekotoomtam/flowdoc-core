@@ -4,7 +4,7 @@ import type {TextBlock,TextStyle} from '../composition/resolvedDocument.js';
 import type {GlyphRun} from '../pdf/drawContract.js';
 import type {TextRuntime,ShapedText} from './textFlow.js';
 import {LayoutError} from './textFlow.js';
-export interface MeasuredLine {heightPt:number;run?:Omit<GlyphRun,'id'>}
+export interface MeasuredLine {heightPt:number;occupiedWidthPt?:number;run?:Omit<GlyphRun,'id'>}
 export async function measureText(node:TextBlock,style:TextStyle,available:number,runtime:TextRuntime,firstLineWidth=available):Promise<MeasuredLine[]>{
  let lineWidth=firstLineWidth;
  let raw='',rawSpans:LinkSpan[]=[];
@@ -22,7 +22,7 @@ export async function measureText(node:TextBlock,style:TextStyle,available:numbe
    if(!text){lines.push({heightPt:lineHeight});lineWidth=available;return;}
    const shaped=await shape(text),advance=shaped.glyphs.reduce((a,g)=>a+g.advancePt,0);
    if(extent(shaped)>lineWidth+epsilon||shaped.ascentPt+shaped.descentPt>lineHeight+epsilon)throw new LayoutError(id,'Text ink does not fit the configured line');
-   lines.push({heightPt:lineHeight,run:{nodeId:id,kind:'glyph-run',text,fontId,fontSizePt:size,lineHeightPt:lineHeight,baselineOffsetPt:shaped.ascentPt+(lineHeight-shaped.ascentPt-shaped.descentPt)/2,color:'000000',bounds:{xPt:-Math.min(0,shaped.inkLeftPt??0),yPt:0,widthPt:advance,heightPt:lineHeight},glyphs:shaped.glyphs,...(spans.length?{sourceStart,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{}),links:spans.filter(s=>s.start<sourceStart+text.length&&s.end>sourceStart)}:{})}});
+   lines.push({heightPt:lineHeight,occupiedWidthPt:extent(shaped),run:{nodeId:id,kind:'glyph-run',text,fontId,fontSizePt:size,lineHeightPt:lineHeight,baselineOffsetPt:shaped.ascentPt+(lineHeight-shaped.ascentPt-shaped.descentPt)/2,color:'000000',bounds:{xPt:-Math.min(0,shaped.inkLeftPt??0),yPt:0,widthPt:advance,heightPt:lineHeight},glyphs:shaped.glyphs,...(spans.length?{sourceStart,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{}),links:spans.filter(s=>s.start<sourceStart+text.length&&s.end>sourceStart)}:{})}});
    lineWidth=available;
   };
   const text=raw.replace(/\r\n?/g,'\n');
