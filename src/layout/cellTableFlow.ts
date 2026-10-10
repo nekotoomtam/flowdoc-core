@@ -53,7 +53,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
  while(true){let g=geometry();if(from>=g.ys.at(-1)!-eps)break;
   const hh=first||t.props.repeatHeaderRows?headerHeight:0,capacity=s.bottom-s.y-hh;
   const full=Math.max(s.bottom-s.top,s.nextCapacity??0)-(t.props.repeatHeaderRows?headerHeight:0);
-  for(const [i,id] of rowIds.entries()){const r=d.nodes[id];if(r?.type==='table-row'&&!r.props.allowBreak&&g.heights[i]!>full+eps)throw new LayoutError(id,'Protected row exceeds page');}
+  for(const [i,id] of rowIds.entries()){const r=d.nodes[id];if(r?.type==='table-row'&&!r.props.allowBreak&&g.ys[i+1]!>from+eps&&g.heights[i]!>full+eps)throw new LayoutError(id,'Protected row exceeds page');}
   for(const c of body)for(const l of c.lines)if(!l.drawn&&l.line.heightPt+c.padding.top+c.padding.bottom>full+eps)throw new LayoutError(l.line.nodeId,l.line.kind==='image-frame'?'Image frame cannot fit with table header and padding':'Next whole line cannot fit with header');
   let cut=Math.min(g.ys.at(-1)!,from+capacity);
   const pending=body.flatMap(c=>c.lines.filter(l=>!l.drawn).map(l=>({start:g.ys[c.row]!+l.offset,end:g.ys[c.row]!+l.offset+l.line.heightPt+c.padding.bottom})));
