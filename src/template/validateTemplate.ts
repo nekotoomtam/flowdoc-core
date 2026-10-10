@@ -1,3 +1,4 @@
+import {validateOwnedTemplate} from './sectionOwnership.js';
 import {validatePageBand} from './pageBands.js';
 import {validatePageSections} from './pageSections.js';
 import {validateAreas} from './areas.js';
@@ -15,6 +16,7 @@ export function validateTemplate(input:unknown):Result<ValidatedTemplate>{
  try {
   if(typeof input==='string'){const r=readTemplateJson(input);if(!r.ok)return r;input=r.value;}
   if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_TEMPLATE','template')],warnings:[]};
+  if(input.nodeModelVersion===15)return validateOwnedTemplate(input);
   const t=structuredClone(input);
   if(!keys(t,['schemaVersion','nodeModelVersion','templateId','docKey','version','name','book','globalSchema','styles','formats','examples',...(t.nodeModelVersion===14?['header','footer']:[]),...(t.nodeModelVersion>=11?['areaFormats']:[]),...((t.nodeModelVersion===12||t.nodeModelVersion===13||t.nodeModelVersion===14)?['pageLayouts','sections']:[])])||t.schemaVersion!==1||![4,5,6,7,8,9,10,11,12,13,14].includes(t.nodeModelVersion))fail('template');
   for(const k of ['templateId','docKey','name'])if(!name(t[k]))fail(k);
@@ -30,10 +32,10 @@ export function validateTemplate(input:unknown):Result<ValidatedTemplate>{
    else if(globalOk&&localOk&&object(t.styles))issues.push(...validateGraph(f.fragment,{heightModes:t.nodeModelVersion>=13,styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,repeats:f.repeats,images:t.nodeModelVersion>=5,merged:t.nodeModelVersion>=6,links:t.nodeModelVersion>=7,contents:t.nodeModelVersion>=8,cellContent:t.nodeModelVersion>=9,itemImages:t.nodeModelVersion>=10,cellRepeats:f.cellRepeats,areas:t.nodeModelVersion>=11},p+'.fragment'));
   }
   if(t.nodeModelVersion===14)for(const k of ['header','footer'])if(own(t,k))issues.push(...validatePageBand(t[k],t.styles,k));
-  if(!issues.length&&t.nodeModelVersion>=11)issues.push(...validateAreas(t as TemplateDefinition));
+  if(!issues.length&&t.nodeModelVersion>=11)issues.push(...validateAreas(t as import('./types.js').LegacyTemplateDefinition));
   if(!Array.isArray(t.examples))fail('examples');
   if(issues.length)return {ok:false,issues,warnings:[]};
-  const definition=t as TemplateDefinition,fingerprint=createHash('sha256').update(canonical(t)).digest('hex');
+  const definition=t as import('./types.js').LegacyTemplateDefinition,fingerprint=createHash('sha256').update(canonical(t)).digest('hex');
   const names=new Set<string>();
   for(const [i,e] of definition.examples.entries()){
    const p=`examples[${i}]`;

@@ -14,7 +14,7 @@ export function validateResolvedDocument(input:unknown):Issue[] {
  const fail=(path:string,nodeId?:string)=>issues.push({code:'LAYOUT_FAILED',path,message:'Invalid or unsupported resolved document value',...(nodeId?{nodeId}:{})});
  if(!isJson(input)||!object(input)){fail('document');return issues;}
  const d=input;
- if(!keys(d,['schemaVersion','nodeModelVersion','template','book','styles','rootIds','nodes','sourceMap',...(d.nodeModelVersion===14?['header','footer']:[]),...((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14)?['sections']:[])])||d.schemaVersion!==1||![4,5,6,7,8,9,10,11,12,13,14].includes(d.nodeModelVersion))fail('document');
+ if(!keys(d,['schemaVersion','nodeModelVersion','template','book','styles','rootIds','nodes','sourceMap',...(d.nodeModelVersion===14?['header','footer']:[]),...((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||d.nodeModelVersion===15)?['sections']:[])])||d.schemaVersion!==1||![4,5,6,7,8,9,10,11,12,13,14,15].includes(d.nodeModelVersion))fail('document');
  if(!object(d.template)||!keys(d.template,['templateId','docKey','version'])||!name(d.template.templateId)||!name(d.template.docKey)||!Number.isInteger(d.template.version)||d.template.version<1)fail('template');
  issues.push(...validateBookStyles(d));
  if(!object(d.styles))return issues;
@@ -25,9 +25,9 @@ export function validateResolvedDocument(input:unknown):Issue[] {
  for(const n of Object.values(d.nodes))if(object(n)&&n.type==='text-block'&&Array.isArray(n.children))for(const c of n.children)if(object(c)&&typeof c.id==='string')ids.add(c.id);
  for(const [id,s] of Object.entries(d.sourceMap)){
   if(object(s)&&['areaId','areaEntryIndex','areaFormatId'].some(k=>Object.hasOwn(s,k))&&(!name(s.areaId)||s.areaId.includes('~')||!name(s.areaFormatId)||s.areaFormatId.includes('~')||!Number.isSafeInteger(s.areaEntryIndex)||s.areaEntryIndex<0))fail('sourceMap.'+id);
-  if(!ids.has(id)||!object(s)||!keys(s,['contentIndex','format','sourceId','itemIndex',...(d.nodeModelVersion>=10?['repeatId']:[]),...(d.nodeModelVersion>=11?['areaId','areaEntryIndex','areaFormatId']:[]),...((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14)?['origin','sectionId']:[])])||!((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14)&&s.origin==='authored'?s.contentIndex===undefined&&s.format===undefined:Number.isInteger(s.contentIndex)&&s.contentIndex>=0&&name(s.format))||!name(s.sourceId)||(s.itemIndex!==undefined&&(!Number.isInteger(s.itemIndex)||s.itemIndex<0))||(s.repeatId!==undefined&&(!name(s.repeatId)||s.repeatId.includes('~')||s.itemIndex===undefined)))fail('sourceMap.'+id);
+  if(!ids.has(id)||!object(s)||!keys(s,['contentIndex','format','sourceId','itemIndex',...(d.nodeModelVersion>=10?['repeatId']:[]),...(d.nodeModelVersion>=11?['areaId','areaEntryIndex','areaFormatId']:[]),...((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||d.nodeModelVersion===15)?['origin','sectionId']:[])])||!((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||d.nodeModelVersion===15)&&s.origin==='authored'?s.contentIndex===undefined&&s.format===undefined:Number.isInteger(s.contentIndex)&&s.contentIndex>=0&&name(s.format))||!name(s.sourceId)||(s.itemIndex!==undefined&&(!Number.isInteger(s.itemIndex)||s.itemIndex<0))||(s.repeatId!==undefined&&(!name(s.repeatId)||s.repeatId.includes('~')||s.itemIndex===undefined)))fail('sourceMap.'+id);
  }
- if((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14))validateSections(d,issues);
+ if((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||d.nodeModelVersion===15))validateSections(d,issues);
  for(const id of d.rootIds)if(!Object.hasOwn(d.sourceMap,id))fail('sourceMap.'+id);
  if(d.nodeModelVersion===14)for(const k of ['header','footer'])if(Object.hasOwn(d,k))issues.push(...validatePageBand(d[k],d.styles,k,true).map(i=>({...i,code:'LAYOUT_FAILED'})));
  if(!issues.length&&d.nodeModelVersion>=7)issues.push(...validateDestinations(d as import('./resolvedDocument.js').ResolvedDocument));
@@ -63,9 +63,10 @@ function validateSections(d:Record<string,any>,issues:Issue[]):void {
  const seen=new Set<string>(),roots:string[]=[],members=new Map<string,string>();
  for(const [i,s] of d.sections.entries()){
   const p=`sections[${i}]`;
-  if(!object(s)||!keys(s,['sectionId','pageLayoutId','page','rootIds',...(d.nodeModelVersion===14?['headerMode','footerMode']:[]),...(d.nodeModelVersion>=13?['role','sourceKind']:[])])||!name(s.sectionId)||s.sectionId.includes('~')||seen.has(s.sectionId)||!name(s.pageLayoutId)||s.pageLayoutId.includes('~')||!Array.isArray(s.rootIds)||!s.rootIds.every(name)){fail(p);continue;}
+  if(!object(s)||!keys(s,['sectionId','pageLayoutId','page','rootIds',...(d.nodeModelVersion>=14?['headerMode','footerMode']:[]),...(d.nodeModelVersion===15?['header','footer']:[]),...(d.nodeModelVersion>=13?['role','sourceKind']:[])])||!name(s.sectionId)||s.sectionId.includes('~')||seen.has(s.sectionId)||!name(s.pageLayoutId)||s.pageLayoutId.includes('~')||!Array.isArray(s.rootIds)||!s.rootIds.every(name)){fail(p);continue;}
   if(d.nodeModelVersion>=13&&(!['body','cover'].includes(s.role)||!['content','authored','blank'].includes(s.sourceKind)||(s.role==='cover'&&(i!==0||s.sourceKind!=='authored'))||(s.sourceKind==='blank'&&s.rootIds.length)))fail(p);
-  if(d.nodeModelVersion===14)for(const k of ['headerMode','footerMode'])if(!['all','first','continuation','none'].includes(s[k]))fail(p+'.'+k);
+  if(d.nodeModelVersion>=14)for(const k of ['headerMode','footerMode'])if(!['all','first','continuation','none'].includes(s[k]))fail(p+'.'+k);
+  if(d.nodeModelVersion===15)for(const k of ['header','footer'])if(Object.hasOwn(s,k))issues.push(...validatePageBand(s[k],d.styles,p+'.'+k,true,undefined,s.sectionId).map(e=>({...e,code:'LAYOUT_FAILED'})));
   seen.add(s.sectionId);roots.push(...s.rootIds);
   issues.push(...validateBookStyles({book:{contentSlot:'body',page:s.page},styles:d.styles}).map(e=>({...e,path:p+'.'+e.path})));
   const pending=[...s.rootIds],visited=new Set<string>();

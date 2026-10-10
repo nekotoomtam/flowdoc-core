@@ -18,6 +18,6 @@ export function validateDestinations(document:ResolvedDocument):Issue[]{
  const issues:Issue[]=[],anchors=new Set<string>();
  const fail=(nodeId:string,path:string)=>issues.push({code:'INVALID_DATA',nodeId,path,message:'Missing or duplicate document destination',...document.sourceMap[nodeId]});
  for(const n of Object.values(document.nodes))if(n.type==='text-block'&&n.props.anchorId!==undefined){if(anchors.has(n.props.anchorId))fail(n.id,'nodes.'+n.id+'.props.anchorId');anchors.add(n.props.anchorId);}
- for(const n of [...Object.values(document.nodes),...Object.values(document.header?.nodes??{}),...Object.values(document.footer?.nodes??{})])if(n.type==='text-block')for(const c of n.children)if(c.type==='reference'&&!anchors.has(c.target))fail(c.id,'nodes.'+n.id+'.children.'+c.id+'.target');
+ for(const n of [...Object.values(document.nodes),...Object.values(document.header?.nodes??{}),...Object.values(document.footer?.nodes??{}),...(document.sections??[]).flatMap(s=>[...Object.values(s.header?.nodes??{}),...Object.values(s.footer?.nodes??{})])])if(n.type==='text-block')for(const c of n.children)if(c.type==='reference'&&!anchors.has(c.target))fail(c.id,'nodes.'+n.id+'.children.'+c.id+'.target');
  return issues;
 }

@@ -1,3 +1,4 @@
+import {prepareSections} from './prepareSections.js';
 import {buildAreaIndex} from '../template/areas.js';
 import type {Result,Issue} from '../result.js';
 import type {ValidatedTemplate,TemplateDefinition} from '../template/types.js';
@@ -9,6 +10,7 @@ export function prepareGeneration(template:ValidatedTemplate,input:unknown):Resu
 }
 // Registration examples use this operation without recursively registering a template.
 export function prepareWithDefinition(t:TemplateDefinition,fingerprint:string,input:unknown):Result<PreparedInput>{
+ if(t.nodeModelVersion===15)return prepareSections(t,fingerprint,input);
  const issues:Issue[]=[],warnings:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_DATA',p));
  if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_DATA','request')],warnings};
  if(!keys(input,['docKey','version','data','content',...(t.nodeModelVersion===14?['header','footer']:[])]))fail('request');
