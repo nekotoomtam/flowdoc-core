@@ -29,7 +29,7 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
   const document=structuredClone(input);
   let images:PdfImageResources;
   try{validateImageResources(imageInput);images=snapshotImageResources(imageInput);}catch{return fail('INVALID_IMAGE_RESOURCE','Prepared image resources are invalid or exceed the memory budget');}
-  const warnings=[...Object.values(document.nodes),...Object.values(document.header?.nodes??{}),...Object.values(document.footer?.nodes??{})].filter(n=>n.type==='image'&&!Object.hasOwn(images,n.props.resourceId)).map(n=>({code:'IMAGE_UNAVAILABLE',path:'nodes.'+n.id,nodeId:n.id,message:'Image unavailable; authored frame retained'}));
+  const warnings=[...Object.values(document.nodes),...Object.values(document.header?.nodes??{}),...Object.values(document.footer?.nodes??{}),...(document.sections??[]).flatMap(s=>[...Object.values(s.header?.nodes??{}),...Object.values(s.footer?.nodes??{})])].filter(n=>n.type==='image'&&!Object.hasOwn(images,n.props.resourceId)).map(n=>({code:'IMAGE_UNAVAILABLE',path:'nodes.'+n.id,nodeId:n.id,message:'Image unavailable; authored frame retained'}));
   let temp:string|undefined,result:Result<PdfArtifact>,stage='resource';
   try {
    temp=await mkdtemp(join(resources.tempRoot,'flowdoc-pdf-'));
