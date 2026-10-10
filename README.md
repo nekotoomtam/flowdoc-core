@@ -6,9 +6,10 @@ Owner: flowdoc-core. This README describes this package's local build and resour
 and PDF API. Shared MVP scope and status belong to Project Control's
 `docs/domains/flowdoc-export-mvp-r2-runtime-plan-2026-10-07.md`.
 
-The package validates templates, prepares typed data and composes bound TextBlock
-and simple table graphs. Its PDF engine renders TextBlocks and simple tables
-with whole-line row continuation. There is no HTTP server or database here.
+Development 0.1.8 validates templates, binds typed data and renders TextBlocks,
+images, merged tables, cell repeats, Area subformats, links and contents to PDF.
+There is no HTTP server or database here. Start with the Thai
+[template guide](docs/template-guide.md) for model 4–11 contracts and examples.
 
 ## Template and data API
 
@@ -25,12 +26,13 @@ const composed = composeDocument(registered.value, prepared.value);
 
 Use raw JSON text when registering templates: duplicate decoded property names
 are rejected. Already parsed objects are accepted, but keys previously discarded
-by JSON.parse cannot be recovered. Future Service registration must retain this
+by JSON.parse cannot be recovered. Service registration retains this
 raw-text boundary. The returned definition is a detached frozen copy with a
 canonical SHA-256 fingerprint (including template identity/version). It is not
 authentication. Preparation pins this definition; it never selects a version.
 
-Fields are strings or one level of arrays of string-field objects. Required
+Fields include strings, images, links, one-level object arrays and model 11 Area.
+Supported item types depend on the node model; see the template guide. Required
 missing fields fail even with defaults; optional absent fields use their declared
 default or `""`/`[]`. Supplied wrong types/null fail without coercion. Unknown
 business fields are ignored with warnings; unknown formats are skipped. At least
@@ -120,10 +122,12 @@ if (engine.ok) {
 
 `resolvedDocument` follows the exported `ResolvedDocument` type. Repository
 fixtures in `fixtures/pdf/` are runnable examples. They contain book page/style
-settings and an ordered node graph, not measured coordinates. Only A4 portrait
-or landscape, mm/pt margins, paragraph TextBlocks, text/line-break inlines and
-Sarabun normal/bold/italic combinations are supported in this slice. Simple tables
-use declared fixed-width columns; nested/merged tables, unresolved tags, custom
+settings and an ordered node graph, not measured coordinates. Supported pages
+are A4 portrait or landscape with mm/pt margins. Text uses paragraph TextBlocks,
+text/line-break/link inlines and Sarabun normal/bold/italic combinations.
+Images and later-model features follow the template guide. Tables
+use declared fixed-width columns; merged cells require model 6 or newer.
+Nested tables, unresolved tags, custom
 geometry and unrecognized props return LAYOUT_FAILED.
 All root nodes need sourceMap entries. Input is copied before asynchronous work.
 
@@ -140,7 +144,7 @@ should remain immutable for an engine's lifetime. No global cross-job text cache
 Current PDF font CIDs are limited to 65535 per font per document; exceeding that
 returns PDF_RENDER_FAILED. High-volume queueing is a later Service concern.
 
-Tables have one optional header row and 4 pt cell padding with 0.5 pt black
+Tables have one optional header row and default 4 pt cell padding with 0.5 pt black
 borders. Column widths must fit the page; text must fit the remaining cell width.
 The tallest cell determines row height. Multiple TextBlocks per cell flow in
 order. `allowBreak:true` continues at measured whole-line boundaries, retaining
@@ -149,8 +153,10 @@ moves the row intact, or returns LAYOUT_FAILED if it exceeds the usable page.
 `repeatHeaderRows:true` repeats the header on continuation pages. The header
 stays with at least the next body line; impossible header/body combinations fail
 instead of producing blank pages. An empty collection renders only its header.
-Page breaks do not mutate the composed graph. Row/column merging, configurable
-cell styling and nested tables remain outside this MVP slice.
+Page breaks do not mutate the composed graph. Model 6 adds merging; model 9 adds
+direct TextBlock/Image children and per-side padding (including zero). Model 10
+adds cell repeats and image item binding; model 11 adds owned Area subformats.
+Nested tables and Columns in cells remain unsupported.
 
 `fixtures/table/` contains raw template/short/empty/long requests. Its body style
 uses 12 pt text / 20 pt lines, providing enough room for measured Sarabun Thai ink;
@@ -175,8 +181,8 @@ rows is supported. Model 4/5 retain their ordinary-table contract.
 
 Merged cells measure text at combined column width. Vertical span height deficits
 extend only the final covered row. Whole lines continue across pages under the
-same logical cell; a protected row remains intact. This does not add images,
-nested tables or column containers inside cells. The packed consumer additionally
+same logical cell; a protected row remains intact. Model 6 itself does not add
+images in cells (added in model 9), nested tables or column containers. The packed consumer additionally
 produces `merged-short.pdf` and `merged-long.pdf` for visual inspection.
 
 
@@ -208,9 +214,9 @@ String-valued command properties and anchorId also accept scoped string bindings
 PDF hit areas follow existing glyph clusters and line/page placement, including
 wrapped labels and repeated table headers. Adjacent links sharing an inseparable
 cluster fail rather than choosing an ambiguous destination. Text styling is
-unchanged. Automatic contents lists and DOCX links are outside this package slice.
+unchanged. Model 8 adds contents below; DOCX links remain unsupported.
 
-## Contents (model 8, development 0.1.5)
+## Contents (model 8)
 
 Mark TextBlocks with `props.toc: {level: 1}` (initial levels 1–3) and a unique
 `anchorId`. Insert one root `table-of-contents` with `props.textStyleId`. Bound

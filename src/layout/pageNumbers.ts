@@ -5,7 +5,7 @@ import type {TextRuntime} from './textFlow.js';
 import {LayoutError} from './textFlow.js';
 import {measureNumber} from './fillContentsNumbers.js';
 export async function appendPageNumbers(document:ResolvedDocument,draw:DrawDocument,runtime:TextRuntime):Promise<void>{
- const node=document.nodeModelVersion===8?document.rootIds.map(id=>document.nodes[id]).find(n=>n?.type==='table-of-contents'):undefined;
+ const node=document.nodeModelVersion>=8?document.rootIds.map(id=>document.nodes[id]).find(n=>n?.type==='table-of-contents'):undefined;
  if(!node)return;
  const margin=document.book.page.margin,bottom=toPt(margin.bottom),left=toPt(margin.left),right=toPt(margin.right);
  if(bottom<18)throw new LayoutError(node.id,'Bottom margin must be at least 18 pt for page numbers');
