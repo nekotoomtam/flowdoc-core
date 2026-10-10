@@ -1,3 +1,4 @@
+import {assignSystemPageNumbers} from './systemPageCounting.js';
 import {measurePageBand,selectPageBands,type MeasuredBand} from './pageBands.js';
 import type {BandMode} from '../template/types.js';
 import {assignCountedPages} from './pageCounting.js';
@@ -135,6 +136,6 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
   y+=fh;
  }else throw new LayoutError(id,'Unsupported root');}
  }
- assignCountedPages({pages});
+ if(d.nodeModelVersion===16)assignSystemPageNumbers(d,{pages});else assignCountedPages({pages});
  return {pages,...(contentsSlots.length?{contentsSlots}:{})};
 }
