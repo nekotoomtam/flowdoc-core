@@ -7,8 +7,8 @@ import type {MeasuredCellItem,PaddingPt} from './measureCellContent.js';
 
 import {LayoutError} from './textFlow.js';
 import type {TextRuntime} from './textFlow.js';
-export interface CellTablePageSink {top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
-interface Cell extends GridCell {padding:PaddingPt;contentWidth:number;lines:{line:MeasuredCellItem;offset:number;drawn:boolean}[]}
+export interface CellTablePageSink {top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;fill?(x:number,y:number,width:number,height:number,color:string,nodeId:string):void;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
+interface Cell extends GridCell {fillColor?:string|undefined;padding:PaddingPt;contentWidth:number;lines:{line:MeasuredCellItem;offset:number;drawn:boolean}[]}
 const eps=1e-6;
 export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRuntime,s:CellTablePageSink):Promise<void>{
  const grid=resolveTableGrid(t,d.nodes),widths=t.columns.map(c=>toPt(c.width));
@@ -21,7 +21,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
   if(!Number.isFinite(contentWidth)||contentWidth<=0)throw new LayoutError(c.id,'Cell padding leaves no content width');
   let offset=padding.top;const lines:Cell['lines']=[];
   for(const line of await measureCellContent(d,n.childIds,contentWidth,runtime)){lines.push({line,offset,drawn:false});offset+=line.heightPt;}
-  cells.push({...c,padding,contentWidth,lines});
+  cells.push({...c,padding,contentWidth,lines,fillColor:n.props.fillColor??(c.row<t.props.headerRowCount?t.props.headerFillColor:undefined)});
  }
  const headerCount=t.props.headerRowCount,headerCells=cells.filter(c=>c.row<headerCount);
  const body=cells.filter(c=>c.row>=headerCount).map(c=>({...c,row:c.row-headerCount}));
@@ -39,6 +39,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
   const edge=(axis:'h'|'v',fixed:number,a:number,b:number)=>{if(b-a<eps)return;const key=axis+':'+fixed.toFixed(6),e=edges.get(key)??{axis,fixed,segments:[]};e.segments.push([a,b]);edges.set(key,e);};
   for(const c of list){const start=ys[c.row]!,end=ys[c.row+c.rowSpan]!,lo=Math.max(start,from),hi=Math.min(end,to);if(hi-lo<=eps)continue;
    const x=s.left+xs[c.column]!,right=s.left+xs[c.column+c.colSpan]!,top=at+lo-from,bottom=at+hi-from;
+   if(c.fillColor)s.fill?.(x,top,right-x,bottom-top,c.fillColor,c.id);
    if(!sharedTop||lo>from+eps)edge('h',top,x,right);edge('h',bottom,x,right);edge('v',x,top,bottom);edge('v',right,top,bottom);
    for(const l of c.lines){const y=start+l.offset;if(!l.drawn&&y>=from-eps&&y+l.line.heightPt<=to+eps){s.emitItem(l.line,x+c.padding.left,at+y-from,c.contentWidth);l.drawn=true;}}
   }

@@ -1,3 +1,4 @@
+import {measureRule} from './line.js';
 import type {PageFieldSlot} from '../pdf/drawContract.js';
 import {assignSystemPageNumbers} from './systemPageCounting.js';
 import {measurePageBand,selectPageBands,type MeasuredBand} from './pageBands.js';
@@ -48,7 +49,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  };
  const nextPage=()=>{if(cover&&sectionPageIndex>0)throw new LayoutError(activeNode,'Cover exceeds one page');const g=geometry(sectionPageIndex);top=g.top;bottom=g.bottom;
   current={...(d.nodeModelVersion>=13?{pageRole}:{}),widthPt,heightPt,backgroundColor:'FFFFFF',commands:[],...(sectionId===undefined?{}:{sectionId,sectionPageIndex:sectionPageIndex++})};pages.push(current);y=top;
-  for(const [kind,m,at] of [['header',g.h,g.hy],['footer',g.f,g.fy]] as const){if(!m)continue;for(const run of m.commands)if(!hideNumbers||!m.numberBlocks.has(run.nodeId))current.commands.push({...run,id:`${kind}-${pages.length}-${run.id}`,bounds:{...run.bounds,xPt:bandRegion(kind).left+run.bounds.xPt,yPt:at+run.bounds.yPt}});if(!hideNumbers)for(const slot of m.pageFields)pageFieldSlots.push({...slot,pageIndex:pages.length-1,sectionId:sectionId!,xPt:bandRegion(kind).left+slot.xPt,yPt:at+slot.yPt});if(m.images.length){current.images??=[];for(const image of m.images)current.images.push({...image,xPt:bandRegion(kind).left+image.xPt,yPt:at+image.yPt});}}
+  for(const [kind,m,at] of [['header',g.h,g.hy],['footer',g.f,g.fy]] as const){if(!m)continue;if(m.borders.length){current.borders??=[];for(const b of m.borders)current.borders.push({...b,x1Pt:bandRegion(kind).left+b.x1Pt,x2Pt:bandRegion(kind).left+b.x2Pt,y1Pt:at+b.y1Pt,y2Pt:at+b.y2Pt});}for(const run of m.commands)if(!hideNumbers||!m.numberBlocks.has(run.nodeId))current.commands.push({...run,id:`${kind}-${pages.length}-${run.id}`,bounds:{...run.bounds,xPt:bandRegion(kind).left+run.bounds.xPt,yPt:at+run.bounds.yPt}});if(!hideNumbers)for(const slot of m.pageFields)pageFieldSlots.push({...slot,pageIndex:pages.length-1,sectionId:sectionId!,xPt:bandRegion(kind).left+slot.xPt,yPt:at+slot.yPt});if(m.images.length){current.images??=[];for(const image of m.images)current.images.push({...image,xPt:bandRegion(kind).left+image.xPt,yPt:at+image.yPt});}}
  };
  const ensureHeight=(height:number,id:string)=>{if(y+height>bottom+epsilon)nextPage();if(height>bottom-top+epsilon)throw new LayoutError(id,'Item exceeds page content height');};
 
@@ -65,6 +66,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  const table=async(t:Table)=>{
   if(d.nodeModelVersion>=9){
    await cellTableFlow(d,t,runtime,{get top(){return top;},get bottom(){return bottom;},get nextCapacity(){const g=geometry(sectionPageIndex);return g.bottom-g.top;},left,availableWidth:available,get y(){return y;},set y(v){y=v;},nextPage,
+    fill(xPt,yPt,widthPt,heightPt,color,nodeId){current.fills??=[];current.fills.push({xPt,yPt,widthPt,heightPt,color,nodeId});},
     emitItem(item,x,at,width){
      if(item.kind==='text-line'){emitLine(item.line,x,at);return;}
      const image=Object.hasOwn(images,item.resourceId)?images[item.resourceId]:undefined;
@@ -72,11 +74,11 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
      const fw=item.frameWidth,fh=item.heightPt,scale=Math.min(fw/image.width,fh/image.height),iw=image.width*scale,ih=image.height*scale;
      const frameLeft=x+(item.align==='right'?width-fw:item.align==='center'?(width-fw)/2:0);
      current.images??=[];current.images.push({nodeId:item.nodeId,resourceId:item.resourceId,xPt:frameLeft+(fw-iw)/2,yPt:at+(fh-ih)/2,widthPt:iw,heightPt:ih});
-    },border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId){current.borders??=[];current.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,widthPt:0.5,color:'000000'});}
+    },border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId){current.borders??=[];current.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,widthPt:0.5,color:t.props.borderColor??'000000'});}
    });return;
   }
   if(d.nodeModelVersion>=6&&t.rowIds.some(rid=>{const r=d.nodes[rid];return r?.type==='table-row'&&r.cellIds.some(cid=>{const c=d.nodes[cid];return c?.type==='table-cell'&&Object.keys(c.props).length>0;});})){
-   await mergedTableFlow(d,t,runtime,{get top(){return top;},get bottom(){return bottom;},get nextCapacity(){const g=geometry(sectionPageIndex);return g.bottom-g.top;},left,availableWidth:available,get y(){return y;},set y(v){y=v;},nextPage,emitLine,border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId){current.borders??=[];current.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,widthPt:0.5,color:'000000'});}});return;
+   await mergedTableFlow(d,t,runtime,{get top(){return top;},get bottom(){return bottom;},get nextCapacity(){const g=geometry(sectionPageIndex);return g.bottom-g.top;},left,availableWidth:available,get y(){return y;},set y(v){y=v;},nextPage,emitLine,border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId){current.borders??=[];current.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,widthPt:0.5,color:t.props.borderColor??'000000'});}});return;
   }
   const widths=t.columns.map(c=>toPt(c.width));
   if(widths.some(w=>w<=2*pad)||widths.reduce((a,b)=>a+b,0)>available+epsilon)throw new LayoutError(t.id,'Table columns exceed available content width');
@@ -85,7 +87,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
   if(header&&header.height>bottom-top+epsilon)throw new LayoutError(header.id,'Header exceeds page content height');
   const drawRow=(row:Row,cursors:number[],counts:number[],height:number)=>{
    let x=left;current.borders??=[];
-   const border=(x1:number,y1:number,x2:number,y2:number)=>current.borders!.push({x1Pt:x1,y1Pt:y1,x2Pt:x2,y2Pt:y2,widthPt:0.5,color:'000000',nodeId:row.id});
+   const border=(x1:number,y1:number,x2:number,y2:number)=>current.borders!.push({x1Pt:x1,y1Pt:y1,x2Pt:x2,y2Pt:y2,widthPt:0.5,color:t.props.borderColor??'000000',nodeId:row.id});
    // One perimeter and one separator per column avoid doubled vertical strokes.
    border(left,y,left+widths.reduce((a,b)=>a+b,0),y);border(left,y+height,left+widths.reduce((a,b)=>a+b,0),y+height);border(left,y,left,y+height);
    row.cells.forEach((cell,i)=>{let at=y+pad;for(const line of cell.lines.slice(cursors[i],cursors[i]!+counts[i]!)){emitLine(line,x+pad,at);at+=line.heightPt;}x+=widths[i]!;border(x,y,x,y+height);});y+=height;
@@ -137,6 +139,8 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
    if(numberSlot)contentsSlots.push({nodeId:n.id,...numberSlot,pageIndex:pages.length-1,xPt:left+available-numberSlot.widthPt,yPt:y});
    y+=line.heightPt;
   }
+ }else if(n?.type==='line'){
+  const m=measureRule(n,available);ensureHeight(m.height,id);current.borders??=[];current.borders.push({nodeId:id,x1Pt:left,x2Pt:left+m.width,y1Pt:y+m.before+m.thickness/2,y2Pt:y+m.before+m.thickness/2,widthPt:m.thickness,color:m.color});y+=m.height;
  }else if(n?.type==='image'){
   const fw=toPt(n.props.width),fh=toPt(n.props.height);
   if(fw>available+epsilon)throw new LayoutError(id,'Image frame exceeds printable page');

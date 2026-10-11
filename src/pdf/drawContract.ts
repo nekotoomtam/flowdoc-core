@@ -16,7 +16,8 @@ export interface GlyphRun {
 }
 export interface Border {x1Pt:number;y1Pt:number;x2Pt:number;y2Pt:number;widthPt:number;color:string;nodeId:string}
 export interface DrawImage {resourceId:string;nodeId:string;xPt:number;yPt:number;widthPt:number;heightPt:number}
-export interface DrawPage {
+export interface Fill {nodeId:string;xPt:number;yPt:number;widthPt:number;heightPt:number;color:string}
+export interface DrawPage {fills?:Fill[];
  pageNumbering?:{current:number|null;total:number;visibility:'show'|'hide'};
  pageRole?:'body'|'cover'|'blank';countedPageNumber?:number|null;
  sectionId?:string;sectionPageIndex?:number;widthPt:number;heightPt:number;backgroundColor:string;commands:GlyphRun[];borders?:Border[];images?:DrawImage[];annotations?:LinkAnnotation[]}

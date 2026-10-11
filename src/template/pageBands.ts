@@ -24,8 +24,8 @@ export function validatePageBand(b:any,styles:any,path:string,resolved=false,sco
   if(!object(n)||n.id!==id||!name(id)){fail(path+'.nodes.'+id);continue;}
   if(n.type==='columns'){
    if(!f.rootIds.includes(id)||!keys(n,['id','type','props','columns'])||!object(n.props)||!keys(n.props,['gap'])||(own(n.props,'gap')&&!bandLength(n.props.gap))||!Array.isArray(n.columns)||!n.columns.length){fail(path+'.nodes.'+id);continue;}
-   for(const c of n.columns){if(!object(c)||!keys(c,['weight','childIds'])||typeof c.weight!=='number'||!Number.isFinite(c.weight)||c.weight<=0||!Array.isArray(c.childIds)){fail(path+'.nodes.'+id);continue;}for(const child of c.childIds){if(!['text-block','image'].includes(f.nodes[child]?.type)||referenced.has(child)||f.rootIds.includes(child))fail(path+'.nodes.'+id);referenced.add(child);}}
-  }else if(!['text-block','image'].includes(n.type))fail(path+'.nodes.'+id);
+   for(const c of n.columns){if(!object(c)||!keys(c,['weight','childIds'])||typeof c.weight!=='number'||!Number.isFinite(c.weight)||c.weight<=0||!Array.isArray(c.childIds)){fail(path+'.nodes.'+id);continue;}for(const child of c.childIds){if(!['text-block','image','line'].includes(f.nodes[child]?.type)||referenced.has(child)||f.rootIds.includes(child))fail(path+'.nodes.'+id);referenced.add(child);}}
+  }else if(!['text-block','image','line'].includes(n.type))fail(path+'.nodes.'+id);
   if(n.type==='text-block'&&object(n.props)&&(own(n.props,'toc')||own(n.props,'anchorId')||n.props.heightMode==='fixed'))fail(path+'.nodes.'+id+'.props');
  }
  if(new Set(f.rootIds).size!==f.rootIds.length)fail(path+'.rootIds');
