@@ -7,7 +7,7 @@ import {mkdtemp,rm,readFile,access} from 'node:fs/promises';
 import {constants} from 'node:fs';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
-import type {Result} from '../result.js';
+import type {Result,Issue} from '../result.js';
 import type {ResolvedDocument} from '../composition/resolvedDocument.js';
 import {validateResolvedDocument} from '../composition/validateResolvedDocument.js';
 import type {ExportResources} from '../runtime/exportResources.js';
@@ -31,7 +31,7 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
   const document=structuredClone(input);
   let images:PdfImageResources;
   try{validateImageResources(imageInput);images=snapshotImageResources(imageInput);}catch{return fail('INVALID_IMAGE_RESOURCE','Prepared image resources are invalid or exceed the memory budget');}
-  const warnings=[...Object.values(document.nodes),...Object.values(document.header?.nodes??{}),...Object.values(document.footer?.nodes??{}),...(document.sections??[]).flatMap(s=>[...Object.values(s.header?.nodes??{}),...Object.values(s.footer?.nodes??{})])].filter(n=>n.type==='image'&&!Object.hasOwn(images,n.props.resourceId)).map(n=>({code:'IMAGE_UNAVAILABLE',path:'nodes.'+n.id,nodeId:n.id,message:'Image unavailable; authored frame retained'}));
+  const warnings:Issue[]=[...Object.values(document.nodes),...Object.values(document.header?.nodes??{}),...Object.values(document.footer?.nodes??{}),...(document.sections??[]).flatMap(s=>[...Object.values(s.header?.nodes??{}),...Object.values(s.footer?.nodes??{})])].filter(n=>n.type==='image'&&!Object.hasOwn(images,n.props.resourceId)).map(n=>({code:'IMAGE_UNAVAILABLE',path:'nodes.'+n.id,nodeId:n.id,message:'Image unavailable; authored frame retained'}));
   let temp:string|undefined,result:Result<PdfArtifact>,stage='resource';
   let session:(TextRuntime&{close():Promise<void>})|undefined;
   try {
@@ -39,6 +39,7 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
    const runtime=cacheTextRuntime(session??deps.runtime as TextRuntime);
    temp=await mkdtemp(join(resources.tempRoot,'flowdoc-pdf-'));
    const draw=await documentFlow(document,runtime,images);
+   warnings.push(...draw.warnings??[]);
    const anchors=indexDestinations(document,draw);
    await fillContentsNumbers(draw,anchors,runtime,(document.nodeModelVersion===16||document.nodeModelVersion===17));
    await fillPageFields(draw,runtime);

@@ -39,10 +39,10 @@ it('rejects third array depth, misplaced item/group refs, dotted sources and ove
 it('gates nested arrays and declarations away from older model versions',()=>{
  for(const version of [15,16]){const t=rowGroupTemplate();t.nodeModelVersion=version;expect(validateTemplate(t).ok).toBe(false);delete t.sections[0].formats.meeting.rowGroups;expect(validateTemplate(t).ok).toBe(false);}
 });
-it('retains keepStart but fails layout explicitly until pagination is implemented',async()=>{
+it('retains keepStart and passes it to pagination',async()=>{
  const t=rowGroupTemplate();t.sections[0].formats.meeting.rowGroups[0].pagination.keepStart=true;
  const d=compose(t);expect(d.nodes[d.rootIds[0]].rowGroups[0].keepStart).toBe(true);
- await expect(documentFlow(d,fakeRuntime)).rejects.toThrow(/keepStart/);
+ expect((await documentFlow(d,fakeRuntime)).pages).toHaveLength(1);
  expect((await documentFlow(compose(),fakeRuntime)).pages).toHaveLength(1);
 });
 it('rejects malformed declarations, spans, repetition overlap and empty item schemas',()=>{
