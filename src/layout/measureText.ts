@@ -25,7 +25,9 @@ export async function measureText(node:TextBlock,style:TextStyle,available:numbe
    lines.push({heightPt:lineHeight,occupiedWidthPt:extent(shaped),run:{nodeId:id,kind:'glyph-run',text,fontId,fontSizePt:size,lineHeightPt:lineHeight,baselineOffsetPt:shaped.ascentPt+(lineHeight-shaped.ascentPt-shaped.descentPt)/2,color:'000000',bounds:{xPt:-Math.min(0,shaped.inkLeftPt??0),yPt:0,widthPt:advance,heightPt:lineHeight},glyphs:shaped.glyphs,...(spans.length?{sourceStart,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{}),links:spans.filter(s=>s.start<sourceStart+text.length&&s.end>sourceStart)}:{})}});
    lineWidth=available;
   };
-  const text=raw.replace(/\r\n?/g,'\n');
+  // Tabs are display spaces, not tab stops. One UTF-16 unit remains one unit,
+  // so normalized link offsets stay valid and authored input stays untouched.
+  const text=raw.replace(/\r\n?/g,'\n').replace(/\t/g,' ');
   let paragraphStart=0;
   for(const paragraph of text.split('\n')){
    if(!paragraph){await emit('');paragraphStart++;continue;}
