@@ -6,10 +6,18 @@ Owner: flowdoc-core. This README describes this package's local build and resour
 and PDF API. Shared MVP scope and status belong to Project Control's
 `docs/domains/flowdoc-export-mvp-r2-runtime-plan-2026-10-07.md`.
 
-Version 0.2.9 validates templates, binds typed data and renders TextBlocks,
+Version 0.2.13 validates templates, binds typed data and renders TextBlocks,
 images, merged tables, cell repeats, Area subformats, links and contents to PDF.
+Text measurement uses a per-generation cache (32 MiB serialized payload, at most
+8,192 entries) and a persistent native shaper per used font. Sessions close on
+success or failure; the 30-second per-request timeout and 16 MiB response bound
+remain. These are cache/transport bounds, not a total job-memory guarantee.
+The performance changes preserve wrapping rules and existing template/API contracts. Font preparation sends
+only unique glyph IDs and font identities to the subset helper, preserving font
+order and subset output; full drawing commands stay in the renderer.
+
 There is no HTTP server or database here. Start with the Thai
-[template guide](docs/template-guide.md) for model 4–16 contracts and examples.
+[template guide](docs/template-guide.md) for model 4–17 contracts and examples.
 
 ## Template and data API
 
@@ -31,7 +39,9 @@ raw-text boundary. The returned definition is a detached frozen copy with a
 canonical SHA-256 fingerprint (including template identity/version). It is not
 authentication. Preparation pins this definition; it never selects a version.
 
-Fields include strings, images, links, one-level object arrays and model 11 Area.
+Fields include strings, images, links, object arrays and model 11 Area.
+Model 17 adds bounded two-level arrays and table rowGroups; older models retain
+their original limits.
 Supported item types depend on the node model; see the template guide. Required
 missing fields fail even with defaults; optional absent fields use their declared
 default or `""`/`[]`. Supplied wrong types/null fail without coercion. Unknown
@@ -276,3 +286,25 @@ page labels. Rendering normalizes tabs to one display space and reuses font CIDs
 Empty trailing starts of table rows no longer paint borders/fills when their
 content moves to the next page; pagination and authored empty rows are preserved.
 These are extensions within existing model gates, not a new nodeModelVersion.
+
+## Changes in 0.2.10–0.2.13
+
+0.2.10 reuses native shaping sessions per document and adds a bounded text cache;
+0.2.11 sends compact glyph sets to font subsetting. Neither changes text wrap.
+0.2.12 adds model17 two-level arrays and row-group composition. 0.2.13 implements
+`pagination.keepStart` to keep the group prefix with the first legal member
+fragment, while later members can continue onto another page.
+
+Start with [row-group template](fixtures/row-groups/template.json) and
+[request](fixtures/row-groups/request.json); the checked-in Core fixture leaves
+keepStart false for the no-policy baseline. Set it true in the template to use
+the policy. [The template guide](docs/template-guide.md#model17-rowgroups)
+explains scopes, empty groups, limits and diagnostics. Group prefixes that
+cannot fit usable page capacity emit `ROW_GROUP_KEEP_START_RELAXED`; read PDF
+Result warnings even on success. Unplaceable indivisible content still fails.
+Expansion beyond 100,000 node/inline identities returns `EXPANSION_LIMIT` before
+PDF generation. This ceiling is not a total RAM bound or a production SLA.
+
+Upgrade the package without rewriting published templates. Existing model4–16
+contracts remain supported; explicitly author model17 to use nested arrays.
+Core contains no DB migration. Service upgrade instructions live in its guide.

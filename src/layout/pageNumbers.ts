@@ -5,7 +5,7 @@ import type {TextRuntime} from './textFlow.js';
 import {LayoutError} from './textFlow.js';
 import {measureNumber} from './fillContentsNumbers.js';
 export async function appendPageNumbers(document:ResolvedDocument,draw:DrawDocument,runtime:TextRuntime):Promise<void>{
- if(document.nodeModelVersion===16)return;
+ if((document.nodeModelVersion===16||document.nodeModelVersion===17))return;
  const node=document.nodeModelVersion>=8?document.rootIds.map(id=>document.nodes[id]).find(n=>n?.type==='table-of-contents'):undefined;
  if(!node)return;
  const style:TextStyle={fontFamilyKey:'sarabun',fontWeight:'normal',fontSize:{value:10,unit:'pt'},lineHeightPt:14};

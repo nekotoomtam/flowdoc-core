@@ -1,3 +1,4 @@
+import type {Issue} from '../result.js';
 import {measureRule} from './line.js';
 import type {PageFieldSlot} from '../pdf/drawContract.js';
 import {assignSystemPageNumbers} from './systemPageCounting.js';
@@ -21,8 +22,9 @@ interface Cell {id:string;lines:MeasuredLine[]}
 interface Row {id:string;allowBreak:boolean;cells:Cell[];height:number}
 const pad=4,epsilon=1e-6;
 export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images:PdfImageResources={}):Promise<DrawDocument>{
+ const warnings:Issue[]=[];
  // Preserve the established text-only drawing contract and exact PDF identity.
- if((d.nodeModelVersion!==12&&d.nodeModelVersion!==13&&d.nodeModelVersion!==14&&(d.nodeModelVersion!==15&&d.nodeModelVersion!==16))&&d.rootIds.every(id=>d.nodes[id]?.type==='text-block'))return textFlow(d,runtime);
+ if((d.nodeModelVersion!==12&&d.nodeModelVersion!==13&&d.nodeModelVersion!==14&&(d.nodeModelVersion!==15&&d.nodeModelVersion!==16&&d.nodeModelVersion!==17))&&d.rootIds.every(id=>d.nodes[id]?.type==='text-block'))return textFlow(d,runtime);
  let widthPt=0,heightPt=0,left=0,top=0,bottom=0,available=0,innerTop=0,innerBottom=0;
  let modes:{headerMode?:BandMode;footerMode?:BandMode}={},bands:Partial<Record<'header'|'footer',MeasuredBand>>={};
  let activeBands:Pick<ResolvedDocument,'header'|'footer'>=d;
@@ -65,7 +67,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  };
  const table=async(t:Table)=>{
   if(d.nodeModelVersion>=9){
-   await cellTableFlow(d,t,runtime,{get top(){return top;},get bottom(){return bottom;},get nextCapacity(){const g=geometry(sectionPageIndex);return g.bottom-g.top;},left,availableWidth:available,get y(){return y;},set y(v){y=v;},nextPage,
+   await cellTableFlow(d,t,runtime,{warn(issue){warnings.push(issue);},get top(){return top;},get bottom(){return bottom;},get nextCapacity(){const g=geometry(sectionPageIndex);return g.bottom-g.top;},left,availableWidth:available,get y(){return y;},set y(v){y=v;},nextPage,
     fill(xPt,yPt,widthPt,heightPt,color,nodeId){current.fills??=[];current.fills.push({xPt,yPt,widthPt,heightPt,color,nodeId});},
     emitItem(item,x,at,width){
      if(item.kind==='text-line'){emitLine(item.line,x,at);return;}
@@ -114,13 +116,13 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
    }
   }
  };
- const sections=(d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||(d.nodeModelVersion===15||d.nodeModelVersion===16))?d.sections!:[{role:undefined,sourceKind:undefined,sectionId:undefined,page:d.book.page,rootIds:d.rootIds}];
+ const sections=(d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||(d.nodeModelVersion===15||d.nodeModelVersion===16||d.nodeModelVersion===17))?d.sections!:[{role:undefined,sourceKind:undefined,sectionId:undefined,page:d.book.page,rootIds:d.rootIds}];
  for(const section of sections){
- if((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||(d.nodeModelVersion===15||d.nodeModelVersion===16))&&!section.rootIds.length&&!(d.nodeModelVersion>=13&&(section.role==='cover'||section.sourceKind==='blank')))continue;
- hideNumbers=d.nodeModelVersion===16&&"numbering" in section&&section.numbering?.visibility==='hide';
+ if((d.nodeModelVersion===12||d.nodeModelVersion===13||d.nodeModelVersion===14||(d.nodeModelVersion===15||d.nodeModelVersion===16||d.nodeModelVersion===17))&&!section.rootIds.length&&!(d.nodeModelVersion>=13&&(section.role==='cover'||section.sourceKind==='blank')))continue;
+ hideNumbers=(d.nodeModelVersion===16||d.nodeModelVersion===17)&&"numbering" in section&&section.numbering?.visibility==='hide';
  sectionId=section.sectionId;sectionPageIndex=0;cover=d.nodeModelVersion>=13&&section.role==='cover';pageRole=cover?'cover':section.sourceKind==='blank'?'blank':'body';setPage(section.page);innerTop=top;innerBottom=bottom;modes=section as typeof modes;bands={};
- activeBands=(d.nodeModelVersion===15||d.nodeModelVersion===16)?section as Pick<ResolvedDocument,'header'|'footer'>:d;
- if(d.nodeModelVersion>=14&&pageRole==='body')for(const k of ['header','footer'] as const){const b=activeBands[k];if(!b||modes[k==='header'?'headerMode':'footerMode']==='none')continue;const region=bandRegion(k);if(region.width<=0)throw new LayoutError(b.rootIds[0]??'page-band','Page band has no available width',sectionId,k+'.placement');const key=((d.nodeModelVersion===15||d.nodeModelVersion===16)?sectionId+':':'')+k+':'+region.width;let m=bandCache.get(key);if(!m){try{m=await measurePageBand(b,d.styles,region.width,runtime,images);}catch(e){if(e instanceof LayoutError)throw new LayoutError(e.nodeId,e.message,sectionId,k+'.nodes.'+e.nodeId+(e.path?'.'+e.path:''));throw e;}bandCache.set(key,m);}bands[k]=m;}
+ activeBands=(d.nodeModelVersion===15||d.nodeModelVersion===16||d.nodeModelVersion===17)?section as Pick<ResolvedDocument,'header'|'footer'>:d;
+ if(d.nodeModelVersion>=14&&pageRole==='body')for(const k of ['header','footer'] as const){const b=activeBands[k];if(!b||modes[k==='header'?'headerMode':'footerMode']==='none')continue;const region=bandRegion(k);if(region.width<=0)throw new LayoutError(b.rootIds[0]??'page-band','Page band has no available width',sectionId,k+'.placement');const key=((d.nodeModelVersion===15||d.nodeModelVersion===16||d.nodeModelVersion===17)?sectionId+':':'')+k+':'+region.width;let m=bandCache.get(key);if(!m){try{m=await measurePageBand(b,d.styles,region.width,runtime,images);}catch(e){if(e instanceof LayoutError)throw new LayoutError(e.nodeId,e.message,sectionId,k+'.nodes.'+e.nodeId+(e.path?'.'+e.path:''));throw e;}bandCache.set(key,m);}bands[k]=m;}
  nextPage();
  for(const id of section.rootIds){activeNode=id;const n=d.nodes[id];if(n?.type==='table')await table(n);else if(n?.type==='text-block'){
   if(n.props.heightMode==='fixed'){
@@ -151,6 +153,6 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
   y+=fh;
  }else throw new LayoutError(id,'Unsupported root');}
  }
- if(d.nodeModelVersion===16)assignSystemPageNumbers(d,{pages});else assignCountedPages({pages});
- return {pages,...(pageTexts.length?{pageTexts}:{}),...(pageFieldSlots.length?{pageFieldSlots}:{}),...(contentsSlots.length?{contentsSlots}:{})};
+ if((d.nodeModelVersion===16||d.nodeModelVersion===17))assignSystemPageNumbers(d,{pages});else assignCountedPages({pages});
+ return {pages,...(warnings.length?{warnings}:{}),...(pageTexts.length?{pageTexts}:{}),...(pageFieldSlots.length?{pageFieldSlots}:{}),...(contentsSlots.length?{contentsSlots}:{})};
 }

@@ -8,7 +8,7 @@ WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY . .
-RUN npm run build && npm test && npm run build:native && npm run build:resources
+RUN npm run build && npm test && npm run build:native && npm run build:resources && node scripts/checkNativeSession.mjs
 RUN mkdir /artifact && npm pack --ignore-scripts --pack-destination /artifact
 FROM scratch AS artifact
 COPY --from=build /artifact/ /

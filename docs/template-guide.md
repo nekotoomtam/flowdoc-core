@@ -1,14 +1,14 @@
-# คู่มือสร้างแม่แบบ FlowDoc Core 0.2.9
+# คู่มือสร้างแม่แบบ FlowDoc Core 0.2.13
 
 ## Authority Boundary
 
-Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.2.9 รองรับ
+Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.2.13 รองรับ
 ไม่ใช่ roadmap หรือการรับรอง release สถานะร่วมและข้อจำกัดที่ตกลงอยู่ใน
 flowdoc-project-control `docs/domains/flowdoc-page-system-roadmap-2026-10-10.md`
 วิธี import/publish และเรียก HTTP อยู่ใน [คู่มือ Service](../../flowdoc-service/docs/usage.md)
 ชนิดข้อมูลฉบับโค้ดอยู่ใน [template/types.ts](../src/template/types.ts)
 
-แม่แบบใหม่ที่ต้องการระบบหน้าครบให้เริ่มจาก model16 ด้านท้ายคู่มือนี้
+แม่แบบใหม่ที่ต้องการระบบหน้าครบใช้ model16; ถ้าต้องการ array สองระดับ/กลุ่มแถวใช้ model17
 หัวข้อ model4–14 อธิบายสัญญาเดิมเพื่ออ่านแม่แบบเก่า ไม่ใช่ข้อจำกัดของ model16
 
 ## 1. แม่แบบ ข้อมูล และเวอร์ชัน
@@ -41,7 +41,7 @@ flowdoc-project-control `docs/domains/flowdoc-page-system-roadmap-2026-10-10.md`
 | สารบัญ | [contents](../fixtures/contents/template.json) |
 
 อย่าเพิ่ม nodeModelVersion ให้แม่แบบเก่าอัตโนมัติ เพราะบางรุ่นกำหนดสัญญาต่างกัน
-รุ่น package 0.2.9 อ่าน model 4–16 ได้ แต่ใช้ความสามารถใหม่ต้องเลือกรุ่น model ที่รองรับ
+รุ่น package 0.2.13 อ่าน model 4–17 ได้ แต่ใช้ความสามารถใหม่ต้องเลือกรุ่น model ที่รองรับ
 
 | Model | สิ่งที่เพิ่ม |
 | --- | --- |
@@ -95,11 +95,12 @@ ID ของ node/leaf เป็นตัวตนโครงสร้าง �
 | string | ข้อความ |
 | image | resource UUID จากขั้น upload ของ Service |
 | link | object คำสั่ง url/link/reference |
-| array | รายการ object ตาม items.fields ชั้นเดียว |
+| array | รายการ object ตาม items.fields; model17 รองรับ array สองระดับ |
 | area | รายการ `{format, data}` ของโครงย่อยที่อนุญาต |
 
 `object` ใช้กับ schema envelope และ array item ไม่ใช่เปิด arbitrary nested object
-array item รองรับ string/link และ image ใน model 10 ขึ้นไป ไม่รองรับ array ซ้อน
+array item รองรับ string/link และ image ใน model 10 ขึ้นไป; model4–16 ไม่รองรับ array ซ้อน
+model17 เพิ่ม array ลูกหนึ่งระดับตามหัวข้อด้านล่าง ไม่เปิด arbitrary nested object
 
 ลำดับตรวจค่าที่ไม่ส่งมา: required ขาดให้ fail แม้มี default;
 ถ้า optional ใช้ default ที่ประกาศ มิฉะนั้นข้อความเป็น `""` และรายการเป็น `[]`
@@ -438,3 +439,85 @@ CID ของ glyph ที่ใช้ซ้ำถูกนำกลับมา
 ระบบไม่วาดกรอบ/สีพื้นของเศษแถวว่างนั้น โดยไม่เปลี่ยนการแบ่งหน้า.
 แถวว่างที่ผู้สร้างตั้งใจใส่ เซลล์ที่มีเนื้อหาบางส่วน และ rowspan ที่พาดผ่าน
 ยังรักษากติกาเดิม ไม่ใช่การลบทุกเซลล์ว่าง.
+
+<a id="model17-rowgroups"></a>
+## Model17: array สองระดับและกลุ่มแถว (0.2.12–0.2.13)
+
+ผู้สร้างเลือก `nodeModelVersion: 17` โดย schemaVersion ยังเป็น1. โครง Section,
+header/footer และการนับหน้าเหมือน model16. ตัวอย่างเต็ม:
+[row-groups/template.json](../fixtures/row-groups/template.json) และ
+[request.json](../fixtures/row-groups/request.json).
+
+ใน inputSchema ของรูปแบบการประชุม ประกาศเช่นนี้:
+
+```json
+{
+  "type": "object",
+  "fields": {
+    "companies": {
+      "type": "array", "required": true,
+      "items": {"type": "object", "fields": {
+        "name": {"type": "string", "required": true},
+        "members": {"type": "array", "required": true, "items": {
+          "type": "object", "fields": {
+            "name": {"type": "string", "required": true},
+            "position": {"type": "string", "default": ""}
+          }
+        }}
+      }}
+    }
+  }
+}
+```
+
+ใน format ใส่ declaration `rowGroups` คู่กับ fragment; ID ด้านล่างอ้าง Node ID
+ที่มีอยู่จริงในกราฟ ไม่ใช่ key ข้อมูล:
+
+```json
+{
+  "rowGroups": [{
+    "id": "companies",
+    "tableId": "table",
+    "rowTemplateIds": ["company", "labels", "member", "empty"],
+    "source": {"scope": "local", "key": "companies"},
+    "memberRepeat": {
+      "rowTemplateId": "member",
+      "source": {"scope": "group", "key": "members"},
+      "emptyRowTemplateId": "empty"
+    },
+    "pagination": {"keepStart": true}
+  }]
+}
+```
+
+- `group` คือบริษัทปัจจุบัน ใช้ใน prefix/member/empty row ได้ เช่น field-ref
+  `{ "scope": "group", "key": "name" }` พร้อม id/type ตามสัญญา leaf เดิม.
+- `item` คือสมาชิกปัจจุบัน ใช้เฉพาะ member row; ไม่เดากลับไปอ่านบริษัท.
+- วงนอกใช้ global/section/local ได้ตามบริบท; วงในอ่าน array ลูกผ่าน group.
+  ไม่ใช้ dotted key และไม่รองรับวงที่สามหรือ Area ใน item.
+- prefix อย่างน้อยหนึ่งแถว ตามด้วย member และ empty เป็นสองแถวสุดท้าย.
+  ทั้งหมดต้องเรียงติดกันใน table.rowIds อยู่นอก repeated header.
+  สมาชิกหลายคนใช้ member row ซ้ำ; ไม่มีสมาชิกใช้ empty row ครั้งเดียว.
+- colSpan ใช้ได้; rowSpan>1 ในกลุ่มหรือคร่อมขอบกลุ่มไม่ได้. กลุ่มห้ามทับ/ซ้อน
+  หรือทับ ordinary repeat/cellRepeat. แถว static ก่อนหลังไม่ถูกวนตาม.
+- `companies: []` ไม่สร้างกลุ่ม; `members: []` ยังแสดง prefix กับ empty row.
+  ข้อความไม่มีสมาชิกเป็น literal ที่ผู้สร้างกำหนดเอง.
+- required ที่หายยังเป็น error แม้มี default; required array ว่างส่งได้.
+  optional ที่หายใช้ default หรือ []; explicit [] ไม่ถูกแทนด้วย default.
+  null/ชนิดผิดปฏิเสธพร้อม path ของ index; key ส่วนเกินถูกละเลยพร้อม warning.
+
+`keepStart` omitted/false ใช้ flow เดิม. เมื่อ true จะเก็บ prefix ทั้งชุดกับ
+ส่วนแรกที่แบ่งได้ของสมาชิกคนแรก/empty row ตาม allowBreak. รูปต้องลงได้ทั้งกรอบ;
+แถว allowBreak=false ต้องลงได้ทั้งแถว. สมาชิกที่เหลือยังต่อหน้าได้ปกติ.
+ระบบคิดพื้นที่หลังหักหัวท้ายกระดาษ หัวตารางซ้ำ และ padding แล้ว ไม่แทรก break
+ลงแม่แบบ และไม่ซ้ำชื่อบริษัทในหน้าต่อไปโดยอัตโนมัติ.
+
+หากชุดเริ่มต้นสูงเกินพื้นที่ที่ใช้ได้ จะผ่อนเฉพาะกลุ่มนั้นพร้อม
+`ROW_GROUP_KEEP_START_RELAXED` โดยมี nodeId/path/groupId/groupIndex และบริบท
+section/content/format. ไม่ตัดข้อมูล; ถ้าเนื้อหาแบ่งไม่ได้และสูงเกินหน้ายังได้
+LAYOUT_FAILED. อ่าน warnings จาก generatePdf แม้ ok=true.
+
+Model17 จำกัดผลขยายรวม 100,000 node/inline identities ต่อเล่ม รวมทุก Section,
+Area และหัวท้าย; เกินแล้วคืน EXPANSION_LIMIT ไม่มีเอกสารบางส่วน.
+นี่ไม่ใช่เพดานจำนวนหน้า และไม่รับรอง RAM/งานพร้อมกัน. ไม่ต้องเปลี่ยน model
+หรือข้อมูลของ published template เดิมเพียงเพื่ออัปเกรด package.

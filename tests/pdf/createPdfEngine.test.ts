@@ -11,6 +11,12 @@ import {sectionTemplate,composed} from '../helpers/sections.js';
 const dirs:string[]=[];
 afterEach(async()=>{for(const d of dirs.splice(0))await rm(d,{recursive:true,force:true});});
 async function setup(){const tempRoot=await mkdtemp(join(tmpdir(),'flowdoc-engine-'));dirs.push(tempRoot);return {tempRoot,pythonExecutable:'python',shaperPath:'shaper',segmenterPath:'segmenter',subsetHelperPath:'subset',fonts:[]} as ExportResources;}
+it.each([false,true])('closes per-generation sessions on success or layout failure (%s)',async failing=>{
+ const closes:ReturnType<typeof vi.fn>[]=[];
+ const engine=createEngine(await setup(),{runtime:()=>{const close=vi.fn(async()=>{});closes.push(close);return {...fakeRuntime,...(failing?{shape:async()=>{throw Error('shape failure');}}:{}),close};},subset:async()=>[],write:()=>new Uint8Array([1])});
+ const results=await Promise.all([engine.generatePdf(document()),engine.generatePdf(document())]);
+ expect(results.map(r=>r.ok)).toEqual([!failing,!failing]);expect(closes).toHaveLength(2);closes.forEach(close=>expect(close).toHaveBeenCalledTimes(1));
+});
 it('attributes page-number space failure to the failing section rather than the TOC',async()=>{
  const t=sectionTemplate(),f=t.sections[0].source.fragment;
  f.rootIds=['toc'];f.nodes={toc:{id:'toc',type:'table-of-contents',props:{textStyleId:'body'}}};

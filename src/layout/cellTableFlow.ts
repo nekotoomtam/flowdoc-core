@@ -5,9 +5,10 @@ import type {ResolvedDocument,Table} from '../composition/resolvedDocument.js';
 import {measureCellContent,resolveCellPadding} from './measureCellContent.js';
 import type {MeasuredCellItem,PaddingPt} from './measureCellContent.js';
 
+import type {Issue} from '../result.js';
 import {LayoutError} from './textFlow.js';
 import type {TextRuntime} from './textFlow.js';
-export interface CellTablePageSink {top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;fill?(x:number,y:number,width:number,height:number,color:string,nodeId:string):void;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
+export interface CellTablePageSink {warn?(issue:Issue):void;top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;fill?(x:number,y:number,width:number,height:number,color:string,nodeId:string):void;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
 interface Cell extends GridCell {fillColor?:string|undefined;padding:PaddingPt;contentWidth:number;lines:{line:MeasuredCellItem;offset:number;drawn:boolean}[]}
 const eps=1e-6;
 export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRuntime,s:CellTablePageSink):Promise<void>{
@@ -26,6 +27,9 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
  const headerCount=t.props.headerRowCount,headerCells=cells.filter(c=>c.row<headerCount);
  const body=cells.filter(c=>c.row>=headerCount).map(c=>({...c,row:c.row-headerCount}));
  const rowIds=t.rowIds.slice(headerCount);
+ const rowPositions=new Map(rowIds.map((id,i)=>[id,i]));
+ const starts=(t.rowGroups??[]).flatMap((group,index)=>group.keepStart?[{group,index,start:rowPositions.get(group.prefixRowIds[0]!)!,member:rowPositions.get(group.firstMemberRowId)!,relaxed:false}]:[]);
+ const cellsByRow=new Map<number,Cell[]>();for(const c of body){const list=cellsByRow.get(c.row)??[];list.push(c);cellsByRow.set(c.row,list);}
  const headerHeight=headerCount?Math.max(0,...headerCells.map(c=>(c.lines.at(-1)?.offset??c.padding.top)+(c.lines.at(-1)?.line.heightPt??0)+c.padding.bottom)):0;
  if(headerHeight>Math.max(s.bottom-s.top,s.nextCapacity??0)+eps)throw new LayoutError(t.id,'Header exceeds page content height');
  const geometry=()=>{const heights=rowIds.map(()=>0),ordered=[...body].sort((a,b)=>a.row+a.rowSpan-b.row-b.rowSpan||a.row-b.row||a.column-b.column);
@@ -65,6 +69,23 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
   // A protected logical row may move, but a spanning cell is not an indivisible group.
   for(let i=0;i<rowIds.length;i++){const r=d.nodes[rowIds[i]!];if(r?.type==='table-row'&&!r.props.allowBreak&&cut>g.ys[i]!+eps&&cut<g.ys[i+1]!-eps)cut=g.ys[i]!;}
 
+  // Group boundaries are indexed once; use existing measured items, never re-wrap.
+  for(const entry of starts){
+   const start=g.ys[entry.start]!;
+   if(entry.relaxed||start<from-eps||start>=cut-eps)continue;
+   const row=d.nodes[rowIds[entry.member]!];
+   const firstHeight=row?.type==='table-row'&&!row.props.allowBreak?g.heights[entry.member]!:Math.max(0,...(cellsByRow.get(entry.member)??[]).map(c=>c.padding.top+(c.lines[0]?.line.heightPt??0)+c.padding.bottom));
+   const end=g.ys[entry.member]!+firstHeight;
+   if(cut>=end-eps)continue;
+   const nextHeader=t.props.repeatHeaderRows||(first&&start<=from+eps)?headerHeight:0;
+   const nextSpace=(s.nextCapacity??(s.bottom-s.top))-nextHeader;
+   if(end-start<=nextSpace+eps){cut=start;break;}
+   entry.relaxed=true;
+   const source=d.sourceMap[t.id];
+   s.warn?.({code:'ROW_GROUP_KEEP_START_RELAXED',path:`nodes.${t.id}.rowGroups[${entry.index}]`,nodeId:t.id,groupId:entry.group.groupId,groupIndex:entry.group.groupIndex,
+    ...(source?{...(source.sectionId?{sectionId:source.sectionId}:{}),...(source.origin==='authored'?{}:{contentIndex:source.contentIndex,format:source.format})}:{}),
+    message:'Group start exceeds usable page capacity; keepStart relaxed for this instance'});
+  }
   const hasLine=pending.some(l=>l.start>=from-eps&&l.end<=cut+eps);
   const startsHere=pending.some(l=>l.start<cut+eps);
   if(cut<=from+eps||(!hasLine&&startsHere)){

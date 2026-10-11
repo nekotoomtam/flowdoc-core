@@ -1,5 +1,6 @@
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
+import {NativeShapeSession} from './nativeShapeSession.js';
 import type {ExportResources} from './exportResources.js';
 import type {ShapedText,TextRuntime} from '../layout/textFlow.js';
 const exec=promisify(execFile);
@@ -28,8 +29,10 @@ export function decodeShape(raw:any,text:string,sizePt:number):ShapedText{
  });
  return {glyphs,ascentPt:top,descentPt:bottom,inkLeftPt:left,inkRightPt:right,glyphInkBoundsPt:raw.glyphs.map((g:any)=>g.ink?{left:(g.xOffset+g.ink.xMin)*scale,right:(g.xOffset+g.ink.xMax)*scale}:null)};
 }
-export function createTextRuntime(resources:ExportResources):TextRuntime{
+export function createTextRuntime(resources:ExportResources):TextRuntime&{close():Promise<void>}{
+ const sessions=new Map<string,NativeShapeSession>();
  return {
+  async close(){await Promise.all([...sessions.values()].map(s=>s.close()));sessions.clear();},
   async breaks(text){
    const raw=JSON.parse((await exec(resources.segmenterPath,[text],subprocessOptions)).stdout);
    const map=byteOffsets(text);
@@ -38,7 +41,9 @@ export function createTextRuntime(resources:ExportResources):TextRuntime{
   },
   async shape(text,fontId,sizePt){
    const font=resources.fonts.find(f=>f.id===fontId);if(!font)throw Error('Missing font');
-   const raw=JSON.parse((await exec(resources.shaperPath,[font.path,text,fontId],subprocessOptions)).stdout);
+   let session=sessions.get(fontId);
+   if(!session){session=new NativeShapeSession(resources.shaperPath,['--serve',font.path,fontId]);sessions.set(fontId,session);}
+   const raw=await session.request(text);
    if(raw.text!==text||raw.fontId!==fontId)throw Error('Mismatched shape result');
    return decodeShape(raw,text,sizePt);
   }

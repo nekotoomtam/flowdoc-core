@@ -1,6 +1,7 @@
 use std::env;
 use std::fs;
 use std::process;
+use std::io::{self, Read, Write};
 
 const SOURCE: &str = "flowdoc-rustybuzz-native-smoke";
 const SHAPER_REVISION: &str = "rustybuzz-0.20.1";
@@ -30,23 +31,34 @@ fn escape_json(value: &str) -> String {
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.len() != 4 {
-        fail("usage: flowdoc-rustybuzz-smoke <font-path> <text> <font-id>");
-    }
-
-    let font_path = &args[1];
-    let text = &args[2];
+    let serving = args.get(1).map(String::as_str) == Some("--serve");
+    if args.len() != 4 { fail("usage: shaper <font-path> <text> <font-id> OR --serve <font-path> <font-id>"); }
+    let font_path = &args[if serving { 2 } else { 1 }];
     let font_id = &args[3];
-    if text.is_empty() {
-        fail("text must not be empty");
+    let font_data = fs::read(font_path).unwrap_or_else(|_| fail("failed to read font"));
+    let face = rustybuzz::Face::from_slice(&font_data, 0).unwrap_or_else(|| fail("failed to parse font"));
+    if !serving { shape(&face, font_path, &args[2], font_id); return; }
+    let mut input = io::stdin().lock();
+    loop {
+        let mut header = [0u8; 4];
+        match input.read(&mut header[..1]) {
+            Ok(0) => return,
+            Ok(_) => {},
+            Err(_) => fail("failed to read request"),
+        }
+        input.read_exact(&mut header[1..]).unwrap_or_else(|_| fail("incomplete request"));
+        let length = u32::from_be_bytes(header) as usize;
+        if length == 0 || length > 16 * 1024 * 1024 { fail("invalid request length"); }
+        let mut data = vec![0; length];
+        input.read_exact(&mut data).unwrap_or_else(|_| fail("incomplete request"));
+        let text = std::str::from_utf8(&data).unwrap_or_else(|_| fail("invalid UTF-8"));
+        shape(&face, font_path, text, font_id);
+        io::stdout().flush().unwrap_or_else(|_| fail("failed to write response"));
     }
+}
 
-    let font_data = fs::read(font_path).unwrap_or_else(|error| {
-        fail(&format!("failed to read font file `{font_path}`: {error}"))
-    });
-    let face = rustybuzz::Face::from_slice(&font_data, 0)
-        .unwrap_or_else(|| fail(&format!("failed to parse font file `{font_path}`")));
-
+fn shape(face: &rustybuzz::Face, font_path: &str, text: &str, font_id: &str) {
+    if text.is_empty() { fail("text must not be empty"); }
     let mut buffer = rustybuzz::UnicodeBuffer::new();
     buffer.push_str(text);
 
