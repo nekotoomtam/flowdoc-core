@@ -1,4 +1,5 @@
 import type {TextStyle} from '../composition/resolvedDocument.js';
+export interface PageText {pageIndex:number;sectionId:string;node:import('../composition/resolvedDocument.js').TextBlock;xPt:number;yPt:number;widthPt:number;style:TextStyle}
 export interface ContentsSlot {nodeId:string;anchorId:string;pageIndex:number;xPt:number;yPt:number;widthPt:number;style:TextStyle}
 export interface PageFieldSlot {pageIndex:number;sectionId:string;nodeId:string;fieldId:string;field:'current'|'total';xPt:number;yPt:number;widthPt:number;style:TextStyle}
 import type {BoundLink} from '../composition/linkContract.js';
@@ -21,5 +22,5 @@ export interface DrawPage {fills?:Fill[];
  pageNumbering?:{current:number|null;total:number;visibility:'show'|'hide'};
  pageRole?:'body'|'cover'|'blank';countedPageNumber?:number|null;
  sectionId?:string;sectionPageIndex?:number;widthPt:number;heightPt:number;backgroundColor:string;commands:GlyphRun[];borders?:Border[];images?:DrawImage[];annotations?:LinkAnnotation[]}
-export interface DrawDocument {pages:DrawPage[];pageFieldSlots?:PageFieldSlot[];contentsSlots?:ContentsSlot[];anchors?:Record<string,{pageIndex:number;xPt:number;yPt:number}>}
+export interface DrawDocument {pages:DrawPage[];pageTexts?:PageText[];pageFieldSlots?:PageFieldSlot[];contentsSlots?:ContentsSlot[];anchors?:Record<string,{pageIndex:number;xPt:number;yPt:number}>}
 export interface PdfFontResource {fontId:string;subsetBytes:Uint8Array;subsetPrefix:string;postScriptName:string}

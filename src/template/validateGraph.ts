@@ -6,7 +6,7 @@ import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat,CellRepeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
+export interface GraphContext {bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -54,7 +54,10 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    if(own(n.props,'color')&&(typeof n.props.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props.color)))fail(p+'.props.color');
    for(const key of ['width','thickness','spaceBefore','spaceAfter'])if(own(n.props,key)){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<0||(['width','thickness'].includes(key)&&v.value===0)||!Number.isFinite(toPt(v as any)))fail(p+'.props.'+key);}
   }else if(n.type==='text-block'){
-   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing',...(ctx.heightModes?['heightMode','height','verticalAlign']:[]),'anchorId',...(ctx.contents?['toc']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
+   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing',...(ctx.heightModes?['heightMode','height','verticalAlign']:[]),'anchorId',...(ctx.contents?['toc']:[]),...(ctx.bandText?['textAlign','pageFieldLayout']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
+   if(own(n.props,'textAlign')&&!['left','center','right'].includes(n.props.textAlign))fail(p+'.props.textAlign');
+   if(own(n.props,'pageFieldLayout')&&(n.props.pageFieldLayout!=='compact'||!n.children.some((c:any)=>c?.type==='system-page-field')))fail(p+'.props.pageFieldLayout');
+   if(n.children.some((c:any)=>c?.type==='system-page-field')&&n.props.textAlign&&n.props.textAlign!=='left'&&n.props.pageFieldLayout!=='compact')fail(p+'.props.pageFieldLayout');
    if(own(n.props,'heightMode')&&!['content','fixed'].includes(n.props.heightMode))fail(p+'.props.heightMode');
    if(n.props.heightMode==='fixed'){
     const h=n.props.height;

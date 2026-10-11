@@ -35,7 +35,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  let sectionId:string|undefined,sectionPageIndex=0,cover=false,activeNode='';let pageRole:'body'|'cover'|'blank'='body';
  const contentsSlots:NonNullable<DrawDocument['contentsSlots']>=[];
  const entries=d.rootIds.some(id=>d.nodes[id]?.type==='table-of-contents')?collectContents(d):[];
- const pageFieldSlots:PageFieldSlot[]=[];let hideNumbers=false;
+ const pageTexts:NonNullable<DrawDocument['pageTexts']>=[];const pageFieldSlots:PageFieldSlot[]=[];let hideNumbers=false;
  const pages:DrawPage[]=[];let current!:DrawPage,y=top,serial=0;
  const bandRegion=(kind:'header'|'footer')=>{const p=activeBands[kind]?.placement;return p?{left:toPt(p.left),width:widthPt-toPt(p.left)-toPt(p.right),edge:kind==='header'?toPt(p.offset):heightPt-toPt(p.offset)}:{left,width:available,edge:kind==='header'?innerTop:innerBottom};};
  const geometry=(index:number)=>{
@@ -49,7 +49,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  };
  const nextPage=()=>{if(cover&&sectionPageIndex>0)throw new LayoutError(activeNode,'Cover exceeds one page');const g=geometry(sectionPageIndex);top=g.top;bottom=g.bottom;
   current={...(d.nodeModelVersion>=13?{pageRole}:{}),widthPt,heightPt,backgroundColor:'FFFFFF',commands:[],...(sectionId===undefined?{}:{sectionId,sectionPageIndex:sectionPageIndex++})};pages.push(current);y=top;
-  for(const [kind,m,at] of [['header',g.h,g.hy],['footer',g.f,g.fy]] as const){if(!m)continue;if(m.borders.length){current.borders??=[];for(const b of m.borders)current.borders.push({...b,x1Pt:bandRegion(kind).left+b.x1Pt,x2Pt:bandRegion(kind).left+b.x2Pt,y1Pt:at+b.y1Pt,y2Pt:at+b.y2Pt});}for(const run of m.commands)if(!hideNumbers||!m.numberBlocks.has(run.nodeId))current.commands.push({...run,id:`${kind}-${pages.length}-${run.id}`,bounds:{...run.bounds,xPt:bandRegion(kind).left+run.bounds.xPt,yPt:at+run.bounds.yPt}});if(!hideNumbers)for(const slot of m.pageFields)pageFieldSlots.push({...slot,pageIndex:pages.length-1,sectionId:sectionId!,xPt:bandRegion(kind).left+slot.xPt,yPt:at+slot.yPt});if(m.images.length){current.images??=[];for(const image of m.images)current.images.push({...image,xPt:bandRegion(kind).left+image.xPt,yPt:at+image.yPt});}}
+  for(const [kind,m,at] of [['header',g.h,g.hy],['footer',g.f,g.fy]] as const){if(!m)continue;if(m.borders.length){current.borders??=[];for(const b of m.borders)current.borders.push({...b,x1Pt:bandRegion(kind).left+b.x1Pt,x2Pt:bandRegion(kind).left+b.x2Pt,y1Pt:at+b.y1Pt,y2Pt:at+b.y2Pt});}for(const run of m.commands)if(!hideNumbers||!m.numberBlocks.has(run.nodeId))current.commands.push({...run,id:`${kind}-${pages.length}-${run.id}`,bounds:{...run.bounds,xPt:bandRegion(kind).left+run.bounds.xPt,yPt:at+run.bounds.yPt}});if(!hideNumbers)for(const slot of m.pageFields)pageFieldSlots.push({...slot,pageIndex:pages.length-1,sectionId:sectionId!,xPt:bandRegion(kind).left+slot.xPt,yPt:at+slot.yPt});if(!hideNumbers)for(const t of m.pageTexts)pageTexts.push({...t,pageIndex:pages.length-1,sectionId:sectionId!,xPt:bandRegion(kind).left+t.xPt,yPt:at+t.yPt});if(m.images.length){current.images??=[];for(const image of m.images)current.images.push({...image,xPt:bandRegion(kind).left+image.xPt,yPt:at+image.yPt});}}
  };
  const ensureHeight=(height:number,id:string)=>{if(y+height>bottom+epsilon)nextPage();if(height>bottom-top+epsilon)throw new LayoutError(id,'Item exceeds page content height');};
 
@@ -152,5 +152,5 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  }else throw new LayoutError(id,'Unsupported root');}
  }
  if(d.nodeModelVersion===16)assignSystemPageNumbers(d,{pages});else assignCountedPages({pages});
- return {pages,...(pageFieldSlots.length?{pageFieldSlots}:{}),...(contentsSlots.length?{contentsSlots}:{})};
+ return {pages,...(pageTexts.length?{pageTexts}:{}),...(pageFieldSlots.length?{pageFieldSlots}:{}),...(contentsSlots.length?{contentsSlots}:{})};
 }
