@@ -30,30 +30,37 @@ def sha256(path: Path) -> str:
 
 document = json.loads(REQUEST_PATH.read_text(encoding="utf-8"))
 request = document.get("rendererHandoff", {}).get("measuredDrawContract", document)
-font_asset = next(
-    (asset for asset in request["fontAssets"] if asset["fontId"] == args.font_id),
-    None,
-)
+if "requestVersion" in request:
+    if type(request["requestVersion"]) is not int or request["requestVersion"] != 1:
+        raise RuntimeError("unsupported subset request version")
+    fonts = request.get("fonts")
+    if not isinstance(fonts, list) or any(not isinstance(f, dict) for f in fonts):
+        raise RuntimeError("invalid subset fonts")
+    matches = [f for f in fonts if f.get("fontId") == args.font_id]
+    if len(matches) != 1:
+        raise RuntimeError("subset request must declare font exactly once")
+    font_asset = matches[0]
+    ids = font_asset.get("glyphIds")
+    if not isinstance(ids, list) or any(type(g) is not int or g < 0 or g > 65535 for g in ids):
+        raise RuntimeError("invalid subset glyph IDs")
+    glyph_ids = sorted(set(ids) | {0})
+else:
+    font_asset = next(
+        (asset for asset in request["fontAssets"] if asset["fontId"] == args.font_id),
+        None,
+    )
+    paint_commands = request.get("paintCommands")
+    if paint_commands is None:
+        paint_commands = [command for page in request["pages"] for command in page["commands"]]
+    glyph_ids = sorted({
+        glyph["glyphId"] for command in paint_commands
+        if command["kind"] == "glyph-run" and command["fontId"] == args.font_id
+        for glyph in command["glyphs"]
+    } | {0})
 if font_asset is None:
     raise RuntimeError(f"request does not declare font {args.font_id}")
 if sha256(SOURCE_PATH) != font_asset["sha256"]:
     raise RuntimeError("registered source font hash mismatch")
-
-paint_commands = request.get("paintCommands")
-if paint_commands is None:
-    paint_commands = [
-        command
-        for page in request["pages"]
-        for command in page["commands"]
-    ]
-
-glyph_ids = sorted({
-    glyph["glyphId"]
-    for command in paint_commands
-    if command["kind"] == "glyph-run"
-    and command["fontId"] == args.font_id
-    for glyph in command["glyphs"]
-} | {0})
 
 font = TTFont(SOURCE_PATH, recalcTimestamp=False)
 options = subset.Options()

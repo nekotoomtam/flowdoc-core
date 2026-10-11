@@ -6,13 +6,15 @@ Owner: flowdoc-core. This README describes this package's local build and resour
 and PDF API. Shared MVP scope and status belong to Project Control's
 `docs/domains/flowdoc-export-mvp-r2-runtime-plan-2026-10-07.md`.
 
-Version 0.2.10 validates templates, binds typed data and renders TextBlocks,
+Version 0.2.11 validates templates, binds typed data and renders TextBlocks,
 images, merged tables, cell repeats, Area subformats, links and contents to PDF.
 Text measurement uses a per-generation cache (32 MiB serialized payload, at most
 8,192 entries) and a persistent native shaper per used font. Sessions close on
 success or failure; the 30-second per-request timeout and 16 MiB response bound
 remain. These are cache/transport bounds, not a total job-memory guarantee.
-Wrapping rules and template/API contracts are unchanged.
+Wrapping rules and template/API contracts are unchanged. Font preparation sends
+only unique glyph IDs and font identities to the subset helper, preserving font
+order and subset output; full drawing commands stay in the renderer.
 
 There is no HTTP server or database here. Start with the Thai
 [template guide](docs/template-guide.md) for model 4–16 contracts and examples.

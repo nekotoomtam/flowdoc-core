@@ -25,6 +25,17 @@ for(const font of r.fonts){
   assert.ok(metadata.subset.bytes>0 && metadata.subset.bytes<metadata.source.bytes);
   assert.ok(shape.glyphs.every(g=>metadata.subset.retainedGlyphIds.includes(g.glyphId)));
   assert.equal(createHash('sha256').update(await readFile(font.path)).digest('hex'),font.sha256);
+  const legacyBytes=await readFile(output);
+  const compact={requestVersion:1,fonts:[{fontId:font.id,sha256:font.sha256,glyphIds:[...new Set([0,...shape.glyphs.map(g=>g.glyphId)])].sort((a,b)=>a-b)}]};
+  await writeFile(request,JSON.stringify(compact));
+  const compactArgs=[r.subsetHelperPath,'--request',request,'--font-id',font.id,'--source',font.path,'--subset',output,'--manifest',manifest,'--subset-id',font.id,'--family-name','FlowDoc Test Subset','--postscript-name','FlowDocTestSubset','--subset-prefix','FDTEST'];
+  await exec(r.pythonExecutable,compactArgs);
+  assert.deepEqual(await readFile(output),legacyBytes,'compact subset must preserve exact font bytes');
+  assert.deepEqual(JSON.parse(await readFile(manifest,'utf8')).subset.retainedGlyphIds,metadata.subset.retainedGlyphIds);
+  for(const invalid of [{...compact,requestVersion:2},{...compact,fonts:[]},{requestVersion:1,fonts:[{...compact.fonts[0],glyphIds:[true]}]},{requestVersion:1,fonts:[{...compact.fonts[0],sha256:'wrong'}]}]){
+    await writeFile(request,JSON.stringify(invalid));await assert.rejects(exec(r.pythonExecutable,compactArgs));
+  }
+  await writeFile(request,JSON.stringify(compact));
   const samePathArgs=[r.subsetHelperPath,'--request',request,'--font-id',font.id,'--source',font.path,'--subset',font.path,'--manifest',manifest,'--subset-id',font.id,'--family-name','FlowDoc Test Subset','--postscript-name','FlowDocTestSubset','--subset-prefix','FDTEST'];
   await assert.rejects(exec(r.pythonExecutable,samePathArgs));
 }

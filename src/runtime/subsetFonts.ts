@@ -7,10 +7,21 @@ import type {DrawDocument,PdfFontResource} from '../pdf/drawContract.js';
 import type {ExportResources} from './exportResources.js';
 import {subprocessOptions} from './textRuntime.js';
 const exec=promisify(execFile);
+export function buildSubsetRequest(draw:DrawDocument,fonts:ReadonlyArray<{id:string;sha256:string}>){
+ const used=new Map<string,Set<number>>();
+ for(const page of draw.pages)for(const command of page.commands){
+  let ids=used.get(command.fontId);if(!ids){ids=new Set([0]);used.set(command.fontId,ids);}
+  for(const glyph of command.glyphs)ids.add(glyph.glyphId);
+ }
+ return {requestVersion:1,fonts:[...used].map(([fontId,ids])=>{
+  const font=fonts.find(f=>f.id===fontId);if(!font)throw Error('Missing font');
+  return {fontId,sha256:font.sha256,glyphIds:[...ids].sort((a,b)=>a-b)};
+ })};
+}
 export async function subsetFonts(draw:DrawDocument,resources:ExportResources,temp:string):Promise<PdfFontResource[]>{
- const commands=draw.pages.flatMap(p=>p.commands),used=[...new Set(commands.map(c=>c.fontId))];
+ const request=buildSubsetRequest(draw,resources.fonts),used=request.fonts.map(f=>f.fontId);
  const requestPath=join(temp,'request.json');
- await writeFile(requestPath,JSON.stringify({fontAssets:resources.fonts.map(f=>({fontId:f.id,sha256:f.sha256})),paintCommands:commands}));
+ await writeFile(requestPath,JSON.stringify(request));
  const result:PdfFontResource[]=[];
  for(const [index,fontId] of used.entries()){
   const font=resources.fonts.find(f=>f.id===fontId);if(!font)throw Error('Missing font');
