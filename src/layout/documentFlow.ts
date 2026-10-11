@@ -140,7 +140,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
    y+=line.heightPt;
   }
  }else if(n?.type==='line'){
-  const m=measureRule(n,available);ensureHeight(m.height,id);current.borders??=[];current.borders.push({nodeId:id,x1Pt:left,x2Pt:left+m.width,y1Pt:y+m.before+m.thickness/2,y2Pt:y+m.before+m.thickness/2,widthPt:m.thickness,color:m.color});y+=m.height;
+  const m=measureRule(n,available);ensureHeight(m.height,id);current.borders??=[];current.borders.push({nodeId:id,x1Pt:left+m.offset,x2Pt:left+m.offset+m.width,y1Pt:y+m.before+m.thickness/2,y2Pt:y+m.before+m.thickness/2,widthPt:m.thickness,color:m.color});y+=m.height;
  }else if(n?.type==='image'){
   const fw=toPt(n.props.width),fh=toPt(n.props.height);
   if(fw>available+epsilon)throw new LayoutError(id,'Image frame exceeds printable page');

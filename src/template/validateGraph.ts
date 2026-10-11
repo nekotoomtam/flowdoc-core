@@ -49,7 +49,8 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
   if(!object(n)||n.id!==id){fail(p);continue;}
   let children:string[]=[];
   if(n.type==='line'&&ctx.heightModes){
-   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['width','thickness','color','spaceBefore','spaceAfter'])){fail(p);continue;}
+   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['align','width','thickness','color','spaceBefore','spaceAfter'])){fail(p);continue;}
+   if(own(n.props,'align')&&!['left','center','right'].includes(n.props.align))fail(p+'.props.align');
    if(own(n.props,'color')&&(typeof n.props.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props.color)))fail(p+'.props.color');
    for(const key of ['width','thickness','spaceBefore','spaceAfter'])if(own(n.props,key)){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<0||(['width','thickness'].includes(key)&&v.value===0)||!Number.isFinite(toPt(v as any)))fail(p+'.props.'+key);}
   }else if(n.type==='text-block'){

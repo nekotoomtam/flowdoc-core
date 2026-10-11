@@ -12,7 +12,7 @@ export interface TextBlock {
 }
 export type SourceOrigin={origin?:never;sectionId?:never;contentIndex:number;format:string}|{origin:'content';sectionId:string;contentIndex:number;format:string}|{origin:'authored';sectionId:string;contentIndex?:never;format?:never};
 export type SourceEntry=SourceOrigin&{sourceId:string;itemIndex?:number;repeatId?:string;areaId?:string;areaEntryIndex?:number;areaFormatId?:string}
-export interface LineBlock {id:string;type:'line';props:{width?:Length;thickness?:Length;color?:string;spaceBefore?:Length;spaceAfter?:Length}}
+export interface LineBlock {id:string;type:'line';props:{align?:'left'|'center'|'right';width?:Length;thickness?:Length;color?:string;spaceBefore?:Length;spaceAfter?:Length}}
 export interface Table {id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean;headerFillColor?:string;borderColor?:string};columns:{width:Length}[];rowIds:string[]}
 export interface TableRow {id:string;type:'table-row';props:{allowBreak:boolean};cellIds:string[]}
 export type CellPadding=Partial<Record<'top'|'right'|'bottom'|'left',Length>>;
