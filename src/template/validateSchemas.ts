@@ -2,7 +2,7 @@ import type {Issue} from '../result.js';
 import type {ObjectSchema,StringField,ArrayField,ImageField,LinkField} from './types.js';
 import {object,keys,own,name,issue} from './checks.js';
 import {validateField} from '../data/validateValues.js';
-export function validateSchemas(input:unknown,path:string,issues:Issue[],item=false,images=false,links=false,itemImages=false,areas=false):input is ObjectSchema {
+export function validateSchemas(input:unknown,path:string,issues:Issue[],item=false,images=false,links=false,itemImages=false,areas=false,maxArrayDepth=1,arrayDepth=item?1:0):input is ObjectSchema {
  const start=issues.length,fail=(p:string)=>issues.push(issue('INVALID_TEMPLATE',p));
  if(!object(input)||!keys(input,['type','fields'])||input.type!=='object'||!object(input.fields)){fail(path);return false;}
  if(item&&itemImages&&!Object.keys(input.fields).length)fail(path+'.fields');
@@ -13,7 +13,7 @@ export function validateSchemas(input:unknown,path:string,issues:Issue[],item=fa
   for(const k of ['required','allowEmpty'])if(own(f,k)&&typeof f[k]!=='boolean')fail(p+'.'+k);
   for(const k of ['label','description'])if(own(f,k)&&typeof f[k]!=='string')fail(p+'.'+k);
   if(f.type==='area'&&areas&&!item){if(!name(f.areaId)||f.areaId.includes('~'))fail(p+'.areaId');}
-  else if(f.type==='array'&&!item)validateSchemas(f.items,p+'.items',issues,true,images,links,itemImages);
+  else if(f.type==='array'&&arrayDepth<maxArrayDepth)validateSchemas(f.items,p+'.items',issues,true,images,links,itemImages,false,maxArrayDepth,arrayDepth+1);
   else if(f.type!=='string'&&!(f.type==='image'&&images&&(!item||itemImages))&&!(f.type==='link'&&links))fail(p+'.type');
   if(f.type!=='area'&&issues.length===before&&own(f,'default')){
    const errors:Issue[]=[],warnings:Issue[]=[];validateField(f as StringField|ArrayField|ImageField|LinkField,f.default,p+'.default',errors,warnings);

@@ -3,11 +3,11 @@ import type {ResolvedDocument,TextBlock,TextInline,Table,TableRow,TableCell,Imag
 export interface StringField {type:'string';required?:boolean;default?:string;allowEmpty?:boolean;label?:string;description?:string}
 export interface ImageField {type:'image';required?:boolean;default?:string;label?:string;description?:string}
 export interface LinkField {type:'link';required?:boolean;default?:BoundLink;label?:string;description?:string}
-export type BindingScope='global'|'section'|'header'|'footer'|'local'|'item';
+export type BindingScope='global'|'section'|'header'|'footer'|'local'|'group'|'item';
 export type ScalarBinding=string|{scope:BindingScope;key:string};
 export type TemplateLink={id:string}&({type:'url';value:ScalarBinding}|{type:'link';text:ScalarBinding;url:ScalarBinding}|{type:'reference';text:ScalarBinding;target:ScalarBinding});
 export type TemplateInline=Exclude<TextInline,{type:'url'|'link'|'reference'}>|FieldRef|TemplateLink;
-export interface ArrayField {type:'array';required?:boolean;default?:Record<string,string|BoundLink>[];items:ObjectSchema<StringField|LinkField|ImageField>;label?:string;description?:string}
+export interface ArrayField {type:'array';required?:boolean;default?:import('../data/types.js').PreparedItem[];items:ObjectSchema<StringField|LinkField|ImageField|ArrayField>;label?:string;description?:string}
 export interface ObjectSchema<F=StringField|ArrayField|ImageField|LinkField|AreaField> {type:'object';fields:Record<string,F>}
 export interface FieldRef {id:string;type:'field-ref';scope:BindingScope;key:string}
 export type TemplateTextBlock=Omit<TextBlock,'children'|'props'>&{props:Omit<TextBlock['props'],'anchorId'>&{anchorId?:ScalarBinding};children:TemplateInline[]};
@@ -19,7 +19,8 @@ export type TemplateNode=LineBlock|TemplateArea|TemplateTextBlock|Table|TableRow
 export interface Fragment {rootIds:string[];nodes:Record<string,TemplateNode>}
 export interface Repeat {tableId:string;rowTemplateId:string;source:{scope:'global'|'section'|'local';key:string}}
 export interface CellRepeat {id:string;cellId:string;childTemplateIds:string[];source:{scope:'global'|'section'|'local';key:string}}
-export interface Format {label?:string;description?:string;inputSchema:ObjectSchema;fragment:Fragment;repeats:Repeat[];cellRepeats?:CellRepeat[]}
+export interface RowGroup {id:string;tableId:string;rowTemplateIds:string[];source:Repeat['source'];memberRepeat:{rowTemplateId:string;source:{scope:'group';key:string};emptyRowTemplateId:string};pagination?:{keepStart:boolean}}
+export interface Format {rowGroups?:RowGroup[];label?:string;description?:string;inputSchema:ObjectSchema;fragment:Fragment;repeats:Repeat[];cellRepeats?:CellRepeat[]}
 export interface AreaFormat extends Format {key:string;ownerAreaId:string}
 interface TemplateBase {
  header?:PageBandDefinition;footer?:PageBandDefinition;
@@ -29,7 +30,7 @@ interface TemplateBase {
  formats:Record<string,Format>;examples:{name:string;request:unknown}[];
 }
 export interface PageLayout {label?:string;page:ResolvedDocument['book']['page']}
-export interface TemplateSection {headerMode?:BandMode;footerMode?:BandMode;role?:'body'|'cover';id:string;label?:string;pageLayoutId?:string;source:{kind:'blank'}|{kind:'content'}|({kind:'authored'}&Pick<Format,'fragment'|'repeats'|'cellRepeats'>)}
+export interface TemplateSection {headerMode?:BandMode;footerMode?:BandMode;role?:'body'|'cover';id:string;label?:string;pageLayoutId?:string;source:{kind:'blank'}|{kind:'content'}|({kind:'authored'}&Pick<Format,'fragment'|'repeats'|'cellRepeats'|'rowGroups'>)}
 export type LegacyTemplateDefinition=TemplateBase&({nodeModelVersion:4|5|6|7|8|9|10|11;book:ResolvedDocument['book']}|{nodeModelVersion:12|13|14;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:TemplateSection[]});
 export interface ValidatedTemplate {readonly definition:TemplateDefinition;readonly fingerprint:string}
 
@@ -43,6 +44,7 @@ export interface Section15 extends TemplateSection {key:string;inputSchema:Objec
 export type Template15=Omit<TemplateBase,'header'|'footer'|'formats'>&{nodeModelVersion:15;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:Section15[]};
 export interface Section16 extends Section15 {numbering?:PageNumbering}
 export type Template16=Omit<Template15,"nodeModelVersion"|"sections">&{nodeModelVersion:16;sections:Section16[]};
-export type ScopedTemplate=Template15|Template16;
+export type Template17=Omit<Template16,"nodeModelVersion">&{nodeModelVersion:17};
+export type ScopedTemplate=Template15|Template16|Template17;
 export type TemplateDefinition=LegacyTemplateDefinition|ScopedTemplate;
 export type PageNumbering={mode:"continue";visibility?:"show"|"hide"}|{mode:"restart";startAt?:number;visibility?:"show"|"hide"}|{mode:"exclude";visibility?:"show"|"hide"};

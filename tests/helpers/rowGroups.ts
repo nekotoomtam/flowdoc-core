@@ -1,0 +1,10 @@
+import {sectionTemplate} from './sections.js';
+export const itemSchema=()=>({type:'object',fields:{name:{type:'string',required:true},members:{type:'array',required:true,items:{type:'object',fields:{name:{type:'string',required:true},position:{type:'string',default:''}}}}}});
+export function rowGroupTemplate():any {
+ const t=sectionTemplate();t.nodeModelVersion=17;t.globalSchema={type:'object',fields:{}};delete t.formats;
+ const nodes:any={table:{id:'table',type:'table',props:{headerRowCount:0,repeatHeaderRows:false},columns:[{width:{value:200,unit:'pt'}}],rowIds:['before','company','labels','member','empty','after']}};
+ for(const id of nodes.table.rowIds){nodes[id]={id,type:'table-row',props:{allowBreak:true},cellIds:[id+'Cell']};nodes[id+'Cell']={id:id+'Cell',type:'table-cell',props:{},childIds:[id+'Text']};nodes[id+'Text']={id:id+'Text',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body'},children:[id==='company'||id==='member'?{id:id+'Leaf',type:'field-ref',scope:id==='company'?'group':'item',key:'name'}:{id:id+'Leaf',type:'text',text:id}]};}
+ const f={inputSchema:{type:'object',fields:{companies:{type:'array',required:true,items:itemSchema()}}},fragment:{rootIds:['table'],nodes},repeats:[],rowGroups:[{id:'companies',tableId:'table',rowTemplateIds:['company','labels','member','empty'],source:{scope:'local',key:'companies'},memberRepeat:{rowTemplateId:'member',source:{scope:'group',key:'members'},emptyRowTemplateId:'empty'},pagination:{keepStart:false}}]};
+ t.sections=[{id:'main',key:'main',source:{kind:'content'},inputSchema:{type:'object',fields:{}},formats:{meeting:f}}];return t;
+}
+export const rowGroupRequest=(companies:any[]=[{name:'Same',members:[{name:'A'},{name:'B'}]},{name:'Same',members:[{name:'C'}]}])=>({docKey:rowGroupTemplate().docKey,data:{},sections:{main:{content:[{format:'meeting',data:{companies}}]}}});

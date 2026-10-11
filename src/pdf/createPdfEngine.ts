@@ -40,7 +40,7 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
    temp=await mkdtemp(join(resources.tempRoot,'flowdoc-pdf-'));
    const draw=await documentFlow(document,runtime,images);
    const anchors=indexDestinations(document,draw);
-   await fillContentsNumbers(draw,anchors,runtime,document.nodeModelVersion===16);
+   await fillContentsNumbers(draw,anchors,runtime,(document.nodeModelVersion===16||document.nodeModelVersion===17));
    await fillPageFields(draw,runtime);
    await appendPageNumbers(document,draw,runtime);
    resolveLinkGeometry(document,draw,anchors);
