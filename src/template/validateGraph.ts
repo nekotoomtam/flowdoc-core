@@ -14,6 +14,8 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
  const scopes:Record<string,ObjectSchema> = ctx.scopeSchemas??{global:ctx.globalSchema,local:ctx.localSchema};
  const scopeNames=[...Object.keys(scopes),'item'];
  const nodes=input.nodes,ids=new Set<string>(),parents=new Map<string,number>(),edges=new Map<string,string[]>();
+ const cellTextIds=new Set<string>();
+ if(ctx.cellContent)for(const n of Object.values(nodes))if(object(n)&&n.type==='table-cell'&&Array.isArray(n.childIds))for(const id of n.childIds)if(typeof id==='string')cellTextIds.add(id);
  const validId=(id:unknown):id is string=>name(id)&&(ctx.resolved===true||!id.includes('~'));
  const unique=(id:unknown,p:string)=>{if(!validId(id)||ids.has(id))fail(p);else ids.add(id);};
  const refs=(value:unknown,p:string):string[]=>{if(!Array.isArray(value)||!value.every(validId)){fail(p);return [];}return value;};
@@ -54,7 +56,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    if(own(n.props,'color')&&(typeof n.props.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props.color)))fail(p+'.props.color');
    for(const key of ['width','thickness','spaceBefore','spaceAfter'])if(own(n.props,key)){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<0||(['width','thickness'].includes(key)&&v.value===0)||!Number.isFinite(toPt(v as any)))fail(p+'.props.'+key);}
   }else if(n.type==='text-block'){
-   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing',...(ctx.heightModes?['heightMode','height','verticalAlign']:[]),'anchorId',...(ctx.contents?['toc']:[]),...(ctx.bandText?['textAlign','pageFieldLayout']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
+   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing',...(ctx.heightModes?['heightMode','height','verticalAlign']:[]),'anchorId',...(ctx.contents?['toc']:[]),...(ctx.bandText||cellTextIds.has(id)?['textAlign']:[]),...(ctx.bandText?['pageFieldLayout']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
    if(own(n.props,'textAlign')&&!['left','center','right'].includes(n.props.textAlign))fail(p+'.props.textAlign');
    if(own(n.props,'pageFieldLayout')&&(n.props.pageFieldLayout!=='compact'||!n.children.some((c:any)=>c?.type==='system-page-field')))fail(p+'.props.pageFieldLayout');
    if(n.children.some((c:any)=>c?.type==='system-page-field')&&n.props.textAlign&&n.props.textAlign!=='left'&&n.props.pageFieldLayout!=='compact')fail(p+'.props.pageFieldLayout');
