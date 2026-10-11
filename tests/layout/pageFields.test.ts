@@ -11,6 +11,16 @@ import {appendPageNumbers} from '../../src/layout/pageNumbers.js';
 import {fillContentsNumbers} from '../../src/layout/fillContentsNumbers.js';
 const styles:any={body:{fontFamilyKey:'sarabun',fontWeight:'normal',fontSize:{value:12,unit:'pt'},lineHeightPt:20}};
 const band=():any=>({baseTextStyleId:'body',rootIds:['a'],nodes:{a:{id:'a',type:'text-block',props:{textStyleId:'body'},children:[{id:'label',type:'text',text:'Page '},{id:'p',type:'system-page-field',field:'current',width:{value:24,unit:'pt'}},{id:'of',type:'text',text:' / '},{id:'t',type:'system-page-field',field:'total',width:{value:24,unit:'pt'}}]}}});
+it('centers compact page text using final one to three digit values',async()=>{
+ const b=band();b.nodes.a.props={textStyleId:'body',textAlign:'center',pageFieldLayout:'compact'};
+ const m:any=await measurePageBand(b,styles,240,fakeRuntime,{});
+ expect(m.heightPt).toBe(20);expect(m.pageFields).toHaveLength(0);expect(m.pageTexts).toHaveLength(1);
+ for(const [current,total] of [[5,8],[10,99],[100,240]]){
+  const draw:any={pages:[{commands:[],pageNumbering:{current,total,visibility:'show'}}],pageTexts:m.pageTexts.map((t:any)=>({...t,pageIndex:0,sectionId:'s'}))};
+  await fillPageFields(draw,fakeRuntime);const r=draw.pages[0].commands[0];
+  expect(r.text).toBe(`Page ${current} / ${total}`);expect(r.bounds.xPt+r.bounds.widthPt/2).toBeCloseTo(120);
+ }
+});
 it('reserves two atomic number slots beside static text',async()=>{const m:any=await measurePageBand(band(),styles,200,fakeRuntime,{});expect(m.pageFields).toHaveLength(2);expect(m.heightPt).toBe(20);expect(m.commands.map((r:any)=>r.text).join('')).toBe('Page  / ');});
 it('fails a slot wider than the available band',async()=>{await expect(measurePageBand(band(),styles,20,fakeRuntime,{})).rejects.toThrow();});
 it('reserves right ink overhang before the next slot',async()=>{const b=band();b.nodes.a.children=[{id:'ink',type:'text',text:'A'},{id:'p',type:'system-page-field',field:'current',width:{value:5,unit:'pt'}}];const runtime={...fakeRuntime,async shape(text:string){return {...await fakeRuntime.shape(text),inkLeftPt:0,inkRightPt:12};}};const m=await measurePageBand(b,styles,100,runtime,{});expect(m.pageFields[0]!.xPt).toBe(12);});

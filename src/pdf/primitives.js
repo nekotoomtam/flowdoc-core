@@ -219,6 +219,10 @@ function appendText(content, page, command, usages, resolvedRuns) {
 }
 function buildPageContent(page, usages, resolvedRuns) {
     const content = createPageContent(page);
+    for (const fill of page.fills ?? []) {
+        if(![fill.xPt,fill.yPt,fill.widthPt,fill.heightPt].every(Number.isFinite)||fill.widthPt<=0||fill.heightPt<=0)throw Error('Invalid fill geometry');
+        content.push('q', `${colorOperands(fill.color)} rg`, `${formatNumber(fill.xPt)} ${formatNumber(page.heightPt-fill.yPt-fill.heightPt)} ${formatNumber(fill.widthPt)} ${formatNumber(fill.heightPt)} re f`, 'Q');
+    }
     for (const border of page.borders ?? []) {
         content.push('q', `${colorOperands(border.color)} RG`, `${formatNumber(border.widthPt)} w`,
             `${formatNumber(border.x1Pt)} ${formatNumber(page.heightPt-border.y1Pt)} m`,

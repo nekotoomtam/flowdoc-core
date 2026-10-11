@@ -15,7 +15,12 @@ export function resolveCellPadding(padding?:CellPadding):PaddingPt {
 export async function measureCellContent(d:ResolvedDocument,childIds:string[],contentWidth:number,runtime:TextRuntime):Promise<MeasuredCellItem[]> {
  const items:MeasuredCellItem[]=[];
  for(const id of childIds){const n=d.nodes[id];
-  if(n?.type==='text-block')for(const line of await measureText(n,d.styles[n.props.textStyleId]!,contentWidth,runtime))items.push({kind:'text-line',nodeId:id,heightPt:line.heightPt,line});
+  if(n?.type==='text-block')for(const measured of await measureText(n,d.styles[n.props.textStyleId]!,contentWidth,runtime)){
+   // Align within the padded cell, using ink bounds rather than character count.
+   const remaining=contentWidth-(measured.occupiedWidthPt??0),offset=n.props.textAlign==='center'?remaining/2:n.props.textAlign==='right'?remaining:0;
+   const line=offset&&measured.run?{...measured,run:{...measured.run,bounds:{...measured.run.bounds,xPt:measured.run.bounds.xPt+offset}}}:measured;
+   items.push({kind:'text-line',nodeId:id,heightPt:line.heightPt,line});
+  }
   else if(n?.type==='image'){
    const frameWidth=toPt(n.props.width),heightPt=toPt(n.props.height);
    if(frameWidth>contentWidth+1e-6)throw new LayoutError(id,'Image frame exceeds cell content width');

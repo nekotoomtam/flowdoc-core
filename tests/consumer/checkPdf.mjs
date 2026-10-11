@@ -18,6 +18,12 @@ for(const name of ['four-styles','overflow']){
  results.push({name,pageCount,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')});
 }
 const document=JSON.parse(await readFile('/consumer/four-styles.resolved.json','utf8'));
+const tabs=structuredClone(document);
+for(const id of tabs.rootIds)for(const child of tabs.nodes[id].children)if(child.type==='text')child.text='\tA\t\tภาษาไทย\tB\t';
+const tabInput=JSON.stringify(tabs),tabPdf=await initialized.value.generatePdf(tabs);
+assert.equal(tabPdf.ok,true,tabPdf.ok?'':JSON.stringify(tabPdf));assert.equal(JSON.stringify(tabs),tabInput);
+await writeFile('/consumer/output/tabs.pdf',tabPdf.value.bytes);
+results.push({name:'tabs',pageCount:tabPdf.value.pageCount,bytes:tabPdf.value.bytes.length});
 const invalid=structuredClone(document);invalid.nodes[invalid.rootIds[0]].type='table';
 const rejected=await initialized.value.generatePdf(invalid);assert.equal(rejected.ok,false);assert.equal(rejected.issues[0].code,'LAYOUT_FAILED');assert.equal('value' in rejected,false);
 const concurrent=await Promise.all([initialized.value.generatePdf(document),initialized.value.generatePdf(document)]);assert.ok(concurrent.every(r=>r.ok));

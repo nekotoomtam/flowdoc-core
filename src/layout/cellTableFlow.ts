@@ -7,8 +7,8 @@ import type {MeasuredCellItem,PaddingPt} from './measureCellContent.js';
 
 import {LayoutError} from './textFlow.js';
 import type {TextRuntime} from './textFlow.js';
-export interface CellTablePageSink {top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
-interface Cell extends GridCell {padding:PaddingPt;contentWidth:number;lines:{line:MeasuredCellItem;offset:number;drawn:boolean}[]}
+export interface CellTablePageSink {top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;fill?(x:number,y:number,width:number,height:number,color:string,nodeId:string):void;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
+interface Cell extends GridCell {fillColor?:string|undefined;padding:PaddingPt;contentWidth:number;lines:{line:MeasuredCellItem;offset:number;drawn:boolean}[]}
 const eps=1e-6;
 export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRuntime,s:CellTablePageSink):Promise<void>{
  const grid=resolveTableGrid(t,d.nodes),widths=t.columns.map(c=>toPt(c.width));
@@ -21,7 +21,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
   if(!Number.isFinite(contentWidth)||contentWidth<=0)throw new LayoutError(c.id,'Cell padding leaves no content width');
   let offset=padding.top;const lines:Cell['lines']=[];
   for(const line of await measureCellContent(d,n.childIds,contentWidth,runtime)){lines.push({line,offset,drawn:false});offset+=line.heightPt;}
-  cells.push({...c,padding,contentWidth,lines});
+  cells.push({...c,padding,contentWidth,lines,fillColor:n.props.fillColor??(c.row<t.props.headerRowCount?t.props.headerFillColor:undefined)});
  }
  const headerCount=t.props.headerRowCount,headerCells=cells.filter(c=>c.row<headerCount);
  const body=cells.filter(c=>c.row>=headerCount).map(c=>({...c,row:c.row-headerCount}));
@@ -39,6 +39,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
   const edge=(axis:'h'|'v',fixed:number,a:number,b:number)=>{if(b-a<eps)return;const key=axis+':'+fixed.toFixed(6),e=edges.get(key)??{axis,fixed,segments:[]};e.segments.push([a,b]);edges.set(key,e);};
   for(const c of list){const start=ys[c.row]!,end=ys[c.row+c.rowSpan]!,lo=Math.max(start,from),hi=Math.min(end,to);if(hi-lo<=eps)continue;
    const x=s.left+xs[c.column]!,right=s.left+xs[c.column+c.colSpan]!,top=at+lo-from,bottom=at+hi-from;
+   if(c.fillColor)s.fill?.(x,top,right-x,bottom-top,c.fillColor,c.id);
    if(!sharedTop||lo>from+eps)edge('h',top,x,right);edge('h',bottom,x,right);edge('v',x,top,bottom);edge('v',right,top,bottom);
    for(const l of c.lines){const y=start+l.offset;if(!l.drawn&&y>=from-eps&&y+l.line.heightPt<=to+eps){s.emitItem(l.line,x+c.padding.left,at+y-from,c.contentWidth);l.drawn=true;}}
   }
@@ -76,7 +77,21 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
    for(const c of body){const base=g.ys[c.row]!;const index=c.lines.findIndex(l=>!l.drawn&&base+l.offset<cut+c.padding.top-eps&&base+l.offset+l.line.heightPt+c.padding.bottom>cut+eps);
     if(index>=0){const delta=cut+c.padding.top-base-c.lines[index]!.offset;for(const l of c.lines.slice(index))l.offset+=delta;shifted=true;g=geometry();}}
   }
-  if(hh)drawHeader();paint(body,g.ys,from,cut,s.y,hh>0);s.y+=cut-from;from=cut;first=false;
+  // Do not paint the empty start of a row whose content all moved forward.
+  // Keep the layout cut unchanged: only the visible border/fill ends earlier.
+  // Authored empty rows and rows crossed by a rowspan keep their geometry.
+  let paintTo=cut;
+  for(let row=rowIds.length-1;row>=0;row--){
+   const start=g.ys[row]!,end=g.ys[row+1]!;
+   if(start>=paintTo-eps||end<=from+eps)continue;
+   if(start<from-eps)break;
+   const active=body.filter(c=>c.row<=row&&c.row+c.rowSpan>row);
+   if(active.some(c=>c.row!==row||c.rowSpan!==1))break;
+   const lines=active.flatMap(c=>c.lines.map(l=>({l,y:start+l.offset})));
+   if(!lines.length||lines.some(({l,y})=>l.drawn||(y>=from-eps&&y+l.line.heightPt<=paintTo+eps)))break;
+   paintTo=start;
+  }
+  if(hh)drawHeader();paint(body,g.ys,from,paintTo,s.y,hh>0);s.y+=cut-from;from=cut;first=false;
   if(from<g.ys.at(-1)!-eps)s.nextPage();
  }
  if(body.some(c=>c.lines.some(l=>!l.drawn)))throw new LayoutError(t.id,'Merged table left pending content');

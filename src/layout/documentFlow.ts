@@ -1,3 +1,4 @@
+import {measureRule} from './line.js';
 import type {PageFieldSlot} from '../pdf/drawContract.js';
 import {assignSystemPageNumbers} from './systemPageCounting.js';
 import {measurePageBand,selectPageBands,type MeasuredBand} from './pageBands.js';
@@ -34,13 +35,21 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  let sectionId:string|undefined,sectionPageIndex=0,cover=false,activeNode='';let pageRole:'body'|'cover'|'blank'='body';
  const contentsSlots:NonNullable<DrawDocument['contentsSlots']>=[];
  const entries=d.rootIds.some(id=>d.nodes[id]?.type==='table-of-contents')?collectContents(d):[];
- const pageFieldSlots:PageFieldSlot[]=[];let hideNumbers=false;
+ const pageTexts:NonNullable<DrawDocument['pageTexts']>=[];const pageFieldSlots:PageFieldSlot[]=[];let hideNumbers=false;
  const pages:DrawPage[]=[];let current!:DrawPage,y=top,serial=0;
- const geometry=(index:number)=>{const shown=selectPageBands(modes,pageRole,index),h=shown.header?bands.header:undefined,f=shown.footer?bands.footer:undefined,hspace=h?h.heightPt+(activeBands.header?.gap?toPt(activeBands.header.gap):0):0,fspace=f?f.heightPt+(activeBands.footer?.gap?toPt(activeBands.footer.gap):0):0;
-  if(hspace+fspace>(innerBottom-innerTop)*.4+epsilon)throw new LayoutError((h?activeBands.header:activeBands.footer)?.rootIds[0]??activeNode,'Page bands exceed 40 percent of inner page height',sectionId,(h?'header':'footer')+'.sizing');return {top:innerTop+hspace,bottom:innerBottom-fspace,h,f};};
+ const bandRegion=(kind:'header'|'footer')=>{const p=activeBands[kind]?.placement;return p?{left:toPt(p.left),width:widthPt-toPt(p.left)-toPt(p.right),edge:kind==='header'?toPt(p.offset):heightPt-toPt(p.offset)}:{left,width:available,edge:kind==='header'?innerTop:innerBottom};};
+ const geometry=(index:number)=>{
+  const shown=selectPageBands(modes,pageRole,index),h=shown.header?bands.header:undefined,f=shown.footer?bands.footer:undefined;
+  const hy=bandRegion('header').edge,fy=bandRegion('footer').edge-(f?.heightPt??0);
+  for(const [kind,m,at] of [['header',h,hy],['footer',f,fy]] as const)if(m&&(at<0||at+m.heightPt>heightPt+epsilon))throw new LayoutError(activeBands[kind]?.rootIds[0]??activeNode,'Page band exceeds physical page',sectionId,kind+'.placement');
+  const hg=activeBands.header?.gap?toPt(activeBands.header.gap):0,fg=activeBands.footer?.gap?toPt(activeBands.footer.gap):0;
+  const nt=h?Math.max(innerTop,hy+h.heightPt+hg):innerTop,nb=f?Math.min(innerBottom,fy-fg):innerBottom;
+  if(Math.max((h?h.heightPt+hg:0)+(f?f.heightPt+fg:0),nt-innerTop+innerBottom-nb)>(innerBottom-innerTop)*.4+epsilon)throw new LayoutError((h?activeBands.header:activeBands.footer)?.rootIds[0]??activeNode,'Page bands exceed 40 percent of inner page height',sectionId,(h?'header':'footer')+'.sizing');
+  return {top:nt,bottom:nb,h,f,hy,fy};
+ };
  const nextPage=()=>{if(cover&&sectionPageIndex>0)throw new LayoutError(activeNode,'Cover exceeds one page');const g=geometry(sectionPageIndex);top=g.top;bottom=g.bottom;
   current={...(d.nodeModelVersion>=13?{pageRole}:{}),widthPt,heightPt,backgroundColor:'FFFFFF',commands:[],...(sectionId===undefined?{}:{sectionId,sectionPageIndex:sectionPageIndex++})};pages.push(current);y=top;
-  for(const [kind,m,at] of [['header',g.h,innerTop],['footer',g.f,innerBottom-(g.f?.heightPt??0)]] as const){if(!m)continue;for(const run of m.commands)if(!hideNumbers||!m.numberBlocks.has(run.nodeId))current.commands.push({...run,id:`${kind}-${pages.length}-${run.id}`,bounds:{...run.bounds,xPt:left+run.bounds.xPt,yPt:at+run.bounds.yPt}});if(!hideNumbers)for(const slot of m.pageFields)pageFieldSlots.push({...slot,pageIndex:pages.length-1,sectionId:sectionId!,xPt:left+slot.xPt,yPt:at+slot.yPt});if(m.images.length){current.images??=[];for(const image of m.images)current.images.push({...image,xPt:left+image.xPt,yPt:at+image.yPt});}}
+  for(const [kind,m,at] of [['header',g.h,g.hy],['footer',g.f,g.fy]] as const){if(!m)continue;if(m.borders.length){current.borders??=[];for(const b of m.borders)current.borders.push({...b,x1Pt:bandRegion(kind).left+b.x1Pt,x2Pt:bandRegion(kind).left+b.x2Pt,y1Pt:at+b.y1Pt,y2Pt:at+b.y2Pt});}for(const run of m.commands)if(!hideNumbers||!m.numberBlocks.has(run.nodeId))current.commands.push({...run,id:`${kind}-${pages.length}-${run.id}`,bounds:{...run.bounds,xPt:bandRegion(kind).left+run.bounds.xPt,yPt:at+run.bounds.yPt}});if(!hideNumbers)for(const slot of m.pageFields)pageFieldSlots.push({...slot,pageIndex:pages.length-1,sectionId:sectionId!,xPt:bandRegion(kind).left+slot.xPt,yPt:at+slot.yPt});if(!hideNumbers)for(const t of m.pageTexts)pageTexts.push({...t,pageIndex:pages.length-1,sectionId:sectionId!,xPt:bandRegion(kind).left+t.xPt,yPt:at+t.yPt});if(m.images.length){current.images??=[];for(const image of m.images)current.images.push({...image,xPt:bandRegion(kind).left+image.xPt,yPt:at+image.yPt});}}
  };
  const ensureHeight=(height:number,id:string)=>{if(y+height>bottom+epsilon)nextPage();if(height>bottom-top+epsilon)throw new LayoutError(id,'Item exceeds page content height');};
 
@@ -57,6 +66,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  const table=async(t:Table)=>{
   if(d.nodeModelVersion>=9){
    await cellTableFlow(d,t,runtime,{get top(){return top;},get bottom(){return bottom;},get nextCapacity(){const g=geometry(sectionPageIndex);return g.bottom-g.top;},left,availableWidth:available,get y(){return y;},set y(v){y=v;},nextPage,
+    fill(xPt,yPt,widthPt,heightPt,color,nodeId){current.fills??=[];current.fills.push({xPt,yPt,widthPt,heightPt,color,nodeId});},
     emitItem(item,x,at,width){
      if(item.kind==='text-line'){emitLine(item.line,x,at);return;}
      const image=Object.hasOwn(images,item.resourceId)?images[item.resourceId]:undefined;
@@ -64,11 +74,11 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
      const fw=item.frameWidth,fh=item.heightPt,scale=Math.min(fw/image.width,fh/image.height),iw=image.width*scale,ih=image.height*scale;
      const frameLeft=x+(item.align==='right'?width-fw:item.align==='center'?(width-fw)/2:0);
      current.images??=[];current.images.push({nodeId:item.nodeId,resourceId:item.resourceId,xPt:frameLeft+(fw-iw)/2,yPt:at+(fh-ih)/2,widthPt:iw,heightPt:ih});
-    },border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId){current.borders??=[];current.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,widthPt:0.5,color:'000000'});}
+    },border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId){current.borders??=[];current.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,widthPt:0.5,color:t.props.borderColor??'000000'});}
    });return;
   }
   if(d.nodeModelVersion>=6&&t.rowIds.some(rid=>{const r=d.nodes[rid];return r?.type==='table-row'&&r.cellIds.some(cid=>{const c=d.nodes[cid];return c?.type==='table-cell'&&Object.keys(c.props).length>0;});})){
-   await mergedTableFlow(d,t,runtime,{get top(){return top;},get bottom(){return bottom;},get nextCapacity(){const g=geometry(sectionPageIndex);return g.bottom-g.top;},left,availableWidth:available,get y(){return y;},set y(v){y=v;},nextPage,emitLine,border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId){current.borders??=[];current.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,widthPt:0.5,color:'000000'});}});return;
+   await mergedTableFlow(d,t,runtime,{get top(){return top;},get bottom(){return bottom;},get nextCapacity(){const g=geometry(sectionPageIndex);return g.bottom-g.top;},left,availableWidth:available,get y(){return y;},set y(v){y=v;},nextPage,emitLine,border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId){current.borders??=[];current.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,widthPt:0.5,color:t.props.borderColor??'000000'});}});return;
   }
   const widths=t.columns.map(c=>toPt(c.width));
   if(widths.some(w=>w<=2*pad)||widths.reduce((a,b)=>a+b,0)>available+epsilon)throw new LayoutError(t.id,'Table columns exceed available content width');
@@ -77,7 +87,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
   if(header&&header.height>bottom-top+epsilon)throw new LayoutError(header.id,'Header exceeds page content height');
   const drawRow=(row:Row,cursors:number[],counts:number[],height:number)=>{
    let x=left;current.borders??=[];
-   const border=(x1:number,y1:number,x2:number,y2:number)=>current.borders!.push({x1Pt:x1,y1Pt:y1,x2Pt:x2,y2Pt:y2,widthPt:0.5,color:'000000',nodeId:row.id});
+   const border=(x1:number,y1:number,x2:number,y2:number)=>current.borders!.push({x1Pt:x1,y1Pt:y1,x2Pt:x2,y2Pt:y2,widthPt:0.5,color:t.props.borderColor??'000000',nodeId:row.id});
    // One perimeter and one separator per column avoid doubled vertical strokes.
    border(left,y,left+widths.reduce((a,b)=>a+b,0),y);border(left,y+height,left+widths.reduce((a,b)=>a+b,0),y+height);border(left,y,left,y+height);
    row.cells.forEach((cell,i)=>{let at=y+pad;for(const line of cell.lines.slice(cursors[i],cursors[i]!+counts[i]!)){emitLine(line,x+pad,at);at+=line.heightPt;}x+=widths[i]!;border(x,y,x,y+height);});y+=height;
@@ -110,7 +120,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  hideNumbers=d.nodeModelVersion===16&&"numbering" in section&&section.numbering?.visibility==='hide';
  sectionId=section.sectionId;sectionPageIndex=0;cover=d.nodeModelVersion>=13&&section.role==='cover';pageRole=cover?'cover':section.sourceKind==='blank'?'blank':'body';setPage(section.page);innerTop=top;innerBottom=bottom;modes=section as typeof modes;bands={};
  activeBands=(d.nodeModelVersion===15||d.nodeModelVersion===16)?section as Pick<ResolvedDocument,'header'|'footer'>:d;
- if(d.nodeModelVersion>=14&&pageRole==='body')for(const k of ['header','footer'] as const){const b=activeBands[k];if(!b||modes[k==='header'?'headerMode':'footerMode']==='none')continue;const key=((d.nodeModelVersion===15||d.nodeModelVersion===16)?sectionId+':':'')+k+':'+available;let m=bandCache.get(key);if(!m){try{m=await measurePageBand(b,d.styles,available,runtime,images);}catch(e){if(e instanceof LayoutError)throw new LayoutError(e.nodeId,e.message,sectionId,k+'.nodes.'+e.nodeId+(e.path?'.'+e.path:''));throw e;}bandCache.set(key,m);}bands[k]=m;}
+ if(d.nodeModelVersion>=14&&pageRole==='body')for(const k of ['header','footer'] as const){const b=activeBands[k];if(!b||modes[k==='header'?'headerMode':'footerMode']==='none')continue;const region=bandRegion(k);if(region.width<=0)throw new LayoutError(b.rootIds[0]??'page-band','Page band has no available width',sectionId,k+'.placement');const key=((d.nodeModelVersion===15||d.nodeModelVersion===16)?sectionId+':':'')+k+':'+region.width;let m=bandCache.get(key);if(!m){try{m=await measurePageBand(b,d.styles,region.width,runtime,images);}catch(e){if(e instanceof LayoutError)throw new LayoutError(e.nodeId,e.message,sectionId,k+'.nodes.'+e.nodeId+(e.path?'.'+e.path:''));throw e;}bandCache.set(key,m);}bands[k]=m;}
  nextPage();
  for(const id of section.rootIds){activeNode=id;const n=d.nodes[id];if(n?.type==='table')await table(n);else if(n?.type==='text-block'){
   if(n.props.heightMode==='fixed'){
@@ -129,6 +139,8 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
    if(numberSlot)contentsSlots.push({nodeId:n.id,...numberSlot,pageIndex:pages.length-1,xPt:left+available-numberSlot.widthPt,yPt:y});
    y+=line.heightPt;
   }
+ }else if(n?.type==='line'){
+  const m=measureRule(n,available);ensureHeight(m.height,id);current.borders??=[];current.borders.push({nodeId:id,x1Pt:left+m.offset,x2Pt:left+m.offset+m.width,y1Pt:y+m.before+m.thickness/2,y2Pt:y+m.before+m.thickness/2,widthPt:m.thickness,color:m.color});y+=m.height;
  }else if(n?.type==='image'){
   const fw=toPt(n.props.width),fh=toPt(n.props.height);
   if(fw>available+epsilon)throw new LayoutError(id,'Image frame exceeds printable page');
@@ -140,5 +152,5 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  }else throw new LayoutError(id,'Unsupported root');}
  }
  if(d.nodeModelVersion===16)assignSystemPageNumbers(d,{pages});else assignCountedPages({pages});
- return {pages,...(pageFieldSlots.length?{pageFieldSlots}:{}),...(contentsSlots.length?{contentsSlots}:{})};
+ return {pages,...(pageTexts.length?{pageTexts}:{}),...(pageFieldSlots.length?{pageFieldSlots}:{}),...(contentsSlots.length?{contentsSlots}:{})};
 }

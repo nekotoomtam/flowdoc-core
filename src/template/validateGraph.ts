@@ -6,7 +6,7 @@ import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat,CellRepeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
+export interface GraphContext {bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -14,6 +14,8 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
  const scopes:Record<string,ObjectSchema> = ctx.scopeSchemas??{global:ctx.globalSchema,local:ctx.localSchema};
  const scopeNames=[...Object.keys(scopes),'item'];
  const nodes=input.nodes,ids=new Set<string>(),parents=new Map<string,number>(),edges=new Map<string,string[]>();
+ const cellTextIds=new Set<string>();
+ if(ctx.cellContent)for(const n of Object.values(nodes))if(object(n)&&n.type==='table-cell'&&Array.isArray(n.childIds))for(const id of n.childIds)if(typeof id==='string')cellTextIds.add(id);
  const validId=(id:unknown):id is string=>name(id)&&(ctx.resolved===true||!id.includes('~'));
  const unique=(id:unknown,p:string)=>{if(!validId(id)||ids.has(id))fail(p);else ids.add(id);};
  const refs=(value:unknown,p:string):string[]=>{if(!Array.isArray(value)||!value.every(validId)){fail(p);return [];}return value;};
@@ -48,8 +50,16 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
   const p=path+'.nodes.'+id;unique(id,p);
   if(!object(n)||n.id!==id){fail(p);continue;}
   let children:string[]=[];
-  if(n.type==='text-block'){
-   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing',...(ctx.heightModes?['heightMode','height','verticalAlign']:[]),'anchorId',...(ctx.contents?['toc']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
+  if(n.type==='line'&&ctx.heightModes){
+   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['align','width','thickness','color','spaceBefore','spaceAfter'])){fail(p);continue;}
+   if(own(n.props,'align')&&!['left','center','right'].includes(n.props.align))fail(p+'.props.align');
+   if(own(n.props,'color')&&(typeof n.props.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props.color)))fail(p+'.props.color');
+   for(const key of ['width','thickness','spaceBefore','spaceAfter'])if(own(n.props,key)){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<0||(['width','thickness'].includes(key)&&v.value===0)||!Number.isFinite(toPt(v as any)))fail(p+'.props.'+key);}
+  }else if(n.type==='text-block'){
+   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing',...(ctx.heightModes?['heightMode','height','verticalAlign']:[]),'anchorId',...(ctx.contents?['toc']:[]),...(ctx.bandText||cellTextIds.has(id)?['textAlign']:[]),...(ctx.bandText?['pageFieldLayout']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
+   if(own(n.props,'textAlign')&&!['left','center','right'].includes(n.props.textAlign))fail(p+'.props.textAlign');
+   if(own(n.props,'pageFieldLayout')&&(n.props.pageFieldLayout!=='compact'||!n.children.some((c:any)=>c?.type==='system-page-field')))fail(p+'.props.pageFieldLayout');
+   if(n.children.some((c:any)=>c?.type==='system-page-field')&&n.props.textAlign&&n.props.textAlign!=='left'&&n.props.pageFieldLayout!=='compact')fail(p+'.props.pageFieldLayout');
    if(own(n.props,'heightMode')&&!['content','fixed'].includes(n.props.heightMode))fail(p+'.props.heightMode');
    if(n.props.heightMode==='fixed'){
     const h=n.props.height;
@@ -84,7 +94,8 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    else {const s=n.props.source;if(!object(s)||!keys(s,['scope','key'])||![...Object.keys(scopes),...(ctx.itemImages?['item']:[])].includes(s.scope)||!name(s.key)||s.key.includes('.'))fail(p+'.props.source');}
    for(const key of ['width','height']){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<=0)fail(p+'.props.'+key);}
   }else if(n.type==='table'){
-   if(!keys(n,['id','type','props','columns','rowIds'])||!object(n.props)||!keys(n.props,['headerRowCount','repeatHeaderRows'])||!Number.isInteger(n.props.headerRowCount)||n.props.headerRowCount<0||n.props.headerRowCount>1||typeof n.props.repeatHeaderRows!=='boolean'||!Array.isArray(n.columns)||!n.columns.length){fail(p);continue;}
+   if(!keys(n,['id','type','props','columns','rowIds'])||!object(n.props)||!keys(n.props,['headerRowCount','repeatHeaderRows',...(ctx.cellContent?['headerFillColor','borderColor']:[])])||!Number.isInteger(n.props.headerRowCount)||n.props.headerRowCount<0||n.props.headerRowCount>1||typeof n.props.repeatHeaderRows!=='boolean'||!Array.isArray(n.columns)||!n.columns.length){fail(p);continue;}
+   for(const k of ['headerFillColor','borderColor'])if(own(n.props,k)&&(typeof n.props[k]!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props[k])))fail(p+'.props.'+k);
    for(const c of n.columns)if(!object(c)||!keys(c,['width'])||!object(c.width)||!keys(c.width,['unit','value'])||!['mm','pt'].includes(c.width.unit)||typeof c.width.value!=='number'||!Number.isFinite(c.width.value)||c.width.value<=0)fail(p+'.columns');
    children=refs(n.rowIds,p+'.rowIds');if(n.props.headerRowCount>children.length)fail(p+'.props.headerRowCount');
    for(const rid of children){const row=own(nodes,rid)?nodes[rid]:null;if(!object(row)||row.type!=='table-row'||!Array.isArray(row.cellIds)||(!ctx.merged&&row.cellIds.length!==n.columns.length))fail(p+'.rowIds');}
@@ -93,7 +104,8 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    children=refs(n.cellIds,p+'.cellIds');if(!children.length&&!ctx.merged)fail(p+'.cellIds');
    for(const cid of children)if(!own(nodes,cid)||nodes[cid]?.type!=='table-cell')fail(p+'.cellIds');
   }else if(n.type==='table-cell'){
-   if(!keys(n,['id','type','props','childIds'])||!object(n.props)||!keys(n.props,[...(ctx.merged?['columnIndex','rowSpan','colSpan']:[]),...(ctx.cellContent?['padding']:[])]))fail(p);
+   if(!keys(n,['id','type','props','childIds'])||!object(n.props)||!keys(n.props,[...(ctx.merged?['columnIndex','rowSpan','colSpan']:[]),...(ctx.cellContent?['padding','fillColor']:[])]))fail(p);
+   if(object(n.props)&&own(n.props,'fillColor')&&(typeof n.props.fillColor!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props.fillColor)))fail(p+'.props.fillColor');
    if(object(n.props)&&own(n.props,'padding')){
     const padding=n.props.padding;
     if(!ctx.cellContent||!object(padding)||!keys(padding,['top','right','bottom','left']))fail(p+'.props.padding');
@@ -119,7 +131,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
  if(ctx.contents&&Object.values(nodes).filter(n=>n?.type==='table-of-contents').length>1)fail(path+'.contents');
  currentNode=undefined;
  const roots=refs(input.rootIds,path+'.rootIds');if(!roots.length&&!ctx.allowEmptyRoots)fail(path+'.rootIds');
- for(const id of roots){parents.set(id,(parents.get(id)??0)+1);if(!own(nodes,id)||!['text-block','table',...(ctx.images?['image']:[]),...(ctx.contents?['table-of-contents']:[]),...(ctx.areas&&!ctx.resolved?['area']:[])].includes(nodes[id]?.type))fail(path+'.rootIds');}
+ for(const id of roots){parents.set(id,(parents.get(id)??0)+1);if(!own(nodes,id)||!['text-block','table',...(ctx.heightModes?['line']:[]),...(ctx.images?['image']:[]),...(ctx.contents?['table-of-contents']:[]),...(ctx.areas&&!ctx.resolved?['area']:[])].includes(nodes[id]?.type))fail(path+'.rootIds');}
  for(const id of Object.keys(nodes))if(parents.get(id)!==1)fail(path+'.nodes.'+id+'.parent',id);
  const active=new Set<string>(),visited=new Set<string>();
  const visit=(root:string)=>{
