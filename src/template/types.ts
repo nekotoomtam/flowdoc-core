@@ -36,7 +36,8 @@ export interface ValidatedTemplate {readonly definition:TemplateDefinition;reado
 export type BandMode='all'|'first'|'continuation'|'none';
 export type BandSizing={mode:'content';minHeight?:import('../composition/resolvedDocument.js').Length;maxHeight?:import('../composition/resolvedDocument.js').Length}|{mode:'fixed';height:import('../composition/resolvedDocument.js').Length};
 export interface BandColumns {id:string;type:'columns';props:{gap?:import('../composition/resolvedDocument.js').Length};columns:{weight:number;childIds:string[]}[]}
-export interface PageBandDefinition {inputSchema:ObjectSchema<StringField|ImageField|LinkField>;fragment:{rootIds:string[];nodes:Record<string,TemplateTextBlock|TemplateImageBlock|BandColumns>};baseTextStyleId:string;sizing?:BandSizing;gap?:import('../composition/resolvedDocument.js').Length}
+export interface BandPlacement {mode:"page";left:import("../composition/resolvedDocument.js").Length;right:import("../composition/resolvedDocument.js").Length;offset:import("../composition/resolvedDocument.js").Length}
+export interface PageBandDefinition {placement?:BandPlacement;inputSchema:ObjectSchema<StringField|ImageField|LinkField>;fragment:{rootIds:string[];nodes:Record<string,TemplateTextBlock|TemplateImageBlock|BandColumns>};baseTextStyleId:string;sizing?:BandSizing;gap?:import('../composition/resolvedDocument.js').Length}
 
 export interface Section15 extends TemplateSection {key:string;inputSchema:ObjectSchema;formats:Record<string,Format>;header?:PageBandDefinition;footer?:PageBandDefinition}
 export type Template15=Omit<TemplateBase,'header'|'footer'|'formats'>&{nodeModelVersion:15;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:Section15[]};

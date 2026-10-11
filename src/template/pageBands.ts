@@ -8,10 +8,11 @@ export const bandLength=(v:any)=>object(v)&&keys(v,['value','unit'])&&['mm','pt'
 export function flatBandFragment(b:any):any {return {rootIds:b.fragment.rootIds.flatMap((id:string)=>{const n=b.fragment.nodes[id];return n?.type==='columns'?n.columns.flatMap((c:any)=>c.childIds):[id];}),nodes:Object.fromEntries(Object.entries(b.fragment.nodes).filter(([,n]:any)=>n.type!=='columns'))};}
 export function validatePageBand(b:any,styles:any,path:string,resolved=false,scopeSchemas?:Record<string,import('./types.js').ObjectSchema>,sourceSectionId=path,pageFields=false):Issue[]{
  const issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_TEMPLATE',p));
- const allowed=resolved?['rootIds','nodes','sourceMap','baseTextStyleId','sizing','gap']:['inputSchema','fragment','baseTextStyleId','sizing','gap'];
+ const allowed=resolved?['rootIds','nodes','sourceMap','baseTextStyleId','sizing','gap','placement']:['inputSchema','fragment','baseTextStyleId','sizing','gap','placement'];
  if(!object(b)||!keys(b,allowed)||!object(styles)||!own(styles,b.baseTextStyleId)){fail(path);return issues;}
  const minimum=styles[b.baseTextStyleId]?.lineHeightPt;
  if(typeof minimum!=='number'||!Number.isFinite(minimum)||minimum<=0){fail(path+'.baseTextStyleId');return issues;}
+ if(own(b,'placement')){const p=b.placement;if(!object(p)||!keys(p,['mode','left','right','offset'])||p.mode!=='page'||!bandLength(p.left)||!bandLength(p.right)||!bandLength(p.offset))fail(path+'.placement');}
  if(own(b,'gap')&&!bandLength(b.gap))fail(path+'.gap');
  if(own(b,'sizing')){const s=b.sizing;if(!object(s)||!['content','fixed'].includes(s.mode))fail(path+'.sizing');else if(s.mode==='fixed'){if(!keys(s,['mode','height'])||!bandLength(s.height)||toPt(s.height)<minimum)fail(path+'.sizing.height');}else{if(!keys(s,['mode','minHeight','maxHeight']))fail(path+'.sizing');for(const k of ['minHeight','maxHeight'])if(own(s,k)&&(!bandLength(s[k])||toPt(s[k])<minimum))fail(path+'.sizing.'+k);if(bandLength(s.minHeight)&&bandLength(s.maxHeight)&&toPt(s.minHeight)>toPt(s.maxHeight))fail(path+'.sizing');}}
  const empty={type:'object' as const,fields:{}};

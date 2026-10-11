@@ -28,4 +28,4 @@ export interface ResolvedDocument {
 }
 export function toPt(length:Length):number {return length.unit==='mm'?length.value*72/25.4:length.value;}
 
-export interface ResolvedBand {rootIds:string[];nodes:Record<string,TextBlock|ImageBlock|import('../template/types.js').BandColumns>;sourceMap:Record<string,SourceEntry>;baseTextStyleId:string;sizing?:import('../template/types.js').BandSizing;gap?:Length}
+export interface ResolvedBand {placement?:import("../template/types.js").BandPlacement;rootIds:string[];nodes:Record<string,TextBlock|ImageBlock|import('../template/types.js').BandColumns>;sourceMap:Record<string,SourceEntry>;baseTextStyleId:string;sizing?:import('../template/types.js').BandSizing;gap?:Length}

@@ -36,11 +36,19 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  const entries=d.rootIds.some(id=>d.nodes[id]?.type==='table-of-contents')?collectContents(d):[];
  const pageFieldSlots:PageFieldSlot[]=[];let hideNumbers=false;
  const pages:DrawPage[]=[];let current!:DrawPage,y=top,serial=0;
- const geometry=(index:number)=>{const shown=selectPageBands(modes,pageRole,index),h=shown.header?bands.header:undefined,f=shown.footer?bands.footer:undefined,hspace=h?h.heightPt+(activeBands.header?.gap?toPt(activeBands.header.gap):0):0,fspace=f?f.heightPt+(activeBands.footer?.gap?toPt(activeBands.footer.gap):0):0;
-  if(hspace+fspace>(innerBottom-innerTop)*.4+epsilon)throw new LayoutError((h?activeBands.header:activeBands.footer)?.rootIds[0]??activeNode,'Page bands exceed 40 percent of inner page height',sectionId,(h?'header':'footer')+'.sizing');return {top:innerTop+hspace,bottom:innerBottom-fspace,h,f};};
+ const bandRegion=(kind:'header'|'footer')=>{const p=activeBands[kind]?.placement;return p?{left:toPt(p.left),width:widthPt-toPt(p.left)-toPt(p.right),edge:kind==='header'?toPt(p.offset):heightPt-toPt(p.offset)}:{left,width:available,edge:kind==='header'?innerTop:innerBottom};};
+ const geometry=(index:number)=>{
+  const shown=selectPageBands(modes,pageRole,index),h=shown.header?bands.header:undefined,f=shown.footer?bands.footer:undefined;
+  const hy=bandRegion('header').edge,fy=bandRegion('footer').edge-(f?.heightPt??0);
+  for(const [kind,m,at] of [['header',h,hy],['footer',f,fy]] as const)if(m&&(at<0||at+m.heightPt>heightPt+epsilon))throw new LayoutError(activeBands[kind]?.rootIds[0]??activeNode,'Page band exceeds physical page',sectionId,kind+'.placement');
+  const hg=activeBands.header?.gap?toPt(activeBands.header.gap):0,fg=activeBands.footer?.gap?toPt(activeBands.footer.gap):0;
+  const nt=h?Math.max(innerTop,hy+h.heightPt+hg):innerTop,nb=f?Math.min(innerBottom,fy-fg):innerBottom;
+  if(Math.max((h?h.heightPt+hg:0)+(f?f.heightPt+fg:0),nt-innerTop+innerBottom-nb)>(innerBottom-innerTop)*.4+epsilon)throw new LayoutError((h?activeBands.header:activeBands.footer)?.rootIds[0]??activeNode,'Page bands exceed 40 percent of inner page height',sectionId,(h?'header':'footer')+'.sizing');
+  return {top:nt,bottom:nb,h,f,hy,fy};
+ };
  const nextPage=()=>{if(cover&&sectionPageIndex>0)throw new LayoutError(activeNode,'Cover exceeds one page');const g=geometry(sectionPageIndex);top=g.top;bottom=g.bottom;
   current={...(d.nodeModelVersion>=13?{pageRole}:{}),widthPt,heightPt,backgroundColor:'FFFFFF',commands:[],...(sectionId===undefined?{}:{sectionId,sectionPageIndex:sectionPageIndex++})};pages.push(current);y=top;
-  for(const [kind,m,at] of [['header',g.h,innerTop],['footer',g.f,innerBottom-(g.f?.heightPt??0)]] as const){if(!m)continue;for(const run of m.commands)if(!hideNumbers||!m.numberBlocks.has(run.nodeId))current.commands.push({...run,id:`${kind}-${pages.length}-${run.id}`,bounds:{...run.bounds,xPt:left+run.bounds.xPt,yPt:at+run.bounds.yPt}});if(!hideNumbers)for(const slot of m.pageFields)pageFieldSlots.push({...slot,pageIndex:pages.length-1,sectionId:sectionId!,xPt:left+slot.xPt,yPt:at+slot.yPt});if(m.images.length){current.images??=[];for(const image of m.images)current.images.push({...image,xPt:left+image.xPt,yPt:at+image.yPt});}}
+  for(const [kind,m,at] of [['header',g.h,g.hy],['footer',g.f,g.fy]] as const){if(!m)continue;for(const run of m.commands)if(!hideNumbers||!m.numberBlocks.has(run.nodeId))current.commands.push({...run,id:`${kind}-${pages.length}-${run.id}`,bounds:{...run.bounds,xPt:bandRegion(kind).left+run.bounds.xPt,yPt:at+run.bounds.yPt}});if(!hideNumbers)for(const slot of m.pageFields)pageFieldSlots.push({...slot,pageIndex:pages.length-1,sectionId:sectionId!,xPt:bandRegion(kind).left+slot.xPt,yPt:at+slot.yPt});if(m.images.length){current.images??=[];for(const image of m.images)current.images.push({...image,xPt:bandRegion(kind).left+image.xPt,yPt:at+image.yPt});}}
  };
  const ensureHeight=(height:number,id:string)=>{if(y+height>bottom+epsilon)nextPage();if(height>bottom-top+epsilon)throw new LayoutError(id,'Item exceeds page content height');};
 
@@ -110,7 +118,7 @@ export async function documentFlow(d:ResolvedDocument,runtime:TextRuntime,images
  hideNumbers=d.nodeModelVersion===16&&"numbering" in section&&section.numbering?.visibility==='hide';
  sectionId=section.sectionId;sectionPageIndex=0;cover=d.nodeModelVersion>=13&&section.role==='cover';pageRole=cover?'cover':section.sourceKind==='blank'?'blank':'body';setPage(section.page);innerTop=top;innerBottom=bottom;modes=section as typeof modes;bands={};
  activeBands=(d.nodeModelVersion===15||d.nodeModelVersion===16)?section as Pick<ResolvedDocument,'header'|'footer'>:d;
- if(d.nodeModelVersion>=14&&pageRole==='body')for(const k of ['header','footer'] as const){const b=activeBands[k];if(!b||modes[k==='header'?'headerMode':'footerMode']==='none')continue;const key=((d.nodeModelVersion===15||d.nodeModelVersion===16)?sectionId+':':'')+k+':'+available;let m=bandCache.get(key);if(!m){try{m=await measurePageBand(b,d.styles,available,runtime,images);}catch(e){if(e instanceof LayoutError)throw new LayoutError(e.nodeId,e.message,sectionId,k+'.nodes.'+e.nodeId+(e.path?'.'+e.path:''));throw e;}bandCache.set(key,m);}bands[k]=m;}
+ if(d.nodeModelVersion>=14&&pageRole==='body')for(const k of ['header','footer'] as const){const b=activeBands[k];if(!b||modes[k==='header'?'headerMode':'footerMode']==='none')continue;const region=bandRegion(k);if(region.width<=0)throw new LayoutError(b.rootIds[0]??'page-band','Page band has no available width',sectionId,k+'.placement');const key=((d.nodeModelVersion===15||d.nodeModelVersion===16)?sectionId+':':'')+k+':'+region.width;let m=bandCache.get(key);if(!m){try{m=await measurePageBand(b,d.styles,region.width,runtime,images);}catch(e){if(e instanceof LayoutError)throw new LayoutError(e.nodeId,e.message,sectionId,k+'.nodes.'+e.nodeId+(e.path?'.'+e.path:''));throw e;}bandCache.set(key,m);}bands[k]=m;}
  nextPage();
  for(const id of section.rootIds){activeNode=id;const n=d.nodes[id];if(n?.type==='table')await table(n);else if(n?.type==='text-block'){
   if(n.props.heightMode==='fixed'){
