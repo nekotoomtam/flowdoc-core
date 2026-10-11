@@ -6,7 +6,7 @@ Owner: flowdoc-core. This README describes this package's local build and resour
 and PDF API. Shared MVP scope and status belong to Project Control's
 `docs/domains/flowdoc-export-mvp-r2-runtime-plan-2026-10-07.md`.
 
-Version 0.2.0 validates templates, binds typed data and renders TextBlocks,
+Version 0.2.9 validates templates, binds typed data and renders TextBlocks,
 images, merged tables, cell repeats, Area subformats, links and contents to PDF.
 There is no HTTP server or database here. Start with the Thai
 [template guide](docs/template-guide.md) for model 4–16 contracts and examples.
@@ -82,7 +82,7 @@ access for locked dependencies. Images and build output are retained for inspect
 
 Do not run `npm pack` from an unprepared host checkout: the native files and
 resource manifest are generated in the Linux build. Installation has no hooks,
-compiler invocation or runtime downloads. This prerelease is private/unpublished.
+compiler invocation or runtime downloads. This package is private/unpublished.
 
 ## Resource API
 
@@ -256,7 +256,7 @@ with Section/node/field context. Callers still send only normal input values.
 
 Section `numbering` supports `continue` (default), `restart` with optional
 positive `startAt` (default 1), or `exclude`; visibility is `show` or `hide`.
-Total counts participating pages across the document. Cover is excluded/hidden;
+Total counts participating pages across the document. Cover is excluded/hidden by default; model16 can explicitly count a cover with continue/restart, while keeping its labels/bands hidden;
 blank is counted/hidden by default. Hide preserves space and suppresses the entire
 TextBlock containing fields. No fields means no automatic footer number.
 TOC uses counted numbers even when the page hides them. Selected headings on
@@ -266,3 +266,13 @@ headings remain absent; duplicate/missing destinations remain invalid.
 See `fixtures/page-numbering`. After `npm run check:package`, inspect the PDFs
 and run `python tests/consumer/checkPageNumberingPdf.py <artifact-directory>`
 with pypdf available. This read-only artifact check is not a runtime dependency.
+
+
+## Changes through 0.2.9
+
+See the template guide for counted-but-hidden model16 covers, page-relative bands,
+horizontal lines/alignment, table colors, cell text alignment and compact centered
+page labels. Rendering normalizes tabs to one display space and reuses font CIDs.
+Empty trailing starts of table rows no longer paint borders/fills when their
+content moves to the next page; pagination and authored empty rows are preserved.
+These are extensions within existing model gates, not a new nodeModelVersion.

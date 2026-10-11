@@ -1,8 +1,8 @@
-# คู่มือสร้างแม่แบบ FlowDoc Core 0.2.0
+# คู่มือสร้างแม่แบบ FlowDoc Core 0.2.9
 
 ## Authority Boundary
 
-Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.2.0 รองรับ
+Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.2.9 รองรับ
 ไม่ใช่ roadmap หรือการรับรอง release สถานะร่วมและข้อจำกัดที่ตกลงอยู่ใน
 flowdoc-project-control `docs/domains/flowdoc-page-system-roadmap-2026-10-10.md`
 วิธี import/publish และเรียก HTTP อยู่ใน [คู่มือ Service](../../flowdoc-service/docs/usage.md)
@@ -41,7 +41,7 @@ flowdoc-project-control `docs/domains/flowdoc-page-system-roadmap-2026-10-10.md`
 | สารบัญ | [contents](../fixtures/contents/template.json) |
 
 อย่าเพิ่ม nodeModelVersion ให้แม่แบบเก่าอัตโนมัติ เพราะบางรุ่นกำหนดสัญญาต่างกัน
-รุ่น package 0.2.0 อ่าน model 4–16 ได้ แต่ใช้ความสามารถใหม่ต้องเลือกรุ่น model ที่รองรับ
+รุ่น package 0.2.9 อ่าน model 4–16 ได้ แต่ใช้ความสามารถใหม่ต้องเลือกรุ่น model ที่รองรับ
 
 | Model | สิ่งที่เพิ่ม |
 | --- | --- |
@@ -361,7 +361,7 @@ Models4–14 ใช้ envelope เดิม ไม่แปลงอัตโ�
 
 Section numbering ใช้ `{ "mode":"continue", "visibility":"show" }` เป็นค่าเริ่มต้น.
 restart เริ่ม1 หรือ startAt ที่เป็นจำนวนเต็มบวก; exclude ไม่นับเลข.
-Cover ไม่นับ/ไม่แสดง; blank นับ/ซ่อนตามค่าเริ่มต้น. visibility hide คงพื้นที่
+Cover ไม่นับ/ไม่แสดงตามค่าเริ่มต้น; model16 เลือก numbering.mode เป็น continue หรือ restart เพื่อนับปกได้ แต่ visibility ต้อง hide และหัวท้ายไม่แสดงเสมอ. blank นับ/ซ่อนตามค่าเริ่มต้น. visibility hide คงพื้นที่
 แต่ซ่อนทั้ง TextBlock ที่มี system-page-field รวมข้อความประกอบในกล่องนั้น.
 ไม่มี field หมายถึงไม่มีเลขท้ายอัตโนมัติใน model16. current ใช้กับ exclude ไม่ได้.
 
@@ -371,7 +371,7 @@ Cover ไม่นับ/ไม่แสดง; blank นับ/ซ่อนต�
 เลขแสดงซ้ำจาก restart ไม่ทำให้ปลายทางสับสน. ชื่อยาวขึ้นหลายบรรทัด/หลายหน้าได้.
 เลขหัวข้อแบบ1.1/1.1.1 ยังไม่ได้สร้างอัตโนมัติในรุ่นนี้.
 
-## Compatibility และการอัปเกรด 0.2.0
+## Compatibility และการอัปเกรด 0.2.9
 
 Package version, nodeModelVersion และ version ของแม่แบบเป็นคนละค่า.
 อัปเกรด package ไม่เปลี่ยนแม่แบบ model4–15 หรือ snapshot ที่ publish แล้ว.
@@ -379,3 +379,62 @@ Package version, nodeModelVersion และ version ของแม่แบบ�
 และ publish เวอร์ชันใหม่. คู่มือเก่าแบบ content ระดับบนยังใช้กับ model เก่าตามเดิม.
 ยังไม่มี DOCX, frontend, ตารางซ้อน/Columnsในcell, TOCระดับ4ขึ้นไป,
 เลขโรมัน หรือการรับรองโหลดพร้อมกันระดับ production.
+
+
+## ตัวเลือกจัดรูปแบบใน 0.2.9
+
+ตัวเลือกเหล่านี้อยู่ในแม่แบบ ไม่ใช่ข้อมูลที่ผู้เรียก API ต้องส่งเพิ่ม.
+
+### หัวท้ายอิงหน้ากระดาษ
+
+model14 ขึ้นไปกำหนดใน header/footer ได้:
+
+```json
+"placement": {
+  "mode": "page",
+  "left": {"value": 0, "unit": "mm"},
+  "right": {"value": 0, "unit": "mm"},
+  "offset": {"value": 0, "unit": "mm"}
+}
+```
+
+left/right คือระยะจากขอบหน้าจริง; offset วัดจากบนสำหรับ header และล่างสำหรับ footer.
+ทั้งหมดต้องไม่ติดลบ. ไม่กำหนด placement ยังคงอิง body margins เดิม.
+เนื้อหายังเว้นพื้นที่หลบหัวท้ายพร้อม gap และมีเพดานความสูงเดิม ไม่ใช่ absolute XY.
+ภาพยังรักษาสัดส่วนภายในกรอบ; หากต้องการเต็มความกว้างโดยไม่เหลือช่องว่าง
+ผู้สร้างต้องตั้งความสูงกรอบตามสัดส่วนภาพเอง ไม่มีโหมด auto-height ของภาพ.
+
+### เส้น สีตาราง และการจัดแนว
+
+Line ใช้ที่ root ของ fragment ใน model13 ขึ้นไป และในหัวท้าย/Columns ของหัวท้ายได้.
+ยังไม่รองรับ Line เป็นลูกเซลล์. ตัวอย่าง node:
+
+```json
+{"id":"rule","type":"line","props":{"width":{"value":60,"unit":"mm"},"align":"center","thickness":{"value":0.5,"unit":"pt"},"color":"777777","spaceBefore":{"value":2,"unit":"pt"},"spaceAfter":{"value":2,"unit":"pt"}}}
+```
+
+width ไม่ใส่คือเต็มพื้นที่, align เริ่ม left และเลือก center/right ได้.
+thickness เริ่ม0.5pt; width/thickness ต้องบวก. ระยะก่อน/หลังเริ่ม0และไม่ติดลบ.
+สีใช้ hex6หลักไม่มี #. ใน model9 ขึ้นไป Table.props มี headerFillColor/borderColor
+และ Cell.props มี fillColor (ทับสีหัวตาราง). ไม่ใส่ยังไม่มีสีพื้นและเส้นดำตามเดิม.
+
+TextBlock ลูกโดยตรงใน cell (model9+) และ TextBlock ในหัวท้ายใช้
+props.textAlign เป็น left(default),center,right ได้; จัดตาม ink ภายในพื้นที่หลังหัก padding.
+ยังไม่ใช่ตัวเลือกสำหรับ TextBlock รากของ body. padding0ยังใช้ได้.
+
+TextBlock หัวท้ายที่มี system-page-field (model16) เลือก
+`"pageFieldLayout":"compact"` เพื่อจัดข้อความทั้งชุด เช่น Page 5 of 85 ด้วยความกว้าง
+จริงหลังแทนตัวเลข และใช้ textAlign:center/right ได้. ต้องวางได้หนึ่งบรรทัด;
+เกินพื้นที่ให้ LAYOUT_FAILED ไม่ย่อหรือจัดหน้าใหม่. ถ้าไม่เลือก compact
+ยังจอง width ของ field ตามเดิม; non-left alignment ของ system fields ต้องใช้ compact.
+
+### การต่อหน้าและข้อความ
+
+แท็บแสดงเป็นช่องว่างหนึ่งตัวเฉพาะขั้น render; ข้อมูลต้นฉบับไม่เปลี่ยน.
+CID ของ glyph ที่ใช้ซ้ำถูกนำกลับมาใช้ในฟอนต์เดียวกัน ไม่ใช้โควตาหนึ่งรายการต่ออักษรทุกครั้ง.
+เพดาน65535ยังมีอยู่ ไม่ใช่การรับรองเอกสารไม่จำกัดขนาด.
+
+หากรายการใหม่ถูกเลื่อนไปหน้าต่อไปและยังไม่มีเนื้อหาใดวางได้ในท้ายหน้าเดิม
+ระบบไม่วาดกรอบ/สีพื้นของเศษแถวว่างนั้น โดยไม่เปลี่ยนการแบ่งหน้า.
+แถวว่างที่ผู้สร้างตั้งใจใส่ เซลล์ที่มีเนื้อหาบางส่วน และ rowspan ที่พาดผ่าน
+ยังรักษากติกาเดิม ไม่ใช่การลบทุกเซลล์ว่าง.
