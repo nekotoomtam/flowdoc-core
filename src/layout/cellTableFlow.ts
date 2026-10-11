@@ -77,7 +77,21 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
    for(const c of body){const base=g.ys[c.row]!;const index=c.lines.findIndex(l=>!l.drawn&&base+l.offset<cut+c.padding.top-eps&&base+l.offset+l.line.heightPt+c.padding.bottom>cut+eps);
     if(index>=0){const delta=cut+c.padding.top-base-c.lines[index]!.offset;for(const l of c.lines.slice(index))l.offset+=delta;shifted=true;g=geometry();}}
   }
-  if(hh)drawHeader();paint(body,g.ys,from,cut,s.y,hh>0);s.y+=cut-from;from=cut;first=false;
+  // Do not paint the empty start of a row whose content all moved forward.
+  // Keep the layout cut unchanged: only the visible border/fill ends earlier.
+  // Authored empty rows and rows crossed by a rowspan keep their geometry.
+  let paintTo=cut;
+  for(let row=rowIds.length-1;row>=0;row--){
+   const start=g.ys[row]!,end=g.ys[row+1]!;
+   if(start>=paintTo-eps||end<=from+eps)continue;
+   if(start<from-eps)break;
+   const active=body.filter(c=>c.row<=row&&c.row+c.rowSpan>row);
+   if(active.some(c=>c.row!==row||c.rowSpan!==1))break;
+   const lines=active.flatMap(c=>c.lines.map(l=>({l,y:start+l.offset})));
+   if(!lines.length||lines.some(({l,y})=>l.drawn||(y>=from-eps&&y+l.line.heightPt<=paintTo+eps)))break;
+   paintTo=start;
+  }
+  if(hh)drawHeader();paint(body,g.ys,from,paintTo,s.y,hh>0);s.y+=cut-from;from=cut;first=false;
   if(from<g.ys.at(-1)!-eps)s.nextPage();
  }
  if(body.some(c=>c.lines.some(l=>!l.drawn)))throw new LayoutError(t.id,'Merged table left pending content');
