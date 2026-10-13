@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { writePdf } from '../../src/pdf/writePdf.js';
 const font = readFileSync(new URL('../../assets/fonts/Sarabun-Regular.ttf', import.meta.url));
@@ -6,6 +7,27 @@ const resource = {fontId:'font-regular',subsetBytes:font,subsetPrefix:'FDTEST',p
 const run = {id:'run',nodeId:'text',kind:'glyph-run' as const,text:'ก',fontId:'font-regular',fontSizePt:14,lineHeightPt:24,baselineOffsetPt:18,color:'000000',bounds:{xPt:40,yPt:40,widthPt:100,heightPt:24},glyphs:[{glyphId:1,advancePt:8,offsetXPt:0,offsetYPt:0,clusterStartOffset:0,clusterEndOffset:1}]};
 const draw = {pages:[{widthPt:595.28,heightPt:841.89,backgroundColor:'FFFFFF',commands:[run]}]};
 describe('private PDF writer',()=>{
+  it('keeps the legacy document ID without serializing the whole document or page list',()=>{
+    const pages=Array.from({length:3},(_,i)=>({...draw.pages[0]!,commands:[{...run,id:`page-${i}`}]}));
+    const input={warnings:[{code:'test',message:'ไทย 🚀 "quote"\\slash\n\ud800'}],pages,anchors:{},pageTexts:undefined,contentsSlots:[]};
+    const expected=createHash('sha256').update(JSON.stringify(input)).digest('hex').slice(0,32).toUpperCase();
+    const stringify=JSON.stringify;
+    const spy=vi.spyOn(JSON,'stringify').mockImplementation(((value:unknown,...args:unknown[])=>{
+      if(value===input||value===pages)throw Error('Whole document JSON allocation');
+      return (stringify as Function)(value,...args);
+    }) as typeof JSON.stringify);
+    try{
+      const pdf=Buffer.from(writePdf(input,[resource])).toString('latin1');
+      expect(pdf).toContain(`/ID [<${expected}> <${expected}>]`);
+    }finally{spy.mockRestore();}
+  });
+  it('preserves JSON property order and optional metadata in the document ID',()=>{
+    for(const input of [draw,{anchors:{},pages:draw.pages,warnings:[],pageTexts:[],pageFieldSlots:[],contentsSlots:[]},{warnings:undefined,pages:[],anchors:{} }]){
+      const expected=createHash('sha256').update(JSON.stringify(input)).digest('hex').slice(0,32).toUpperCase();
+      const pdf=Buffer.from(writePdf(input,[resource])).toString('latin1');
+      expect(pdf).toContain(`/ID [<${expected}> <${expected}>]`);
+    }
+  });
   it('exports more than 65535 repeated glyph occurrences across pages',()=>{
     const line={...run,text:'ก'.repeat(100),glyphs:Array.from({length:100},(_,i)=>({...run.glyphs[0]!,advancePt:4,clusterStartOffset:i,clusterEndOffset:i+1}))};
     const pages=Array.from({length:700},(_,i)=>({...draw.pages[0]!,commands:[{...line,id:`repeat-${i}`}]}));

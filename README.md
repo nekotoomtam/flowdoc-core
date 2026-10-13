@@ -6,7 +6,7 @@ Owner: flowdoc-core. This README describes this package's local build and resour
 and PDF API. Shared MVP scope and status belong to Project Control's
 `docs/domains/flowdoc-export-mvp-r2-runtime-plan-2026-10-07.md`.
 
-Version 0.2.13 validates templates, binds typed data and renders TextBlocks,
+Version 0.2.14 validates templates, binds typed data and renders TextBlocks,
 images, merged tables, cell repeats, Area subformats, links and contents to PDF.
 Text measurement uses a per-generation cache (32 MiB serialized payload, at most
 8,192 entries) and a persistent native shaper per used font. Sessions close on
@@ -308,3 +308,16 @@ PDF generation. This ceiling is not a total RAM bound or a production SLA.
 Upgrade the package without rewriting published templates. Existing model4–16
 contracts remain supported; explicitly author model17 to use nested arrays.
 Core contains no DB migration. Service upgrade instructions live in its guide.
+
+## Changes in 0.2.14
+
+PDF fingerprinting consumes draw JSON one top-level array item at a time instead
+of building one JSON string for the whole document. Property order, optional
+values, Unicode escaping and image hashes retain the same fingerprint and PDF
+bytes for identical inputs. This reduces temporary serialization; it does not
+stream the entire PDF or bound total job memory. A large individual page can
+still require a large temporary value.
+
+No template-model or public API change is required. Keep published templates and
+their versions unchanged. The Service guide records the bounded 98/483-page
+observations and operational upgrade steps; these are not production limits.
