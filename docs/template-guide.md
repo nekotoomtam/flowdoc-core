@@ -1,8 +1,8 @@
-# คู่มือสร้างแม่แบบ FlowDoc Core 0.2.13
+# คู่มือสร้างแม่แบบ FlowDoc Core 0.2.14
 
 ## Authority Boundary
 
-Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.2.13 รองรับ
+Owner: flowdoc-core. คู่มือนี้อธิบายรูปแบบแม่แบบและ binding ที่ package 0.2.14 รองรับ
 ไม่ใช่ roadmap หรือการรับรอง release สถานะร่วมและข้อจำกัดที่ตกลงอยู่ใน
 flowdoc-project-control `docs/domains/flowdoc-page-system-roadmap-2026-10-10.md`
 วิธี import/publish และเรียก HTTP อยู่ใน [คู่มือ Service](../../flowdoc-service/docs/usage.md)
@@ -41,7 +41,7 @@ flowdoc-project-control `docs/domains/flowdoc-page-system-roadmap-2026-10-10.md`
 | สารบัญ | [contents](../fixtures/contents/template.json) |
 
 อย่าเพิ่ม nodeModelVersion ให้แม่แบบเก่าอัตโนมัติ เพราะบางรุ่นกำหนดสัญญาต่างกัน
-รุ่น package 0.2.13 อ่าน model 4–17 ได้ แต่ใช้ความสามารถใหม่ต้องเลือกรุ่น model ที่รองรับ
+รุ่น package 0.2.14 อ่าน model 4–17 ได้ แต่ใช้ความสามารถใหม่ต้องเลือกรุ่น model ที่รองรับ
 
 | Model | สิ่งที่เพิ่ม |
 | --- | --- |
@@ -521,3 +521,14 @@ Model17 จำกัดผลขยายรวม 100,000 node/inline identitie
 Area และหัวท้าย; เกินแล้วคืน EXPANSION_LIMIT ไม่มีเอกสารบางส่วน.
 นี่ไม่ใช่เพดานจำนวนหน้า และไม่รับรอง RAM/งานพร้อมกัน. ไม่ต้องเปลี่ยน model
 หรือข้อมูลของ published template เดิมเพียงเพื่ออัปเกรด package.
+
+## อัปเกรดเป็น 0.2.14
+
+รุ่นนี้ลด JSON ชั่วคราวระหว่างคำนวณลายนิ้วมือ PDF โดยคำนวณทีละส่วน
+แทนการสร้างข้อความ JSON ทั้งเล่ม ผลลายนิ้วมือและ PDF สำหรับข้อมูลเดียวกัน
+ยังเหมือนเดิม ไม่ต้องแก้แม่แบบ เปลี่ยน nodeModelVersion หรือ publish ใหม่
+
+ผู้ใช้ Core โดยตรงติดตั้งแพ็กเกจ 0.2.14 พร้อม resources ของชุดเดียวกัน
+ผู้ใช้ผ่าน Service ให้อัปเกรดตาม [คู่มือ Service](../../flowdoc-service/docs/usage.md)
+ไม่ต้องคัดลอกไฟล์ Core เข้า Service เอง ยังสร้างข้อมูลจัดหน้าและไฟล์ PDF
+ในหน่วยความจำ จึงไม่มีการรับรองเพดาน RAM หรือจำนวนหน้าจากการเปลี่ยนนี้
