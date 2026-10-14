@@ -17,7 +17,8 @@ export function prepareAreaValue(index:AreaIndex,areaId:string,value:unknown,pat
    validateValues(sf.format.inputSchema,e.data,`${path}[${e.originalIndex}].data`,issues,[],'prepared');
   }
   prev=-1;for(const i of value.skippedIndices){if(!valid(i)||i<=prev||used.has(i))fail();else used.add(i);prev=i;}
-  if(used.size!==value.originalCount)fail();return structuredClone(value) as PreparedAreaValue;
+  if(index.strict&&value.skippedIndices.length)fail(path+'.skippedIndices');
+  if(used.size!==value.originalCount)fail();return value as PreparedAreaValue;
  }
  if(missing){if(a.field.required){issues.push(issue('MISSING_REQUIRED',path));return out;}value=own(a.field,'default')?structuredClone(a.field.default):[];}
  if(!Array.isArray(value)){issues.push({...issue('TYPE_MISMATCH',path),expectedType:'array',actualType:typeof value});return out;}
@@ -28,7 +29,8 @@ export function prepareAreaValue(index:AreaIndex,areaId:string,value:unknown,pat
   const sf=object(e)&&typeof e.format==='string'?a.formatsByKey.get(e.format):undefined;
   if(!errors.length&&!sf)errors.push(issue('UNKNOWN_FORMAT',p+'.format'));
   const data=!errors.length&&sf?validateValues(sf.format.inputSchema,e.data,p+'.data',errors,warn):{};
-  if(errors.length){out.skippedIndices.push(i);warnings.push(...errors.map(e=>({...e,code:'AREA_ENTRY_SKIPPED',message:e.code+': '+e.message,action:'skipped' as const})));}
+  if(errors.length&&index.strict){issues.push(...errors);}
+  else if(errors.length){out.skippedIndices.push(i);warnings.push(...errors.map(e=>({...e,code:'AREA_ENTRY_SKIPPED',message:e.code+': '+e.message,action:'skipped' as const})));}
   else {out.entries.push({originalIndex:i,format:e.format,formatId:sf!.id,data});warnings.push(...warn);}
  }
  return out;

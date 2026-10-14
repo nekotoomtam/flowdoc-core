@@ -15,27 +15,28 @@ export function validateOwnedTemplate(input:unknown):Result<ValidatedTemplate>{
  const issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_TEMPLATE',p));
  if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_TEMPLATE','template')],warnings:[]};
  const t=structuredClone(input) as any;
- if(!keys(t,['schemaVersion','nodeModelVersion','templateId','docKey','version','name','book','styles','globalSchema','examples','pageLayouts','sections','areaFormats'])||t.schemaVersion!==1||(t.nodeModelVersion!==15&&t.nodeModelVersion!==16&&t.nodeModelVersion!==17))fail('template');
+ if(!keys(t,['schemaVersion','nodeModelVersion','templateId','docKey','version','name','book','styles','globalSchema','examples','pageLayouts','sections','areaFormats'])||t.schemaVersion!==1||(t.nodeModelVersion!==15&&t.nodeModelVersion!==16&&(t.nodeModelVersion!==17&&t.nodeModelVersion!==18)))fail('template');
  for(const k of ['templateId','docKey','name'])if(!name(t[k]))fail(k);
  if(!Number.isInteger(t.version)||t.version<1)fail('version');
- validateSchemas(t.globalSchema,'globalSchema',issues,false,true,true,true,true,t.nodeModelVersion===17?2:1);
+ validateSchemas(t.globalSchema,'globalSchema',issues,false,true,true,true,true,(t.nodeModelVersion===17||t.nodeModelVersion===18)?2:1);
  if(!Array.isArray(t.sections)||!t.sections.length)fail('sections');
  const seen=new Set<string>(),areaIds=new Set<string>();
  const schemas:any[]=[t.globalSchema];
  for(const [i,s] of (Array.isArray(t.sections)?t.sections:[]).entries()){
   const p=`sections[${i}]`;if(!object(s)){fail(p);continue;}
-  if((t.nodeModelVersion===16||t.nodeModelVersion===17))issues.push(...validateNumbering(s,p));
+  if((t.nodeModelVersion===16||(t.nodeModelVersion===17||t.nodeModelVersion===18)))issues.push(...validateNumbering(s,p));
+  if(t.nodeModelVersion===18&&(s.source?.kind==='content'||!object(s.formats)||Object.keys(s.formats).length))fail(p+'.source');
   if(!name(s.key)||s.key.includes('.')||seen.has(s.key))fail(p+'.key');else seen.add(s.key);
-  validateSchemas(s.inputSchema,p+'.inputSchema',issues,false,true,true,true,true,t.nodeModelVersion===17?2:1);schemas.push(s.inputSchema);
+  validateSchemas(s.inputSchema,p+'.inputSchema',issues,false,true,true,true,true,(t.nodeModelVersion===17||t.nodeModelVersion===18)?2:1);schemas.push(s.inputSchema);
   if(!object(s.formats))fail(p+'.formats');else for(const [key,f] of Object.entries(s.formats)){
    const fp=p+'.formats.'+key;
-   if(!name(key)||!object(f)||!keys(f,['label','description','inputSchema','fragment','repeats','cellRepeats',...(t.nodeModelVersion===17?['rowGroups']:[])])){fail(fp);continue;}
+   if(!name(key)||!object(f)||!keys(f,['label','description','inputSchema','fragment','repeats','cellRepeats',...((t.nodeModelVersion===17||t.nodeModelVersion===18)?['rowGroups']:[])])){fail(fp);continue;}
    for(const k of ['label','description'])if(own(f,k)&&typeof f[k]!=='string')fail(fp+'.'+k);
-   validateSchemas(f.inputSchema,fp+'.inputSchema',issues,false,true,true,true,true,t.nodeModelVersion===17?2:1);schemas.push(f.inputSchema);
+   validateSchemas(f.inputSchema,fp+'.inputSchema',issues,false,true,true,true,true,(t.nodeModelVersion===17||t.nodeModelVersion===18)?2:1);schemas.push(f.inputSchema);
    if(!Array.isArray(f.repeats)||(own(f,'cellRepeats')&&!Array.isArray(f.cellRepeats)))fail(fp+'.repeats');
    else if(!issues.length)issues.push(...validateOwnedGraph(t,s as unknown as Section15,f as unknown as Format,fp));
   }
-  for(const k of ['header','footer'])if(own(s,k)&&!issues.length)issues.push(...validatePageBand(s[k],t.styles,p+'.'+k,false,{global:t.globalSchema,section:s.inputSchema,[k]:s[k]?.inputSchema},p,(t.nodeModelVersion===16||t.nodeModelVersion===17)));
+  for(const k of ['header','footer'])if(own(s,k)&&!issues.length)issues.push(...validatePageBand(s[k],t.styles,p+'.'+k,false,{global:t.globalSchema,section:s.inputSchema,[k]:s[k]?.inputSchema},p,(t.nodeModelVersion===16||(t.nodeModelVersion===17||t.nodeModelVersion===18))));
  }
  if(issues.length)return {ok:false,issues,warnings:[]};
  issues.push(...validatePageSections(t));
@@ -52,7 +53,7 @@ export function validateOwnedTemplate(input:unknown):Result<ValidatedTemplate>{
  }
  return issues.length?{ok:false,issues,warnings:[]}:{ok:true,value:freeze({definition:t,fingerprint}),warnings:[]};
 }
-function validateOwnedGraph(t:ScopedTemplate,s:Section15,f:Format,path:string,areas=true):Issue[]{return validateGraph(f.fragment,{styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,scopeSchemas:{global:t.globalSchema,section:s.inputSchema,local:f.inputSchema},rowGroups:t.nodeModelVersion===17,groupDeclarations:f.rowGroups,repeats:f.repeats,cellRepeats:f.cellRepeats??[],heightModes:true,images:true,merged:true,links:true,contents:true,cellContent:true,itemImages:true,areas},path+'.fragment');}
+function validateOwnedGraph(t:ScopedTemplate,s:Section15,f:Format,path:string,areas=true):Issue[]{return validateGraph(f.fragment,{pageBreaks:t.nodeModelVersion===18,styles:t.styles,globalSchema:t.globalSchema,localSchema:f.inputSchema,scopeSchemas:{global:t.globalSchema,section:s.inputSchema,local:f.inputSchema},rowGroups:(t.nodeModelVersion===17||t.nodeModelVersion===18),groupDeclarations:f.rowGroups,repeats:f.repeats,cellRepeats:f.cellRepeats??[],heightModes:true,images:true,merged:true,links:true,contents:true,cellContent:true,itemImages:true,areas},path+'.fragment');}
 function validateOwnedAreas(t:ScopedTemplate):Issue[]{
  const issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_TEMPLATE',p)),index=buildAreaIndex(t),placements=new Map<string,{section:Section15;count:number}>();
  for(const s of t.sections)for(const [host,f] of [...Object.entries(s.formats),...(s.source.kind==='authored'?[['',s.source] as const]:[])])for(const n of Object.values(f.fragment.nodes))if(n.type==='area'){
@@ -68,8 +69,8 @@ function validateOwnedAreas(t:ScopedTemplate):Issue[]{
  const names=new Set<string>();
  for(const [id,f] of Object.entries(t.areaFormats??{})){
   const p='areaFormats.'+id,a=index.byId.get(f?.ownerAreaId),place=a&&placements.get(a.field.areaId),key=JSON.stringify([f?.ownerAreaId,f?.key]);
-  if(!name(id)||id.includes('~')||!object(f)||!keys(f,['key','ownerAreaId','label','description','inputSchema','fragment','repeats','cellRepeats',...(t.nodeModelVersion===17?['rowGroups']:[])])||!name(f.key)||!a||!place||names.has(key)){fail(p);continue;}names.add(key);
-  const valid=validateSchemas(f.inputSchema,p+'.inputSchema',issues,false,true,true,true,false,t.nodeModelVersion===17?2:1);
+  if(!name(id)||id.includes('~')||!object(f)||!keys(f,['key','ownerAreaId','label','description','inputSchema','fragment','repeats','cellRepeats',...((t.nodeModelVersion===17||t.nodeModelVersion===18)?['rowGroups']:[])])||!name(f.key)||!a||!place||names.has(key)){fail(p);continue;}names.add(key);
+  const valid=validateSchemas(f.inputSchema,p+'.inputSchema',issues,false,true,true,true,false,(t.nodeModelVersion===17||t.nodeModelVersion===18)?2:1);
   if(!Array.isArray(f.repeats)||(f.cellRepeats!==undefined&&!Array.isArray(f.cellRepeats)))fail(p+'.repeats');else if(valid)issues.push(...validateOwnedGraph(t,place.section,f,p,false));
  }
  for(const [id,a] of index.byId){if(placements.get(id)?.count!==1||!a.formatsByKey.size)fail('area.'+id);if(own(a.field,'default')){const errors:Issue[]=[],warnings:Issue[]=[];validateValues({type:'object',fields:{[a.key]:a.field}},{[a.key]:a.field.default},'area.'+id,errors,warnings,'request',false,index);issues.push(...[...errors,...warnings].map(i=>({...i,code:'INVALID_TEMPLATE'})));}}

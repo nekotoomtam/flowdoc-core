@@ -42,7 +42,7 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
    const draw=await documentFlow(document,runtime,images);
    warnings.push(...draw.warnings??[]);
    const anchors=indexDestinations(document,draw);
-   await fillContentsNumbers(draw,anchors,runtime,(document.nodeModelVersion===16||document.nodeModelVersion===17));
+   await fillContentsNumbers(draw,anchors,runtime,(document.nodeModelVersion===16||(document.nodeModelVersion===17||document.nodeModelVersion===18)));
    await fillPageFields(draw,runtime);
    await appendPageNumbers(document,draw,runtime);
    // Page fields are the last text-runtime consumer; avoid retaining layout cache during PDF output.

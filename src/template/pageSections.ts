@@ -23,7 +23,7 @@ export function validatePageSections(t:Record<string,any>):Issue[] {
  const seen=new Set<string>();let content=0;
  for(const [i,s] of t.sections.entries()){
   const p=`sections[${i}]`;
-  if(!object(s)||!keys(s,['id','label','pageLayoutId','source',...((t.nodeModelVersion===16||t.nodeModelVersion===17)?['numbering']:[]),...((t.nodeModelVersion===15||t.nodeModelVersion===16||t.nodeModelVersion===17)?['key','inputSchema','formats','header','footer']:[]),...(t.nodeModelVersion>=14?['headerMode','footerMode']:[]),...(t.nodeModelVersion>=13?['role']:[])])||!id(s.id)||seen.has(s.id)){fail(p);continue;}seen.add(s.id);
+  if(!object(s)||!keys(s,['id','label','pageLayoutId','source',...((t.nodeModelVersion===16||(t.nodeModelVersion===17||t.nodeModelVersion===18))?['numbering']:[]),...((t.nodeModelVersion===15||t.nodeModelVersion===16||(t.nodeModelVersion===17||t.nodeModelVersion===18))?['key','inputSchema','formats','header','footer']:[]),...(t.nodeModelVersion>=14?['headerMode','footerMode']:[]),...(t.nodeModelVersion>=13?['role']:[])])||!id(s.id)||seen.has(s.id)){fail(p);continue;}seen.add(s.id);
   if(own(s,'label')&&typeof s.label!=='string')fail(p+'.label');
   if(own(s,'pageLayoutId')&&(!id(s.pageLayoutId)||!object(t.pageLayouts)||!own(t.pageLayouts,s.pageLayoutId)))fail(p+'.pageLayoutId');
   if(own(s,'role')&&!['body','cover'].includes(s.role))fail(p+'.role');
@@ -34,11 +34,11 @@ export function validatePageSections(t:Record<string,any>):Issue[] {
   if(source.kind==='blank'&&t.nodeModelVersion>=13){if(!keys(source,['kind']))fail(p+'.source');}
   else if(source.kind==='content'){content++;if(!keys(source,['kind']))fail(p+'.source');}
   else if(source.kind==='authored'){
-   if(!keys(source,['kind','fragment','repeats','cellRepeats',...(t.nodeModelVersion===17?['rowGroups']:[])])||!Array.isArray(source.repeats)||(own(source,'cellRepeats')&&!Array.isArray(source.cellRepeats))){fail(p+'.source');continue;}
-   if(object(t.globalSchema)&&object(t.globalSchema.fields)&&object(t.styles))issues.push(...validateGraph(source.fragment,{heightModes:t.nodeModelVersion>=13,fixedRootIds:t.nodeModelVersion>=13&&s.role==='cover'?source.fragment?.rootIds:[],allowEmptyRoots:true,styles:t.styles,...((t.nodeModelVersion===15||t.nodeModelVersion===16||t.nodeModelVersion===17)?{scopeSchemas:{global:t.globalSchema as TemplateDefinition["globalSchema"],section:s.inputSchema}}:{}),globalSchema:t.globalSchema as TemplateDefinition['globalSchema'],localSchema:{type:'object',fields:{}},rowGroups:t.nodeModelVersion===17,groupDeclarations:source.rowGroups,repeats:source.repeats,cellRepeats:source.cellRepeats,images:true,merged:true,links:true,contents:true,cellContent:true,itemImages:true,areas:true},p+'.source.fragment'));
+   if(!keys(source,['kind','fragment','repeats','cellRepeats',...((t.nodeModelVersion===17||t.nodeModelVersion===18)?['rowGroups']:[])])||!Array.isArray(source.repeats)||(own(source,'cellRepeats')&&!Array.isArray(source.cellRepeats))){fail(p+'.source');continue;}
+   if(object(t.globalSchema)&&object(t.globalSchema.fields)&&object(t.styles))issues.push(...validateGraph(source.fragment,{pageBreaks:t.nodeModelVersion===18,heightModes:t.nodeModelVersion>=13,fixedRootIds:t.nodeModelVersion>=13&&s.role==='cover'?source.fragment?.rootIds:[],allowEmptyRoots:true,styles:t.styles,...((t.nodeModelVersion===15||t.nodeModelVersion===16||(t.nodeModelVersion===17||t.nodeModelVersion===18))?{scopeSchemas:{global:t.globalSchema as TemplateDefinition["globalSchema"],section:s.inputSchema}}:{}),globalSchema:t.globalSchema as TemplateDefinition['globalSchema'],localSchema:{type:'object',fields:{}},rowGroups:(t.nodeModelVersion===17||t.nodeModelVersion===18),groupDeclarations:source.rowGroups,repeats:source.repeats,cellRepeats:source.cellRepeats,images:true,merged:true,links:true,contents:true,cellContent:true,itemImages:true,areas:true},p+'.source.fragment'));
   }else fail(p+'.source.kind');
  }
- if((t.nodeModelVersion!==15&&t.nodeModelVersion!==16&&t.nodeModelVersion!==17)&&content>1)fail('sections');
- if((t.nodeModelVersion!==15&&t.nodeModelVersion!==16&&t.nodeModelVersion!==17)&&content&&object(t.formats)&&!Object.keys(t.formats).length)fail('formats');
+ if((t.nodeModelVersion!==15&&t.nodeModelVersion!==16&&(t.nodeModelVersion!==17&&t.nodeModelVersion!==18))&&content>1)fail('sections');
+ if((t.nodeModelVersion!==15&&t.nodeModelVersion!==16&&(t.nodeModelVersion!==17&&t.nodeModelVersion!==18))&&content&&object(t.formats)&&!Object.keys(t.formats).length)fail('formats');
  return issues;
 }

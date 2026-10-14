@@ -1,5 +1,5 @@
 import type {BoundLink} from '../composition/linkContract.js';
-import type {ResolvedDocument,TextBlock,TextInline,Table,TableRow,TableCell,ImageBlock,ContentsBlock,LineBlock} from '../composition/resolvedDocument.js';
+import type {ResolvedDocument,TextBlock,TextInline,Table,TableRow,TableCell,PageBreak,ImageBlock,ContentsBlock,LineBlock} from '../composition/resolvedDocument.js';
 export interface StringField {type:'string';required?:boolean;default?:string;allowEmpty?:boolean;label?:string;description?:string}
 export interface ImageField {type:'image';required?:boolean;default?:string;label?:string;description?:string}
 export interface LinkField {type:'link';required?:boolean;default?:BoundLink;label?:string;description?:string}
@@ -15,7 +15,7 @@ export type TemplateImageBlock=Omit<ImageBlock,'props'>&{props:{width:ImageBlock
 export interface AreaEntry {format:string;data:Record<string,unknown>}
 export interface AreaField {type:'area';areaId:string;required?:boolean;default?:AreaEntry[];label?:string;description?:string}
 export interface TemplateArea {id:string;type:'area';props:{areaId:string}}
-export type TemplateNode=LineBlock|TemplateArea|TemplateTextBlock|Table|TableRow|TableCell|TemplateImageBlock|ContentsBlock;
+export type TemplateNode=PageBreak|LineBlock|TemplateArea|TemplateTextBlock|Table|TableRow|TableCell|TemplateImageBlock|ContentsBlock;
 export interface Fragment {rootIds:string[];nodes:Record<string,TemplateNode>}
 export interface Repeat {tableId:string;rowTemplateId:string;source:{scope:'global'|'section'|'local';key:string}}
 export interface CellRepeat {id:string;cellId:string;childTemplateIds:string[];source:{scope:'global'|'section'|'local';key:string}}
@@ -45,6 +45,7 @@ export type Template15=Omit<TemplateBase,'header'|'footer'|'formats'>&{nodeModel
 export interface Section16 extends Section15 {numbering?:PageNumbering}
 export type Template16=Omit<Template15,"nodeModelVersion"|"sections">&{nodeModelVersion:16;sections:Section16[]};
 export type Template17=Omit<Template16,"nodeModelVersion">&{nodeModelVersion:17};
-export type ScopedTemplate=Template15|Template16|Template17;
+export type Template18=Omit<Template17,"nodeModelVersion">&{nodeModelVersion:18};
+export type ScopedTemplate=Template15|Template16|Template17|Template18;
 export type TemplateDefinition=LegacyTemplateDefinition|ScopedTemplate;
 export type PageNumbering={mode:"continue";visibility?:"show"|"hide"}|{mode:"restart";startAt?:number;visibility?:"show"|"hide"}|{mode:"exclude";visibility?:"show"|"hide"};

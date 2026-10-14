@@ -5,7 +5,7 @@ export function validateRowGroupMetadata(d:Record<string,any>):Issue[]{
  for(const [tableId,t] of Object.entries(d.nodes) as [string,any][]){
   if(t?.type!=='table'||!own(t,'rowGroups'))continue;
   const path='nodes.'+tableId+'.rowGroups';
-  if(d.nodeModelVersion!==17||!Array.isArray(t.rowGroups)||!Array.isArray(t.rowIds)){fail(path);continue;}
+  if((d.nodeModelVersion!==17&&d.nodeModelVersion!==18)||!Array.isArray(t.rowGroups)||!Array.isArray(t.rowIds)){fail(path);continue;}
   const groupRowIds=new Set<string>(),rowPositions=new Map<string,number>(t.rowIds.map((id:string,i:number)=>[id,i]));
   const nextIndex=new Map<string,number>();let previousEnd=t.props?.headerRowCount??0;
   for(const [index,g] of t.rowGroups.entries()){

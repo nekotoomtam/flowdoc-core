@@ -4,7 +4,8 @@ import type {Result,Issue} from '../result.js';
 import {object,keys,own,isJson,name,issue,canonical} from '../template/checks.js';
 import {buildAreaIndex} from '../template/areas.js';
 import {validateValues} from './validateValues.js';
-import {validatePreparedInput} from '../composition/validatePreparedInput.js';
+import {prepareAreaValue} from './prepareAreas.js';
+import {checkPreparedInput} from '../composition/validatePreparedInput.js';
 export function prepareSections(t:ScopedTemplate,fingerprint:string,input:unknown):Result<PreparedInput>{
  const issues:Issue[]=[],warnings:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_DATA',p));
  if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_DATA','request')],warnings};
@@ -14,7 +15,7 @@ export function prepareSections(t:ScopedTemplate,fingerprint:string,input:unknow
  if(!object(raw))fail('sections');else for(const key of Object.keys(raw))if(!t.sections.some(s=>s.key===key))issues.push(issue('UNKNOWN_SECTION','sections.'+key,'Allowed sections: '+t.sections.map(s=>s.key).join(', ')));
  const index=buildAreaIndex(t),data=validateValues(t.globalSchema,own(input,'data')?input.data:{},'data',issues,warnings,'request',false,index),sections:Record<string,PreparedSection>=Object.create(null);
  for(const s of t.sections){const path='sections.'+s.key,entry=object(raw)&&own(raw,s.key)?raw[s.key]:{},sw:Issue[]=[];
-  if(!object(entry)||!keys(entry,['data','header','footer','content'])){fail(path);continue;}
+  if(!object(entry)||!keys(entry,t.nodeModelVersion===18?['data','header','footer']:['data','header','footer','content'])){fail(path);continue;}
   const value:PreparedSection={key:s.key,data:validateValues(s.inputSchema,own(entry,'data')?entry.data:{},path+'.data',issues,sw,'request',false,index),content:[],originalContentCount:0,skippedContentIndices:[],warnings:sw};
   for(const k of ['header','footer'] as const){if(s[k])value[k]=validateValues(s[k]!.inputSchema,own(entry,k)?entry[k]:{},path+'.'+k,issues,sw);else if(own(entry,k)){if(!object(entry[k]))fail(path+'.'+k);else for(const key of Object.keys(entry[k]))sw.push({...issue('UNKNOWN_VARIABLE',path+'.'+k+'.'+key),action:'ignored'});}}
   const content=own(entry,'content')?entry.content:[];
@@ -37,23 +38,27 @@ export function prepareSections(t:ScopedTemplate,fingerprint:string,input:unknow
 function proxy(t:ScopedTemplate,s?:Section15):any {const base={...t,nodeModelVersion:14,globalSchema:s?.inputSchema??t.globalSchema,formats:s?.formats??{},sections:[{id:'validate',source:{kind:'authored',fragment:{rootIds:[],nodes:{}},repeats:[]} },...(s?.source.kind==='content'?[{id:'content',source:{kind:'content'}}]:[])]};delete (base as any).header;delete (base as any).footer;return {...base,...(s?.header?{header:s.header}:{}),...(s?.footer?{footer:s.footer}:{})};}
 export function validatePreparedSections(template:ValidatedTemplate&{definition:ScopedTemplate},input:unknown):Result<PreparedInput>{
  const t=template.definition,index=buildAreaIndex(t),issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_DATA',p));
+ // The legacy proxy checks snapshot integrity; strict Area policy belongs to the actual model.
+ const strictAreas=(data:Record<string,unknown>,path:string,sectionId?:string)=>{if(index.strict)for(const a of index.byId.values())if(sectionId===undefined?a.scope==='global':a.scope==='section'&&a.sectionId===sectionId)prepareAreaValue(index,a.field.areaId,data[a.key],path+'.'+a.key,issues,[],false,'prepared');};
  if(!isJson(input)||!object(input))return {ok:false,issues:[issue('INVALID_DATA','prepared')],warnings:[]};
  const p=input;
  if(!keys(p,['schemaVersion','template','data','sections','content','originalContentCount','skippedContentIndices','warnings'])||!object(p.sections)||!Array.isArray(p.warnings)||!Array.isArray(p.content)||p.content.length||p.originalContentCount!==0||!Array.isArray(p.skippedContentIndices)||p.skippedContentIndices.length)return {ok:false,issues:[issue('INVALID_DATA','prepared')],warnings:[]};
  const globalWarnings=p.warnings.filter((w:any)=>object(w)&&typeof w.path==='string'&&w.path.startsWith('data.'));
- const root=validatePreparedInput({definition:proxy(t),fingerprint:template.fingerprint},{schemaVersion:p.schemaVersion,template:p.template,data:p.data,content:[],originalContentCount:0,skippedContentIndices:[],warnings:globalWarnings});if(!root.ok)issues.push(...root.issues);
+ const root=checkPreparedInput({definition:proxy(t),fingerprint:template.fingerprint},{schemaVersion:p.schemaVersion,template:p.template,data:p.data,content:[],originalContentCount:0,skippedContentIndices:[],warnings:globalWarnings});if(!root.ok)issues.push(...root.issues);
  const collected:Issue[]=[...globalWarnings];
+ if(root.ok)strictAreas(root.value.data,'data');
  for(const key of Object.keys(p.sections))if(!t.sections.some(s=>s.id===key))fail('sections.'+key);
  for(const s of t.sections){const v=p.sections[s.id],path='sections.'+s.key;
   if(!object(v)||!keys(v,['key','data','header','footer','content','originalContentCount','skippedContentIndices','warnings'])||v.key!==s.key||!Array.isArray(v.warnings)){fail(path);continue;}
   if(s.source.kind!=='content'&&v.originalContentCount!==0)fail(path+'.content');
   const ws=v.warnings.map((w:any)=>{if(!object(w)||typeof w.path!=='string'||!w.path.startsWith(path+'.')){fail(path+'.warnings');return w;}return {...w,path:w.path.slice(path.length+1)};});
   const {key:_,...body}=v;
-  const r=validatePreparedInput({definition:proxy(t,s),fingerprint:template.fingerprint},{...body,schemaVersion:p.schemaVersion,template:p.template,warnings:ws});
+  const r=checkPreparedInput({definition:proxy(t,s),fingerprint:template.fingerprint},{...body,schemaVersion:p.schemaVersion,template:p.template,warnings:ws});
   if(!r.ok)issues.push(...r.issues.map(i=>({...i,path:path+'.'+i.path})));
   else for(const a of index.byId.values())if(a.scope!=='local'&&r.value.content.filter(c=>Object.values(s.formats[c.format]!.fragment.nodes).some(n=>n.type==='area'&&n.props.areaId===a.field.areaId)).length>1)fail(path+'.content');
   collected.push(...v.warnings);
+  if(r.ok)strictAreas(r.value.data,path+'.data',s.id);
  }
  if(canonical(collected)!==canonical(p.warnings))fail('warnings');
- return issues.length?{ok:false,issues,warnings:[]}:{ok:true,value:structuredClone(p) as PreparedInput,warnings:structuredClone(p.warnings)};
+ return issues.length?{ok:false,issues,warnings:[]}:{ok:true,value:p as PreparedInput,warnings:p.warnings};
 }

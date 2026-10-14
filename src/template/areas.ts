@@ -6,15 +6,15 @@ import {validateSchemas} from './validateSchemas.js';
 import {validateGraph} from './validateGraph.js';
 import {validateValues} from '../data/validateValues.js';
 export interface AreaDefinition {scope:'global'|'section'|'local';sectionId?:string|undefined;hostFormat?:string|undefined;key:string;field:AreaField;formatsByKey:Map<string,{id:string;format:AreaFormat}>}
-export interface AreaIndex {byId:Map<string,AreaDefinition>}
+export interface AreaIndex {strict?:boolean;byId:Map<string,AreaDefinition>}
 export function buildAreaIndex(t:TemplateDefinition):AreaIndex {
  const byId=new Map<string,AreaDefinition>();
  const add=(fields:Record<string,any>,scope:'global'|'section'|'local',hostFormat?:string,sectionId?:string|undefined)=>{for(const [key,field] of Object.entries(fields))if(field.type==='area')byId.set(field.areaId,{scope,hostFormat,sectionId,key,field,formatsByKey:new Map()});};
  add(t.globalSchema.fields,'global');
- if((t.nodeModelVersion===15||t.nodeModelVersion===16||t.nodeModelVersion===17))for(const s of t.sections){add(s.inputSchema.fields,'section',undefined,s.id);for(const [key,f] of Object.entries(s.formats))add(f.inputSchema.fields,'local',key,s.id);}
+ if((t.nodeModelVersion===15||t.nodeModelVersion===16||(t.nodeModelVersion===17||t.nodeModelVersion===18)))for(const s of t.sections){add(s.inputSchema.fields,'section',undefined,s.id);for(const [key,f] of Object.entries(s.formats))add(f.inputSchema.fields,'local',key,s.id);}
  else for(const [key,f] of Object.entries(t.formats))add(f.inputSchema.fields,'local',key);
  for(const [id,f] of Object.entries(t.areaFormats??{}))byId.get(f.ownerAreaId)?.formatsByKey.set(f.key,{id,format:f});
- return {byId};
+ return {byId,strict:t.nodeModelVersion===18};
 }
 export function validateAreas(t:import('./types.js').LegacyTemplateDefinition):Issue[]{
  const issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_TEMPLATE',p)),seen=new Set<string>();
