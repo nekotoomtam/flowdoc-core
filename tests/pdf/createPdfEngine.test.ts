@@ -1,5 +1,6 @@
 import {contentsDocument} from '../helpers/contents.js';
 import * as flow from '../../src/layout/documentFlow.js';
+import * as cache from '../../src/runtime/cacheTextRuntime.js';
 import {it,expect,afterEach,vi} from 'vitest';
 import {mkdtemp,readdir,rm,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -11,6 +12,15 @@ import {sectionTemplate,composed} from '../helpers/sections.js';
 const dirs:string[]=[];
 afterEach(async()=>{for(const d of dirs.splice(0))await rm(d,{recursive:true,force:true});});
 async function setup(){const tempRoot=await mkdtemp(join(tmpdir(),'flowdoc-engine-'));dirs.push(tempRoot);return {tempRoot,pythonExecutable:'python',shaperPath:'shaper',segmenterPath:'segmenter',subsetHelperPath:'subset',fonts:[]} as ExportResources;}
+it.each([false,true])('releases text cache before subset or after a layout failure (%s)',async failing=>{
+ const original=cache.cacheTextRuntime,disposed=vi.fn();
+ const spy=vi.spyOn(cache,'cacheTextRuntime').mockImplementation(base=>{const cached=original(base);return {...cached,dispose(){disposed();cached.dispose();}};});
+ try{
+  const engine=createEngine(await setup(),{runtime:failing?{...fakeRuntime,shape:async()=>{throw Error('shape');}}:fakeRuntime,subset:async()=>{expect(disposed).toHaveBeenCalled();return [];},write:()=>new Uint8Array([1])});
+  expect((await engine.generatePdf(contentsDocument(3))).ok).toBe(!failing);
+  expect(disposed).toHaveBeenCalled();
+ }finally{spy.mockRestore();}
+});
 it.each([false,true])('closes per-generation sessions on success or layout failure (%s)',async failing=>{
  const closes:ReturnType<typeof vi.fn>[]=[];
  const engine=createEngine(await setup(),{runtime:()=>{const close=vi.fn(async()=>{});closes.push(close);return {...fakeRuntime,...(failing?{shape:async()=>{throw Error('shape failure');}}:{}),close};},subset:async()=>[],write:()=>new Uint8Array([1])});

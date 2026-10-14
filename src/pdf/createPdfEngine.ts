@@ -34,9 +34,10 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
   const warnings:Issue[]=[...Object.values(document.nodes),...Object.values(document.header?.nodes??{}),...Object.values(document.footer?.nodes??{}),...(document.sections??[]).flatMap(s=>[...Object.values(s.header?.nodes??{}),...Object.values(s.footer?.nodes??{})])].filter(n=>n.type==='image'&&!Object.hasOwn(images,n.props.resourceId)).map(n=>({code:'IMAGE_UNAVAILABLE',path:'nodes.'+n.id,nodeId:n.id,message:'Image unavailable; authored frame retained'}));
   let temp:string|undefined,result:Result<PdfArtifact>,stage='resource';
   let session:(TextRuntime&{close():Promise<void>})|undefined;
+  let runtime:ReturnType<typeof cacheTextRuntime>|undefined;
   try {
    if(typeof deps.runtime==='function')session=deps.runtime();
-   const runtime=cacheTextRuntime(session??deps.runtime as TextRuntime);
+   runtime=cacheTextRuntime(session??deps.runtime as TextRuntime);
    temp=await mkdtemp(join(resources.tempRoot,'flowdoc-pdf-'));
    const draw=await documentFlow(document,runtime,images);
    warnings.push(...draw.warnings??[]);
@@ -44,6 +45,8 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
    await fillContentsNumbers(draw,anchors,runtime,(document.nodeModelVersion===16||document.nodeModelVersion===17));
    await fillPageFields(draw,runtime);
    await appendPageNumbers(document,draw,runtime);
+   // Page fields are the last text-runtime consumer; avoid retaining layout cache during PDF output.
+   runtime.dispose();
    resolveLinkGeometry(document,draw,anchors);
    const fonts=await deps.subset(draw,resources,temp);
    stage='writer';const bytes=deps.write(draw,fonts,images);
@@ -52,6 +55,7 @@ export function createEngine(resources:ExportResources,deps:Dependencies):PdfEng
    if(error instanceof LayoutError){const source=document.sourceMap[error.nodeId];result={ok:false,issues:[{code:'LAYOUT_FAILED',path:error.path??'nodes.'+error.nodeId,...(error.sectionId?{sectionId:error.sectionId}:{}),nodeId:error.nodeId,message:error.message,...(source?.origin==='authored'?{sectionId:source.sectionId}:source?{contentIndex:source.contentIndex,format:source.format,...(source.sectionId?{sectionId:source.sectionId}:{})}:{})}],warnings:[]};}
    else result=fail(stage==='writer'?'PDF_RENDER_FAILED':'RESOURCE_UNAVAILABLE',stage==='writer'?'PDF writing failed':'Text or font runtime failed');
   }finally{
+   runtime?.dispose();
    if(session)try{await session.close();}catch{result=fail('RESOURCE_UNAVAILABLE','Text runtime cleanup failed');}
    if(temp)try{await rm(temp,{recursive:true,force:true});}catch{result=fail('RESOURCE_UNAVAILABLE','Temporary output cleanup failed');}
   }
