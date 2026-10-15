@@ -8,10 +8,10 @@ const images={'22222222-2222-4222-8222-222222222222':{kind:'rgb',width:2,height:
 const results=[];
 for(const name of ['short','long','overflow','empty']){
  const t=structuredClone(template),r=JSON.parse(await readFile('/consumer/page-bands-request.json','utf8'));
- if(name==='long')r.header.projectName='รายงานผลการทดสอบระบบสารสนเทศเพื่อสนับสนุนการปฏิบัติงานและติดตามผลการดำเนินงานของหน่วยงาน '.repeat(3);
- if(name==='overflow')r.header.projectName='ชื่อโครงการที่ยาวเกินพื้นที่ปก\n'.repeat(100);
- r.header.logo='22222222-2222-4222-8222-222222222222';
- if(name==='empty'){t.sections=[{id:'cover',role:'cover',source:{kind:'authored',repeats:[],fragment:{rootIds:[],nodes:{}}}},{id:'blank',source:{kind:'blank'}}];t.formats={};t.areaFormats={};r.content=[];}
+ if(name==='long')r.sections.body.header.projectName='รายงานผลการทดสอบระบบสารสนเทศเพื่อสนับสนุนการปฏิบัติงานและติดตามผลการดำเนินงานของหน่วยงาน '.repeat(3);
+ if(name==='overflow')r.sections.body.header.projectName='ชื่อโครงการที่ยาวเกินพื้นที่ปก\n'.repeat(100);
+ r.sections.body.header.logo='22222222-2222-4222-8222-222222222222';
+ if(name==='empty'){t.sections=[{id:'cover',key:'cover',inputSchema:{type:'object',fields:{}},formats:{},role:'cover',source:{kind:'authored',repeats:[],fragment:{rootIds:[],nodes:{}}}},{id:'blank',key:'blank',inputSchema:{type:'object',fields:{}},formats:{},source:{kind:'blank'}}];delete t.areaFormats;r.sections={};}
  const d=ok(composeDocument(ok(validateTemplate(t)),ok(prepareGeneration(ok(validateTemplate(t)),r))));
  const result=await engine.generatePdf(d,images);
  if(name==='overflow'){assert.equal(result.ok,false);assert.equal(result.issues[0].code,'LAYOUT_FAILED');assert(result.issues[0].path.startsWith('header'));results.push({name,status:'rejected',issues:result.issues});continue;}

@@ -8,7 +8,7 @@ import {fakeRuntime} from '../helpers/document.js';
 const pt=(value:number)=>({value,unit:'pt'});
 const placement=(left=0,right=0,offset=0)=>({mode:'page',left:pt(left),right:pt(right),offset:pt(offset)});
 const ok=(r:any)=>{expect(r.ok,JSON.stringify(r)).toBe(true);return r.value;};
-function template(){const t=ownedTemplate();t.nodeModelVersion=16;for(const s of t.sections){s.header.placement=placement();s.footer=structuredClone(s.header);s.footer.placement=placement(12,18,5);s.footer.fragment.nodes.head.children=[{id:'foot',type:'text',text:'FOOT'}];}return t;}
+function template(){const t=ownedTemplate();t.nodeModelVersion=18;for(const s of t.sections){s.header.placement=placement();s.footer=structuredClone(s.header);s.footer.placement=placement(12,18,5);s.footer.fragment.nodes.head.children=[{id:'foot',type:'text',text:'FOOT'}];}return t;}
 async function draw(t:any){const v=ok(validateTemplate(t));return documentFlow(ok(composeDocument(v,ok(prepareGeneration(v,ownedRequest(t))))),fakeRuntime);}
 it('places bands against page edges in portrait and landscape while body keeps its margins',async()=>{
  const t=template(),d=await draw(t);

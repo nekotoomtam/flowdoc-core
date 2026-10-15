@@ -9,8 +9,8 @@ import {bindInlines,resolveScalar} from './bindInlines.js';
 // Clone only reachable subtrees. A repeated row replaces its source row; no
 // template descendants survive when its collection is empty.
 export function expandRows(format:Format,global:PreparedData,local:PreparedData,contentIndex:number|undefined,formatKey:string|undefined,nodes:Record<string,DocumentNode>,sourceMap:Record<string,SourceEntry>,options:ExpansionOptions={}):string[]{
- if(!options.origin&&(contentIndex===undefined||formatKey===undefined))throw Error('Missing content origin');
- const prefix=options.prefix??`content-${contentIndex}~`,origin={...(options.origin??{contentIndex:contentIndex!,format:formatKey!}),...options.areaOrigin};
+ if(options.origin?.origin!=='authored')throw Error('Missing authored Section origin');
+ const prefix=options.prefix??`section-${options.origin.sectionId}~`,origin={...options.origin,...options.areaOrigin};
  const repeats=new Map(format.repeats.map(r=>[r.rowTemplateId,r]));
  const cellRepeats=new Map((format.cellRepeats??[]).map(r=>[r.cellId,r]));
  const groupStarts=new Map((format.rowGroups??[]).map(g=>[g.rowTemplateIds[0]!,g]));

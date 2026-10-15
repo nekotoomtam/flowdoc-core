@@ -26,11 +26,11 @@ it('composes a named section Area and rejects direct content on model18',()=>{
  r.sections.one.content=[];expect(prepareGeneration(v,r).ok).toBe(false);
  t.sections[0].source={kind:'content'};expect(validateTemplate(t).ok).toBe(false);
 });
-it('fails invalid Area entries with indexed diagnostics while model17 keeps skip semantics',()=>{
+it('fails invalid Area entries with indexed diagnostics and rejects retired models',()=>{
  for(const e of [{format:'missing',data:{}},{format:'text',data:{}},{format:'text',data:{text:4}}]){
   const v=ok(validateTemplate(fixture()));const result=prepareGeneration(v,request([entry('A'),e]));
   expect(result.ok).toBe(false);if(!result.ok)expect(result.issues.some(i=>i.path.startsWith('sections.one.data.details[1]'))).toBe(true);
-  const old=prepareGeneration(ok(validateTemplate(fixture(17))),request([entry('A'),e]));expect(old.ok).toBe(true);expect(old.warnings.some(w=>w.code==='AREA_ENTRY_SKIPPED')).toBe(true);
+  expect(validateTemplate(fixture(17)).ok).toBe(false);
  }
 });
 it('author-defined breaks separate content without leading, repeated or trailing blank pages',async()=>{
@@ -57,9 +57,11 @@ it('rejects a tampered prepared Area that silently drops an entry',()=>{
  expect(composeDocument(v,p).ok).toBe(false);
 });
 it('rejects legacy skipped-entry metadata relabelled as model18 prepared input',()=>{
- const old=ok(validateTemplate(fixture(17))),v=ok(validateTemplate(fixture()));
- const p=ok(prepareGeneration(old,request([entry('A'),{format:'missing',data:{}}])));
- p.template.fingerprint=v.fingerprint;expect(composeDocument(v,p).ok).toBe(false);
+ const v=ok(validateTemplate(fixture()));
+ const p=ok(prepareGeneration(v,request([entry('A'),entry('B')])));
+ p.sections['id-one'].data.details.entries.pop();p.sections['id-one'].data.details.skippedIndices=[1];
+ p.sections['id-one'].warnings=[{code:'AREA_ENTRY_SKIPPED',path:'sections.one.data.details[1]',message:'old skipped value',action:'skipped'}];p.warnings=p.sections['id-one'].warnings;
+ expect(composeDocument(v,p).ok).toBe(false);
 });
 it('keeps empty optional Areas empty and rejects cross-Area formats',()=>{
  const t=fixture();t.sections[0].inputSchema.fields.details.required=false;

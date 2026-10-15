@@ -1,34 +1,13 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 4,
+  "nodeModelVersion": 18,
   "templateId": "tpl-srs-basic",
   "docKey": "srs-basic",
   "version": 1,
   "name": "SRS MVP",
   "book": {
-    "page": {
-      "size": "A4",
-      "orientation": "portrait",
-      "margin": {
-        "top": {
-          "value": 20,
-          "unit": "mm"
-        },
-        "right": {
-          "value": 20,
-          "unit": "mm"
-        },
-        "bottom": {
-          "value": 20,
-          "unit": "mm"
-        },
-        "left": {
-          "value": 20,
-          "unit": "mm"
-        }
-      }
-    },
-    "contentSlot": "body"
+    "contentSlot": "body",
+    "defaultPageLayoutId": "normal"
   },
   "globalSchema": {
     "type": "object",
@@ -52,7 +31,111 @@
       "lineHeightPt": 18
     }
   },
-  "formats": {
+  "examples": [
+    {
+      "name": "normal",
+      "request": {
+        "docKey": "srs-basic",
+        "version": 1,
+        "data": {
+          "projectName": "ระบบจัดการเอกสาร"
+        },
+        "sections": {
+          "main": {
+            "data": {
+              "details": [
+                {
+                  "format": "section-note",
+                  "data": {
+                    "text": "ขอบเขตการทำงาน"
+                  }
+                },
+                {
+                  "format": "requirement-list",
+                  "data": {
+                    "items": [
+                      {
+                        "code": "REQ-001",
+                        "detail": "สร้าง PDF ได้"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "format": "section-note",
+                  "data": {
+                    "text": "รายละเอียดหลังตาราง"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "pageLayouts": {
+    "normal": {
+      "page": {
+        "size": "A4",
+        "orientation": "portrait",
+        "margin": {
+          "top": {
+            "value": 20,
+            "unit": "mm"
+          },
+          "right": {
+            "value": 20,
+            "unit": "mm"
+          },
+          "bottom": {
+            "value": 20,
+            "unit": "mm"
+          },
+          "left": {
+            "value": 20,
+            "unit": "mm"
+          }
+        }
+      }
+    }
+  },
+  "sections": [
+    {
+      "id": "main",
+      "key": "main",
+      "source": {
+        "kind": "authored",
+        "fragment": {
+          "rootIds": [
+            "area"
+          ],
+          "nodes": {
+            "area": {
+              "id": "area",
+              "type": "area",
+              "props": {
+                "areaId": "main-details"
+              }
+            }
+          }
+        },
+        "repeats": []
+      },
+      "inputSchema": {
+        "type": "object",
+        "fields": {
+          "details": {
+            "type": "area",
+            "areaId": "main-details",
+            "required": true
+          }
+        }
+      },
+      "formats": {}
+    }
+  ],
+  "areaFormats": {
     "section-note": {
       "label": "ข้อความประกอบหัวข้อ",
       "inputSchema": {
@@ -108,7 +191,9 @@
           }
         }
       },
-      "repeats": []
+      "repeats": [],
+      "key": "section-note",
+      "ownerAreaId": "main-details"
     },
     "requirement-list": {
       "label": "ตารางข้อกำหนด",
@@ -369,44 +454,9 @@
             "key": "items"
           }
         }
-      ]
+      ],
+      "key": "requirement-list",
+      "ownerAreaId": "main-details"
     }
-  },
-  "examples": [
-    {
-      "name": "normal",
-      "request": {
-        "docKey": "srs-basic",
-        "version": 1,
-        "data": {
-          "projectName": "ระบบจัดการเอกสาร"
-        },
-        "content": [
-          {
-            "format": "section-note",
-            "data": {
-              "text": "ขอบเขตการทำงาน"
-            }
-          },
-          {
-            "format": "requirement-list",
-            "data": {
-              "items": [
-                {
-                  "code": "REQ-001",
-                  "detail": "สร้าง PDF ได้"
-                }
-              ]
-            }
-          },
-          {
-            "format": "section-note",
-            "data": {
-              "text": "รายละเอียดหลังตาราง"
-            }
-          }
-        ]
-      }
-    }
-  ]
+  }
 }

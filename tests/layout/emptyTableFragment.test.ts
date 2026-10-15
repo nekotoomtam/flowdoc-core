@@ -2,7 +2,7 @@ import {it,expect} from 'vitest';
 import {document,fakeRuntime} from '../helpers/document.js';
 import {cellTableFlow} from '../../src/layout/cellTableFlow.js';
 async function trial(empty=false){
- const d:any=document('first');d.nodeModelVersion=9;
+ const d:any=document('first');d.nodeModelVersion=18;
  d.nodes.second={...structuredClone(d.nodes.t),id:'second'};d.nodes.second.children[0].text='second';
  d.nodes.table={id:'table',type:'table',props:{headerRowCount:0,repeatHeaderRows:false},columns:[{width:{value:100,unit:'pt'}}],rowIds:['r1','r2']};
  for(const [r,c,t] of [['r1','c1','t'],['r2','c2','second']]){d.nodes[r]={id:r,type:'table-row',props:{allowBreak:true},cellIds:[c]};d.nodes[c]={id:c,type:'table-cell',props:{fillColor:'EEEEEE'},childIds:empty&&r==='r2'?[]:[t]};}

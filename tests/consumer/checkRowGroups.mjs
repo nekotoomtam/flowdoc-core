@@ -13,10 +13,10 @@ assert.deepEqual(texts,['before','Company A','labels','Person A','Person B','Com
 const engine=ok(await createPdfEngine(ok(await loadBundledResources({pythonExecutable:'/usr/local/bin/python',tempRoot:'/consumer/temp'}))));
 const pdf=ok(await engine.generatePdf(JSON.parse(JSON.stringify(document))));assert.equal(pdf.pageCount,1);
 await writeFile('/consumer/output/row-groups.pdf',pdf.bytes);
-definition.sections[0].formats.meeting.rowGroups[0].pagination.keepStart=true;
+definition.areaFormats.meeting.rowGroups[0].pagination.keepStart=true;
 const pending=ok(validateTemplate(definition)),d=ok(composeDocument(pending,ok(prepareGeneration(pending,request))));
 const kept=await engine.generatePdf(d);assert.equal(kept.ok,true);assert.deepEqual(kept.warnings,[]);
-const format=definition.sections[0].formats.meeting;format.fragment.nodes.labelsText.children[0].text=Array(80).fill('Tall prefix').join('\n');
+const format=definition.areaFormats.meeting;format.fragment.nodes.labelsText.children[0].text=Array(80).fill('Tall prefix').join('\n');
 const oversized=ok(validateTemplate(definition)),longDoc=ok(composeDocument(oversized,ok(prepareGeneration(oversized,request))));
 const relaxed=await engine.generatePdf(longDoc);assert.equal(relaxed.ok,true);assert.equal(relaxed.warnings.length,2);assert(relaxed.warnings.every(w=>w.code==='ROW_GROUP_KEEP_START_RELAXED'&&w.groupId==='companies'));
 await writeFile('/consumer/output/row-groups-fallback.pdf',relaxed.value.bytes);
