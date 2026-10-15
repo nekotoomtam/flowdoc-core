@@ -21,8 +21,10 @@ export async function measureText(node:TextBlock,style:TextStyle,available:numbe
   const emit=async(text:string,sourceStart=0)=>{
    if(!text){lines.push({heightPt:lineHeight});lineWidth=available;return;}
    const shaped=await shape(text),advance=shaped.glyphs.reduce((a,g)=>a+g.advancePt,0);
-   if(extent(shaped)>lineWidth+epsilon||shaped.ascentPt+shaped.descentPt>lineHeight+epsilon)throw new LayoutError(id,'Text ink does not fit the configured line');
-   lines.push({heightPt:lineHeight,occupiedWidthPt:extent(shaped),run:{nodeId:id,kind:'glyph-run',text,fontId,fontSizePt:size,lineHeightPt:lineHeight,baselineOffsetPt:shaped.ascentPt+(lineHeight-shaped.ascentPt-shaped.descentPt)/2,color:'000000',bounds:{xPt:-Math.min(0,shaped.inkLeftPt??0),yPt:0,widthPt:advance,heightPt:lineHeight},glyphs:shaped.glyphs,...(spans.length?{sourceStart,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{}),links:spans.filter(s=>s.start<sourceStart+text.length&&s.end>sourceStart)}:{})}});
+   if(extent(shaped)>lineWidth+epsilon)throw new LayoutError(id,'Text ink does not fit the configured line');
+   // Keep authored text intact; stacked marks may need more than the requested leading.
+   const actualHeight=Math.max(lineHeight,shaped.ascentPt+shaped.descentPt);
+   lines.push({heightPt:actualHeight,occupiedWidthPt:extent(shaped),run:{nodeId:id,kind:'glyph-run',text,fontId,fontSizePt:size,lineHeightPt:actualHeight,baselineOffsetPt:shaped.ascentPt+(actualHeight-shaped.ascentPt-shaped.descentPt)/2,color:'000000',bounds:{xPt:-Math.min(0,shaped.inkLeftPt??0),yPt:0,widthPt:advance,heightPt:actualHeight},glyphs:shaped.glyphs,...(spans.length?{sourceStart,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{}),links:spans.filter(s=>s.start<sourceStart+text.length&&s.end>sourceStart)}:{})}});
    lineWidth=available;
   };
   // Tabs are display spaces, not tab stops. One UTF-16 unit remains one unit,

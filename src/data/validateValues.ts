@@ -8,7 +8,9 @@ import {object,own,text,issue} from '../template/checks.js';
 export type ValueMode='request'|'prepared';
 export const actualType=(v:unknown)=>v===null?'null':Array.isArray(v)?'array':typeof v==='undefined'?'null':typeof v as 'string'|'number'|'boolean'|'object'|'array'|'null';
 export function validateValues(schema:ObjectSchema,input:unknown,path:string,issues:Issue[],warnings:Issue[],mode:ValueMode='request',missing=false,areaIndex?:AreaIndex):PreparedData {
- const out:PreparedData=Object.create(null);
+ // Prepared values are checked in place, never rewritten. The outer validator snapshots once.
+ const out:PreparedData=mode==='prepared'&&object(input)?input as PreparedData:Object.create(null);
+ const store=(key:string,value:PreparedData[string])=>{if(mode==='request')out[key]=value;};
  if(missing){issues.push(issue('MISSING_REQUIRED',path));}
  else if(!object(input)){issues.push({...issue('TYPE_MISMATCH',path),expectedType:'object',actualType:actualType(input)});return out;}
  const data=missing?Object.create(null):input as Record<string,unknown>;
@@ -18,12 +20,12 @@ export function validateValues(schema:ObjectSchema,input:unknown,path:string,iss
  }
  for(const [key,field] of Object.entries(schema.fields)){
   const p=path+'.'+key;
-  if(field.type==='area'){if(!areaIndex)issues.push(issue('INVALID_DATA',p));else out[key]=prepareAreaValue(areaIndex,field.areaId,data[key],p,issues,warnings,!own(data,key),mode);continue;}
+  if(field.type==='area'){if(!areaIndex)issues.push(issue('INVALID_DATA',p));else store(key,prepareAreaValue(areaIndex,field.areaId,data[key],p,issues,warnings,!own(data,key),mode));continue;}
   if(!own(data,key)){
    if(mode==='prepared'||field.required){issues.push(issue(mode==='prepared'?'INVALID_DATA':'MISSING_REQUIRED',p));continue;}
-   if(own(field,'default'))out[key]=validateField(field,structuredClone(field.default),p,issues,warnings,mode);
-   else out[key]=field.type==='array'?[]:'';
-  }else out[key]=validateField(field,data[key],p,issues,warnings,mode);
+   if(own(field,'default'))store(key,validateField(field,structuredClone(field.default),p,issues,warnings,mode));
+   else store(key,field.type==='array'?[]:'');
+  }else store(key,validateField(field,data[key],p,issues,warnings,mode));
  }
  return out;
 }
@@ -32,7 +34,7 @@ export function validateField(field:StringField|ArrayField|ImageField|LinkField|
  if(field.type==='link'){
   if(mode==='prepared'&&value===''&&!field.required&&!own(field,'default'))return '';
   if(!validateLink(value)){issues.push(issue('INVALID_DATA',path));return '';}
-  return structuredClone(value);
+  return mode==='prepared'?value:structuredClone(value);
  }
  if(field.type==='image'){
   if(typeof value!=='string'){issues.push({...issue('TYPE_MISMATCH',path),expectedType:'image',actualType:actualType(value)});return '';}
@@ -46,5 +48,6 @@ export function validateField(field:StringField|ArrayField|ImageField|LinkField|
   return value;
  }
  if(!Array.isArray(value)){issues.push({...issue('TYPE_MISMATCH',path),expectedType:'array',actualType:actualType(value)});return [];}
+ if(mode==='prepared'){value.forEach((item,index)=>validateValues(field.items,item,`${path}[${index}]`,issues,warnings,mode));return value;}
  return value.map((item,index)=>validateValues(field.items,item,`${path}[${index}]`,issues,warnings,mode) as PreparedItem);
 }

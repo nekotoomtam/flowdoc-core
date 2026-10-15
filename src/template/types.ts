@@ -1,5 +1,5 @@
 import type {BoundLink} from '../composition/linkContract.js';
-import type {ResolvedDocument,TextBlock,TextInline,Table,TableRow,TableCell,ImageBlock,ContentsBlock,LineBlock} from '../composition/resolvedDocument.js';
+import type {ResolvedDocument,TextBlock,TextInline,Table,TableRow,TableCell,PageBreak,ImageBlock,ContentsBlock,LineBlock} from '../composition/resolvedDocument.js';
 export interface StringField {type:'string';required?:boolean;default?:string;allowEmpty?:boolean;label?:string;description?:string}
 export interface ImageField {type:'image';required?:boolean;default?:string;label?:string;description?:string}
 export interface LinkField {type:'link';required?:boolean;default?:BoundLink;label?:string;description?:string}
@@ -15,7 +15,7 @@ export type TemplateImageBlock=Omit<ImageBlock,'props'>&{props:{width:ImageBlock
 export interface AreaEntry {format:string;data:Record<string,unknown>}
 export interface AreaField {type:'area';areaId:string;required?:boolean;default?:AreaEntry[];label?:string;description?:string}
 export interface TemplateArea {id:string;type:'area';props:{areaId:string}}
-export type TemplateNode=LineBlock|TemplateArea|TemplateTextBlock|Table|TableRow|TableCell|TemplateImageBlock|ContentsBlock;
+export type TemplateNode=PageBreak|LineBlock|TemplateArea|TemplateTextBlock|Table|TableRow|TableCell|TemplateImageBlock|ContentsBlock;
 export interface Fragment {rootIds:string[];nodes:Record<string,TemplateNode>}
 export interface Repeat {tableId:string;rowTemplateId:string;source:{scope:'global'|'section'|'local';key:string}}
 export interface CellRepeat {id:string;cellId:string;childTemplateIds:string[];source:{scope:'global'|'section'|'local';key:string}}
@@ -23,15 +23,13 @@ export interface RowGroup {id:string;tableId:string;rowTemplateIds:string[];sour
 export interface Format {rowGroups?:RowGroup[];label?:string;description?:string;inputSchema:ObjectSchema;fragment:Fragment;repeats:Repeat[];cellRepeats?:CellRepeat[]}
 export interface AreaFormat extends Format {key:string;ownerAreaId:string}
 interface TemplateBase {
- header?:PageBandDefinition;footer?:PageBandDefinition;
  areaFormats?:Record<string,AreaFormat>;
  schemaVersion:1;templateId:string;docKey:string;version:number;name:string;
  styles:ResolvedDocument['styles'];globalSchema:ObjectSchema;
- formats:Record<string,Format>;examples:{name:string;request:unknown}[];
+ examples:{name:string;request:unknown}[];
 }
 export interface PageLayout {label?:string;page:ResolvedDocument['book']['page']}
-export interface TemplateSection {headerMode?:BandMode;footerMode?:BandMode;role?:'body'|'cover';id:string;label?:string;pageLayoutId?:string;source:{kind:'blank'}|{kind:'content'}|({kind:'authored'}&Pick<Format,'fragment'|'repeats'|'cellRepeats'|'rowGroups'>)}
-export type LegacyTemplateDefinition=TemplateBase&({nodeModelVersion:4|5|6|7|8|9|10|11;book:ResolvedDocument['book']}|{nodeModelVersion:12|13|14;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:TemplateSection[]});
+export interface TemplateSection {headerMode?:BandMode;footerMode?:BandMode;role?:'body'|'cover';id:string;label?:string;pageLayoutId?:string;source:{kind:'blank'}|({kind:'authored'}&Pick<Format,'fragment'|'repeats'|'cellRepeats'|'rowGroups'>)}
 export interface ValidatedTemplate {readonly definition:TemplateDefinition;readonly fingerprint:string}
 
 export type BandMode='all'|'first'|'continuation'|'none';
@@ -40,11 +38,7 @@ export interface BandColumns {id:string;type:'columns';props:{gap?:import('../co
 export interface BandPlacement {mode:"page";left:import("../composition/resolvedDocument.js").Length;right:import("../composition/resolvedDocument.js").Length;offset:import("../composition/resolvedDocument.js").Length}
 export interface PageBandDefinition {placement?:BandPlacement;inputSchema:ObjectSchema<StringField|ImageField|LinkField>;fragment:{rootIds:string[];nodes:Record<string,LineBlock|TemplateTextBlock|TemplateImageBlock|BandColumns>};baseTextStyleId:string;sizing?:BandSizing;gap?:import('../composition/resolvedDocument.js').Length}
 
-export interface Section15 extends TemplateSection {key:string;inputSchema:ObjectSchema;formats:Record<string,Format>;header?:PageBandDefinition;footer?:PageBandDefinition}
-export type Template15=Omit<TemplateBase,'header'|'footer'|'formats'>&{nodeModelVersion:15;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:Section15[]};
-export interface Section16 extends Section15 {numbering?:PageNumbering}
-export type Template16=Omit<Template15,"nodeModelVersion"|"sections">&{nodeModelVersion:16;sections:Section16[]};
-export type Template17=Omit<Template16,"nodeModelVersion">&{nodeModelVersion:17};
-export type ScopedTemplate=Template15|Template16|Template17;
-export type TemplateDefinition=LegacyTemplateDefinition|ScopedTemplate;
+export interface AreaSection extends TemplateSection {key:string;inputSchema:ObjectSchema;formats:Record<string,never>;header?:PageBandDefinition;footer?:PageBandDefinition;numbering?:PageNumbering}
+export type Template18=TemplateBase&{nodeModelVersion:18;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:AreaSection[]};
+export type TemplateDefinition=Template18;
 export type PageNumbering={mode:"continue";visibility?:"show"|"hide"}|{mode:"restart";startAt?:number;visibility?:"show"|"hide"}|{mode:"exclude";visibility?:"show"|"hide"};

@@ -8,7 +8,7 @@ const ids=['22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-33333
 const images=Object.fromEntries(ids.map((id,i)=>[id,{kind:'rgb',width:2,height:1,bytes:new Uint8Array([[20,90,160,40,150,210],[40,130,60,100,180,90],[180,80,20,210,120,30]][i])}]));
 const results=[];
 for(const [name,count] of [['empty',0],['one',1],['long',3]]){
- const request={docKey:'area-demo',data:{},content:[{format:'contents',data:{}},...['evidence','evidence','merged'].map((format,j)=>({format,data:{details:[{format:'notice',data:{}},...Array.from({length:count},(_,i)=>({format:'evidence',data:{photo:ids[i%3],caption:`BEGIN-${j}-${i}\n`+'ตรวจสอบข้อมูลภาษาไทยและภาพหลักฐานให้ตรงตามรายการที่ส่งเข้ามา\n'.repeat(name==='long'?8:1)+`END-${j}-${i}`}}))]}})),{format:'summary',data:{}}]};
+ const request={docKey:'area-demo',data:{},sections:Object.fromEntries(['evidence','evidence2','merged'].map((key,j)=>[key,{data:{details:[{format:'notice',data:{}},...Array.from({length:count},(_,i)=>({format:'evidence',data:{photo:ids[i%3],caption:`BEGIN-${j}-${i}\n`+'ตรวจสอบข้อมูลภาษาไทยและภาพหลักฐานให้ตรงตามรายการที่ส่งเข้ามา\n'.repeat(name==='long'?8:1)+`END-${j}-${i}`}}))]}}]))};
  const original=structuredClone(request),d=ok(composeDocument(template,ok(prepareGeneration(template,request))));
  assert.deepEqual(request,original);assert.equal(Object.values(d.nodes).filter(n=>n.type==='image').length,count*3);
  for(const [id,n] of Object.entries(d.nodes))if(n.type==='image'){assert(d.sourceMap[id].areaId);assert(Number.isInteger(d.sourceMap[id].areaEntryIndex));}

@@ -2,68 +2,31 @@
 
 ## Authority Boundary
 
-Owner: flowdoc-core. This README describes this package's local build and resource
-and PDF API. Shared MVP scope and status belong to Project Control's
-`docs/domains/flowdoc-export-mvp-r2-runtime-plan-2026-10-07.md`.
+Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Version 0.2.14 validates templates, binds typed data and renders TextBlocks,
-images, merged tables, cell repeats, Area subformats, links and contents to PDF.
-Text measurement uses a per-generation cache (32 MiB serialized payload, at most
-8,192 entries) and a persistent native shaper per used font. Sessions close on
-success or failure; the 30-second per-request timeout and 16 MiB response bound
-remain. These are cache/transport bounds, not a total job-memory guarantee.
-The performance changes preserve wrapping rules and existing template/API contracts. Font preparation sends
-only unique glyph IDs and font identities to the subset helper, preserving font
-order and subset output; full drawing commands stay in the renderer.
-
-There is no HTTP server or database here. Start with the Thai
-[template guide](docs/template-guide.md) for model 4–17 contracts and examples.
+Version 0.3.0 accepts **nodeModelVersion: 18 only**. Models 4–17 are rejected at template and resolved-document entrypoints. This is a breaking contract cutover; changing an old template's version number alone does not migrate it.
 
 ## Template and data API
 
 ```ts
-import {validateTemplate, prepareGeneration, composeDocument} from '@flowdoc/core';
-const registered = validateTemplate(rawTemplateJson);
-if (!registered.ok) throw new Error(JSON.stringify(registered.issues));
-const prepared = prepareGeneration(registered.value, requestJson);
+import { validateTemplate, prepareGeneration, composeDocument } from '@flowdoc/core';
+const template = validateTemplate(rawTemplateJson);
+if (!template.ok) throw new Error(JSON.stringify(template.issues));
+const prepared = prepareGeneration(template.value, requestJson);
 if (!prepared.ok) throw new Error(JSON.stringify(prepared.issues));
-const composed = composeDocument(registered.value, prepared.value);
-// Pass composed.value to engine.value.generatePdf only after composed.ok.
-// Preserve prepared.warnings in the caller's job/status record.
+const composed = composeDocument(template.value, prepared.value);
+if (!composed.ok) throw new Error(JSON.stringify(composed.issues));
+// Pass composed.value to engine.value.generatePdf.
+// Preserve warnings in the caller's job/status record.
 ```
 
-Use raw JSON text when registering templates: duplicate decoded property names
-are rejected. Already parsed objects are accepted, but keys previously discarded
-by JSON.parse cannot be recovered. Service registration retains this
-raw-text boundary. The returned definition is a detached frozen copy with a
-canonical SHA-256 fingerprint (including template identity/version). It is not
-authentication. Preparation pins this definition; it never selects a version.
+Use raw JSON text to detect duplicate decoded keys. Template validation returns a detached frozen definition and canonical fingerprint. Prepared snapshots are JSON-serializable and checked again at composition; this structural check is not authentication.
 
-Fields include strings, images, links, object arrays and model 11 Area.
-Model 17 adds bounded two-level arrays and table rowGroups; older models retain
-their original limits.
-Supported item types depend on the node model; see the template guide. Required
-missing fields fail even with defaults; optional absent fields use their declared
-default or `""`/`[]`. Supplied wrong types/null fail without coercion. Unknown
-business fields are ignored with warnings; unknown formats are skipped. At least
-one accepted invocation is required in legacy content-only models; newer authored sections can supply the document roots. Envelope properties are strict. Examples in
-the template must validate without either errors or warnings.
+A document defines page layouts and ordered Sections. Each Section owns its paper, header/footer, variables and authored content or intentional blank page. An Area is a named variable declared in globalSchema or a Section inputSchema and placed in an authored graph. areaFormats explicitly declare ownerAreaId and key; invocation data belongs to that format. Section formats must be empty and requests do not accept legacy content arrays. Static content, covers and page breaks remain supported.
 
-Persist PreparedInput as JSON if needed and keep the original request separately.
-Composition rechecks its pin, complete normalized data, index order and coverage.
-It applies no replacement defaults to a corrupted prepared snapshot. Optional
-absent/no-default strings normalize to empty even with allowEmpty=false; that
-canonical empty value is valid when a prepared snapshot is read back. This
-snapshot check is structural validation, not proof of who wrote the values.
+Unknown business fields produce warnings. Invalid Area entries, missing required fields, unknown formats and wrong types fail rather than silently skipping content. Areas accept arrays or keyed objects according to their declaration. See the [local template entrypoint](docs/template-guide.md) and runnable fixtures.
 
-Formats contain independent text/table graphs. Table repeats replace one source
-row with zero or more rows, using explicit global/local/item scopes. Generated
-IDs and sourceMap preserve original request indices, including skipped entries.
-Each invocation owns its nodes/data; no mutable defaults or outputs are shared.
-Newline values become line-break leaves, empty values create no text leaves, and
-all text inherits its parent TextBlock style. No expression evaluator is used.
-`fixtures/srs-basic/` demonstrates a text/table/text request;
-`fixtures/binding-text/` demonstrates the text-only PDF path.
+Text measurement uses a per-generation cache (32 MiB serialized payload, at most 8,192 entries) and a persistent shaper per font. Sessions close on success or failure. These bounds are not a total job-memory guarantee. Core contains no HTTP server or database.
 
 ## Release branches
 
@@ -135,8 +98,7 @@ fixtures in `fixtures/pdf/` are runnable examples. They contain book page/style
 settings and an ordered node graph, not measured coordinates. Supported pages
 are A4 portrait or landscape with mm/pt margins. Text uses paragraph TextBlocks,
 text/line-break/link inlines and Sarabun normal/bold/italic combinations.
-Images and later-model features follow the template guide. Tables
-use declared fixed-width columns; merged cells require model 6 or newer.
+Images and Areas follow the template guide. Tables use declared fixed-width columns and support merged cells.
 Nested tables, unresolved tags, custom
 geometry and unrecognized props return LAYOUT_FAILED.
 All root nodes need sourceMap entries. Input is copied before asynchronous work.
@@ -163,9 +125,7 @@ moves the row intact, or returns LAYOUT_FAILED if it exceeds the usable page.
 `repeatHeaderRows:true` repeats the header on continuation pages. The header
 stays with at least the next body line; impossible header/body combinations fail
 instead of producing blank pages. An empty collection renders only its header.
-Page breaks do not mutate the composed graph. Model 6 adds merging; model 9 adds
-direct TextBlock/Image children and per-side padding (including zero). Model 10
-adds cell repeats and image item binding; model 11 adds owned Area subformats.
+Page breaks do not mutate the composed graph. Cells support direct TextBlock/Image children, per-side padding (including zero), cell repeats, image item binding and owned Area subformats.
 Nested tables and Columns in cells remain unsupported.
 
 `fixtures/table/` contains raw template/short/empty/long requests. Its body style
@@ -178,146 +138,3 @@ The installed consumer generates `table-short.pdf`, `table-empty.pdf` and
 expected text and result metadata in the artifact directory. Inspect extracted
 text, embedded fonts and rendered pages before claiming visual acceptance; the
 consumer command alone does not perform the host Poppler/visual review.
-
-## Merged tables (model 6)
-
-Development model 6 adds explicitly placed merged table cells. For a table using
-explicit placement, every cell supplies zero-based `columnIndex`; `rowSpan` and
-`colSpan` default to 1. Covered slots have no placeholder nodes. Fully covered
-rows may have empty `cellIds`; intentional empty cells have empty `childIds`.
-Overlaps, holes, out-of-bounds spans, mixed placement, header/body crossing and
-rowspans touching repeated rows are rejected. Horizontal merging in repeated
-rows is supported. Model 4/5 retain their ordinary-table contract.
-
-Merged cells measure text at combined column width. Vertical span height deficits
-extend only the final covered row. Whole lines continue across pages under the
-same logical cell; a protected row remains intact. Model 6 itself does not add
-images in cells (added in model 9), nested tables or column containers. The packed consumer additionally
-produces `merged-short.pdf` and `merged-long.pdf` for visual inspection.
-
-
-## Reused implementation
-
-Native source/Cargo.lock and the subset algorithm were extracted from
-`flowdoc-vnext-core` commit `fa76c74356e5cfc9296f6a86c0bfac690e8416f6` through
-the validated Linux runtime probe. They require no old repository at runtime.
-Rustybuzz 0.20.1 and ICU segmenter 2.2.0 remain locked. Sarabun Regular, Bold,
-Italic and BoldItalic ship with their SIL Open Font License in `assets/fonts/OFL.txt`.
-The derivative subset helper uses explicit output names rather than the source
-font's reserved family name. Runtime packaging currently targets the pinned Debian
-Bookworm images only; other platforms are not claimed as verified.
-
-## Model 7 links and destinations
-
-Model 7 retains image and merged-cell support and adds inline `url` (value),
-`link` (text/url) and `reference` (text/target) commands. External destinations
-accept absolute HTTP/HTTPS URLs without credentials or control characters.
-TextBlock `props.anchorId` identifies the first nonblank positioned line, including
-inside cells; duplicate/missing or entirely empty destinations fail export.
-
-A `link` schema field accepts one of those command objects without an inline id.
-It can also occur in an array item schema. A field-ref inserts the typed command;
-optional omission emits nothing, while supplied empty strings/null are invalid.
-String-valued command properties and anchorId also accept scoped string bindings
-`{scope:'global'|'local'|'item',key:'fieldName'}` in templates.
-
-PDF hit areas follow existing glyph clusters and line/page placement, including
-wrapped labels and repeated table headers. Adjacent links sharing an inseparable
-cluster fail rather than choosing an ambiguous destination. Text styling is
-unchanged. Model 8 adds contents below; DOCX links remain unsupported.
-
-## Contents (model 8)
-
-Mark TextBlocks with `props.toc: {level: 1}` (initial levels 1–3) and a unique
-`anchorId`. Insert one root `table-of-contents` with `props.textStyleId`. Bound
-visible titles, including TextBlocks in cells, follow authored document order.
-Titles and their actual physical page numbers link to the first positioned heading.
-Three levels are an initial validation limit; the stored level is numeric.
-
-Contents use 12 pt indentation per level, a 12 pt gap and a fixed 36 pt number
-column. Page numbers are filled after one pagination; a number that does not fit
-fails. Model 8 documents with a contents node also receive temporary bottom-right
-physical page numbers (regular 10 pt / 14 pt line box, bottom margin at least 18 pt).
-No alternate numbering, generic footer controls or automatic heading inference.
-See `fixtures/contents/template.json`. Existing models 4–7 retain their behavior.
-## Section-owned inputs (model 15)
-
-Model 15 declares each section with stable `id`, caller-facing `key`,
-`inputSchema`, `formats` and optional `header`/`footer`. Requests use shared
-`data` plus `sections.<key>.data/header/footer/content`. Section order comes
-from the template. Omitted objects use defaults/required rules; unknown section
-keys reject the complete request. Header/footer values belong to their own section.
-
-Bindings explicitly select `global`, `section`, `header`, `footer`, `local`
-or array `item` where allowed. There is no fallback between namespaces.
-Document-global Areas retain one placement, including after prepared-input reload.
-Invalid authored Area defaults fail template validation. Cover/blank exclusions,
-existing overflow limits and A4 portrait/landscape rules still apply.
-
-See `fixtures/section-ownership/{template,request}.json` and the packed
-`section-ownership.pdf` consumer output. Models 4–14 keep their prior contract;
-there is no automatic migration, DOCX or frontend adapter in this change.
-
-## System page fields (model 16)
-
-Creators place `{id,type:"system-page-field",field:"current"|"total",width}`
-inside header/footer TextBlocks. Width is a positive mm/pt slot; overflow fails
-with Section/node/field context. Callers still send only normal input values.
-
-Section `numbering` supports `continue` (default), `restart` with optional
-positive `startAt` (default 1), or `exclude`; visibility is `show` or `hide`.
-Total counts participating pages across the document. Cover is excluded/hidden by default; model16 can explicitly count a cover with continue/restart, while keeping its labels/bands hidden;
-blank is counted/hidden by default. Hide preserves space and suppresses the entire
-TextBlock containing fields. No fields means no automatic footer number.
-TOC uses counted numbers even when the page hides them. Selected headings on
-excluded pages keep their clickable title and an empty number slot. Cover
-headings remain absent; duplicate/missing destinations remain invalid.
-
-See `fixtures/page-numbering`. After `npm run check:package`, inspect the PDFs
-and run `python tests/consumer/checkPageNumberingPdf.py <artifact-directory>`
-with pypdf available. This read-only artifact check is not a runtime dependency.
-
-
-## Changes through 0.2.9
-
-See the template guide for counted-but-hidden model16 covers, page-relative bands,
-horizontal lines/alignment, table colors, cell text alignment and compact centered
-page labels. Rendering normalizes tabs to one display space and reuses font CIDs.
-Empty trailing starts of table rows no longer paint borders/fills when their
-content moves to the next page; pagination and authored empty rows are preserved.
-These are extensions within existing model gates, not a new nodeModelVersion.
-
-## Changes in 0.2.10–0.2.13
-
-0.2.10 reuses native shaping sessions per document and adds a bounded text cache;
-0.2.11 sends compact glyph sets to font subsetting. Neither changes text wrap.
-0.2.12 adds model17 two-level arrays and row-group composition. 0.2.13 implements
-`pagination.keepStart` to keep the group prefix with the first legal member
-fragment, while later members can continue onto another page.
-
-Start with [row-group template](fixtures/row-groups/template.json) and
-[request](fixtures/row-groups/request.json); the checked-in Core fixture leaves
-keepStart false for the no-policy baseline. Set it true in the template to use
-the policy. [The template guide](docs/template-guide.md#model17-rowgroups)
-explains scopes, empty groups, limits and diagnostics. Group prefixes that
-cannot fit usable page capacity emit `ROW_GROUP_KEEP_START_RELAXED`; read PDF
-Result warnings even on success. Unplaceable indivisible content still fails.
-Expansion beyond 100,000 node/inline identities returns `EXPANSION_LIMIT` before
-PDF generation. This ceiling is not a total RAM bound or a production SLA.
-
-Upgrade the package without rewriting published templates. Existing model4–16
-contracts remain supported; explicitly author model17 to use nested arrays.
-Core contains no DB migration. Service upgrade instructions live in its guide.
-
-## Changes in 0.2.14
-
-PDF fingerprinting consumes draw JSON one top-level array item at a time instead
-of building one JSON string for the whole document. Property order, optional
-values, Unicode escaping and image hashes retain the same fingerprint and PDF
-bytes for identical inputs. This reduces temporary serialization; it does not
-stream the entire PDF or bound total job memory. A large individual page can
-still require a large temporary value.
-
-No template-model or public API change is required. Keep published templates and
-their versions unchanged. The Service guide records the bounded 98/483-page
-observations and operational upgrade steps; these are not production limits.

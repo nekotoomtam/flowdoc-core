@@ -10,10 +10,10 @@ it.each(['center','right'] as const)('aligns every wrapped cell line %s by actua
  for(const item of items){if(item.kind!=='text-line')throw Error();const line=item.line;expect(line.run!.bounds.xPt).toBeCloseTo((100-line.occupiedWidthPt!)/(align==='center'?2:1));}
 });
 it('admits alignment only for supported cell text, rejecting invalid values',()=>{
- const t=mergedTemplate();t.nodeModelVersion=9;const n=t.formats.merged.fragment.nodes;
+ const t=mergedTemplate();t.nodeModelVersion=18;const n=t.areaFormats.merged.fragment.nodes;
  n.at.props.textAlign='center';expect(validateTemplate(t).ok).toBe(true);
  n.at.props.textAlign='justify';expect(validateTemplate(t).ok).toBe(false);
- n.at.props.textAlign='center';t.nodeModelVersion=8;expect(validateTemplate(t).ok).toBe(false);
+ n.at.props.textAlign='right';expect(validateTemplate(t).ok).toBe(true);
 });
 it('keeps empty text height, negative bearings and link spans',async()=>{
  const d:any=document();d.nodes.t.props.textAlign='center';d.nodes.t.children=[{id:'l',type:'link',text:'ABC',url:'https://example.com'}];
@@ -24,7 +24,7 @@ it('keeps empty text height, negative bearings and link spans',async()=>{
 });
 it('retains centered lines across merged cells and page continuation',async()=>{
  const {mergedDoc}=await import('../helpers/merged.js');const {cellTableFlow}=await import('../../src/layout/cellTableFlow.js');
- const d:any=mergedDoc(95);d.nodeModelVersion=9;for(const n of Object.values(d.nodes) as any[])if(n.type==='text-block')n.props.textAlign='center';
+ const d:any=mergedDoc(95);d.nodeModelVersion=18;for(const n of Object.values(d.nodes) as any[])if(n.type==='text-block')n.props.textAlign='center';
  let pages=1,lines=0;
  const sink={top:0,bottom:150,left:10,availableWidth:500,y:0,nextPage(){pages++;this.y=0;},emitItem(item:any,x:number,y:number,width:number){if(item.kind!=='text-line'||!item.line.run)return;lines++;const l=item.line;expect(l.run.bounds.xPt+l.occupiedWidthPt/2).toBeCloseTo(width/2);},border(){}};
  await cellTableFlow(d,d.nodes.table,fakeRuntime,sink);expect(pages).toBeGreaterThan(1);expect(lines).toBeGreaterThan(95);

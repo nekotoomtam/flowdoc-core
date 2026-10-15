@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 4,
+  "nodeModelVersion": 18,
   "template": {
     "templateId": "pdf-fixture",
     "docKey": "pdf-fixture",
@@ -287,44 +287,126 @@
   },
   "sourceMap": {
     "heading0": {
-      "contentIndex": 0,
-      "format": "note",
-      "sourceId": "heading0"
+      "sourceId": "heading0",
+      "origin": "authored",
+      "sectionId": "main"
     },
     "body0": {
-      "contentIndex": 1,
-      "format": "note",
-      "sourceId": "body0"
+      "sourceId": "body0",
+      "origin": "authored",
+      "sectionId": "main"
     },
     "heading1": {
-      "contentIndex": 2,
-      "format": "note",
-      "sourceId": "heading1"
+      "sourceId": "heading1",
+      "origin": "authored",
+      "sectionId": "main"
     },
     "body1": {
-      "contentIndex": 3,
-      "format": "note",
-      "sourceId": "body1"
+      "sourceId": "body1",
+      "origin": "authored",
+      "sectionId": "main"
     },
     "heading2": {
-      "contentIndex": 4,
-      "format": "note",
-      "sourceId": "heading2"
+      "sourceId": "heading2",
+      "origin": "authored",
+      "sectionId": "main"
     },
     "body2": {
-      "contentIndex": 5,
-      "format": "note",
-      "sourceId": "body2"
+      "sourceId": "body2",
+      "origin": "authored",
+      "sectionId": "main"
     },
     "heading3": {
-      "contentIndex": 6,
-      "format": "note",
-      "sourceId": "heading3"
+      "sourceId": "heading3",
+      "origin": "authored",
+      "sectionId": "main"
     },
     "body3": {
-      "contentIndex": 7,
-      "format": "note",
-      "sourceId": "body3"
+      "sourceId": "body3",
+      "origin": "authored",
+      "sectionId": "main"
+    },
+    "heading0-text": {
+      "sourceId": "heading0-text",
+      "origin": "authored",
+      "sectionId": "main"
+    },
+    "body0-text": {
+      "sourceId": "body0-text",
+      "origin": "authored",
+      "sectionId": "main"
+    },
+    "heading1-text": {
+      "sourceId": "heading1-text",
+      "origin": "authored",
+      "sectionId": "main"
+    },
+    "body1-text": {
+      "sourceId": "body1-text",
+      "origin": "authored",
+      "sectionId": "main"
+    },
+    "heading2-text": {
+      "sourceId": "heading2-text",
+      "origin": "authored",
+      "sectionId": "main"
+    },
+    "body2-text": {
+      "sourceId": "body2-text",
+      "origin": "authored",
+      "sectionId": "main"
+    },
+    "heading3-text": {
+      "sourceId": "heading3-text",
+      "origin": "authored",
+      "sectionId": "main"
+    },
+    "body3-text": {
+      "sourceId": "body3-text",
+      "origin": "authored",
+      "sectionId": "main"
     }
-  }
+  },
+  "sections": [
+    {
+      "sectionId": "main",
+      "pageLayoutId": "normal",
+      "page": {
+        "size": "A4",
+        "orientation": "portrait",
+        "margin": {
+          "top": {
+            "value": 20,
+            "unit": "mm"
+          },
+          "right": {
+            "value": 20,
+            "unit": "mm"
+          },
+          "bottom": {
+            "value": 20,
+            "unit": "mm"
+          },
+          "left": {
+            "value": 20,
+            "unit": "mm"
+          }
+        }
+      },
+      "rootIds": [
+        "heading0",
+        "body0",
+        "heading1",
+        "body1",
+        "heading2",
+        "body2",
+        "heading3",
+        "body3"
+      ],
+      "sourceKind": "authored",
+      "role": "body",
+      "headerMode": "none",
+      "footerMode": "none"
+    }
+  ]
 }
