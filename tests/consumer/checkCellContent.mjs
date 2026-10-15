@@ -3,7 +3,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {loadBundledResources,createPdfEngine} from '@flowdoc/core';
 const ok=r=>{assert(r.ok,JSON.stringify(r));return r.value;};
 const d=JSON.parse(await readFile('/consumer/four-styles.resolved.json','utf8'));
-d.nodeModelVersion=9;d.rootIds=['toc','table','after'];d.nodes={};d.sourceMap={};
+d.nodeModelVersion=18;d.rootIds=['toc','table','after'];d.nodes={};d.sourceMap={};
 const add=n=>{d.nodes[n.id]=n;d.sourceMap[n.id]={contentIndex:0,format:'cell-proof',sourceId:n.id};};
 const style=Object.keys(d.styles)[0];
 const text=(id,value,props={})=>add({id,type:'text-block',role:{role:'paragraph'},props:{textStyleId:style,...props},children:[{id:id+'-leaf',type:'text',text:value}]});
@@ -24,6 +24,8 @@ for(let i=0;i<12;i++){
  text(caption,`END-${i} คำบรรยายภาพหลักฐาน`);
  add({id:b,type:'table-cell',props:{columnIndex:1,padding:i===0?{top:{value:0,unit:'pt'},left:{value:0,unit:'pt'},bottom:{value:0,unit:'pt'},right:{value:0,unit:'pt'}}:{left:{value:2,unit:'mm'}}},childIds:[desc,pic,caption]});
 }
+d.sections[0].rootIds=d.rootIds;d.sections[0].sourceKind='authored';
+for(const n of Object.values(d.nodes))for(const id of [n.id,...(n.children??[]).map(c=>c.id)])d.sourceMap[id]={origin:'authored',sectionId:d.sections[0].sectionId,sourceId:id};
 const map={image0:{kind:'rgb',width:2,height:1,bytes:new Uint8Array([20,90,160,40,150,210])},image1:{kind:'rgb',width:1,height:2,bytes:new Uint8Array([40,130,60,100,180,90])},image2:{kind:'rgb',width:2,height:2,bytes:new Uint8Array([180,80,20,210,120,30,180,80,20,210,120,30])}};
 const engine=ok(await createPdfEngine(ok(await loadBundledResources({pythonExecutable:'/usr/local/bin/python',tempRoot:'/consumer/temp'}))));
 const result=await engine.generatePdf(d,map),pdf=ok(result);assert.equal(result.warnings.length,0);assert(pdf.pageCount>2);

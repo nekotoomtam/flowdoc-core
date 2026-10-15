@@ -7,10 +7,10 @@ const engine=ok(await createPdfEngine(ok(await loadBundledResources({pythonExecu
 const images={'22222222-2222-4222-8222-222222222222':{kind:'rgb',width:2,height:1,bytes:new Uint8Array([20,90,160,40,150,210])}};
 const results=[];
 for(const name of ['long','static']){
- const request=JSON.parse(await readFile('/consumer/page-sections-request.json','utf8'));if(name==='static')request.content=[];
+ const request=JSON.parse(await readFile('/consumer/page-sections-request.json','utf8'));if(name==='static')request.sections.body.data.details=[];
  const d=ok(composeDocument(t,ok(prepareGeneration(t,request)))),pdf=ok(await engine.generatePdf(d,images));
  const raw=Buffer.from(pdf.bytes).toString('latin1');assert(raw.includes('/Subtype /Image'));assert((raw.match(/\/Dest \[/g)??[]).length>=2);
- if(name==='long')assert(pdf.pageCount>=4);else assert.equal(pdf.pageCount,2);
+ if(name==='long')assert(pdf.pageCount>=4);else assert.equal(pdf.pageCount,3);
  await writeFile(`/consumer/output/page-sections-${name}.pdf`,pdf.bytes);
  await writeFile(`/consumer/output/page-sections-${name}.resolved.json`,JSON.stringify(d,null,2));
  results.push({name,pageCount:pdf.pageCount});

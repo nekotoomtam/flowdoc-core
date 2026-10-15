@@ -21,6 +21,6 @@ for(const name of ['short','empty','long']){
 const request=JSON.parse(await readFile('/consumer/table-long.json','utf8'));
 const invalid=unwrap(composeDocument(template,unwrap(prepareGeneration(template,request))));
 const row=Object.values(invalid.nodes).find(n=>n.type==='table-row'&&n.id.includes('item-0'));row.props.allowBreak=false;
-const failure=await engine.generatePdf(invalid);assert.equal(failure.ok,false);assert.equal(failure.issues[0].code,'LAYOUT_FAILED');assert.equal(failure.issues[0].nodeId,row.id);assert.equal(failure.issues[0].contentIndex,1);
+const failure=await engine.generatePdf(invalid);assert.equal(failure.ok,false);assert.equal(failure.issues[0].code,'LAYOUT_FAILED');assert.equal(failure.issues[0].nodeId,row.id);assert.equal(invalid.nodeModelVersion,18);assert.equal(invalid.sourceMap[row.id].areaEntryIndex,1);
 assert.deepEqual(await readdir('/consumer/temp'),[]);
 await writeFile('/consumer/output/table-result.json',JSON.stringify({status:'PASS',pdfs,checks:['installed composed SRS graph','short table','empty header only','multi-page row continuation','contextual oversize row failure','immutable document','cleanup']},null,2));

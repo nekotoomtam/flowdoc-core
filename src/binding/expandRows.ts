@@ -9,8 +9,8 @@ import {bindInlines,resolveScalar} from './bindInlines.js';
 // Clone only reachable subtrees. A repeated row replaces its source row; no
 // template descendants survive when its collection is empty.
 export function expandRows(format:Format,global:PreparedData,local:PreparedData,contentIndex:number|undefined,formatKey:string|undefined,nodes:Record<string,DocumentNode>,sourceMap:Record<string,SourceEntry>,options:ExpansionOptions={}):string[]{
- if(!options.origin&&(contentIndex===undefined||formatKey===undefined))throw Error('Missing content origin');
- const prefix=options.prefix??`content-${contentIndex}~`,origin={...(options.origin??{contentIndex:contentIndex!,format:formatKey!}),...options.areaOrigin};
+ if(options.origin?.origin!=='authored')throw Error('Missing authored Section origin');
+ const prefix=options.prefix??`section-${options.origin.sectionId}~`,origin={...options.origin,...options.areaOrigin};
  const repeats=new Map(format.repeats.map(r=>[r.rowTemplateId,r]));
  const cellRepeats=new Map((format.cellRepeats??[]).map(r=>[r.cellId,r]));
  const groupStarts=new Map((format.rowGroups??[]).map(g=>[g.rowTemplateIds[0]!,g]));
@@ -23,7 +23,7 @@ export function expandRows(format:Format,global:PreparedData,local:PreparedData,
   const id=instancePrefix+sourceId+(itemIndex===undefined?'':`~item-${itemIndex}`);
   sourceMap[id]={...instanceOrigin,sourceId,...itemIndex===undefined?{}:{itemIndex}};
   if(source.type==='text-block')nodes[id]={...structuredClone(source),id,props:{...structuredClone(source.props),...(source.props.anchorId===undefined?{}:{anchorId:resolveScalar(source.props.anchorId,scopes)})} as import('../composition/resolvedDocument.js').TextBlock['props'],children:bindInlines(source.children,scopes,instancePrefix,itemIndex,instanceOrigin,sourceMap,options.budget)};
-  else if(source.type==='table-of-contents'||source.type==='line')nodes[id]={...structuredClone(source),id};
+  else if(source.type==='page-break'||source.type==='table-of-contents'||source.type==='line')nodes[id]={...structuredClone(source),id};
   else if(source.type==='image'){const scope=scopes[source.props.source.scope]!;nodes[id]={id,type:'image',props:{width:structuredClone(source.props.width),height:structuredClone(source.props.height),...(source.props.align===undefined?{}:{align:source.props.align}),resourceId:scope[source.props.source.key] as string}};}
   else if(source.type==='table'){
    const rowIds:string[]=[],groups:import('../composition/resolvedDocument.js').ResolvedRowGroup[]=[];

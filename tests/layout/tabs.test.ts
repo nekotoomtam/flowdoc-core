@@ -16,7 +16,7 @@ it('renders every tab as one space before breaking and shaping without mutating 
 });
 
 it('keeps link geometry identical to spaces across CRLF and wrapped lines',async()=>{
- const d:any=document();d.nodeModelVersion=7;
+ const d:any=document();d.nodeModelVersion=18;
  d.book.page.margin.right={value:210-20-20*25.4/72,unit:'mm'};
  d.nodes.t.children=[{id:'a',type:'text',text:'a\t\r\n'},
   {id:'link',type:'link',text:'b\tcdef',url:'https://example.com'},

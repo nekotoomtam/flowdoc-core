@@ -7,7 +7,7 @@ import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat,CellRepeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
+export interface GraphContext {pageBreaks?:boolean;rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -52,7 +52,9 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
   const p=path+'.nodes.'+id;unique(id,p);
   if(!object(n)||n.id!==id){fail(p);continue;}
   let children:string[]=[];
-  if(n.type==='line'&&ctx.heightModes){
+  if(n.type==='page-break'&&ctx.pageBreaks){
+   if(!keys(n,['id','type'])||!input.rootIds.includes(id))fail(p);
+  }else if(n.type==='line'&&ctx.heightModes){
    if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['align','width','thickness','color','spaceBefore','spaceAfter'])){fail(p);continue;}
    if(own(n.props,'align')&&!['left','center','right'].includes(n.props.align))fail(p+'.props.align');
    if(own(n.props,'color')&&(typeof n.props.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props.color)))fail(p+'.props.color');
@@ -133,7 +135,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
  if(ctx.contents&&Object.values(nodes).filter(n=>n?.type==='table-of-contents').length>1)fail(path+'.contents');
  currentNode=undefined;
  const roots=refs(input.rootIds,path+'.rootIds');if(!roots.length&&!ctx.allowEmptyRoots)fail(path+'.rootIds');
- for(const id of roots){parents.set(id,(parents.get(id)??0)+1);if(!own(nodes,id)||!['text-block','table',...(ctx.heightModes?['line']:[]),...(ctx.images?['image']:[]),...(ctx.contents?['table-of-contents']:[]),...(ctx.areas&&!ctx.resolved?['area']:[])].includes(nodes[id]?.type))fail(path+'.rootIds');}
+ for(const id of roots){parents.set(id,(parents.get(id)??0)+1);if(!own(nodes,id)||!['text-block','table',...(ctx.pageBreaks?['page-break']:[]),...(ctx.heightModes?['line']:[]),...(ctx.images?['image']:[]),...(ctx.contents?['table-of-contents']:[]),...(ctx.areas&&!ctx.resolved?['area']:[])].includes(nodes[id]?.type))fail(path+'.rootIds');}
  for(const id of Object.keys(nodes))if(parents.get(id)!==1)fail(path+'.nodes.'+id+'.parent',id);
  const active=new Set<string>(),visited=new Set<string>();
  const visit=(root:string)=>{

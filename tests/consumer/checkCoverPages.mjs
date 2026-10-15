@@ -10,7 +10,7 @@ for(const name of ['short','long','overflow','empty']){
  const t=structuredClone(template),r=JSON.parse(await readFile('/consumer/cover-pages-request.json','utf8'));
  if(name==='long')r.data.projectName='รายงานผลการทดสอบระบบสารสนเทศเพื่อสนับสนุนการปฏิบัติงานและติดตามผลการดำเนินงานของหน่วยงาน '.repeat(3);
  if(name==='overflow')r.data.projectName='ชื่อโครงการที่ยาวเกินพื้นที่ปก\n'.repeat(100);
- if(name==='empty'){t.sections=[{id:'cover',role:'cover',source:{kind:'authored',repeats:[],fragment:{rootIds:[],nodes:{}}}},{id:'blank',source:{kind:'blank'}}];t.formats={};t.areaFormats={};r.content=[];}
+ if(name==='empty'){t.sections=[{id:'cover',key:'cover',inputSchema:{type:'object',fields:{}},formats:{},role:'cover',source:{kind:'authored',repeats:[],fragment:{rootIds:[],nodes:{}}}},{id:'blank',key:'blank',inputSchema:{type:'object',fields:{}},formats:{},source:{kind:'blank'}}];delete t.areaFormats;r.sections={};}
  const d=ok(composeDocument(ok(validateTemplate(t)),ok(prepareGeneration(ok(validateTemplate(t)),r))));
  const result=await engine.generatePdf(d,images);
  if(name==='overflow'){assert.equal(result.ok,false);assert.equal(result.issues[0].code,'LAYOUT_FAILED');assert.equal(result.issues[0].sectionId,'introduction');results.push({name,status:'rejected',issues:result.issues});continue;}
