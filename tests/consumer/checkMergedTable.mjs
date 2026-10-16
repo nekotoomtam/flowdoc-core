@@ -7,7 +7,7 @@ const engine=ok(await createPdfEngine(ok(await loadBundledResources({pythonExecu
 const results=[];
 for(const [name,count] of [['short',4],['long',100]]){
  const text=Array.from({length:count},(_,i)=>`A${String(i).padStart(3,'0')} ทดสอบข้อมูล`).join('\n');
- const d=ok(composeDocument(t,ok(prepareGeneration(t,{docKey:'merged-trial',data:{text},content:[{format:'merged',data:{}}]}))));
+ const d=ok(composeDocument(t,ok(prepareGeneration(t,{docKey:'merged-trial',data:{text},sections:{main:{data:{details:[{format:'merged',data:{}}]}}}}))));
  const pdf=ok(await engine.generatePdf(d));assert(name==='short'?pdf.pageCount===1:pdf.pageCount>=3);
  await writeFile(`/consumer/output/merged-${name}.pdf`,pdf.bytes);
  await writeFile(`/consumer/output/merged-${name}.resolved.json`,JSON.stringify(d,null,2));

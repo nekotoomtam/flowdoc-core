@@ -6,7 +6,7 @@ import * as grid from '../../src/composition/tableGrid.js';
 import * as measurement from '../../src/layout/measureCellContent.js';
 const images:any={p:{format:'rgb',width:2,height:1,pixels:new Uint8Array(6)}};
 function mixed(lines=80):any{
- const d=mergedDoc(lines);d.nodeModelVersion=9;
+ const d=mergedDoc(lines);d.nodeModelVersion=18;
  for(const cid of ['a','h']){const id=cid+'-image';d.nodes[id]={id,type:'image',props:{width:{value:100,unit:'pt'},height:{value:60,unit:'pt'},resourceId:'p'}};d.nodes[cid].childIds.push(id);}
  return d;
 }

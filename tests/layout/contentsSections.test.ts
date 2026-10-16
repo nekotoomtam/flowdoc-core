@@ -6,7 +6,7 @@ import {indexDestinations,resolveLinkGeometry} from '../../src/layout/linkGeomet
 import {fillContentsNumbers} from '../../src/layout/fillContentsNumbers.js';
 
 function scoped(count:number,title='หัวข้อ') {
- const d=contentsDocument(count,title);d.nodeModelVersion=16;
+ const d=contentsDocument(count,title);d.nodeModelVersion=18;
  d.sections=[{sectionId:'contents',rootIds:['toc'],page:d.book.page,numbering:{mode:'continue'}},
  {sectionId:'hidden',rootIds:d.rootIds.slice(1,-1),page:d.book.page,numbering:{mode:'restart',startAt:1,visibility:'hide'}},
  {sectionId:'excluded',rootIds:d.rootIds.slice(-1),page:d.book.page,numbering:{mode:'exclude'}}];

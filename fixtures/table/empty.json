@@ -4,24 +4,30 @@
   "data": {
     "projectName": "SRS ทดลองตาราง"
   },
-  "content": [
-    {
-      "format": "section-note",
+  "sections": {
+    "main": {
       "data": {
-        "text": "ข้อความก่อนตาราง"
-      }
-    },
-    {
-      "format": "requirement-list",
-      "data": {
-        "items": []
-      }
-    },
-    {
-      "format": "section-note",
-      "data": {
-        "text": "ข้อความหลังตาราง"
+        "details": [
+          {
+            "format": "section-note",
+            "data": {
+              "text": "ข้อความก่อนตาราง"
+            }
+          },
+          {
+            "format": "requirement-list",
+            "data": {
+              "items": []
+            }
+          },
+          {
+            "format": "section-note",
+            "data": {
+              "text": "ข้อความหลังตาราง"
+            }
+          }
+        ]
       }
     }
-  ]
+  }
 }

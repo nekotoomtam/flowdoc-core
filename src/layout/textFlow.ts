@@ -5,6 +5,7 @@ import type { DrawDocument, DrawPage, Glyph } from '../pdf/drawContract.js';
 
 export interface ShapedText {glyphs:Glyph[];ascentPt:number;descentPt:number;inkLeftPt?:number;inkRightPt?:number;glyphInkBoundsPt?:({left:number;right:number}|null)[]}
 export interface TextRuntime {
+ fontId?(style:import('../composition/resolvedDocument.js').TextStyle):string;
  breaks(text:string):Promise<number[]>;
  shape(text:string,fontId:string,sizePt:number):Promise<ShapedText>;
 }

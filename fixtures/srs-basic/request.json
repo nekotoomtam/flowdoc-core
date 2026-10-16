@@ -4,29 +4,35 @@
   "data": {
     "projectName": "ระบบจัดการเอกสาร"
   },
-  "content": [
-    {
-      "format": "section-note",
+  "sections": {
+    "main": {
       "data": {
-        "text": "ขอบเขตการทำงาน"
-      }
-    },
-    {
-      "format": "requirement-list",
-      "data": {
-        "items": [
+        "details": [
           {
-            "code": "REQ-001",
-            "detail": "สร้าง PDF ได้"
+            "format": "section-note",
+            "data": {
+              "text": "ขอบเขตการทำงาน"
+            }
+          },
+          {
+            "format": "requirement-list",
+            "data": {
+              "items": [
+                {
+                  "code": "REQ-001",
+                  "detail": "สร้าง PDF ได้"
+                }
+              ]
+            }
+          },
+          {
+            "format": "section-note",
+            "data": {
+              "text": "รายละเอียดหลังตาราง"
+            }
           }
         ]
       }
-    },
-    {
-      "format": "section-note",
-      "data": {
-        "text": "รายละเอียดหลังตาราง"
-      }
     }
-  ]
+  }
 }

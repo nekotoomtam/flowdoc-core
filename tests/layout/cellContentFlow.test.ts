@@ -5,7 +5,7 @@ import * as grid from '../../src/composition/tableGrid.js';
 import {cellTableFlow} from '../../src/layout/cellTableFlow.js';
 import {mergedDoc} from '../helpers/merged.js';
 export function cellDoc():any{
- const d:any=document();d.nodeModelVersion=9;d.rootIds=['table'];d.sourceMap={table:{contentIndex:0,format:'cell',sourceId:'table'}};
+ const d:any=document();d.nodeModelVersion=18;d.rootIds.splice(0,d.rootIds.length,'table');d.sourceMap={table:{contentIndex:0,format:'cell',sourceId:'table'}};
  d.nodes={table:{id:'table',type:'table',props:{headerRowCount:0,repeatHeaderRows:false},columns:[{width:{value:200,unit:'pt'}}],rowIds:['row']},row:{id:'row',type:'table-row',props:{allowBreak:true},cellIds:['cell']},cell:{id:'cell',type:'table-cell',props:{},childIds:['t','pic','caption']},t:d.nodes.t,pic:{id:'pic',type:'image',props:{width:{value:100,unit:'pt'},height:{value:80,unit:'pt'},resourceId:'p',align:'center'}},caption:{id:'caption',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body'},children:[{id:'caption-leaf',type:'text',text:'caption'}]}};return d;
 }
 export const images:any={p:{format:'rgb',width:2,height:1,pixels:new Uint8Array(6)}};
@@ -30,7 +30,7 @@ it('moves an image whole and keeps following caption after it',async()=>{
 });
 it.each(['wide','tall','padding'])('rejects impossible %s',kind=>{const d=cellDoc();if(kind==='wide')d.nodes.pic.props.width.value=201;if(kind==='tall')d.nodes.pic.props.height.value=1000;if(kind==='padding')d.nodes.cell.props.padding={left:{value:200,unit:'pt'}};return expect(documentFlow(d,fakeRuntime,images)).rejects.toThrow();});
 it('prepares each table once per layout pass despite multiple pages and repeated headers',async()=>{
- const d=mergedDoc(95);d.nodeModelVersion=9;const spy=vi.spyOn(grid,'resolveTableGrid');
+ const d=mergedDoc(95);d.nodeModelVersion=18;const spy=vi.spyOn(grid,'resolveTableGrid');
  try{const r=await documentFlow(d,fakeRuntime);expect(r.pages.length).toBeGreaterThan(2);expect(spy).toHaveBeenCalledTimes(1);}finally{spy.mockRestore();}
 });
 it('supports fully empty zero-padding cells without stalling',async()=>{const d=cellDoc();d.nodes.cell.childIds=[];d.nodes.cell.props.padding=Object.fromEntries(['top','right','bottom','left'].map(s=>[s,{value:0,unit:'pt'}]));const r=await documentFlow(d,fakeRuntime);expect(r.pages).toHaveLength(1);});

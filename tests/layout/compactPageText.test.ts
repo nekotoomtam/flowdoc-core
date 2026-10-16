@@ -32,7 +32,7 @@ it('aligns to a column with ink overhang and retains links',async()=>{
  expect(r.bounds.xPt).toBe(190);expect(r.links?.[0]?.link).toMatchObject({url:'https://example.com'});
 });
 it('round trips band options and keeps body geometry identical when numbers are hidden',async()=>{
- const t=ownedTemplate();t.nodeModelVersion=16;
+ const t=ownedTemplate();t.nodeModelVersion=18;
  for(const s of t.sections){s.header.fragment={rootIds:['a'],nodes:{a:node()}};s.header.baseTextStyleId='body';}
  const make=()=>{const v=ok(validateTemplate(t));return ok(composeDocument(v,ok(prepareGeneration(v,ownedRequest(t)))));};
  const d=await documentFlow(make(),fakeRuntime);expect(d.pageTexts).toHaveLength(3);await fillPageFields(d,fakeRuntime);
@@ -43,7 +43,7 @@ it('round trips band options and keeps body geometry identical when numbers are 
 });
 it('rejects invalid options, ambiguous fixed alignment and use outside bands',()=>{
  for(const props of [{textAlign:'justify'},{pageFieldLayout:'auto'},{textAlign:'center',pageFieldLayout:undefined}]){
-  const t=ownedTemplate();t.nodeModelVersion=16;const n=node();n.props={textStyleId:'body',...props};if(n.props.pageFieldLayout===undefined)delete n.props.pageFieldLayout;t.sections[0].header.fragment={rootIds:['a'],nodes:{a:n}};expect(validateTemplate(t).ok).toBe(false);
+  const t=ownedTemplate();t.nodeModelVersion=18;const n=node();n.props={textStyleId:'body',...props};if(n.props.pageFieldLayout===undefined)delete n.props.pageFieldLayout;t.sections[0].header.fragment={rootIds:['a'],nodes:{a:n}};expect(validateTemplate(t).ok).toBe(false);
  }
- const t=ownedTemplate();t.nodeModelVersion=16;const n=node();delete n.props.pageFieldLayout;n.children=[{id:'label',type:'text',text:'text'}];const s=t.sections[0];s.source={kind:'authored',fragment:{rootIds:['a'],nodes:{a:n}}};expect(validateTemplate(t).ok).toBe(false);
+ const t=ownedTemplate();t.nodeModelVersion=18;const n=node();delete n.props.pageFieldLayout;n.children=[{id:'label',type:'text',text:'text'}];const s=t.sections[0];s.source={kind:'authored',fragment:{rootIds:['a'],nodes:{a:n}}};expect(validateTemplate(t).ok).toBe(false);
 });

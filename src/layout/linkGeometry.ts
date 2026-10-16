@@ -2,7 +2,6 @@ import type {ResolvedDocument} from '../composition/resolvedDocument.js';
 import type {DrawDocument,LinkAnnotation} from '../pdf/drawContract.js';
 import {LayoutError} from './textFlow.js';
 export function indexDestinations(document:ResolvedDocument,draw:DrawDocument):NonNullable<DrawDocument['anchors']>{
- if(document.nodeModelVersion<7)return Object.create(null);
  const targets=new Map(Object.values(document.nodes).filter(n=>n.type==='text-block'&&n.props.anchorId!==undefined).map(n=>[n.id,(n as import('../composition/resolvedDocument.js').TextBlock).props.anchorId!]));
  const anchors:NonNullable<DrawDocument['anchors']>=Object.create(null);
  for(const [pageIndex,page] of draw.pages.entries())for(const run of page.commands){
@@ -14,7 +13,6 @@ export function indexDestinations(document:ResolvedDocument,draw:DrawDocument):N
 }
 // Layout has already fixed line/page positions. Never reshape slices here.
 export function resolveLinkGeometry(document:ResolvedDocument,draw:DrawDocument,provided?:NonNullable<DrawDocument['anchors']>):void {
- if(document.nodeModelVersion<7)return;
  const anchors=provided??indexDestinations(document,draw);
  for(const page of draw.pages)for(const run of page.commands){
   if(!run.links?.length)continue;

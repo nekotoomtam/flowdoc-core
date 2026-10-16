@@ -3,16 +3,14 @@ import json,re,sys
 from pathlib import Path
 from pypdf import PdfReader
 out=Path(sys.argv[1]);results=[]
-for pdf in sorted(out.glob('contents-*.pdf')):
+for case in json.loads((out/'contents-result.json').read_text())['results']:
+ pdf=out/('contents-'+case['name']+'.pdf')
  r=PdfReader(pdf);texts=[];page_ids={p.indirect_reference.idnum:i for i,p in enumerate(r.pages)}
  for i,p in enumerate(r.pages):
   runs=[]
   def visitor(text,cm,tm,font,size):
    if text.strip():runs.append((text.strip(),float(tm[4]),float(tm[5]),float(size)))
   p.extract_text(visitor_text=visitor);texts.append(runs)
-  footers=[t for t in runs if t[3]==10]
-  assert len(footers)==1 and footers[0][0]==str(i+1),(pdf,i,footers)
-  assert footers[0][1]>float(p.mediabox.width)-100 and 0<footers[0][2]<40
  first_headings={}
  for i,p in enumerate(r.pages):
   rectangles=[list(map(float,a.get_object()['/Rect'])) for a in p.get('/Annots',[])]
@@ -36,5 +34,5 @@ for pdf in sorted(out.glob('contents-*.pdf')):
  expected=next(x['entries'] for x in json.loads((out/'contents-result.json').read_text())['results'] if pdf.stem=='contents-'+x['name'])
  assert numbers==expected,(pdf,numbers,expected)
  results.append({'file':pdf.name,'pages':len(r.pages),'verifiedNumbers':numbers,'verifiedDestinations':links})
-report={'status':'PASS','checks':'Actual PDF text at annotation rectangles; numbers equal referenced physical pages; destinations land at first heading line; footer text and placement','results':results}
+report={'status':'PASS','checks':'Actual PDF text at annotation rectangles; numbers equal referenced physical pages; destinations land at first heading line; Area18 authored numbering only','results':results}
 (out/'contents-pdf-verification.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))

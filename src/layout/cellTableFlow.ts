@@ -88,7 +88,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
   }
   const hasLine=pending.some(l=>l.start>=from-eps&&l.end<=cut+eps);
   const startsHere=pending.some(l=>l.start<cut+eps);
-  if(cut<=from+eps||(!hasLine&&startsHere)){
+  if(cut<=from+eps||(!hasLine&&(startsHere||(hh>0&&pending.length>0)))){
    if(s.y>s.top+eps||(s.nextCapacity??0)>s.bottom-s.top+eps){s.nextPage();continue;}throw new LayoutError(t.id,'Merged row made no progress');
   }
   // Keep each cell's next line whole. Carry its remaining offsets into the next
