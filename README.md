@@ -4,6 +4,7 @@
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
+The development package is 0.4.0; the accepted `release` snapshot remains 0.3.0.
 Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
 
 ## Template and data API
@@ -162,3 +163,10 @@ The installed consumer generates `table-short.pdf`, `table-empty.pdf` and
 expected text and result metadata in the artifact directory. Inspect extracted
 text, embedded fonts and rendered pages before claiming visual acceptance; the
 consumer command alone does not perform the host Poppler/visual review.
+
+For delivery, update this README and `docs/template-guide.md` with the candidate's
+actual contract and limits before freezing its tree. Retain the packed artifact,
+checksum, source commit and Linux consumer results. The Service consumer must use
+that exact tarball; a Windows build alone does not verify its native PDF runtime.
+Font verification covers exact selected faces/required glyphs and legacy Sarabun
+parity. Release promotion follows the gates above after this preparation.

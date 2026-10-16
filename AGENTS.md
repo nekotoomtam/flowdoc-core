@@ -26,3 +26,5 @@ unrelated changes and commit only after relevant checks pass.
 Before release preparation or Git promotion, read the shared
 [release rules and gates](../flowdoc-project-control/docs/domains/flowdoc-export-working-release-rules-draft-2026-10-09.md).
 Keep development history on development branches; `release` is a tagged snapshot chain.
+Update and review this repo's `README.md` and `docs/template-guide.md` for the
+candidate contract, package/runtime requirements and limitations before promotion.
