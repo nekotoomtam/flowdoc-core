@@ -7,7 +7,7 @@ import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat,CellRepeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {pageBreaks?:boolean;rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
+export interface GraphContext {sectionIds?:string[]|undefined;pageBreaks?:boolean;rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -81,7 +81,8 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
     else if(c.type==='line-break'){if(!keys(c,['id','type']))fail(cp);}
     else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.'))fail(cp);}
     else if(ctx.links&&['url','link','reference'].includes(c.type)){
-     const {id:_,...command}=c;
+     const {id:_,targetSectionId,...command}=c;
+     if(targetSectionId!==undefined&&(c.type!=='reference'||!ctx.sectionIds?.includes(targetSectionId)))fail(cp+'.targetSectionId');
      const candidate=Object.fromEntries(Object.entries(command).map(([key,value])=>[key,!ctx.resolved&&key!=='type'&&scalarRef(value)?(key==='url'||key==='value'?'https://example.com':'bound'):value]));
      if(!validateLink(candidate))fail(cp);
     }else fail(cp);

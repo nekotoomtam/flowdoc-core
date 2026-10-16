@@ -7,6 +7,7 @@ import { validatePageBand } from './pageBands.js';
 import { validateGraph } from './validateGraph.js';
 import { buildAreaIndex } from './areas.js';
 import { validateValues } from '../data/validateValues.js';
+import {prepareInstances} from '../data/prepareInstances.js';
 import { prepareSections } from '../data/prepareSections.js';
 import type { Template18, Format, AreaSection, ValidatedTemplate, ObjectSchema } from './types.js';
 import type { Issue, Result } from '../result.js';
@@ -16,7 +17,7 @@ export function validateOwnedTemplate(input: unknown): Result<ValidatedTemplate>
     if (!isJson(input) || !object(input))
         return { ok: false, issues: [issue('INVALID_TEMPLATE', 'template')], warnings: [] };
     const t = structuredClone(input) as any;
-    if (!keys(t, ['schemaVersion', 'nodeModelVersion', 'templateId', 'docKey', 'version', 'name', 'book', 'styles', 'globalSchema', 'examples', 'pageLayouts', 'sections', 'areaFormats']) || ![1,2].includes(t.schemaVersion) || t.nodeModelVersion !== 18)
+    if (!keys(t, ['schemaVersion', 'nodeModelVersion', 'templateId', 'docKey', 'version', 'name', 'book', 'styles', 'globalSchema', 'examples', 'pageLayouts', 'sections', 'areaFormats']) || ![1,2].includes(t.schemaVersion) || ![18,19].includes(t.nodeModelVersion))
         fail('template');
     for (const k of ['templateId', 'docKey', 'name'])
         if (!name(t[k]))
@@ -35,9 +36,9 @@ export function validateOwnedTemplate(input: unknown): Result<ValidatedTemplate>
             continue;
         }
         issues.push(...validateNumbering(s, p));
-        if ((s.source?.kind === 'content' || !object(s.formats) || Object.keys(s.formats).length))
+        if ((s.source?.kind === 'content' || (t.nodeModelVersion===18 ? !object(s.formats) || Object.keys(s.formats).length : own(s,'formats') || own(s,'key'))))
             fail(p + '.source');
-        if (!name(s.key) || s.key.includes('.') || seen.has(s.key))
+        if (t.nodeModelVersion===18 && (!name(s.key) || s.key.includes('.') || seen.has(s.key)))
             fail(p + '.key');
         else
             seen.add(s.key);
@@ -45,7 +46,7 @@ export function validateOwnedTemplate(input: unknown): Result<ValidatedTemplate>
         schemas.push(s.inputSchema);
         for (const k of ['header', 'footer'])
             if (own(s, k) && !issues.length)
-                issues.push(...validatePageBand(s[k], t.styles, p + '.' + k, false, { global: t.globalSchema, section: s.inputSchema, [k]: s[k]?.inputSchema }, p, true));
+                issues.push(...validatePageBand(s[k], t.styles, p + '.' + k, false, { global: t.globalSchema, section: s.inputSchema, [k]: s[k]?.inputSchema }, p, true,t.nodeModelVersion===19?t.sections.map((s:any)=>s.id):undefined));
     }
     if (issues.length)
         return { ok: false, issues, warnings: [] };
@@ -74,22 +75,22 @@ export function validateOwnedTemplate(input: unknown): Result<ValidatedTemplate>
         names.add(e.name);
         if (e.request?.version !== t.version)
             fail(`examples[${i}].request.version`);
-        const r = prepareSections(t, fingerprint, e.request);
+        const r = t.nodeModelVersion===19 ? prepareInstances(t,fingerprint,e.request) : prepareSections(t, fingerprint, e.request);
         issues.push(...[...(!r.ok ? r.issues : []), ...r.warnings].map(x => ({ ...x, code: 'INVALID_TEMPLATE', path: `examples[${i}].request.` + x.path })));
     }
     return issues.length ? { ok: false, issues, warnings: [] } : { ok: true, value: freeze({ definition: t, fingerprint }), warnings: [] };
 }
-function validateOwnedGraph(t: Template18, s: AreaSection, f: Format, path: string, areas = true): Issue[] { return validateGraph(f.fragment, { pageBreaks: true, styles: t.styles, globalSchema: t.globalSchema, localSchema: f.inputSchema, scopeSchemas: { global: t.globalSchema, section: s.inputSchema, local: f.inputSchema }, rowGroups: true, groupDeclarations: f.rowGroups, repeats: f.repeats, cellRepeats: f.cellRepeats ?? [], heightModes: true, images: true, merged: true, links: true, contents: true, cellContent: true, itemImages: true, areas }, path + '.fragment'); }
-function validateOwnedAreas(t: Template18): Issue[] {
+function validateOwnedGraph(t: import('./types.js').TemplateDefinition, s: import('./types.js').TemplateDefinition['sections'][number], f: Format, path: string, areas = true): Issue[] { return validateGraph(f.fragment, { sectionIds:t.nodeModelVersion===19?t.sections.map(s=>s.id):undefined, pageBreaks: true, styles: t.styles, globalSchema: t.globalSchema, localSchema: f.inputSchema, scopeSchemas: { global: t.globalSchema, section: s.inputSchema, local: f.inputSchema }, rowGroups: true, groupDeclarations: f.rowGroups, repeats: f.repeats, cellRepeats: f.cellRepeats ?? [], heightModes: true, images: true, merged: true, links: true, contents: true, cellContent: true, itemImages: true, areas }, path + '.fragment'); }
+function validateOwnedAreas(t: import('./types.js').TemplateDefinition): Issue[] {
     const issues: Issue[] = [], fail = (p: string) => issues.push(issue('INVALID_TEMPLATE', p)), index = buildAreaIndex(t), placements = new Map<string, {
-        section: AreaSection;
+        section: import('./types.js').TemplateDefinition['sections'][number];
         count: number;
     }>();
     for (const s of t.sections)
         for (const [host, f] of (s.source.kind === 'authored' ? [['', s.source] as const] : []))
             for (const n of Object.values(f.fragment.nodes))
                 if (n.type === 'area') {
-                    const a = index.byId.get(n.props.areaId), p = `sections.${s.key}.area.${n.props.areaId}`;
+                    const a = index.byId.get(n.props.areaId), p = `sections.${s.id}.area.${n.props.areaId}`;
                     if (!a || (a.sectionId !== undefined && a.sectionId !== s.id)) {
                         fail(p);
                         continue;

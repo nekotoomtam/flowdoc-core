@@ -32,4 +32,5 @@ export type {SystemPageField} from "./composition/resolvedDocument.js";
 
 export type {ResolvedRowGroup} from './composition/resolvedDocument.js';
 
-export type {Template18,AreaSection,BindingScope,PageNumbering,RowGroup} from './template/types.js';
+export type {Template18,Template19,InstanceSection,AreaSection,BindingScope,PageNumbering,RowGroup} from './template/types.js';
+export type {PreparedSection19} from './data/types.js';

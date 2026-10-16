@@ -1,5 +1,16 @@
 # FlowDoc Core
 
+Development candidate `0.4.2-dev.1` adds model19 Section instances: UUID `id`,
+required display `label`/`nameBase`, no `key`/`formats`, and generation
+`sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
+each saved ID is required exactly once. Prepared schema2 pins model19 and the
+definition fingerprint. Model18 retains its existing object input/schema1 reader.
+Section-local anchors are namespaced by instance; cross-Section references use
+an explicit `targetSectionId`. No implicit migration or font-size adjustment.
+Area cover blocks and scoped/multiple TOCs remain later stages and are not
+advertised by this candidate. This is a development package, not an installation
+or release claim. Shared contract: Project Control Section–Area Stage0/1.
+
 ## Authority Boundary
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).

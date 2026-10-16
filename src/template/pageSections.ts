@@ -30,11 +30,15 @@ export function validatePageSections(t: Record<string, any>): Issue[] {
     let content = 0;
     for (const [i, s] of t.sections.entries()) {
         const p = `sections[${i}]`;
-        if (!object(s) || !keys(s, ['id', 'label', 'pageLayoutId', 'source', ...(['numbering']), ...(['key', 'inputSchema', 'formats', 'header', 'footer']), ...(['headerMode', 'footerMode']), ...(['role'])]) || !id(s.id) || seen.has(s.id)) {
+        if (!object(s) || !keys(s, ['id', 'label', 'pageLayoutId', 'source', ...(['numbering']), ...(['key', 'inputSchema', 'formats', 'header', 'footer']), ...(['headerMode', 'footerMode']), ...(['role']),...(t.nodeModelVersion===19?['nameBase','origin']:[])]) || !id(s.id) || seen.has(s.id)) {
             fail(p);
             continue;
         }
         seen.add(s.id);
+        if(t.nodeModelVersion===19){
+         if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.id)||!name(s.label)||!name(s.nameBase)||own(s,'role'))fail(p);
+         if(own(s,'origin')&&(!object(s.origin)||!keys(s.origin,['templateId','revision','sectionId'])||!name(s.origin.templateId)||!name(s.origin.sectionId)||!Number.isSafeInteger(s.origin.revision)||s.origin.revision<1))fail(p+'.origin');
+        }
         if (own(s, 'label') && typeof s.label !== 'string')
             fail(p + '.label');
         if (own(s, 'pageLayoutId') && (!id(s.pageLayoutId) || !object(t.pageLayouts) || !own(t.pageLayouts, s.pageLayoutId)))
@@ -61,7 +65,7 @@ export function validatePageSections(t: Record<string, any>): Issue[] {
                 continue;
             }
             if (object(t.globalSchema) && object(t.globalSchema.fields) && object(t.styles))
-                issues.push(...validateGraph(source.fragment, { pageBreaks: true, heightModes: true, fixedRootIds: s.role === 'cover' ? source.fragment?.rootIds : [], allowEmptyRoots: true, styles: t.styles, ...({ scopeSchemas: { global: t.globalSchema as TemplateDefinition["globalSchema"], section: s.inputSchema } }), globalSchema: t.globalSchema as TemplateDefinition['globalSchema'], localSchema: { type: 'object', fields: {} }, rowGroups: true, groupDeclarations: source.rowGroups, repeats: source.repeats, cellRepeats: source.cellRepeats, images: true, merged: true, links: true, contents: true, cellContent: true, itemImages: true, areas: true }, p + '.source.fragment'));
+                issues.push(...validateGraph(source.fragment, { sectionIds:t.nodeModelVersion===19?t.sections.map((s:any)=>s.id):undefined, pageBreaks: true, heightModes: true, fixedRootIds: s.role === 'cover' ? source.fragment?.rootIds : [], allowEmptyRoots: true, styles: t.styles, ...({ scopeSchemas: { global: t.globalSchema as TemplateDefinition["globalSchema"], section: s.inputSchema } }), globalSchema: t.globalSchema as TemplateDefinition['globalSchema'], localSchema: { type: 'object', fields: {} }, rowGroups: true, groupDeclarations: source.rowGroups, repeats: source.repeats, cellRepeats: source.cellRepeats, images: true, merged: true, links: true, contents: true, cellContent: true, itemImages: true, areas: true }, p + '.source.fragment'));
         }
         else
             fail(p + '.source.kind');

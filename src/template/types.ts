@@ -5,7 +5,7 @@ export interface ImageField {type:'image';required?:boolean;default?:string;labe
 export interface LinkField {type:'link';required?:boolean;default?:BoundLink;label?:string;description?:string}
 export type BindingScope='global'|'section'|'header'|'footer'|'local'|'group'|'item';
 export type ScalarBinding=string|{scope:BindingScope;key:string};
-export type TemplateLink={id:string}&({type:'url';value:ScalarBinding}|{type:'link';text:ScalarBinding;url:ScalarBinding}|{type:'reference';text:ScalarBinding;target:ScalarBinding});
+export type TemplateLink={id:string}&({type:'url';value:ScalarBinding}|{type:'link';text:ScalarBinding;url:ScalarBinding}|{type:'reference';text:ScalarBinding;target:ScalarBinding;targetSectionId?:string});
 export type TemplateInline=Exclude<TextInline,{type:'url'|'link'|'reference'}>|FieldRef|TemplateLink;
 export interface ArrayField {type:'array';required?:boolean;default?:import('../data/types.js').PreparedItem[];items:ObjectSchema<StringField|LinkField|ImageField|ArrayField>;label?:string;description?:string}
 export interface ObjectSchema<F=StringField|ArrayField|ImageField|LinkField|AreaField> {type:'object';fields:Record<string,F>}
@@ -40,5 +40,7 @@ export interface PageBandDefinition {placement?:BandPlacement;inputSchema:Object
 
 export interface AreaSection extends TemplateSection {key:string;inputSchema:ObjectSchema;formats:Record<string,never>;header?:PageBandDefinition;footer?:PageBandDefinition;numbering?:PageNumbering}
 export type Template18=TemplateBase&{nodeModelVersion:18;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:AreaSection[]};
-export type TemplateDefinition=Template18;
+export interface InstanceSection extends Omit<AreaSection,'key'|'formats'> {label:string;nameBase:string;origin?:{templateId:string;revision:number;sectionId:string}}
+export type Template19=Omit<Template18,'nodeModelVersion'|'sections'>&{nodeModelVersion:19;sections:InstanceSection[]};
+export type TemplateDefinition=Template18|Template19;
 export type PageNumbering={mode:"continue";visibility?:"show"|"hide"}|{mode:"restart";startAt?:number;visibility?:"show"|"hide"}|{mode:"exclude";visibility?:"show"|"hide"};

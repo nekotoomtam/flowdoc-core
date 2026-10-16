@@ -19,11 +19,11 @@ export function validateResolvedDocument(input: unknown): Issue[] {
         return issues;
     }
     const d = input;
-    if (d.nodeModelVersion !== 18) {
+    if (![18,19].includes(d.nodeModelVersion)) {
         fail("nodeModelVersion");
         return issues;
     }
-    if (!keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', ...([]), ...(['sections'])]) || ![1,2].includes(d.schemaVersion) || d.nodeModelVersion !== 18)
+    if (!keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', ...([]), ...(['sections'])]) || ![1,2].includes(d.schemaVersion) || ![18,19].includes(d.nodeModelVersion))
         fail('document');
     if (!object(d.template) || !keys(d.template, ['templateId', 'docKey', 'version']) || !name(d.template.templateId) || !name(d.template.docKey) || !Number.isInteger(d.template.version) || d.template.version < 1)
         fail('template');

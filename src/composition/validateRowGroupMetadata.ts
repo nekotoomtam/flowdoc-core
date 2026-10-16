@@ -9,7 +9,7 @@ export function validateRowGroupMetadata(d: Record<string, any>): Issue[] {
         if (t?.type !== 'table' || !own(t, 'rowGroups'))
             continue;
         const path = 'nodes.' + tableId + '.rowGroups';
-        if ((d.nodeModelVersion !== 18) || !Array.isArray(t.rowGroups) || !Array.isArray(t.rowIds)) {
+        if ((![18,19].includes(d.nodeModelVersion)) || !Array.isArray(t.rowGroups) || !Array.isArray(t.rowIds)) {
             fail(path);
             continue;
         }
