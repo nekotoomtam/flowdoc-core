@@ -45,15 +45,24 @@ approved weights from filenames. The caller owns catalog authorization/readiness
 
 ## Release branches
 
+Before preparing or promoting a release, follow the shared
+[release rules and gates](../flowdoc-project-control/docs/domains/flowdoc-export-working-release-rules-draft-2026-10-09.md).
+They also record the owner-authorized 2026-10-16 history repair; that exception
+does not permit moving tags during normal releases.
+
 Version 0.1.0 is the first local export package release. `release` contains one
 snapshot commit per accepted version; annotated `v<version>` tags identify those
 commits and must not be moved. Development history remains on development branches.
 The initial release snapshot has its own root; later releases must parent the
-previous release commit and include only the reviewed candidate tree. Record the
+previous release commit as its only parent and include only the reviewed candidate tree. Never merge or
+fast-forward development history into `release`; every reachable commit must have
+its version tag on the remote, including commits through any additional parent. Record the
 development source commit in each release commit and verify tree equality. Do not
 merge unrelated histories blindly. Build and verify the package before tagging;
 never overwrite a released package under the same version. Service pins its exact
-tarball and checksum. This local release is not a public registry publication.
+tarball and checksum. Send the snapshot branch and its annotated tag atomically,
+then verify both remote targets. A development package version or a successful
+local installation does not establish a release. This local release is not a public registry publication.
 
 ## Local development
 
