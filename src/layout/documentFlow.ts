@@ -41,7 +41,14 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     let sectionId: string | undefined, sectionPageIndex = 0, cover = false, activeNode = '';
     let pageRole: 'body' | 'cover' | 'blank' = 'body';
     const contentsSlots: NonNullable<DrawDocument['contentsSlots']> = [];
-    const entries = d.rootIds.some(id => d.nodes[id]?.type === 'table-of-contents') ? collectContents(d) : [];
+    const contentsById = new Map<string, ReturnType<typeof collectContents>>();
+    const contentsByScope = new Map<string, ReturnType<typeof collectContents>>();
+    for(const id of d.rootIds){const node=d.nodes[id];if(node?.type!=='table-of-contents')continue;
+        const owner=d.nodeModelVersion===19&&node.props.scope?.kind==='section'?d.sourceMap[id]!.sectionId:undefined;
+        const key=owner===undefined?'document':'section:'+owner;
+        if(!contentsByScope.has(key))contentsByScope.set(key,collectContents(d,owner));
+        contentsById.set(id,contentsByScope.get(key)!);
+    }
     const pageTexts: NonNullable<DrawDocument['pageTexts']> = [];
     const pageFieldSlots: PageFieldSlot[] = [];
     let hideNumbers = false;
@@ -123,7 +130,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     };
     const sections = d.sections!;
     for (const section of sections) {
-        if (!section.rootIds.some(id => d.nodes[id]?.type !== 'page-break') && !((section.role === 'cover' || section.sourceKind === 'blank')))
+        if (!section.rootIds.some(id => d.nodes[id]?.type !== 'page-break' && (d.nodeModelVersion!==19||d.nodes[id]?.type!=='table-of-contents'||contentsById.get(id)!.length>0)) && !((section.role === 'cover' || section.sourceKind === 'blank')))
             continue;
         hideNumbers = "numbering" in section && section.numbering?.visibility === 'hide';
         sectionId = section.sectionId;
@@ -170,7 +177,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
             }
             if (n?.type === 'table' && !n.rowIds.length)
                 continue;
-            const contents = n?.type === 'table-of-contents' ? await measureContents(n, entries, d.styles[n.props.textStyleId]!, available, runtime) : undefined;
+            const contents = n?.type === 'table-of-contents' ? await measureContents(n, contentsById.get(id)!, d.styles[n.props.textStyleId]!, available, runtime) : undefined;
             if (contents && !contents.length)
                 continue;
             if (pendingBreak) {
@@ -234,6 +241,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                 throw new LayoutError(id, 'Unsupported root');
         }
     }
+    if(d.nodeModelVersion===19&&!pages.length)throw new LayoutError(d.rootIds[0]??'document','No layout content in document');
     assignSystemPageNumbers(d, { pages });
     return { pages, ...(warnings.length ? { warnings } : {}), ...(pageTexts.length ? { pageTexts } : {}), ...(pageFieldSlots.length ? { pageFieldSlots } : {}), ...(contentsSlots.length ? { contentsSlots } : {}) };
 }

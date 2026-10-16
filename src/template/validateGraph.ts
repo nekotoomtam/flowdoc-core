@@ -7,7 +7,7 @@ import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat,CellRepeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {sectionIds?:string[]|undefined;pageBreaks?:boolean;rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
+export interface GraphContext {scopedContents?:boolean;sectionIds?:string[]|undefined;pageBreaks?:boolean;rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -91,7 +91,8 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
   }else if(n.type==='area'&&ctx.areas&&!ctx.resolved){
    if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['areaId'])||!validId(n.props.areaId))fail(p);
   }else if(n.type==='table-of-contents'&&ctx.contents){
-   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['textStyleId'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId))fail(p);
+   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['textStyleId',...(ctx.scopedContents?['scope']:[])])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId))fail(p);
+   if(ctx.scopedContents&&(!object(n.props?.scope)||!keys(n.props.scope,['kind'])||!['section','document'].includes(n.props.scope.kind)))fail(p+'.props.scope');
   }else if(n.type==='image'&&ctx.images){
    if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['width','height','align',ctx.resolved?'resourceId':'source'])){fail(p);continue;}
    if(own(n.props,'align')&&!['left','center','right'].includes(n.props.align))fail(p+'.props.align');
@@ -133,7 +134,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    for(const c of grid.cells)if(c.rowSpan>1&&grid.rowIds.slice(c.row,c.row+c.rowSpan).some(id=>repeatItems.has(id)||groupRows.has(id)))fail(path+'.nodes.'+c.id+'.props.rowSpan',c.id);
   }catch(e){if(e instanceof TableGridError)fail(path+'.nodes.'+e.nodeId+'.'+e.property,e.nodeId);else fail(path+'.nodes.'+n.id,n.id);}
  }
- if(ctx.contents&&Object.values(nodes).filter(n=>n?.type==='table-of-contents').length>1)fail(path+'.contents');
+ if(ctx.contents){const tocs=Object.values(nodes).filter(n=>n?.type==='table-of-contents');if(!ctx.scopedContents&&tocs.length>1)fail(path+'.contents');else if(ctx.scopedContents&&!ctx.resolved)for(const kind of ['section','document'])if(tocs.filter(n=>n.props?.scope?.kind===kind).length>1)fail(path+'.contents');}
  currentNode=undefined;
  const roots=refs(input.rootIds,path+'.rootIds');if(!roots.length&&!ctx.allowEmptyRoots)fail(path+'.rootIds');
  for(const id of roots){parents.set(id,(parents.get(id)??0)+1);if(!own(nodes,id)||!['text-block','table',...(ctx.pageBreaks?['page-break']:[]),...(ctx.heightModes?['line']:[]),...(ctx.images?['image']:[]),...(ctx.contents?['table-of-contents']:[]),...(ctx.areas&&!ctx.resolved?['area']:[])].includes(nodes[id]?.type))fail(path+'.rootIds');}

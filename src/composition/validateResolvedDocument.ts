@@ -35,7 +35,7 @@ export function validateResolvedDocument(input: unknown): Issue[] {
         return issues;
     }
     const empty = { type: 'object' as const, fields: {} };
-    issues.push(...validateGraph({ rootIds: d.rootIds, nodes: d.nodes }, { pageBreaks: true, allowEmptyRoots: true, heightModes: true, fixedRootIds: Array.isArray(d.sections) ? d.sections.filter((s: any) => (d.nodeModelVersion === 19 || s?.role === 'cover') && s?.sourceKind === 'authored').flatMap((s: any) => Array.isArray(s.rootIds) ? s.rootIds.filter((id: string) => d.sourceMap[id]?.origin === 'authored' && (d.nodeModelVersion === 19 || (d.sourceMap[id]?.areaId === undefined && d.sourceMap[id]?.itemIndex === undefined))) : []) : [], styles: d.styles, globalSchema: empty, localSchema: empty, repeats: [], resolved: true, rowGroups: true, images: true, merged: true, links: true, contents: true, cellContent: true }, 'document').map(i => ({ ...i, code: 'LAYOUT_FAILED' })));
+    issues.push(...validateGraph({ rootIds: d.rootIds, nodes: d.nodes }, { pageBreaks: true, allowEmptyRoots: true, heightModes: true, fixedRootIds: Array.isArray(d.sections) ? d.sections.filter((s: any) => (d.nodeModelVersion === 19 || s?.role === 'cover') && s?.sourceKind === 'authored').flatMap((s: any) => Array.isArray(s.rootIds) ? s.rootIds.filter((id: string) => d.sourceMap[id]?.origin === 'authored' && (d.nodeModelVersion === 19 || (d.sourceMap[id]?.areaId === undefined && d.sourceMap[id]?.itemIndex === undefined))) : []) : [], styles: d.styles, globalSchema: empty, localSchema: empty, repeats: [], resolved: true, rowGroups: true, images: true, merged: true, links: true, contents: true, scopedContents: d.nodeModelVersion===19, cellContent: true }, 'document').map(i => ({ ...i, code: 'LAYOUT_FAILED' })));
     const ids = new Set<string>(Object.keys(d.nodes));
     for (const n of Object.values(d.nodes))
         if (object(n) && n.type === 'text-block' && Array.isArray(n.children))
@@ -49,6 +49,14 @@ export function validateResolvedDocument(input: unknown): Issue[] {
             fail('sourceMap.' + id);
     }
     validateSections(d, issues);
+    if(!issues.length&&d.nodeModelVersion===19){
+        const scopes=new Set<string>();
+        for(const node of Object.values(d.nodes) as any[])if(node.type==='table-of-contents'){
+            const key=node.props.scope.kind==='document'?'document':'section:'+d.sourceMap[node.id].sectionId;
+            if(scopes.has(key))fail('nodes.'+node.id+'.props.scope',node.id);
+            scopes.add(key);
+        }
+    }
     for (const id of d.rootIds)
         if (!Object.hasOwn(d.sourceMap, id))
             fail('sourceMap.' + id);

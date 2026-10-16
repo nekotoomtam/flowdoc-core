@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-Development candidate `0.4.2-dev.2` adds model19 Section instances: UUID `id`,
+Development candidate `0.4.2-dev.3` adds model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -10,15 +10,22 @@ an explicit `targetSectionId`. No implicit migration or font-size adjustment.
 Model19 Stage2 permits fixed-height text at Section flow roots, including top-level
 Area Formats. Frames must fit their text and remaining body space; overflow fails
 without clipping, shrinking or moving the frame. Section page/band settings remain
-authoritative. Cell/repeat frames and nested Areas stay forbidden; scoped/multiple
-TOCs remain Stage3. This is a development package, not an installation
-or release claim. Shared contract: Project Control Section–Area Stage0–2.
+authoritative. Cell/repeat frames and nested Areas stay forbidden. Scoped/multiple
+TOCs use explicit model19 scope `{kind:"section"}` or `{kind:"document"}`.
+One TOC per Section and one per document may coexist; duplicates after Area
+expansion fail. Section scope uses its owning Section, not a caller-selected ID.
+Empty scopes add no page. Target numbers follow continue/restart/exclude; hidden
+numbers remain in contents and excluded targets retain title links without numbers.
+Pagination has one layout pass: fixed number slots are filled afterwards without
+reflow; an oversized number fails rather than guessing or retrying. Model18 keeps
+its existing unscoped contract. This is a development package, not an installation
+or release claim. Shared contract: Project Control Section–Area Stage0–3.
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.2-dev.2, a development candidate after 0.4.0.
+Package version: 0.4.2-dev.3, a development candidate after 0.4.0.
 This candidate adds the opt-in height calculation below; it has no release tag.
 Release identity requires the matching tagged snapshot and acceptance gates.
 Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
