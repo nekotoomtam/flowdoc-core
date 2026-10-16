@@ -1,6 +1,8 @@
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {NativeShapeSession} from './nativeShapeSession.js';
+import {selectFont} from '../fonts/selection.js';
+import {FontError} from '../fonts/types.js';
 import type {ExportResources} from './exportResources.js';
 import type {ShapedText,TextRuntime} from '../layout/textFlow.js';
 const exec=promisify(execFile);
@@ -32,6 +34,7 @@ export function decodeShape(raw:any,text:string,sizePt:number):ShapedText{
 export function createTextRuntime(resources:ExportResources):TextRuntime&{close():Promise<void>}{
  const sessions=new Map<string,NativeShapeSession>();
  return {
+  fontId:style=>selectFont(style,resources.fonts).id,
   async close(){await Promise.all([...sessions.values()].map(s=>s.close()));sessions.clear();},
   async breaks(text){
    const raw=JSON.parse((await exec(resources.segmenterPath,[text],subprocessOptions)).stdout);
@@ -45,7 +48,8 @@ export function createTextRuntime(resources:ExportResources):TextRuntime&{close(
    if(!session){session=new NativeShapeSession(resources.shaperPath,['--serve',font.path,fontId]);sessions.set(fontId,session);}
    const raw=await session.request(text);
    if(raw.text!==text||raw.fontId!==fontId)throw Error('Mismatched shape result');
-   return decodeShape(raw,text,sizePt);
+   if(raw.glyphs?.some((g:any)=>g.glyphId===0))throw new FontError('FONT_GLYPH_MISSING');
+   try{return decodeShape(raw,text,sizePt);}catch{throw new FontError('FONT_SHAPING_FAILED');}
   }
  };
 }

@@ -4,7 +4,7 @@
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Version 0.3.0 accepts **nodeModelVersion: 18 only**. Models 4–17 are rejected at template and resolved-document entrypoints. This is a breaking contract cutover; changing an old template's version number alone does not migrate it.
+Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
 
 ## Template and data API
 
@@ -27,6 +27,21 @@ A document defines page layouts and ordered Sections. Each Section owns its pape
 Unknown business fields produce warnings. Invalid Area entries, missing required fields, unknown formats and wrong types fail rather than silently skipping content. Areas accept arrays or keyed objects according to their declaration. See the [local template entrypoint](docs/template-guide.md) and runnable fixtures.
 
 Text measurement uses a per-generation cache (32 MiB serialized payload, at most 8,192 entries) and a persistent shaper per font. Sessions close on success or failure. These bounds are not a total job-memory guarantee. Core contains no HTTP server or database.
+
+Schema 2 text styles use `{font:{kind:'library',releaseId,weight,style},fontSize,lineHeightPt}`.
+Weight is an integer 1–1000; style is normal/italic. `{font:{kind:'unselected'},fontSize,lineHeightPt}`
+is structurally valid for drafts and blocks PDF with FONT_NOT_SELECTED.
+Schema 1 keeps its Sarabun normal/bold/italic contract and canonical fingerprint.
+
+Use root export `loadLibraryFonts(bundledResources, faces)` before `createPdfEngine`.
+Each face supplies releaseId, faceId, assetId, approved weight/style, absolute file path,
+SHA-256 and licenses[{id,path,sha256}]. Only static TTF is supported; selection is exact,
+without nearest weight, synthesized styles or fallback. Core checks bytes and normal/italic
+flags, then snapshots verified font/license bytes into a private generation directory.
+Shaping and subsetting use that same snapshot. Schema 2 PDF results include fontUsage
+with selected identities, hashes and license hashes, without filesystem paths.
+Core does not fetch fonts, resolve a latest release, authorize catalog activation or infer
+approved weights from filenames. The caller owns catalog authorization/readiness.
 
 ## Release branches
 

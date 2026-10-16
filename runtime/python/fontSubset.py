@@ -63,6 +63,14 @@ if sha256(SOURCE_PATH) != font_asset["sha256"]:
     raise RuntimeError("registered source font hash mismatch")
 
 font = TTFont(SOURCE_PATH, recalcTimestamp=False)
+source_names = {"family": font["name"].getDebugName(16) or font["name"].getDebugName(1), "version": font["name"].getDebugName(5), "rawWeight": font["OS/2"].usWeightClass}
+licenses = font_asset.get("licenses")
+if font_asset["fontId"].startswith("library-") and not licenses:
+    raise RuntimeError("library font license required")
+if licenses:
+    for license_asset in licenses:
+        if sha256(Path(license_asset["path"])) != license_asset["sha256"]:
+            raise RuntimeError("font license hash mismatch")
 options = subset.Options()
 options.retain_gids = True
 options.hinting = False
@@ -100,6 +108,8 @@ manifest = {
     "postScriptName": args.postscript_name,
     "subsetPrefix": args.subset_prefix,
     "source": {
+        "names": source_names,
+        **({"selection": font_asset["selection"]} if "selection" in font_asset else {}),
         "path": SOURCE_PATH.as_posix(),
         "sha256": font_asset["sha256"],
         "bytes": SOURCE_PATH.stat().st_size,
@@ -125,11 +135,11 @@ manifest = {
         "descent": subset_font["hhea"].descent,
         "capHeight": getattr(subset_font["OS/2"], "sCapHeight", subset_font["hhea"].ascent),
     },
-    "license": {
+    "license": ({"assets": licenses, "reservedNameRemovedFromDerivative": True} if licenses else {
         "id": "OFL-1.1",
         "path": "assets/fonts/OFL.txt",
         "reservedNameRemovedFromDerivative": True,
-    },
+    }),
     "builder": {
         "fontToolsVersion": "4.58.2",
         "shaperRevision": "rustybuzz-0.20.1",

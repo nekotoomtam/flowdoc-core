@@ -1,4 +1,7 @@
 import { cacheTextRuntime } from '../runtime/cacheTextRuntime.js';
+import {snapshotFonts,validateFontIdentities} from '../fonts/resources.js';
+import {selectFont} from '../fonts/selection.js';
+import {FontError} from '../fonts/types.js';
 import { fillPageFields } from '../layout/fillPageFields.js';
 import { fillContentsNumbers } from '../layout/fillContentsNumbers.js';
 
@@ -24,12 +27,13 @@ export interface PdfArtifact {
     bytes: Uint8Array;
     mediaType: 'application/pdf';
     pageCount: number;
+    fontUsage?:{fontId:string;sha256:string;selection?:import('../runtime/exportResources.js').FontResource['selection'];licenses:{id:string;sha256:string}[]}[];
 }
 export interface PdfEngine {
     generatePdf(document: ResolvedDocument, images?: PdfImageResources): Promise<Result<PdfArtifact>>;
 }
 interface Dependencies {
-    runtime: TextRuntime | (() => TextRuntime & {
+    runtime: TextRuntime | ((resources:ExportResources) => TextRuntime & {
         close(): Promise<void>;
     });
     subset: typeof subsetFonts;
@@ -58,10 +62,14 @@ export function createEngine(resources: ExportResources, deps: Dependencies): Pd
             }) | undefined;
             let runtime: ReturnType<typeof cacheTextRuntime> | undefined;
             try {
-                if (typeof deps.runtime === 'function')
-                    session = deps.runtime();
-                runtime = cacheTextRuntime(session ?? deps.runtime as TextRuntime);
+                if(document.schemaVersion===2)for(const [id,style] of Object.entries(document.styles)){
+                    try{selectFont(style,resources.fonts);}catch(error){if(error instanceof FontError)throw new FontError(error.code,'/styles/'+id.replaceAll('~','~0').replaceAll('/','~1')+'/font');throw error;}
+                }
                 temp = await mkdtemp(join(resources.tempRoot, 'flowdoc-pdf-'));
+                const current=await snapshotFonts(resources,temp);
+                if (typeof deps.runtime === 'function')
+                    session = deps.runtime(current);
+                runtime = cacheTextRuntime(session ?? deps.runtime as TextRuntime);
                 const draw = await documentFlow(document, runtime, images);
                 warnings.push(...draw.warnings ?? []);
                 const anchors = indexDestinations(document, draw);
@@ -71,13 +79,15 @@ export function createEngine(resources: ExportResources, deps: Dependencies): Pd
                 // Page fields are the last text-runtime consumer; avoid retaining layout cache during PDF output.
                 runtime.dispose();
                 resolveLinkGeometry(document, draw, anchors);
-                const fonts = await deps.subset(draw, resources, temp);
+                const fonts = await deps.subset(draw, current, temp);
                 stage = 'writer';
                 const bytes = deps.write(draw, fonts, images);
-                result = { ok: true, value: { bytes, mediaType: 'application/pdf', pageCount: draw.pages.length }, warnings };
+                const used=new Set(draw.pages.flatMap(p=>p.commands.map(c=>c.fontId)));
+                result = { ok: true, value: { bytes, mediaType: 'application/pdf', pageCount: draw.pages.length,...(document.schemaVersion===2?{fontUsage:current.fonts.filter(f=>used.has(f.id)).map(f=>({fontId:f.id,sha256:f.sha256,...(f.selection?{selection:f.selection}:{}),licenses:(f.licenses??[]).map(l=>({id:l.id,sha256:l.sha256}))}))}:{}) }, warnings };
             }
             catch (error) {
-                if (error instanceof LayoutError) {
+                if(error instanceof FontError)result={ok:false,issues:[{code:error.code,path:error.path,message:error.message}],warnings:[]};
+                else if (error instanceof LayoutError) {
                     const source = document.sourceMap[error.nodeId];
                     result = { ok: false, issues: [{ code: 'LAYOUT_FAILED', path: error.path ?? 'nodes.' + error.nodeId, ...(error.sectionId ? { sectionId: error.sectionId } : {}), nodeId: error.nodeId, message: error.message, ...(source?.origin === 'authored' ? { sectionId: source.sectionId } : source ? { contentIndex: source.contentIndex, format: source.format, ...(source.sectionId ? { sectionId: source.sectionId } : {}) } : {}) }], warnings: [] };
                 }
@@ -107,9 +117,8 @@ export function createEngine(resources: ExportResources, deps: Dependencies): Pd
 export async function createPdfEngine(resources: ExportResources): Promise<Result<PdfEngine>> {
     try {
         const snapshot = structuredClone(resources);
-        const required = ['font-regular', 'font-bold', 'font-italic', 'font-bold-italic'];
-        if (snapshot.fonts.length !== 4 || new Set(snapshot.fonts.map(f => f.id)).size !== 4 || required.some(id => !snapshot.fonts.some(f => f.id === id)))
-            throw Error('Invalid font set');
+        validateFontIdentities(snapshot.fonts);
+        if(!snapshot.fonts.length)throw Error('Invalid font set');
         for (const font of snapshot.fonts)
             if (createHash('sha256').update(await readFile(font.path)).digest('hex') !== font.sha256)
                 throw Error('Changed font');
@@ -118,9 +127,10 @@ export async function createPdfEngine(resources: ExportResources): Promise<Resul
         const versions = await probeRuntime(snapshot);
         if (!versions.python.startsWith('3.11.') || versions.fontTools !== '4.58.2')
             throw Error('Invalid Python');
-        return { ok: true, value: createEngine(snapshot, { runtime: () => createTextRuntime(snapshot), subset: subsetFonts, write: writePdf }), warnings: [] };
+        return { ok: true, value: createEngine(snapshot, { runtime: current => createTextRuntime(current), subset: subsetFonts, write: writePdf }), warnings: [] };
     }
-    catch {
+    catch(error) {
+        if(error instanceof FontError)return {ok:false,issues:[{code:error.code,path:error.path,message:error.message}],warnings:[]};
         return fail('RESOURCE_UNAVAILABLE', 'PDF engine resources are unavailable or incompatible');
     }
 }

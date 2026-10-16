@@ -16,7 +16,7 @@ export function validateOwnedTemplate(input: unknown): Result<ValidatedTemplate>
     if (!isJson(input) || !object(input))
         return { ok: false, issues: [issue('INVALID_TEMPLATE', 'template')], warnings: [] };
     const t = structuredClone(input) as any;
-    if (!keys(t, ['schemaVersion', 'nodeModelVersion', 'templateId', 'docKey', 'version', 'name', 'book', 'styles', 'globalSchema', 'examples', 'pageLayouts', 'sections', 'areaFormats']) || t.schemaVersion !== 1 || t.nodeModelVersion !== 18)
+    if (!keys(t, ['schemaVersion', 'nodeModelVersion', 'templateId', 'docKey', 'version', 'name', 'book', 'styles', 'globalSchema', 'examples', 'pageLayouts', 'sections', 'areaFormats']) || ![1,2].includes(t.schemaVersion) || t.nodeModelVersion !== 18)
         fail('template');
     for (const k of ['templateId', 'docKey', 'name'])
         if (!name(t[k]))

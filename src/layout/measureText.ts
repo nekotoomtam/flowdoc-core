@@ -1,4 +1,5 @@
 import {linkLabel} from '../composition/linkContract.js';
+import {fontIdForStyle} from '../fonts/selection.js';
 import type {LinkSpan} from '../pdf/drawContract.js';
 import type {TextBlock,TextStyle} from '../composition/resolvedDocument.js';
 import type {GlyphRun} from '../pdf/drawContract.js';
@@ -12,7 +13,7 @@ export async function measureText(node:TextBlock,style:TextStyle,available:numbe
  const normalizedOffset=(offset:number)=>raw.slice(0,offset).replace(/\r\n?/g,'\n').length;
  const spans=rawSpans.map(s=>({...s,start:normalizedOffset(s.start),end:normalizedOffset(s.end)}));
  const id=node.id,epsilon=1e-6,size=style.fontSize.value,lineHeight=style.lineHeightPt;
- const fontId=style.fontWeight==='bold'?(style.fontStyle==='italic'?'font-bold-italic':'font-bold'):(style.fontStyle==='italic'?'font-italic':'font-regular');
+ const fontId=fontIdForStyle(style,runtime);
  if(available<=0)throw new LayoutError(id,'No content width');
   const cache=new Map<string,ShapedText>();
   const shape=async(text:string)=>{if(!cache.has(text))cache.set(text,await runtime.shape(text,fontId,size));return cache.get(text)!;};
