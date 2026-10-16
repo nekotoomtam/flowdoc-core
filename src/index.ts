@@ -1,6 +1,8 @@
 export { loadBundledResources } from './runtime/loadBundledResources.js';
 export {loadLibraryFonts} from './fonts/resources.js';
 export {selectFont} from './fonts/selection.js';
+export {calculateFontHeightAdjustment,FONT_HEIGHT_METHOD} from './fonts/heightAdjustment.js';
+export type {FontHeightAdjustmentMetric,FontHeightAdjustmentInput,FontHeightAdjustmentResult,FontHeightAdjustmentErrorCode} from './fonts/heightAdjustment.js';
 export type {FontSelection,LibraryTextStyle,LibraryFontInput,FontLicense} from './fonts/types.js';
 export {createPdfEngine} from './pdf/createPdfEngine.js';
 export type {PdfEngine,PdfArtifact} from './pdf/createPdfEngine.js';

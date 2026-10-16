@@ -4,9 +4,34 @@
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.0. Its release identity is the matching annotated tag on the
-snapshot branch; a package version alone does not establish release acceptance.
+Package version: 0.4.1-dev.font-height.1, a development candidate after 0.4.0.
+This candidate adds the opt-in height calculation below; it has no release tag.
+Release identity requires the matching tagged snapshot and acceptance gates.
 Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
+
+## Opt-in font height calculation
+
+`calculateFontHeightAdjustment` and `FONT_HEIGHT_METHOD` are public root exports.
+The input is `{fontSizePt, sourceMetric, targetMetric}`; each metric contains only
+`methodId: 'thai-bo-baseline-top-v1'`, integer `unitsPerEm` (16–16384), and positive
+`topDesign` as a decimal string. Both measurements come from the approved Regular
+400 profile. Resolve files, profile trust, face availability and permissions in
+the caller; this pure function performs no lookup or mutation.
+
+It returns `{ok:true,value:{fontSizePt,methodId}}` or `{ok:false,code}`.
+Codes: `INVALID_FONT_INPUT`, `METRIC_INVALID`, `METHOD_UNSUPPORTED`, `NUMERIC_RANGE`.
+The formula is old pt times source height/em divided by target height/em, with
+exact rational arithmetic and final positive round-half-up to six decimal places.
+Equal ratios preserve the original pt without rounding. TH Sarabun New 16 pt
+(top 400/em 1000) to Sarabun (586/1000) yields 10.921502 pt.
+Finite positive pt has no new upper bound; zero after rounding or numeric
+overflow is unavailable, never clamped. Decimal parsing is bounded to 400
+characters and an absolute exponent of 400; malformed/nonfinite metrics fail.
+
+The function does not alter `lineHeightPt`, font selection, PDF resources,
+templates, or renderer behavior. Width, wrapping and required line clearance
+still depend on the selected face. Callers explicitly apply a successful result;
+ordinary pt rendering and legacy Sarabun do not invoke this calculation.
 
 ## Template and data API
 

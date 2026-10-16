@@ -1,10 +1,13 @@
-# FlowDoc Core 0.4.0 template entrypoint
+# FlowDoc Core 0.4.1-dev.font-height.1 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes package 0.4.0, prepared against the 0.3.0 release baseline.
+This describes development package 0.4.1-dev.font-height.1 after release 0.4.0.
+It adds an opt-in pure font-height calculation; template schema and ordinary pt
+rendering are unchanged. See the root README's font-height API for inputs/errors.
+Height adjustment does not keep text width, wrapping, or line clearance constant.
 Release identity is established by the matching snapshot/tag after the release gates.
 
 Only `nodeModelVersion: 18` is accepted. Models 4–17 and their legacy content envelopes have been retired. Historical explanations remain in Git history and must not be used as current authoring instructions.
