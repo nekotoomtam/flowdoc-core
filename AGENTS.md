@@ -22,3 +22,9 @@ the packed artifact in an isolated Linux/amd64 consumer before claiming packagin
 Do not install/build/download runtime tools during package installation or rendering.
 Shared plans remain in Project Control. Verify changed/affected areas, preserve
 unrelated changes and commit only after relevant checks pass.
+
+Before release preparation or Git promotion, read the shared
+[release rules and gates](../flowdoc-project-control/docs/domains/flowdoc-export-working-release-rules-draft-2026-10-09.md).
+Keep development history on development branches; `release` is a tagged snapshot chain.
+Update and review this repo's `README.md` and `docs/template-guide.md` for the
+candidate contract, package/runtime requirements and limitations before promotion.

@@ -4,6 +4,7 @@ import { validatePageBand } from '../template/pageBands.js';
 import { validateDestinations } from './linkContract.js';
 import { validateGraph } from '../template/validateGraph.js';
 import { isJson } from '../template/checks.js';
+import {isFontSelection} from '../fonts/validateSelection.js';
 import type { Issue } from '../result.js';
 const object = (v: unknown): v is Record<string, any> => !!v && typeof v === 'object' && !Array.isArray(v);
 const number = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v > 0;
@@ -22,7 +23,7 @@ export function validateResolvedDocument(input: unknown): Issue[] {
         fail("nodeModelVersion");
         return issues;
     }
-    if (!keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', ...([]), ...(['sections'])]) || d.schemaVersion !== 1 || d.nodeModelVersion !== 18)
+    if (!keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', ...([]), ...(['sections'])]) || ![1,2].includes(d.schemaVersion) || d.nodeModelVersion !== 18)
         fail('document');
     if (!object(d.template) || !keys(d.template, ['templateId', 'docKey', 'version']) || !name(d.template.templateId) || !name(d.template.docKey) || !Number.isInteger(d.template.version) || d.template.version < 1)
         fail('template');
@@ -84,6 +85,12 @@ export function validateBookStyles(d: Record<string, any>): Issue[] {
         return issues;
     }
     for (const [id, s] of Object.entries(d.styles)) {
+        if(d.schemaVersion===2){
+            if(!object(s)||!keys(s,['font','fontSize','lineHeightPt'])||!isFontSelection(s.font))
+                issues.push({code:'INVALID_FONT_SELECTION',path:'/styles/'+id.replaceAll('~','~0').replaceAll('/','~1')+'/font',message:'Invalid font selection'});
+            if(!object(s)||!object(s.fontSize)||!keys(s.fontSize,['value','unit'])||s.fontSize.unit!=='pt'||!number(s.fontSize.value)||!number(s.lineHeightPt))fail('styles.'+id);
+            continue;
+        }
         if (!object(s) || !keys(s, ['fontFamilyKey', 'fontWeight', 'fontStyle', 'fontSize', 'lineHeightPt']) || s.fontFamilyKey !== 'sarabun' || !['normal', 'bold'].includes(s.fontWeight) || (s.fontStyle !== undefined && !['normal', 'italic'].includes(s.fontStyle)) || !object(s.fontSize) || !keys(s.fontSize, ['value', 'unit']) || s.fontSize.unit !== 'pt' || !number(s.fontSize.value) || !number(s.lineHeightPt))
             fail('styles.' + id);
     }
@@ -113,7 +120,7 @@ function validateSections(d: Record<string, any>, issues: Issue[]): void {
                 issues.push(...validatePageBand(s[k], d.styles, p + '.' + k, true, undefined, s.sectionId, true).map(e => ({ ...e, code: 'LAYOUT_FAILED' })));
         seen.add(s.sectionId);
         roots.push(...s.rootIds);
-        issues.push(...validateBookStyles({ book: { contentSlot: 'body', page: s.page }, styles: d.styles }).map(e => ({ ...e, path: p + '.' + e.path })));
+        issues.push(...validateBookStyles({schemaVersion:d.schemaVersion, book: { contentSlot: 'body', page: s.page }, styles: d.styles }).map(e => ({ ...e, path: e.code==='INVALID_FONT_SELECTION'?e.path:p + '.' + e.path })));
         const pending = [...s.rootIds], visited = new Set<string>();
         while (pending.length) {
             const id = pending.pop()!;

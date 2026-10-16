@@ -17,7 +17,7 @@ export function validatePageSections(t: Record<string, any>): Issue[] {
                 fail(p);
                 continue;
             }
-            issues.push(...validateBookStyles({ book: { contentSlot: 'body', page: v.page }, styles: t.styles }).map(i => ({ ...i, code: 'INVALID_TEMPLATE', path: i.path.startsWith('book') ? p + i.path.slice(4) : i.path })));
+            issues.push(...validateBookStyles({schemaVersion:t.schemaVersion, book: { contentSlot: 'body', page: v.page }, styles: t.styles }).map(i => ({ ...i, code: i.code==='INVALID_FONT_SELECTION'?i.code:'INVALID_TEMPLATE', path: i.path.startsWith('book') ? p + i.path.slice(4) : i.path })));
         }
         if (!own(t.pageLayouts, t.book?.defaultPageLayoutId))
             fail('book.defaultPageLayoutId');

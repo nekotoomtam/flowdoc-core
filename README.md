@@ -4,7 +4,9 @@
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Version 0.3.0 accepts **nodeModelVersion: 18 only**. Models 4–17 are rejected at template and resolved-document entrypoints. This is a breaking contract cutover; changing an old template's version number alone does not migrate it.
+Package version: 0.4.0. Its release identity is the matching annotated tag on the
+snapshot branch; a package version alone does not establish release acceptance.
+Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
 
 ## Template and data API
 
@@ -28,17 +30,41 @@ Unknown business fields produce warnings. Invalid Area entries, missing required
 
 Text measurement uses a per-generation cache (32 MiB serialized payload, at most 8,192 entries) and a persistent shaper per font. Sessions close on success or failure. These bounds are not a total job-memory guarantee. Core contains no HTTP server or database.
 
+Schema 2 text styles use `{font:{kind:'library',releaseId,weight,style},fontSize,lineHeightPt}`.
+Weight is an integer 1–1000; style is normal/italic. `{font:{kind:'unselected'},fontSize,lineHeightPt}`
+is structurally valid for drafts and blocks PDF with FONT_NOT_SELECTED.
+Schema 1 keeps its Sarabun normal/bold/italic contract and canonical fingerprint.
+
+Use root export `loadLibraryFonts(bundledResources, faces)` before `createPdfEngine`.
+Each face supplies releaseId, faceId, assetId, approved weight/style, absolute file path,
+SHA-256 and licenses[{id,path,sha256}]. Only static TTF is supported; selection is exact,
+without nearest weight, synthesized styles or fallback. Core checks bytes and normal/italic
+flags, then snapshots verified font/license bytes into a private generation directory.
+Shaping and subsetting use that same snapshot. Schema 2 PDF results include fontUsage
+with selected identities, hashes and license hashes, without filesystem paths.
+Core does not fetch fonts, resolve a latest release, authorize catalog activation or infer
+approved weights from filenames. The caller owns catalog authorization/readiness.
+
 ## Release branches
+
+Before preparing or promoting a release, follow the shared
+[release rules and gates](../flowdoc-project-control/docs/domains/flowdoc-export-working-release-rules-draft-2026-10-09.md).
+They also record the owner-authorized 2026-10-16 history repair; that exception
+does not permit moving tags during normal releases.
 
 Version 0.1.0 is the first local export package release. `release` contains one
 snapshot commit per accepted version; annotated `v<version>` tags identify those
 commits and must not be moved. Development history remains on development branches.
 The initial release snapshot has its own root; later releases must parent the
-previous release commit and include only the reviewed candidate tree. Record the
+previous release commit as its only parent and include only the reviewed candidate tree. Never merge or
+fast-forward development history into `release`; every reachable commit must have
+its version tag on the remote, including commits through any additional parent. Record the
 development source commit in each release commit and verify tree equality. Do not
 merge unrelated histories blindly. Build and verify the package before tagging;
 never overwrite a released package under the same version. Service pins its exact
-tarball and checksum. This local release is not a public registry publication.
+tarball and checksum. Send the snapshot branch and its annotated tag atomically,
+then verify both remote targets. A development package version or a successful
+local installation does not establish a release. This local release is not a public registry publication.
 
 ## Local development
 
@@ -138,3 +164,10 @@ The installed consumer generates `table-short.pdf`, `table-empty.pdf` and
 expected text and result metadata in the artifact directory. Inspect extracted
 text, embedded fonts and rendered pages before claiming visual acceptance; the
 consumer command alone does not perform the host Poppler/visual review.
+
+For delivery, update this README and `docs/template-guide.md` with the candidate's
+actual contract and limits before freezing its tree. Retain the packed artifact,
+checksum, source commit and Linux consumer results. The Service consumer must use
+that exact tarball; a Windows build alone does not verify its native PDF runtime.
+Font verification covers exact selected faces/required glyphs and legacy Sarabun
+parity. Release promotion follows the gates above after this preparation.

@@ -44,7 +44,7 @@ export async function loadResources(root: string, options: ResourceOptions, deps
   catch {return failure('tempRoot','Temporary root is not writable');}
   finally {if(temp)await rm(temp,{recursive:true,force:true}).catch(()=>{});}
   const value:ExportResources={...options,shaperPath:paths.get('shaper')!,segmenterPath:paths.get('segmenter')!,subsetHelperPath:paths.get('subset')!,
-    fonts:manifest.resources.filter(e=>e.id.startsWith('font-')&&e.id!=='font-license').map(e=>({id:e.id,path:paths.get(e.id)!,sha256:e.sha256}))};
+    fonts:manifest.resources.filter(e=>e.id.startsWith('font-')&&e.id!=='font-license').map(e=>({id:e.id,path:paths.get(e.id)!,sha256:e.sha256,licenses:[{id:'OFL-1.1',path:paths.get('font-license')!,sha256:manifest.resources.find(r=>r.id==='font-license')!.sha256}]}))};
   try {const p=await deps.probe(value);if(typeof p.python!=='string'||!p.python.startsWith('3.11.')||p.fontTools!==manifest.fontTools)return failure('runtime','Python 3.11 and fontTools 4.58.2 required');}
   catch {return failure('runtime','Python, fontTools or native executable probe failed');}
   return {ok:true,value,warnings:[]};
