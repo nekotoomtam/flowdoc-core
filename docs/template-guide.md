@@ -4,8 +4,8 @@
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes the 0.4.0 development package. The accepted release remains
-0.3.0 until the separate release gates pass; a manual version is not a release tag.
+This describes package 0.4.0, prepared against the 0.3.0 release baseline.
+Release identity is established by the matching snapshot/tag after the release gates.
 
 Only `nodeModelVersion: 18` is accepted. Models 4–17 and their legacy content envelopes have been retired. Historical explanations remain in Git history and must not be used as current authoring instructions.
 
