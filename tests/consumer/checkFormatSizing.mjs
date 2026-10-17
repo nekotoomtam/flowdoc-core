@@ -19,6 +19,12 @@ let r=await render('format-fixed',template);assert(r.ok);assert.equal(r.value.pa
 const table=structuredClone(template),f=table.areaFormats.panel,n=f.fragment.nodes;
 f.sizing.height.value=48.5;n.cell={id:'cell',type:'table-cell',props:{},childIds:['text']};n.row={id:'row',type:'table-row',props:{allowBreak:true},cellIds:['cell']};n.table={id:'table',type:'table',props:{headerRowCount:0,repeatHeaderRows:false},columns:[{width:{value:200,unit:'pt'}}],rowIds:['row']};f.fragment.rootIds=['table'];
 r=await render('format-fixed-table',table);assert(r.ok);assert.equal(r.warnings[0].formatOmission.pending[0].lineIndex,2);
+const maximum=structuredClone(template),page=maximum.pageLayouts.portrait.page;
+maximum.areaFormats.panel.sizing.height.value=300;page.margin.bottom={value:297*72/25.4-20*72/25.4-120,unit:'pt'};
+const reduced=structuredClone(request);reduced.sections[0].data.parts=[{format:'panel',data:{text:Array.from({length:10},(_,i)=>'REDUCED '+i).join('\n')}},{format:'panel',data:{text:'HIDDEN'}}];
+r=await render('format-maximum-reduced',maximum,reduced);assert(r.ok);assert.equal(r.value.pageCount,1);assert.equal(r.warnings[0].code,'FORMAT_CONTENT_OMITTED');assert.equal(r.warnings[0].formatOmission.pending[0].lineIndex,6);assert.equal(r.warnings[1].code,'FORMAT_FRAME_NOT_SHOWN');assert.equal(r.warnings[1].formatFrameOmission.availableHeightPt,0);
+maximum.areaFormats.panel={...structuredClone(f),sizing:{mode:'fixed',height:{value:300,unit:'pt'}}};page.margin.bottom={value:297*72/25.4-20*72/25.4-48.5,unit:'pt'};
+reduced.sections[0].data.parts=[{format:'panel',data:{text:'ROW 1\nROW 2\nROW 3'}}];r=await render('format-maximum-table',maximum,reduced);assert(r.ok);assert.equal(r.warnings[0].formatOmission.pending[0].lineIndex,2);
 const frame=structuredClone(template);frame.areaFormats.panel.sizing.height.value=1000;
 frame.areaFormats.after=structuredClone(template.areaFormats.panel);frame.areaFormats.after.key='after';
 const q=structuredClone(request);q.sections[0].data.parts[1].format='after';
