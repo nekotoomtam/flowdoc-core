@@ -268,9 +268,10 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
             if(pendingBreak){if(y>top+epsilon)nextPage();pendingBreak=false;}
             const height=toPt(f.sizing.height),availableHeight=Math.max(0,bottom-y),completed=new Set<string>();
             const markOmitted=(processed:string[]=[])=>{const shown=new Set(processed),remaining=f.rootIds.filter(id=>!completed.has(id)),todo=[...remaining];while(todo.length){const id=todo.pop()!;if(shown.has(id))continue;omittedNodeIds.add(id);const n=d.nodes[id];if(!n)continue;for(const key of ['rowIds','cellIds','childIds'] as const)if(key in n)todo.push(...(n as unknown as Record<string,string[]>)[key]!);}};
-            if(height>availableHeight+epsilon){warnings.push(formatWarning(f,'FORMAT_FRAME_NOT_SHOWN',{reason:'insufficient-page-space',sectionPageIndex:sectionPageIndex-1,requiredHeightPt:height,availableHeightPt:availableHeight}));markOmitted();}
+            if(availableHeight===0){warnings.push(formatWarning(f,'FORMAT_FRAME_NOT_SHOWN',{reason:'insufficient-page-space',sectionPageIndex:sectionPageIndex-1,requiredHeightPt:height,availableHeightPt:availableHeight}));markOmitted();}
             else {
-                fixed={instance:f,start:y,end:y+height};
+                // A declared fixed height is a maximum within this page's remainder.
+                fixed={instance:f,start:y,end:Math.min(y+height,bottom)};
                 try{for(const id of f.rootIds){await renderRoot(id);completed.add(id);}}
                 catch(error){if(!(error instanceof FormatStop))throw error;warnings.push(formatWarning(f,'FORMAT_CONTENT_OMITTED',{reason:error.reason,pending:error.pending}));markOmitted(error.completedNodeIds);}
                 finally{y=fixed.end;fixed=undefined;}

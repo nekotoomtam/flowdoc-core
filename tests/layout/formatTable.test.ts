@@ -1,5 +1,5 @@
 import {it,expect} from 'vitest';
-import {sizingTemplate,composeSizing,sizingEntry} from '../helpers/formatSizing.js';
+import {sizingTemplate,composeSizing,sizingEntry,setSizingBodyHeight} from '../helpers/formatSizing.js';
 import {documentFlow} from '../../src/layout/documentFlow.js';
 import {fakeRuntime} from '../helpers/document.js';
 import {rowGroupTemplate} from '../helpers/rowGroups.js';
@@ -10,6 +10,11 @@ function tableTemplate(height:number,allowBreak=true){
  f.fragment.nodes.cell={id:'cell',type:'table-cell',props:{},childIds:['text']};f.fragment.nodes.row={id:'row',type:'table-row',props:{allowBreak},cellIds:['cell']};f.fragment.nodes.table={id:'table',type:'table',props:{headerRowCount:0,repeatHeaderRows:false},columns:[{width:{value:200,unit:'pt'}}],rowIds:['row']};f.fragment.rootIds=['table'];return t;
 }
 const flat=(r:any)=>r.pages.flatMap((p:any)=>p.commands.map((c:any)=>c.text));
+it('passes the reduced page capacity into the existing bounded table sink',async()=>{
+ const t=tableTemplate(300);setSizingBodyHeight(t,48.5);const r=await documentFlow(composeSizing(t,[sizingEntry('A\nB\nC'),sizingEntry('NEXT')]),fakeRuntime);
+ expect(r.pages).toHaveLength(1);expect(flat(r)).toEqual(['A','B']);expect(r.warnings).toMatchObject([{code:'FORMAT_CONTENT_OMITTED',formatOmission:{areaEntryIndex:0,pending:[{lineIndex:2}]}},{code:'FORMAT_FRAME_NOT_SHOWN',formatFrameOmission:{areaEntryIndex:1,availableHeightPt:0}}]);
+ const bottom=20*72/25.4+48.5;for(const b of r.pages[0]!.borders!)expect(Math.max(b.y1Pt,b.y2Pt)+b.widthPt/2).toBeLessThanOrEqual(bottom+1e-6);
+});
 it('omits an oversized explicit-auto header image and recomputes the header',async()=>{
  const t=tableTemplate(80),f=t.areaFormats.panel,n=f.fragment.nodes;f.sizing={mode:'auto'};f.inputSchema.fields.photo={type:'image',required:true};n.pic={id:'pic',type:'image',props:{width:{value:20,unit:'pt'},height:{value:1000,unit:'pt'},source:{scope:'local',key:'photo'}}};n.hcell={id:'hcell',type:'table-cell',props:{},childIds:['pic']};n.hrow={id:'hrow',type:'table-row',props:{allowBreak:false},cellIds:['hcell']};n.table.rowIds.unshift('hrow');n.table.props.headerRowCount=1;n.table.props.repeatHeaderRows=true;
  const entries=[{format:'panel',data:{text:'BODY',photo:'22222222-2222-4222-8222-222222222222'}}];const r=await documentFlow(composeSizing(t,entries),fakeRuntime);expect(flat(r)).toEqual(['BODY']);expect(r.warnings![0].code).toBe('FORMAT_IMAGE_NOT_SHOWN');

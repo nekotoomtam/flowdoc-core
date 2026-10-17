@@ -6,6 +6,12 @@ export function sizingTemplate(sizing?:unknown):any {
  return t;
 }
 export const sizingEntry=(text:string)=>({format:'panel',data:{text}});
+/** Controlled A4 body capacity before page-band deductions. */
+export function setSizingBodyHeight(t:any,heightPt:number):void {
+ const p=t.pageLayouts[t.sections[0].pageLayoutId??t.book.defaultPageLayoutId].page;
+ const top=p.margin.top.value*(p.margin.top.unit==='mm'?72/25.4:1);
+ p.margin.bottom={value:297*72/25.4-top-heightPt,unit:'pt'};
+}
 export function composeSizing(t:any,entries:any[]=[sizingEntry('A')]):any {
  const v=validateTemplate(t);if(!v.ok)throw Error(JSON.stringify(v));
  const p=prepareGeneration(v.value,areaRequest(t,entries));if(!p.ok)throw Error(JSON.stringify(p));

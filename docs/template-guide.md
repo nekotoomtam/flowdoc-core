@@ -76,7 +76,7 @@ Sarabun output with its confirmed baseline. A successful validator or preview jo
 ID alone does not prove the final PDF is complete: inspect its content, pagination,
 links and every rendered page.
 
-## Format sizing candidate
+## Packaged Format sizing v1 candidate
 
 Model19 Area Format definitions optionally declare `sizing: {mode: "auto"}` or
 `{mode: "fixed", height: {value: 100, unit: "pt"}}` (pt/mm). Omitted sizing retains
@@ -91,3 +91,10 @@ is partial. A visible link/TOC targeting omitted content fails with
 
 Candidate verification is recorded in Project Control; this paragraph does not
 certify delivery, visual parity or installed availability.
+
+Unpackaged source correction (maximum-height v2, stage1): fixed now uses the
+current page remainder up to its declared maximum, reserving that effective
+height even for short/empty calls. Positive-space overflow uses content warnings;
+only zero space produces a frame warning. Core source checks do not certify
+Service/FlowDocMake support or replace the pinned v1 archive. Packaging and
+capability version2 remain later work under the Project Control correction plan.
