@@ -1,6 +1,8 @@
 export { loadBundledResources } from './runtime/loadBundledResources.js';
 export {loadLibraryFonts} from './fonts/resources.js';
 export {selectFont} from './fonts/selection.js';
+export {calculateFontHeightAdjustment,FONT_HEIGHT_METHOD} from './fonts/heightAdjustment.js';
+export type {FontHeightAdjustmentMetric,FontHeightAdjustmentInput,FontHeightAdjustmentResult,FontHeightAdjustmentErrorCode} from './fonts/heightAdjustment.js';
 export type {FontSelection,LibraryTextStyle,LibraryFontInput,FontLicense} from './fonts/types.js';
 export {createPdfEngine} from './pdf/createPdfEngine.js';
 export type {PdfEngine,PdfArtifact} from './pdf/createPdfEngine.js';
@@ -19,7 +21,7 @@ export type {PreparedPdfImage,PdfImageResources} from './pdf/imageResources.js';
 export type {BoundLink} from './composition/linkContract.js';
 export type {LinkField,ScalarBinding,TemplateLink,TemplateInline} from './template/types.js';
 
-export type {ContentsBlock} from './composition/resolvedDocument.js';
+export type {ContentsBlock,ContentsScope} from './composition/resolvedDocument.js';
 
 export {readGenerationJson} from './data/readGenerationJson.js';
 export type {AreaField,AreaEntry,AreaFormat,TemplateArea} from './template/types.js';
@@ -30,4 +32,5 @@ export type {SystemPageField} from "./composition/resolvedDocument.js";
 
 export type {ResolvedRowGroup} from './composition/resolvedDocument.js';
 
-export type {Template18,AreaSection,BindingScope,PageNumbering,RowGroup} from './template/types.js';
+export type {Template18,Template19,InstanceSection,AreaSection,BindingScope,PageNumbering,RowGroup} from './template/types.js';
+export type {PreparedSection19} from './data/types.js';

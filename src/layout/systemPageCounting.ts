@@ -3,7 +3,7 @@ import type { DrawDocument } from '../pdf/drawContract.js';
 import { normalizeNumbering } from '../template/pageNumbering.js';
 import { LayoutError } from './textFlow.js';
 export function assignSystemPageNumbers(document: ResolvedDocument, draw: DrawDocument): void {
-    if ((document.nodeModelVersion !== 18))
+    if ((![18,19].includes(document.nodeModelVersion)))
         return;
     const sections = new Map(document.sections!.map(s => [s.sectionId, s])), seen = new Set<string>();
     let last = 0, total = 0;

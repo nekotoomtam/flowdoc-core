@@ -22,5 +22,5 @@ export interface DrawPage {fills?:Fill[];
  pageNumbering?:{current:number|null;total:number;visibility:'show'|'hide'};
  pageRole?:'body'|'cover'|'blank';countedPageNumber?:number|null;
  sectionId?:string;sectionPageIndex?:number;widthPt:number;heightPt:number;backgroundColor:string;commands:GlyphRun[];borders?:Border[];images?:DrawImage[];annotations?:LinkAnnotation[]}
-export interface DrawDocument {warnings?:import('../result.js').Issue[];pages:DrawPage[];pageTexts?:PageText[];pageFieldSlots?:PageFieldSlot[];contentsSlots?:ContentsSlot[];anchors?:Record<string,{pageIndex:number;xPt:number;yPt:number}>}
+export interface DrawDocument {omittedAnchorIds?:string[];omittedNodeIds?:string[];warnings?:import('../result.js').Issue[];pages:DrawPage[];pageTexts?:PageText[];pageFieldSlots?:PageFieldSlot[];contentsSlots?:ContentsSlot[];anchors?:Record<string,{pageIndex:number;xPt:number;yPt:number}>}
 export interface PdfFontResource {fontId:string;subsetBytes:Uint8Array;subsetPrefix:string;postScriptName:string}

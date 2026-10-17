@@ -5,7 +5,7 @@ export interface ImageField {type:'image';required?:boolean;default?:string;labe
 export interface LinkField {type:'link';required?:boolean;default?:BoundLink;label?:string;description?:string}
 export type BindingScope='global'|'section'|'header'|'footer'|'local'|'group'|'item';
 export type ScalarBinding=string|{scope:BindingScope;key:string};
-export type TemplateLink={id:string}&({type:'url';value:ScalarBinding}|{type:'link';text:ScalarBinding;url:ScalarBinding}|{type:'reference';text:ScalarBinding;target:ScalarBinding});
+export type TemplateLink={id:string}&({type:'url';value:ScalarBinding}|{type:'link';text:ScalarBinding;url:ScalarBinding}|{type:'reference';text:ScalarBinding;target:ScalarBinding;targetSectionId?:string});
 export type TemplateInline=Exclude<TextInline,{type:'url'|'link'|'reference'}>|FieldRef|TemplateLink;
 export interface ArrayField {type:'array';required?:boolean;default?:import('../data/types.js').PreparedItem[];items:ObjectSchema<StringField|LinkField|ImageField|ArrayField>;label?:string;description?:string}
 export interface ObjectSchema<F=StringField|ArrayField|ImageField|LinkField|AreaField> {type:'object';fields:Record<string,F>}
@@ -21,7 +21,7 @@ export interface Repeat {tableId:string;rowTemplateId:string;source:{scope:'glob
 export interface CellRepeat {id:string;cellId:string;childTemplateIds:string[];source:{scope:'global'|'section'|'local';key:string}}
 export interface RowGroup {id:string;tableId:string;rowTemplateIds:string[];source:Repeat['source'];memberRepeat:{rowTemplateId:string;source:{scope:'group';key:string};emptyRowTemplateId:string};pagination?:{keepStart:boolean}}
 export interface Format {rowGroups?:RowGroup[];label?:string;description?:string;inputSchema:ObjectSchema;fragment:Fragment;repeats:Repeat[];cellRepeats?:CellRepeat[]}
-export interface AreaFormat extends Format {key:string;ownerAreaId:string}
+export interface AreaFormat extends Format {key:string;ownerAreaId:string;sizing?:import('./formatSizing.js').FormatSizing}
 interface TemplateBase {
  areaFormats?:Record<string,AreaFormat>;
  schemaVersion:1|2;templateId:string;docKey:string;version:number;name:string;
@@ -40,5 +40,7 @@ export interface PageBandDefinition {placement?:BandPlacement;inputSchema:Object
 
 export interface AreaSection extends TemplateSection {key:string;inputSchema:ObjectSchema;formats:Record<string,never>;header?:PageBandDefinition;footer?:PageBandDefinition;numbering?:PageNumbering}
 export type Template18=TemplateBase&{nodeModelVersion:18;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:AreaSection[]};
-export type TemplateDefinition=Template18;
+export interface InstanceSection extends Omit<AreaSection,'key'|'formats'> {label:string;nameBase:string;origin?:{templateId:string;revision:number;sectionId:string}}
+export type Template19=Omit<Template18,'nodeModelVersion'|'sections'>&{nodeModelVersion:19;sections:InstanceSection[]};
+export type TemplateDefinition=Template18|Template19;
 export type PageNumbering={mode:"continue";visibility?:"show"|"hide"}|{mode:"restart";startAt?:number;visibility?:"show"|"hide"}|{mode:"exclude";visibility?:"show"|"hide"};

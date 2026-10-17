@@ -1,13 +1,16 @@
-# FlowDoc Core 0.4.0 template entrypoint
+# FlowDoc Core 0.4.3 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes package 0.4.0, prepared against the 0.3.0 release baseline.
+This describes development package 0.4.3 after release 0.4.0.
+It adds an opt-in pure font-height calculation; template schema and ordinary pt
+rendering are unchanged. See the root README's font-height API for inputs/errors.
+Height adjustment does not keep text width, wrapping, or line clearance constant.
 Release identity is established by the matching snapshot/tag after the release gates.
 
-Only `nodeModelVersion: 18` is accepted. Models 4–17 and their legacy content envelopes have been retired. Historical explanations remain in Git history and must not be used as current authoring instructions.
+Models 18 and 19 are accepted. Model19 uses UUID Section instances and array input; its Stage2 fixed-height text frames are allowed only at Section flow roots, including top-level Area Formats. Text-node props.heightMode:fixed / props.height frames fail on text/body overflow and cannot control Section pages or bands. They are separate from Area Format sizing.fixed below. Cell/repeat frames and nested Areas remain prohibited; Stage3 TOCs require props.scope `{kind:"section"}` or `{kind:"document"}`, with one per scope after expansion. Section scope uses the owning Section. Empty scopes create no page; number slots are reserved and filled from actual target page numbering in one layout pass. Model18 TOCs remain unscoped. Model18 keeps its original behavior. Models 4–17 and their legacy content envelopes have been retired. Historical explanations remain in Git history and must not be used as current authoring instructions.
 
 Read [Developer Documentation](../../flowdoc-project-control/docs/developer/authoring/README.md) for definitions, node properties, defaults, binding scopes, tables, contents, page numbering, image sizing and review rules. The [authoring workflow](../../flowdoc-project-control/docs/domains/flowdoc-ai-template-authoring-guide.md) covers draft creation through a complete reviewed PDF. Publish requires explicit user confirmation.
 
@@ -72,3 +75,23 @@ verify embedded font identities against the supplied bytes, and compare legacy
 Sarabun output with its confirmed baseline. A successful validator or preview job
 ID alone does not prove the final PDF is complete: inspect its content, pagination,
 links and every rendered page.
+
+## Packaged Format sizing v2 development candidate
+
+Model19 Area Format definitions optionally declare `sizing: {mode: "auto"}` or
+`{mode: "fixed", height: {value: 300, unit: "pt"}}` (pt/mm). Omitted sizing retains
+legacy auto. Fixed requires a Section flow-root Area and cannot contain a TOC.
+Each call reserves min(declared maximum, current body remainder), even when
+content is short or empty. A positive remainder renders every fitting whole
+line/image/protected table unit, closes table fragments and stops this instance;
+it never moves or retries the remainder. Only zero remaining space omits the
+whole frame. Later calls run independently. No clipping or automatic shrink.
+
+Input stays complete. FORMAT_CONTENT_OMITTED, FORMAT_FRAME_NOT_SHOWN and
+FORMAT_IMAGE_NOT_SHOWN retain diagnostic version1 and identify partial rendering.
+Visible references/TOC to omitted content fail LAYOUT_FAILED with reason
+omitted-destination and collected warnings. No Area sizing or request override.
+Matched consumers require formatSizing.version2, diagnosticsVersion1 and the
+exact new artifact checksum. Version1 archives describe the earlier whole-frame
+fit gate and remain immutable. Package 0.4.3 is untagged, not installed;
+Project Control owns cross-repository verification and release acceptance.

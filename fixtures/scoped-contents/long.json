@@ -1,0 +1,550 @@
+{
+  "docKey": "scoped-contents-trial",
+  "data": {},
+  "sections": [
+    {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "data": {
+        "label": "Alpha",
+        "parts": [
+          {
+            "format": "document-contents",
+            "data": {}
+          },
+          {
+            "format": "section-contents",
+            "data": {}
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-0",
+              "title": "H000 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-1",
+              "title": "H001 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-2",
+              "title": "H002 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-3",
+              "title": "H003 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-4",
+              "title": "H004 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-5",
+              "title": "H005 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-6",
+              "title": "H006 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-7",
+              "title": "H007 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-8",
+              "title": "H008 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-9",
+              "title": "H009 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-10",
+              "title": "H010 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-11",
+              "title": "H011 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-12",
+              "title": "H012 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-13",
+              "title": "H013 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-14",
+              "title": "H014 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-15",
+              "title": "H015 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-16",
+              "title": "H016 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-17",
+              "title": "H017 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-18",
+              "title": "H018 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-19",
+              "title": "H019 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-20",
+              "title": "H020 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-21",
+              "title": "H021 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-22",
+              "title": "H022 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-23",
+              "title": "H023 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-24",
+              "title": "H024 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-25",
+              "title": "H025 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-26",
+              "title": "H026 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-27",
+              "title": "H027 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-28",
+              "title": "H028 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-29",
+              "title": "H029 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-30",
+              "title": "H030 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-31",
+              "title": "H031 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-32",
+              "title": "H032 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-33",
+              "title": "H033 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-34",
+              "title": "H034 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-35",
+              "title": "H035 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "prose",
+            "data": {
+              "text": "จบเนื้อหาของ Section นี้ / END BODY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000002",
+      "data": {
+        "label": "Beta",
+        "parts": [
+          {
+            "format": "section-contents",
+            "data": {}
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-0",
+              "title": "H000 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-1",
+              "title": "H001 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-2",
+              "title": "H002 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-3",
+              "title": "H003 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-4",
+              "title": "H004 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-5",
+              "title": "H005 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-6",
+              "title": "H006 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-7",
+              "title": "H007 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-8",
+              "title": "H008 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-9",
+              "title": "H009 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-10",
+              "title": "H010 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-11",
+              "title": "H011 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-12",
+              "title": "H012 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-13",
+              "title": "H013 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-14",
+              "title": "H014 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-15",
+              "title": "H015 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-16",
+              "title": "H016 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-17",
+              "title": "H017 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-18",
+              "title": "H018 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-19",
+              "title": "H019 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-20",
+              "title": "H020 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-21",
+              "title": "H021 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-22",
+              "title": "H022 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-23",
+              "title": "H023 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-24",
+              "title": "H024 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-25",
+              "title": "H025 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-26",
+              "title": "H026 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-27",
+              "title": "H027 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-28",
+              "title": "H028 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-29",
+              "title": "H029 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-30",
+              "title": "H030 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-31",
+              "title": "H031 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-32",
+              "title": "H032 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-33",
+              "title": "H033 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-34",
+              "title": "H034 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "heading",
+            "data": {
+              "anchor": "topic-35",
+              "title": "H035 ขอบเขตสารบัญ"
+            }
+          },
+          {
+            "format": "prose",
+            "data": {
+              "text": "จบเนื้อหาของ Section นี้ / END BODY"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -7,8 +7,9 @@ import type {MeasuredCellItem,PaddingPt} from './measureCellContent.js';
 
 import type {Issue} from '../result.js';
 import {LayoutError} from './textFlow.js';
+import {FormatStop,formatCursor} from './formatLayout.js';
 import type {TextRuntime} from './textFlow.js';
-export interface CellTablePageSink {warn?(issue:Issue):void;top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;fill?(x:number,y:number,width:number,height:number,color:string,nodeId:string):void;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
+export interface CellTablePageSink {bounded?:boolean;omitImage?(nodeId:string):boolean;warn?(issue:Issue):void;top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;fill?(x:number,y:number,width:number,height:number,color:string,nodeId:string):void;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
 interface Cell extends GridCell {fillColor?:string|undefined;padding:PaddingPt;contentWidth:number;lines:{line:MeasuredCellItem;offset:number;drawn:boolean}[]}
 const eps=1e-6;
 export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRuntime,s:CellTablePageSink):Promise<void>{
@@ -30,19 +31,24 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
  const rowPositions=new Map(rowIds.map((id,i)=>[id,i]));
  const starts=(t.rowGroups??[]).flatMap((group,index)=>group.keepStart?[{group,index,start:rowPositions.get(group.prefixRowIds[0]!)!,member:rowPositions.get(group.firstMemberRowId)!,relaxed:false}]:[]);
  const cellsByRow=new Map<number,Cell[]>();for(const c of body){const list=cellsByRow.get(c.row)??[];list.push(c);cellsByRow.set(c.row,list);}
+ const omitOversizedImages=(list:Cell[],capacity:number)=>{for(const c of list){let offset=c.padding.top;const retained:Cell['lines']=[];
+  for(const item of c.lines){if(item.line.kind==='image-frame'&&item.line.heightPt+c.padding.top+c.padding.bottom>capacity+eps&&s.omitImage?.(item.line.nodeId))continue;retained.push({...item,offset});offset+=item.line.heightPt;}c.lines=retained;
+ }};
+ omitOversizedImages(headerCells,Math.max(s.bottom-s.top,s.nextCapacity??0));
  const headerHeight=headerCount?Math.max(0,...headerCells.map(c=>(c.lines.at(-1)?.offset??c.padding.top)+(c.lines.at(-1)?.line.heightPt??0)+c.padding.bottom)):0;
- if(headerHeight>Math.max(s.bottom-s.top,s.nextCapacity??0)+eps)throw new LayoutError(t.id,'Header exceeds page content height');
+ if(headerHeight>Math.max(s.bottom-s.top,s.nextCapacity??0)+eps){if(s.bounded)throw new FormatStop('height-limit',[formatCursor(d,t.id,'node',{nodeType:'table'})]);throw new LayoutError(t.id,'Header exceeds page content height');}
  const geometry=()=>{const heights=rowIds.map(()=>0),ordered=[...body].sort((a,b)=>a.row+a.rowSpan-b.row-b.rowSpan||a.row-b.row||a.column-b.column);
   for(const c of ordered.filter(c=>c.rowSpan===1))heights[c.row]=Math.max(heights[c.row]!, (c.lines.at(-1)?.offset??c.padding.top)+(c.lines.at(-1)?.line.heightPt??0)+c.padding.bottom);
   for(const c of ordered.filter(c=>c.rowSpan>1)){const need=(c.lines.at(-1)?.offset??c.padding.top)+(c.lines.at(-1)?.line.heightPt??0)+c.padding.bottom,have=heights.slice(c.row,c.row+c.rowSpan).reduce((a,b)=>a+b,0);if(need>have)heights[c.row+c.rowSpan-1]!+=need-have;}
   const ys=[0];for(const h of heights)ys.push(ys.at(-1)!+h);return {heights,ys};
  };
+ const paintedCells=new Set<string>();
  const paint=(list:Cell[],ys:number[],from:number,to:number,at:number,sharedTop=false)=>{
   // Union collinear edges: shared or partially shared cell edges are stroked once.
   const edges=new Map<string,{axis:'h'|'v';fixed:number;segments:[number,number][]}>();
   const edge=(axis:'h'|'v',fixed:number,a:number,b:number)=>{if(b-a<eps)return;const key=axis+':'+fixed.toFixed(6),e=edges.get(key)??{axis,fixed,segments:[]};e.segments.push([a,b]);edges.set(key,e);};
   for(const c of list){const start=ys[c.row]!,end=ys[c.row+c.rowSpan]!,lo=Math.max(start,from),hi=Math.min(end,to);if(hi-lo<=eps)continue;
-   const x=s.left+xs[c.column]!,right=s.left+xs[c.column+c.colSpan]!,top=at+lo-from,bottom=at+hi-from;
+   paintedCells.add(c.id);const x=s.left+xs[c.column]!,right=s.left+xs[c.column+c.colSpan]!,top=at+lo-from,bottom=at+hi-from;
    if(c.fillColor)s.fill?.(x,top,right-x,bottom-top,c.fillColor,c.id);
    if(!sharedTop||lo>from+eps)edge('h',top,x,right);edge('h',bottom,x,right);edge('v',x,top,bottom);edge('v',right,top,bottom);
    for(const l of c.lines){const y=start+l.offset;if(!l.drawn&&y>=from-eps&&y+l.line.heightPt<=to+eps){s.emitItem(l.line,x+c.padding.left,at+y-from,c.contentWidth);l.drawn=true;}}
@@ -52,14 +58,26 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
  };
  const drawHeader=()=>{for(const c of headerCells)for(const l of c.lines)l.drawn=false;paint(headerCells,[0,headerHeight],0,headerHeight,s.y);s.y+=headerHeight;};
  const fullBodyHeight=Math.max(s.bottom-s.top,s.nextCapacity??0)-(t.props.repeatHeaderRows?headerHeight:0);
- for(const c of body)if(c.padding.top+c.padding.bottom>fullBodyHeight+eps)throw new LayoutError(c.id,'Cell padding exceeds printable page');
- if(!rowIds.length||geometry().ys.at(-1)!<=eps){if(s.y+headerHeight>s.bottom+eps)s.nextPage();if(headerCount)drawHeader();return;}
+ omitOversizedImages(body,fullBodyHeight);
  let from=0,first=true;
+ const stop=(reason:'height-limit'|'unbreakable-item-does-not-fit'='height-limit'):never=>{
+  const unfinished=body.filter(c=>c.lines.some(l=>!l.drawn)),ys=geometry().ys;
+  const row=Math.min(rowIds.length-1,Math.max(0,ys.findLastIndex(y=>y<=from+eps)));
+  const cursors=unfinished.filter(c=>c.row<=row&&c.row+c.rowSpan>row).map(c=>{
+   const item=c.lines.find(l=>!l.drawn)!.line,extra={tableId:t.id,rowId:rowIds[c.row]!,cellId:c.id};
+   return formatCursor(d,item.nodeId,item.kind==='image-frame'?'image':'text',{...extra,...(item.kind==='text-line'?{lineIndex:c.lines.filter(l=>l.line.nodeId===item.nodeId&&l.drawn).length,...(item.line.run?.sourceStart===undefined?{}:{sourceOffset:item.line.run.sourceStart})}:{})});
+  });
+  const actual=cursors.some(c=>c.kind==='image')?'image-does-not-fit':reason;
+  const completedNodeIds=[...headerCells,...body].flatMap(c=>{const cell=d.nodes[c.id];return cell?.type==='table-cell'&&paintedCells.has(c.id)?cell.childIds.filter(id=>c.lines.filter(l=>l.line.nodeId===id).every(l=>l.drawn)):[];});
+  throw new FormatStop(actual,cursors.length?cursors:[formatCursor(d,t.id,'node',{nodeType:'table'})],completedNodeIds);
+ };
+ for(const c of body)if(!s.bounded&&c.padding.top+c.padding.bottom>fullBodyHeight+eps)throw new LayoutError(c.id,'Cell padding exceeds printable page');
+ if(!rowIds.length||geometry().ys.at(-1)!<=eps){if(s.y+headerHeight>s.bottom+eps)s.nextPage();if(headerCount)drawHeader();return;}
  while(true){let g=geometry();if(from>=g.ys.at(-1)!-eps)break;
   const hh=first||t.props.repeatHeaderRows?headerHeight:0,capacity=s.bottom-s.y-hh;
   const full=Math.max(s.bottom-s.top,s.nextCapacity??0)-(t.props.repeatHeaderRows?headerHeight:0);
-  for(const [i,id] of rowIds.entries()){const r=d.nodes[id];if(r?.type==='table-row'&&!r.props.allowBreak&&g.ys[i+1]!>from+eps&&g.heights[i]!>full+eps)throw new LayoutError(id,'Protected row exceeds page');}
-  for(const c of body)for(const l of c.lines)if(!l.drawn&&l.line.heightPt+c.padding.top+c.padding.bottom>full+eps)throw new LayoutError(l.line.nodeId,l.line.kind==='image-frame'?'Image frame cannot fit with table header and padding':'Next whole line cannot fit with header');
+  for(const [i,id] of rowIds.entries()){const r=d.nodes[id];if(!s.bounded&&r?.type==='table-row'&&!r.props.allowBreak&&g.ys[i+1]!>from+eps&&g.heights[i]!>full+eps)throw new LayoutError(id,'Protected row exceeds page');}
+  for(const c of body)for(const l of c.lines)if(!s.bounded&&!l.drawn&&l.line.heightPt+c.padding.top+c.padding.bottom>full+eps)throw new LayoutError(l.line.nodeId,l.line.kind==='image-frame'?'Image frame cannot fit with table header and padding':'Next whole line cannot fit with header');
   let cut=Math.min(g.ys.at(-1)!,from+capacity);
   const pending=body.flatMap(c=>c.lines.filter(l=>!l.drawn).map(l=>({start:g.ys[c.row]!+l.offset,end:g.ys[c.row]!+l.offset+l.line.heightPt+c.padding.bottom})));
   // Carry the final line with trailing padding rather than create an empty
@@ -77,6 +95,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
    const firstHeight=row?.type==='table-row'&&!row.props.allowBreak?g.heights[entry.member]!:Math.max(0,...(cellsByRow.get(entry.member)??[]).map(c=>c.padding.top+(c.lines[0]?.line.heightPt??0)+c.padding.bottom));
    const end=g.ys[entry.member]!+firstHeight;
    if(cut>=end-eps)continue;
+   if(s.bounded){cut=start;break;}
    const nextHeader=t.props.repeatHeaderRows||(first&&start<=from+eps)?headerHeight:0;
    const nextSpace=(s.nextCapacity??(s.bottom-s.top))-nextHeader;
    if(end-start<=nextSpace+eps){cut=start;break;}
@@ -89,6 +108,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
   const hasLine=pending.some(l=>l.start>=from-eps&&l.end<=cut+eps);
   const startsHere=pending.some(l=>l.start<cut+eps);
   if(cut<=from+eps||(!hasLine&&(startsHere||(hh>0&&pending.length>0)))){
+   if(s.bounded)stop(rowIds.some((id,i)=>{const r=d.nodes[id];return r?.type==='table-row'&&!r.props.allowBreak&&g.ys[i]!<=from+eps&&g.ys[i+1]!>from+eps;})?'unbreakable-item-does-not-fit':'height-limit');
    if(s.y>s.top+eps||(s.nextCapacity??0)>s.bottom-s.top+eps){s.nextPage();continue;}throw new LayoutError(t.id,'Merged row made no progress');
   }
   // Keep each cell's next line whole. Carry its remaining offsets into the next
@@ -113,7 +133,7 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
    paintTo=start;
   }
   if(hh)drawHeader();paint(body,g.ys,from,paintTo,s.y,hh>0);s.y+=cut-from;from=cut;first=false;
-  if(from<g.ys.at(-1)!-eps)s.nextPage();
+  if(from<g.ys.at(-1)!-eps){if(s.bounded)stop();s.nextPage();}
  }
  if(body.some(c=>c.lines.some(l=>!l.drawn)))throw new LayoutError(t.id,'Merged table left pending content');
 }
