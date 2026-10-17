@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-Development candidate `0.4.3-dev.2` adds model19 Section instances: UUID `id`,
+Development candidate `0.4.3` adds model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -8,8 +8,9 @@ definition fingerprint. Model18 retains its existing object input/schema1 reader
 Section-local anchors are namespaced by instance; cross-Section references use
 an explicit `targetSectionId`. No implicit migration or font-size adjustment.
 Model19 Stage2 permits fixed-height text at Section flow roots, including top-level
-Area Formats. Frames must fit their text and remaining body space; overflow fails
-without clipping, shrinking or moving the frame. Section page/band settings remain
+Area Formats. Text nodes with props.heightMode:fixed / props.height must fit their text and remaining body space; overflow fails
+without clipping, shrinking or moving that text frame. This is separate from
+Area Format sizing.fixed, whose maximum-height behavior is described below. Section page/band settings remain
 authoritative. Cell/repeat frames and nested Areas stay forbidden. Scoped/multiple
 TOCs use explicit model19 scope `{kind:"section"}` or `{kind:"document"}`.
 One TOC per Section and one per document may coexist; duplicates after Area
@@ -25,8 +26,8 @@ or release claim. Shared contract: Project Control Section–Area Stage0–3.
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.3-dev.2, a development candidate after 0.4.0.
-This candidate adds the opt-in height calculation below; it has no release tag.
+Package version: 0.4.3, a development candidate after 0.4.0.
+This candidate includes Section19, scoped contents, Format sizing v2 and the opt-in height calculation below; it has no release tag.
 Release identity requires the matching tagged snapshot and acceptance gates.
 Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
 
@@ -70,7 +71,7 @@ if (!composed.ok) throw new Error(JSON.stringify(composed.issues));
 
 Use raw JSON text to detect duplicate decoded keys. Template validation returns a detached frozen definition and canonical fingerprint. Prepared snapshots are JSON-serializable and checked again at composition; this structural check is not authentication.
 
-A document defines page layouts and ordered Sections. Each Section owns its paper, header/footer, variables and authored content or intentional blank page. An Area is a named variable declared in globalSchema or a Section inputSchema and placed in an authored graph. areaFormats explicitly declare ownerAreaId and key; invocation data belongs to that format. Section formats must be empty and requests do not accept legacy content arrays. Static content, covers and page breaks remain supported.
+A document defines page layouts and ordered Sections. Each Section owns its paper, header/footer, variables and authored content or intentional blank page. An Area is a named variable declared in globalSchema or a Section inputSchema and placed in an authored graph. areaFormats explicitly declare ownerAreaId and key; invocation data belongs to that format. Model18 Section formats must be empty; model19 has no Section formats/key and uses the ID-addressed array shown above. Requests do not accept legacy content arrays. Static content, covers and page breaks remain supported.
 
 Unknown business fields produce warnings. Invalid Area entries, missing required fields, unknown formats and wrong types fail rather than silently skipping content. Areas accept arrays or keyed objects according to their declaration. See the [local template entrypoint](docs/template-guide.md) and runnable fixtures.
 
@@ -218,7 +219,7 @@ that exact tarball; a Windows build alone does not verify its native PDF runtime
 Font verification covers exact selected faces/required glyphs and legacy Sarabun
 parity. Release promotion follows the gates above after this preparation.
 
-## ## Packaged Format sizing v2 development candidate
+## Packaged Format sizing v2 development candidate
 
 Model19 Area Format definitions optionally declare `sizing: {mode: "auto"}` or
 `{mode: "fixed", height: {value: 300, unit: "pt"}}` (pt/mm). Omitted sizing retains
@@ -235,5 +236,5 @@ Visible references/TOC to omitted content fail LAYOUT_FAILED with reason
 omitted-destination and collected warnings. No Area sizing or request override.
 Matched consumers require formatSizing.version2, diagnosticsVersion1 and the
 exact new artifact checksum. Version1 archives describe the earlier whole-frame
-fit gate and remain immutable. Package 0.4.3-dev.2 is untagged, not installed;
-Project Control owns shared acceptance and later whole-document verification.
+fit gate and remain immutable. Package 0.4.3 is untagged, not installed;
+Project Control owns cross-repository verification and release acceptance.
