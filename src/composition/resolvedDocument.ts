@@ -24,7 +24,9 @@ export interface ImageBlock {id:string;type:'image';props:{width:Length;height:L
 export type ContentsScope={kind:'section'}|{kind:'document'};
 export interface ContentsBlock {id:string;type:'table-of-contents';props:{textStyleId:string;scope?:ContentsScope}}
 export type DocumentNode=PageBreak|LineBlock|TextBlock|Table|TableRow|TableCell|ImageBlock|ContentsBlock;
+export interface FormatInstance {sectionId:string;areaId:string;areaEntryIndex:number;areaFormatId:string;format:string;sizing:import('../template/formatSizing.js').FormatSizing;rootIds:string[];rootStartIndex?:number}
 export interface ResolvedDocument {
+  formatInstances?:FormatInstance[];
   schemaVersion:1|2;nodeModelVersion:18|19;template:{templateId:string;docKey:string;version:number};
   book:{contentSlot:'body';page:{size:'A4';orientation:'portrait'|'landscape';margin:{top:Length;right:Length;bottom:Length;left:Length}}};
   header?:ResolvedBand;footer?:ResolvedBand;

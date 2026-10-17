@@ -10,10 +10,11 @@ export function composeSections(t: TemplateDefinition, p: PreparedInput, d: Reso
     const budget = new ExpansionBudget();
     const areaIndex = buildAreaIndex(t);
     d.sections = [];
+    const formatInstances:import('./resolvedDocument.js').FormatInstance[]=[];
     for (const s of t.sections) {
         const value = Array.isArray(p.sections)?p.sections.find(v=>v.id===s.id)!:p.sections![s.id]!, data = value.data, scopes = { section: data };
         const sectionId = s.id, prefix = `section-${sectionId}~`, pageLayoutId = s.pageLayoutId ?? t.book.defaultPageLayoutId;
-        const rootIds = s.source.kind === 'blank' ? [] : expandRows({ ...s.source, inputSchema: { type: 'object', fields: {} } }, p.data, {}, undefined, undefined, d.nodes, d.sourceMap, { budget, areaIndex, scopes, prefix, origin: { origin: 'authored', sectionId } });
+        const rootIds = s.source.kind === 'blank' ? [] : expandRows({ ...s.source, inputSchema: { type: 'object', fields: {} } }, p.data, {}, undefined, undefined, d.nodes, d.sourceMap, { budget, areaIndex, scopes, prefix, rootOffset:0, formatInstances, origin: { origin: 'authored', sectionId } });
         d.sections.push({ ...({ numbering: normalizeNumbering(s as import("../template/types.js").AreaSection) }), ...({ headerMode: s.headerMode ?? 'all', footerMode: s.footerMode ?? 'all' }), ...({ role: s.role ?? 'body', sourceKind: s.source.kind }), sectionId, pageLayoutId, page: structuredClone(t.pageLayouts[pageLayoutId]!.page), rootIds });
         {
             const def = s as import('../template/types.js').AreaSection;
@@ -31,4 +32,5 @@ export function composeSections(t: TemplateDefinition, p: PreparedInput, d: Reso
         }
         d.rootIds.push(...rootIds);
     }
+    if(formatInstances.length)d.formatInstances=formatInstances;
 }

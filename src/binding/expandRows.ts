@@ -1,7 +1,7 @@
 import type {ExpansionBudget} from './expansionBudget.js';
 import type {AreaIndex} from '../template/areas.js';
 import {expandArea} from './expandAreas.js';
-export interface ExpansionOptions {budget?:ExpansionBudget|undefined;scopes?:Partial<import('./bindInlines.js').BindingScopes>|undefined;origin?:SourceOrigin|undefined;areaIndex?:AreaIndex;prefix?:string;areaOrigin?:{areaId:string;areaEntryIndex:number;areaFormatId:string}}
+export interface ExpansionOptions {formatInstances?:import('../composition/resolvedDocument.js').FormatInstance[]|undefined;rootOffset?:number|undefined;budget?:ExpansionBudget|undefined;scopes?:Partial<import('./bindInlines.js').BindingScopes>|undefined;origin?:SourceOrigin|undefined;areaIndex?:AreaIndex;prefix?:string;areaOrigin?:{areaId:string;areaEntryIndex:number;areaFormatId:string}}
 import type {Format} from '../template/types.js';
 import type {PreparedData,PreparedItem} from '../data/types.js';
 import type {DocumentNode,SourceEntry,SourceOrigin} from '../composition/resolvedDocument.js';
@@ -62,10 +62,12 @@ export function expandRows(format:Format,global:PreparedData,local:PreparedData,
   }
   return id;
  };
- const children=(id:string,itemIndex?:number,item:PreparedItem={},repeatId?:string,group?:GroupContext):string[]=>{
+ const children=(id:string,itemIndex?:number,item:PreparedItem={},repeatId?:string,group?:GroupContext,rootOffset?:number):string[]=>{
   const n=format.fragment.nodes[id]!;if(n.type!=='area')return [clone(id,itemIndex,item,repeatId,group)];
   if(!options.areaIndex)throw Error('Missing area index');
-  return expandArea({budget:options.budget,index:options.areaIndex,areaId:n.props.areaId,global,local,scopes:options.scopes,contentIndex,formatKey,nodes,sourceMap,prefix,origin:options.origin});
+  return expandArea({formatInstances:options.formatInstances,rootOffset,budget:options.budget,index:options.areaIndex,areaId:n.props.areaId,global,local,scopes:options.scopes,contentIndex,formatKey,nodes,sourceMap,prefix,origin:options.origin});
  };
- return format.fragment.rootIds.flatMap(id=>children(id));
+ const result:string[]=[];
+ for(const id of format.fragment.rootIds)result.push(...children(id,undefined,{},undefined,undefined,options.rootOffset===undefined?undefined:options.rootOffset+result.length));
+ return result;
 }

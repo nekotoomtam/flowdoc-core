@@ -21,7 +21,7 @@ export interface Repeat {tableId:string;rowTemplateId:string;source:{scope:'glob
 export interface CellRepeat {id:string;cellId:string;childTemplateIds:string[];source:{scope:'global'|'section'|'local';key:string}}
 export interface RowGroup {id:string;tableId:string;rowTemplateIds:string[];source:Repeat['source'];memberRepeat:{rowTemplateId:string;source:{scope:'group';key:string};emptyRowTemplateId:string};pagination?:{keepStart:boolean}}
 export interface Format {rowGroups?:RowGroup[];label?:string;description?:string;inputSchema:ObjectSchema;fragment:Fragment;repeats:Repeat[];cellRepeats?:CellRepeat[]}
-export interface AreaFormat extends Format {key:string;ownerAreaId:string}
+export interface AreaFormat extends Format {key:string;ownerAreaId:string;sizing?:import('./formatSizing.js').FormatSizing}
 interface TemplateBase {
  areaFormats?:Record<string,AreaFormat>;
  schemaVersion:1|2;templateId:string;docKey:string;version:number;name:string;

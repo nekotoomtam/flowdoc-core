@@ -1,4 +1,5 @@
 import { validateNumbering } from './pageNumbering.js';
+import {isFormatSizing} from './formatSizing.js';
 import { createHash } from 'node:crypto';
 import { object, keys, name, own, isJson, issue, canonical, freeze } from './checks.js';
 import { validateSchemas } from './validateSchemas.js';
@@ -112,11 +113,12 @@ function validateOwnedAreas(t: import('./types.js').TemplateDefinition): Issue[]
     const names = new Set<string>();
     for (const [id, f] of Object.entries(t.areaFormats ?? {})) {
         const p = 'areaFormats.' + id, a = index.byId.get(f?.ownerAreaId), place = a && placements.get(a.field.areaId), key = JSON.stringify([f?.ownerAreaId, f?.key]);
-        if (!name(id) || id.includes('~') || !object(f) || !keys(f, ['key', 'ownerAreaId', 'label', 'description', 'inputSchema', 'fragment', 'repeats', 'cellRepeats', ...(['rowGroups'])]) || !name(f.key) || !a || !place || names.has(key)) {
+        if (!name(id) || id.includes('~') || !object(f) || !keys(f, ['key', 'ownerAreaId', 'label', 'description', 'inputSchema', 'fragment', 'repeats', 'cellRepeats', 'sizing', ...(['rowGroups'])]) || !name(f.key) || !a || !place || names.has(key)) {
             fail(p);
             continue;
         }
         names.add(key);
+        if(own(f,'sizing')&&(t.nodeModelVersion!==19||!isFormatSizing(f.sizing)||(f.sizing.mode==='fixed'&&(!place.topLevel||Object.values(f.fragment?.nodes??{}).some((n:any)=>n?.type==='table-of-contents')))))fail(p+'.sizing');
         const valid = validateSchemas(f.inputSchema, p + '.inputSchema', issues, false, true, true, true, false, 2);
         if (!Array.isArray(f.repeats) || (f.cellRepeats !== undefined && !Array.isArray(f.cellRepeats)))
             fail(p + '.repeats');

@@ -1,4 +1,6 @@
 import { validateRowGroupMetadata } from './validateRowGroupMetadata.js';
+import {validateFormatInstances} from './validateFormatInstances.js';
+import type {ResolvedDocument} from './resolvedDocument.js';
 import { validateNumbering } from '../template/pageNumbering.js';
 import { validatePageBand } from '../template/pageBands.js';
 import { validateDestinations } from './linkContract.js';
@@ -23,7 +25,7 @@ export function validateResolvedDocument(input: unknown): Issue[] {
         fail("nodeModelVersion");
         return issues;
     }
-    if (!keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', ...([]), ...(['sections'])]) || ![1,2].includes(d.schemaVersion) || ![18,19].includes(d.nodeModelVersion))
+    if (!keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', 'formatInstances', ...([]), ...(['sections'])]) || ![1,2].includes(d.schemaVersion) || ![18,19].includes(d.nodeModelVersion))
         fail('document');
     if (!object(d.template) || !keys(d.template, ['templateId', 'docKey', 'version']) || !name(d.template.templateId) || !name(d.template.docKey) || !Number.isInteger(d.template.version) || d.template.version < 1)
         fail('template');
@@ -49,6 +51,7 @@ export function validateResolvedDocument(input: unknown): Issue[] {
             fail('sourceMap.' + id);
     }
     validateSections(d, issues);
+    if(!issues.length)issues.push(...validateFormatInstances(d as ResolvedDocument));
     if(!issues.length&&d.nodeModelVersion===19){
         const scopes=new Set<string>();
         for(const node of Object.values(d.nodes) as any[])if(node.type==='table-of-contents'){
