@@ -23,6 +23,10 @@ it('retains empty invocation boundaries, but no metadata for legacy default',()=
  const d=composeSizing(t,[sizingEntry(''),sizingEntry('')]);expect(d.formatInstances).toHaveLength(2);expect(d.formatInstances.map((f:any)=>f.rootStartIndex)).toEqual([0,1]);
  expect(validateResolvedDocument(d)).toEqual([]);expect(composeSizing(sizingTemplate()).formatInstances).toBeUndefined();
 });
+it('rejects a forged empty boundary ordered behind roots already consumed',()=>{
+ const d=composeSizing(sizingTemplate(fixed),[sizingEntry('A')]);d.formatInstances.push({...structuredClone(d.formatInstances[0]),areaEntryIndex:1,rootIds:[],rootStartIndex:0});
+ expect(validateResolvedDocument(d).length).toBeGreaterThan(0);
+});
 it('rejects new sizing in model18, fixed cell contexts, Area props and fixed TOCs',()=>{
  const legacy=areaTemplate();legacy.areaFormats['format-001'].sizing={mode:'auto'};expect(validateTemplate(legacy).ok).toBe(false);
  const cell=areaTemplate();cell.nodeModelVersion=19;cell.sections.forEach((s:any,i:number)=>{delete s.key;delete s.formats;s.id=`10000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`;s.label='Part'+i;s.nameBase='Part';});

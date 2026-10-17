@@ -4,11 +4,27 @@ import {documentFlow} from '../../src/layout/documentFlow.js';
 import {fakeRuntime} from '../helpers/document.js';
 import {rowGroupTemplate} from '../helpers/rowGroups.js';
 import {mergedDoc} from '../helpers/merged.js';
+import {indexDestinations} from '../../src/layout/linkGeometry.js';
 function tableTemplate(height:number,allowBreak=true){
  const t=sizingTemplate({mode:'fixed',height:{value:height,unit:'pt'}}),f=t.areaFormats.panel;
  f.fragment.nodes.cell={id:'cell',type:'table-cell',props:{},childIds:['text']};f.fragment.nodes.row={id:'row',type:'table-row',props:{allowBreak},cellIds:['cell']};f.fragment.nodes.table={id:'table',type:'table',props:{headerRowCount:0,repeatHeaderRows:false},columns:[{width:{value:200,unit:'pt'}}],rowIds:['row']};f.fragment.rootIds=['table'];return t;
 }
 const flat=(r:any)=>r.pages.flatMap((p:any)=>p.commands.map((c:any)=>c.text));
+it('omits an oversized explicit-auto header image and recomputes the header',async()=>{
+ const t=tableTemplate(80),f=t.areaFormats.panel,n=f.fragment.nodes;f.sizing={mode:'auto'};f.inputSchema.fields.photo={type:'image',required:true};n.pic={id:'pic',type:'image',props:{width:{value:20,unit:'pt'},height:{value:1000,unit:'pt'},source:{scope:'local',key:'photo'}}};n.hcell={id:'hcell',type:'table-cell',props:{},childIds:['pic']};n.hrow={id:'hrow',type:'table-row',props:{allowBreak:false},cellIds:['hcell']};n.table.rowIds.unshift('hrow');n.table.props.headerRowCount=1;n.table.props.repeatHeaderRows=true;
+ const entries=[{format:'panel',data:{text:'BODY',photo:'22222222-2222-4222-8222-222222222222'}}];const r=await documentFlow(composeSizing(t,entries),fakeRuntime);expect(flat(r)).toEqual(['BODY']);expect(r.warnings![0].code).toBe('FORMAT_IMAGE_NOT_SHOWN');
+ delete f.sizing;await expect(documentFlow(composeSizing(t,entries),fakeRuntime)).rejects.toThrow('Header exceeds');
+});
+it('does not relabel an already processed empty anchor as deliberate omission',async()=>{
+ const t=tableTemplate(60),n=t.areaFormats.panel.fragment.nodes;n.empty={id:'empty',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body',anchorId:'empty-anchor'},children:[{id:'emptyLeaf',type:'text',text:' '}]};n.cell.childIds.unshift('empty');
+ const d=composeSizing(t,[sizingEntry('A\nB\nC\nD\nE')]),r=await documentFlow(d,fakeRuntime);expect(()=>indexDestinations(d,r)).toThrow('Destination has no nonempty positioned line');
+});
+it('reports every unfinished cell active at a cut through a rowspan',async()=>{
+ const t=tableTemplate(90),n=t.areaFormats.panel.fragment.nodes;n.cell.props={columnIndex:0,rowSpan:2};n.table.columns=[{width:{value:100,unit:'pt'}},{width:{value:100,unit:'pt'}}];
+ for(const [id,text]of [['b','B'],['c','C1\nC2\nC3\nC4\nC5']]){n[id!]={id,type:'table-cell',props:{columnIndex:1},childIds:[id+'text']};n[id+'text']={id:id+'text',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body'},children:[{id:id+'leaf',type:'text',text}]};}
+ n.row.cellIds.push('b');n.row2={id:'row2',type:'table-row',props:{allowBreak:true},cellIds:['c']};n.table.rowIds.push('row2');
+ const r=await documentFlow(composeSizing(t,[sizingEntry('A1\nA2\nA3\nA4\nA5\nA6\nA7\nA8')]),fakeRuntime);expect(r.warnings![0].formatOmission.pending).toEqual(expect.arrayContaining([expect.objectContaining({sourceNodeId:'text',lineIndex:4}),expect.objectContaining({sourceNodeId:'ctext',lineIndex:2})]));
+});
 it('keeps an earlier fitting row when a later row has padding taller than the frame',async()=>{
  const t=tableTemplate(80),n=t.areaFormats.panel.fragment.nodes;
  n.text2={...structuredClone(n.text),id:'text2',children:[{id:'tail',type:'text',text:'HIDDEN'}]};

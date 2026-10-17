@@ -2,7 +2,7 @@ import type {FormatInstance,ResolvedDocument} from '../composition/resolvedDocum
 import type {Issue} from '../result.js';
 export interface FormatCursor {kind:'text'|'image'|'node';nodeId:string;sourceNodeId:string;lineIndex?:number;sourceOffset?:number;nodeType?:string;tableId?:string;rowId?:string;cellId?:string;groupId?:string;groupIndex?:number;itemIndex?:number;repeatId?:string}
 export type FormatReason='height-limit'|'image-does-not-fit'|'unbreakable-item-does-not-fit'|'explicit-page-break';
-export class FormatStop extends Error {constructor(readonly reason:FormatReason,readonly pending:FormatCursor[]){super(reason);}}
+export class FormatStop extends Error {constructor(readonly reason:FormatReason,readonly pending:FormatCursor[],readonly completedNodeIds:string[]=[]){super(reason);}}
 export function formatCursor(d:ResolvedDocument,nodeId:string,kind:FormatCursor['kind'],extra:Partial<FormatCursor>={}):FormatCursor {
  const s=d.sourceMap[nodeId];return {kind,nodeId,sourceNodeId:s?.sourceId??nodeId,...(s?.groupId?{groupId:s.groupId,groupIndex:s.groupIndex!}:{}),...(s?.itemIndex===undefined?{}:{itemIndex:s.itemIndex}),...(s?.repeatId?{repeatId:s.repeatId}:{}),...extra};
 }
