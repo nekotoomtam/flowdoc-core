@@ -1,10 +1,10 @@
-# FlowDoc Core 0.4.2-dev.3 template entrypoint
+# FlowDoc Core 0.4.3-dev.1 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes development package 0.4.2-dev.3 after release 0.4.0.
+This describes development package 0.4.3-dev.1 after release 0.4.0.
 It adds an opt-in pure font-height calculation; template schema and ordinary pt
 rendering are unchanged. See the root README's font-height API for inputs/errors.
 Height adjustment does not keep text width, wrapping, or line clearance constant.
@@ -75,3 +75,19 @@ verify embedded font identities against the supplied bytes, and compare legacy
 Sarabun output with its confirmed baseline. A successful validator or preview job
 ID alone does not prove the final PDF is complete: inspect its content, pagination,
 links and every rendered page.
+
+## Format sizing candidate
+
+Model19 Area Format definitions optionally declare `sizing: {mode: "auto"}` or
+`{mode: "fixed", height: {value: 100, unit: "pt"}}` (pt/mm). Omitted sizing retains
+legacy behavior. Fixed is allowed only at a Section flow root, without TOC; each
+Area entry reserves its own frame if it fits the current page. A frame that does
+not fit is skipped without moving pages. Overflow stops that instance at a whole
+line/image boundary, closes table borders and continues the next entry. Input is
+retained. `FORMAT_CONTENT_OMITTED`, `FORMAT_FRAME_NOT_SHOWN` and
+`FORMAT_IMAGE_NOT_SHOWN` identify omissions; a succeeded PDF with these warnings
+is partial. A visible link/TOC targeting omitted content fails with
+`LAYOUT_FAILED` reason `omitted-destination`. No Area sizing or request override.
+
+Candidate verification is recorded in Project Control; this paragraph does not
+certify delivery, visual parity or installed availability.

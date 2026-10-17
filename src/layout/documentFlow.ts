@@ -1,4 +1,6 @@
 import type { Issue } from '../result.js';
+import {FormatStop,formatCursor,formatWarning,instanceForNode} from './formatLayout.js';
+import type {FormatInstance} from '../composition/resolvedDocument.js';
 import { measureRule } from './line.js';
 import type { PageFieldSlot } from '../pdf/drawContract.js';
 import { assignSystemPageNumbers } from './systemPageCounting.js';
@@ -19,7 +21,12 @@ import type { PdfImageResources } from '../pdf/imageResources.js';
 const epsilon = 1e-6;
 export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, images: PdfImageResources = {}): Promise<DrawDocument> {
     const warnings: Issue[] = [];
+    const omittedNodeIds=new Set<string>();
+    let fixed:{instance:FormatInstance;start:number;end:number}|undefined;
+    const pending=(id:string,kind:'text'|'image'|'node',extra:Partial<import('./formatLayout.js').FormatCursor>={})=>formatCursor(d,id,kind,extra);
+    try {
     let widthPt = 0, heightPt = 0, left = 0, top = 0, bottom = 0, available = 0, innerTop = 0, innerBottom = 0;
+    const limit=()=>fixed?.end??bottom;
     let modes: {
         headerMode?: BandMode;
         footerMode?: BandMode;
@@ -68,6 +75,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         return { top: nt, bottom: nb, h, f, hy, fy };
     };
     const nextPage = () => {
+        if(fixed)throw new FormatStop('height-limit',[pending(activeNode,'node',{nodeType:d.nodes[activeNode]?.type??'table'})]);
         if (cover && sectionPageIndex > 0)
             throw new LayoutError(activeNode, 'Cover exceeds one page');
         const g = geometry(sectionPageIndex);
@@ -100,7 +108,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
             }
         }
     };
-    const ensureHeight = (height: number, id: string) => { if (y + height > bottom + epsilon)
+    const ensureHeight = (height: number, id: string, cursor= pending(id,'node',{nodeType:d.nodes[id]?.type??'text-block'})) => { if(fixed&&y+height>limit()+epsilon)throw new FormatStop(cursor.kind==='image'?'image-does-not-fit':'height-limit',[cursor]); if (y + height > bottom + epsilon)
         nextPage(); if (height > bottom - top + epsilon)
         throw new LayoutError(id, 'Item exceeds page content height'); };
     const emitLine = (line: MeasuredLine, x: number, at: number) => { if (line.run)
@@ -108,8 +116,9 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     const measureBlock = async (id: string, width: number) => { const n = d.nodes[id]; if (n?.type !== 'text-block')
         throw new LayoutError(id, 'Expected a TextBlock'); return measureText(n, d.styles[n.props.textStyleId]!, width, runtime); };
     const table = async (t: Table) => {
+        const bounded=!!fixed; if(bounded)y+=.25;
         {
-            await cellTableFlow(d, t, runtime, { warn(issue) { warnings.push(issue); }, get top() { return top; }, get bottom() { return bottom; }, get nextCapacity() { const g = geometry(sectionPageIndex); return g.bottom - g.top; }, left, availableWidth: available, get y() { return y; }, set y(v) { y = v; }, nextPage,
+            await cellTableFlow(d, t, runtime, {bounded, omitImage(nodeId){const f=instanceForNode(d,nodeId);if(fixed||f?.sizing.mode!=='auto')return false;warnings.push(formatWarning(f,'FORMAT_IMAGE_NOT_SHOWN',{reason:'image-exceeds-page',pending:[pending(nodeId,'image')]}));omittedNodeIds.add(nodeId);return true;}, warn(issue) { warnings.push(issue); }, get top() { return bounded?fixed!.start+.25:top; }, get bottom() { return bounded?limit()-.25:limit(); }, get nextCapacity() { if(fixed)return 0; const g = geometry(sectionPageIndex); return g.bottom - g.top; }, left, availableWidth: available, get y() { return y; }, set y(v) { y = v; }, nextPage,
                 fill(xPt, yPt, widthPt, heightPt, color, nodeId) { current.fills ??= []; current.fills.push({ xPt, yPt, widthPt, heightPt, color, nodeId }); },
                 emitItem(item, x, at, width) {
                     if (item.kind === 'text-line') {
@@ -123,14 +132,15 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                     const frameLeft = x + (item.align === 'right' ? width - fw : item.align === 'center' ? (width - fw) / 2 : 0);
                     current.images ??= [];
                     current.images.push({ nodeId: item.nodeId, resourceId: item.resourceId, xPt: frameLeft + (fw - iw) / 2, yPt: at + (fh - ih) / 2, widthPt: iw, heightPt: ih });
-                }, border(x1Pt, y1Pt, x2Pt, y2Pt, nodeId) { current.borders ??= []; current.borders.push({ x1Pt, y1Pt, x2Pt, y2Pt, nodeId, widthPt: 0.5, color: t.props.borderColor ?? '000000' }); }
+                }, border(x1Pt, y1Pt, x2Pt, y2Pt, nodeId) { if(bounded){x1Pt=Math.max(left+.25,Math.min(left+available-.25,x1Pt));x2Pt=Math.max(left+.25,Math.min(left+available-.25,x2Pt));} current.borders ??= []; current.borders.push({ x1Pt, y1Pt, x2Pt, y2Pt, nodeId, widthPt: 0.5, color: t.props.borderColor ?? '000000' }); }
             });
+            if(bounded)y+=.25;
             return;
         }
     };
     const sections = d.sections!;
     for (const section of sections) {
-        if (!section.rootIds.some(id => d.nodes[id]?.type !== 'page-break' && (d.nodeModelVersion!==19||d.nodes[id]?.type!=='table-of-contents'||contentsById.get(id)!.length>0)) && !((section.role === 'cover' || section.sourceKind === 'blank')))
+        if (!section.rootIds.some(id => d.nodes[id]?.type !== 'page-break' && (d.nodeModelVersion!==19||d.nodes[id]?.type!=='table-of-contents'||contentsById.get(id)!.length>0)) && !d.formatInstances?.some(f=>f.sectionId===section.sectionId&&f.sizing.mode==='fixed') && !((section.role === 'cover' || section.sourceKind === 'blank')))
             continue;
         hideNumbers = "numbering" in section && section.numbering?.visibility === 'hide';
         sectionId = section.sectionId;
@@ -168,18 +178,19 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
             }
         nextPage();
         let pendingBreak = false;
-        for (const id of section.rootIds) {
+        const renderRoot=async(id:string)=> {
             activeNode = id;
             const n = d.nodes[id];
             if (n?.type === 'page-break') {
+                if(fixed)throw new FormatStop('explicit-page-break',[pending(id,'node',{nodeType:'page-break'})]);
                 pendingBreak = true;
-                continue;
+                return;
             }
             if (n?.type === 'table' && !n.rowIds.length)
-                continue;
+                return;
             const contents = n?.type === 'table-of-contents' ? await measureContents(n, contentsById.get(id)!, d.styles[n.props.textStyleId]!, available, runtime) : undefined;
             if (contents && !contents.length)
-                continue;
+                return;
             if (pendingBreak) {
                 if (y > top + epsilon)
                     nextPage();
@@ -190,6 +201,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
             else if (n?.type === 'text-block') {
                 if (n.props.heightMode === 'fixed') {
                     const measured = await measureFixedTextBlock(n, d.styles[n.props.textStyleId]!, available, runtime);
+                    if(fixed&&y+measured.heightPt>limit()+epsilon)throw new FormatStop('unbreakable-item-does-not-fit',[pending(id,'node',{nodeType:'text-block'})]);
                     if (y + measured.heightPt > bottom + epsilon)
                         throw new LayoutError(id, 'Reserved frame exceeds cover content area');
                     let at = y + measured.offsetPt;
@@ -198,12 +210,14 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                         at += line.heightPt;
                     }
                     y += measured.heightPt;
-                    continue;
+                    return;
                 }
+                let lineIndex=0;
                 for (const line of await measureBlock(id, available)) {
-                    ensureHeight(line.heightPt, id);
+                    ensureHeight(line.heightPt, id,pending(id,'text',{lineIndex, ...(line.run?.sourceStart===undefined?{}:{sourceOffset:line.run.sourceStart})}));
                     emitLine(line, left, y);
                     y += line.heightPt;
+                    lineIndex++;
                 }
             }
             else if (n?.type === 'table-of-contents') {
@@ -227,7 +241,11 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                 const fw = toPt(n.props.width), fh = toPt(n.props.height);
                 if (fw > available + epsilon)
                     throw new LayoutError(id, 'Image frame exceeds printable page');
-                ensureHeight(fh, id);
+                const instance=instanceForNode(d,id);
+                if(!fixed&&instance?.sizing.mode==='auto'&&fh>Math.max(bottom-top,geometry(sectionPageIndex).bottom-geometry(sectionPageIndex).top)+epsilon){
+                    warnings.push(formatWarning(instance,'FORMAT_IMAGE_NOT_SHOWN',{reason:'image-exceeds-page',pending:[pending(id,'image')]}));omittedNodeIds.add(id);return;
+                }
+                ensureHeight(fh, id,pending(id,'image'));
                 const image = Object.hasOwn(images, n.props.resourceId) ? images[n.props.resourceId] : undefined;
                 const frameLeft = left + (n.props.align === 'right' ? available - fw : n.props.align === 'center' ? (available - fw) / 2 : 0);
                 if (image) {
@@ -239,9 +257,29 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
             }
             else
                 throw new LayoutError(id, 'Unsupported root');
+        };
+        const instances=(d.formatInstances??[]).filter(f=>f.sectionId===section.sectionId&&f.rootStartIndex!==undefined).sort((a,b)=>a.rootStartIndex!-b.rootStartIndex!);
+        let position=0,fi=0;
+        while(position<section.rootIds.length||fi<instances.length){
+            const f=instances[fi];
+            if(!f||f.rootStartIndex!==position){await renderRoot(section.rootIds[position++]!);continue;}
+            fi++;
+            if(f.sizing.mode==='auto'){for(const id of f.rootIds)await renderRoot(id);position+=f.rootIds.length;continue;}
+            if(pendingBreak){if(y>top+epsilon)nextPage();pendingBreak=false;}
+            const height=toPt(f.sizing.height),availableHeight=Math.max(0,bottom-y),completed=new Set<string>();
+            const markOmitted=()=>{const remaining=f.rootIds.filter(id=>!completed.has(id)),todo=[...remaining];while(todo.length){const id=todo.pop()!;omittedNodeIds.add(id);const n=d.nodes[id];if(!n)continue;for(const key of ['rowIds','cellIds','childIds'] as const)if(key in n)todo.push(...(n as unknown as Record<string,string[]>)[key]!);}};
+            if(height>availableHeight+epsilon){warnings.push(formatWarning(f,'FORMAT_FRAME_NOT_SHOWN',{reason:'insufficient-page-space',sectionPageIndex:sectionPageIndex-1,requiredHeightPt:height,availableHeightPt:availableHeight}));markOmitted();}
+            else {
+                fixed={instance:f,start:y,end:y+height};
+                try{for(const id of f.rootIds){await renderRoot(id);completed.add(id);}}
+                catch(error){if(!(error instanceof FormatStop))throw error;warnings.push(formatWarning(f,'FORMAT_CONTENT_OMITTED',{reason:error.reason,pending:error.pending}));markOmitted();}
+                finally{y=fixed.end;fixed=undefined;}
+            }
+            position+=f.rootIds.length;
         }
     }
     if(d.nodeModelVersion===19&&!pages.length)throw new LayoutError(d.rootIds[0]??'document','No layout content in document');
     assignSystemPageNumbers(d, { pages });
-    return { pages, ...(warnings.length ? { warnings } : {}), ...(pageTexts.length ? { pageTexts } : {}), ...(pageFieldSlots.length ? { pageFieldSlots } : {}), ...(contentsSlots.length ? { contentsSlots } : {}) };
+    return { pages, ...(omittedNodeIds.size?{omittedNodeIds:[...omittedNodeIds]}:{}), ...(warnings.length ? { warnings } : {}), ...(pageTexts.length ? { pageTexts } : {}), ...(pageFieldSlots.length ? { pageFieldSlots } : {}), ...(contentsSlots.length ? { contentsSlots } : {}) };
+    }catch(error){if(error instanceof LayoutError)error.warnings=warnings;throw error;}
 }

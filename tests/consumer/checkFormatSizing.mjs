@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import {readFile,writeFile} from 'node:fs/promises';
+import {validateTemplate,prepareGeneration,composeDocument,loadBundledResources,createPdfEngine} from '@flowdoc/core';
+const ok=r=>{assert(r.ok,JSON.stringify(r));return r.value;};
+const template=JSON.parse(await readFile('/consumer/format-sizing-template.json','utf8'));
+const request=JSON.parse(await readFile('/consumer/format-sizing-request.json','utf8'));
+const resources=ok(await loadBundledResources({pythonExecutable:'/usr/local/bin/python',tempRoot:'/consumer/temp'}));
+const engine=ok(await createPdfEngine(resources));
+const results=[];
+async function render(name,t,q=request){
+ const before=JSON.stringify(q),v=ok(validateTemplate(t)),prepared=ok(prepareGeneration(v,q)),document=ok(composeDocument(v,prepared));
+ const result=await engine.generatePdf(document);
+ assert.equal(JSON.stringify(q),before);assert.deepEqual(prepared.skippedContentIndices,[]);
+ await writeFile('/consumer/output/'+name+'-result.json',JSON.stringify({...result,...(result.ok?{value:{pageCount:result.value.pageCount}}:{})},null,2));
+ if(result.ok)await writeFile('/consumer/output/'+name+'.pdf',result.value.bytes);
+ results.push({name,ok:result.ok,warnings:result.warnings,...(result.ok?{pageCount:result.value.pageCount}:{issues:result.issues})});return result;
+}
+let r=await render('format-fixed',template);assert(r.ok);assert.equal(r.value.pageCount,1);assert.equal(r.warnings[0].code,'FORMAT_CONTENT_OMITTED');assert.equal(r.warnings[0].formatOmission.pending[0].lineIndex,5);
+const table=structuredClone(template),f=table.areaFormats.panel,n=f.fragment.nodes;
+f.sizing.height.value=48.5;n.cell={id:'cell',type:'table-cell',props:{},childIds:['text']};n.row={id:'row',type:'table-row',props:{allowBreak:true},cellIds:['cell']};n.table={id:'table',type:'table',props:{headerRowCount:0,repeatHeaderRows:false},columns:[{width:{value:200,unit:'pt'}}],rowIds:['row']};f.fragment.rootIds=['table'];
+r=await render('format-fixed-table',table);assert(r.ok);assert.equal(r.warnings[0].formatOmission.pending[0].lineIndex,2);
+const frame=structuredClone(template);frame.areaFormats.panel.sizing.height.value=1000;
+frame.areaFormats.after=structuredClone(template.areaFormats.panel);frame.areaFormats.after.key='after';
+const q=structuredClone(request);q.sections[0].data.parts[1].format='after';
+r=await render('format-frame-skipped',frame,q);assert(r.ok);assert.equal(r.value.pageCount,1);assert.equal(r.warnings[0].code,'FORMAT_FRAME_NOT_SHOWN');
+const auto=structuredClone(template);auto.areaFormats.panel.sizing={mode:'auto'};
+const long=structuredClone(request);long.sections[0].data.parts[0].data.text=Array.from({length:90},(_,i)=>'บรรทัด / LINE '+i).join('\n');
+r=await render('format-auto',auto,long);assert(r.ok);assert(r.value.pageCount>1);assert.equal(r.warnings.length,0);
+const implicit=structuredClone(auto);delete implicit.areaFormats.panel.sizing;
+r=await render('format-implicit',implicit,long);assert(r.ok);assert.equal(r.warnings.length,0);
+const target=structuredClone(template);target.areaFormats.panel.sizing.height.value=20;const g=target.areaFormats.panel.fragment;
+g.nodes.hidden={id:'hidden',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body',anchorId:'secret'},children:[{id:'hiddenValue',type:'text',text:'HIDDEN'}]};g.rootIds.push('hidden');
+target.areaFormats.ref={key:'ref',ownerAreaId:'parts',inputSchema:{type:'object',fields:{}},repeats:[],fragment:{rootIds:['ref'],nodes:{ref:{id:'ref',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body'},children:[{id:'jump',type:'reference',target:'secret',text:'JUMP'}]}}}};
+const link=structuredClone(request);link.sections[0].data.parts=[{format:'panel',data:{text:'A'}},{format:'ref',data:{}}];
+r=await render('format-omitted-destination',target,link);assert(!r.ok);assert.equal(r.issues[0].reason,'omitted-destination');assert.equal(r.warnings[0].code,'FORMAT_CONTENT_OMITTED');
+await writeFile('/consumer/output/format-sizing-result.json',JSON.stringify({status:'PASS',results,visualAcceptance:'pending'},null,2));

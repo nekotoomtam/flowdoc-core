@@ -8,7 +8,9 @@ export function indexDestinations(document:ResolvedDocument,draw:DrawDocument):N
   const anchor=targets.get(run.nodeId);
   if(anchor!==undefined&&!Object.hasOwn(anchors,anchor)&&run.text.trim())anchors[anchor]={pageIndex,xPt:run.bounds.xPt,yPt:run.bounds.yPt};
  }
- for(const [id,anchor] of targets)if(!Object.hasOwn(anchors,anchor))throw new LayoutError(id,'Destination has no nonempty positioned line');
+ const omitted:string[]=[];
+ for(const [id,anchor] of targets)if(!Object.hasOwn(anchors,anchor)){if(draw.omittedNodeIds?.includes(id))omitted.push(anchor);else throw new LayoutError(id,'Destination has no nonempty positioned line');}
+ if(omitted.length)draw.omittedAnchorIds=omitted;
  return anchors;
 }
 // Layout has already fixed line/page positions. Never reshape slices here.
@@ -36,5 +38,5 @@ export function resolveLinkGeometry(document:ResolvedDocument,draw:DrawDocument,
   if(nonempty.length)(page.annotations??=[]).push(...nonempty);
  }
  if(Object.keys(anchors).length)draw.anchors=anchors;
- for(const page of draw.pages)for(const a of page.annotations??[])if(a.destination.type==='internal'&&!Object.hasOwn(anchors,a.destination.target))throw new LayoutError(a.nodeId,'Missing positioned destination');
+ for(const page of draw.pages)for(const a of page.annotations??[])if(a.destination.type==='internal'&&!Object.hasOwn(anchors,a.destination.target)){const error=new LayoutError(a.nodeId,'Missing positioned destination');if(draw.omittedAnchorIds?.includes(a.destination.target))error.reason='omitted-destination';throw error;}
 }

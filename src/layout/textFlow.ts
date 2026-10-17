@@ -10,6 +10,8 @@ export interface TextRuntime {
  shape(text:string,fontId:string,sizePt:number):Promise<ShapedText>;
 }
 export class LayoutError extends Error {
+ warnings?:import('../result.js').Issue[];
+ reason?:string;
  constructor(public readonly nodeId:string,message:string,public readonly sectionId?:string,public readonly path?:string){super(message);}
 }
 export async function textFlow(document:ResolvedDocument,runtime:TextRuntime):Promise<DrawDocument>{

@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-Development candidate `0.4.2-dev.3` adds model19 Section instances: UUID `id`,
+Development candidate `0.4.3-dev.1` adds model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -25,7 +25,7 @@ or release claim. Shared contract: Project Control Section–Area Stage0–3.
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.2-dev.3, a development candidate after 0.4.0.
+Package version: 0.4.3-dev.1, a development candidate after 0.4.0.
 This candidate adds the opt-in height calculation below; it has no release tag.
 Release identity requires the matching tagged snapshot and acceptance gates.
 Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
@@ -217,3 +217,19 @@ checksum, source commit and Linux consumer results. The Service consumer must us
 that exact tarball; a Windows build alone does not verify its native PDF runtime.
 Font verification covers exact selected faces/required glyphs and legacy Sarabun
 parity. Release promotion follows the gates above after this preparation.
+
+## Format sizing candidate
+
+Model19 Area Format definitions optionally declare `sizing: {mode: "auto"}` or
+`{mode: "fixed", height: {value: 100, unit: "pt"}}` (pt/mm). Omitted sizing retains
+legacy behavior. Fixed is allowed only at a Section flow root, without TOC; each
+Area entry reserves its own frame if it fits the current page. A frame that does
+not fit is skipped without moving pages. Overflow stops that instance at a whole
+line/image boundary, closes table borders and continues the next entry. Input is
+retained. `FORMAT_CONTENT_OMITTED`, `FORMAT_FRAME_NOT_SHOWN` and
+`FORMAT_IMAGE_NOT_SHOWN` identify omissions; a succeeded PDF with these warnings
+is partial. A visible link/TOC targeting omitted content fails with
+`LAYOUT_FAILED` reason `omitted-destination`. No Area sizing or request override.
+
+Candidate verification is recorded in Project Control; this paragraph does not
+certify delivery, visual parity or installed availability.
