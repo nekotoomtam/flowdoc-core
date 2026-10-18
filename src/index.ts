@@ -34,3 +34,5 @@ export type {ResolvedRowGroup,ResolvedGroupLabel} from './composition/resolvedDo
 
 export type {Template18,Template19,InstanceSection,AreaSection,BindingScope,PageNumbering,RowGroup,GroupLabel} from './template/types.js';
 export type {PreparedSection19} from './data/types.js';
+export {normalizeTaskInput} from './data/taskInput.js';
+export type {TaskValue,TaskImageContext,TaskImageResource,TaskInputOptions,TaskInputLimits,TaskInputSummary} from './data/taskInput.js';

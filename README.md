@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-Development candidate `0.4.4` adds model19 Section instances: UUID `id`,
+Development candidate `0.4.5` adds model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -22,11 +22,23 @@ reflow; an oversized number fails rather than guessing or retrying. Model18 keep
 its existing unscoped contract. This is a development package, not an installation
 or release claim. Shared contract: Project Control Section–Area Stage0–3.
 
+## Internal task input reader
+
+Unreleased `normalizeTaskInput(template, valueHandle, options)` validates model18/19
+values and writes `flowdoc-task-input/1` incrementally. Storage-neutral handles expose
+object properties, array elements and bounded scalars; Core never loads a whole
+Section or Area entry. A collection pass precedes resolution so property order and
+forward image references do not select a first winner. Service owns file/image
+metadata and Section asset keys. Only typed image slots invoke its adapter; omitted
+images retain explicit version1 unavailable resources and reasons, including required
+fields. Legacy `prepareGeneration` still accepts its original UUID image values only.
+This normalized contract is internal input for future task processing, not a new
+legacy prepared snapshot, renderer capability, public endpoint or PDF readiness claim.
 ## Authority Boundary
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.4, an unpromoted development candidate after 0.4.3.
+Package version: 0.4.5, an unpromoted development candidate after 0.4.3.
 This candidate includes Section19, scoped contents, Format sizing v2 and the opt-in height calculation below; it has no release tag.
 Release identity requires the matching tagged snapshot and acceptance gates.
 Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
@@ -236,7 +248,7 @@ Visible references/TOC to omitted content fail LAYOUT_FAILED with reason
 omitted-destination and collected warnings. No Area sizing or request override.
 Matched consumers require formatSizing.version2, diagnosticsVersion1 and the
 exact new artifact checksum. Version1 archives describe the earlier whole-frame
-fit gate and remain immutable. Package 0.4.4 is untagged, not installed;
+fit gate and remain immutable. Package 0.4.5 is untagged, not installed;
 Project Control owns cross-repository verification and release acceptance.
 
 
