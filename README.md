@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-Development candidate `0.4.3` adds model19 Section instances: UUID `id`,
+Development candidate `0.4.4` adds model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -26,7 +26,7 @@ or release claim. Shared contract: Project Control Section–Area Stage0–3.
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.3, a development candidate after 0.4.0.
+Package version: 0.4.4, an unpromoted development candidate after 0.4.3.
 This candidate includes Section19, scoped contents, Format sizing v2 and the opt-in height calculation below; it has no release tag.
 Release identity requires the matching tagged snapshot and acceptance gates.
 Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
@@ -236,5 +236,39 @@ Visible references/TOC to omitted content fail LAYOUT_FAILED with reason
 omitted-destination and collected warnings. No Area sizing or request override.
 Matched consumers require formatSizing.version2, diagnosticsVersion1 and the
 exact new artifact checksum. Version1 archives describe the earlier whole-frame
-fit gate and remain immutable. Package 0.4.3 is untagged, not installed;
+fit gate and remain immutable. Package 0.4.4 is untagged, not installed;
 Project Control owns cross-repository verification and release acceptance.
+
+
+## Group-label spans development candidate
+
+Model19 (schema1 or2) rowGroups optionally declares
+`groupLabel:{cellTemplateId:"member-label",emptyCellTemplateId:"empty-label"}`.
+The member and empty label cells bind the same group field, occupy the same grid column/colSpan, have no
+authored rowSpan, and each contains one text-block with a required nonempty
+string field-ref in group scope. Labels cannot contain links, anchors, images
+or TOCs. The group needs member/empty row templates; a prefix is optional here.
+Normal rowGroups without groupLabel retain their existing contract. Model18
+rejects this optional declaration; it is not silently discarded.
+
+The empty template row must set allowBreak:false. Core derives span from member count (empty uses one fallback row). An empty
+group collection emits no group; equal names remain distinct instances.
+keepStart is always true for groupLabel and cannot be set false. In auto,
+each actual continuation fragment repeats the complete name plus ` (ต่อ)`;
+members keep their logical identity and flow once. A complete label that cannot
+fit fails LAYOUT_FAILED with reason group-label-does-not-fit and group context.
+
+Format sizing.fixed still reserves the lesser of maximum height and current
+page remainder. It closes the visible table and stops this Format; remaining
+members never continue onto another page. FORMAT_CONTENT_OMITTED retains
+formatOmission.version1; pending groupId/groupIndex/itemIndex identify where
+content stopped (no itemIndex for group labels/empty rows). Input stays complete;
+a successful partial PDF must be reported as incomplete. Totals remain authored
+ordinary rows, not a new aggregation or group-footer hook.
+
+Consumers must preserve the declaration and inspect groupLabelSpans.version1
+on a matched Service/FlowDocMake contract, with model19/schema1,2, diagnostics1
+and formatSizing.version2. The suffix uses the selected label font; missing
+glyphs block generation without fallback. This unpromoted candidate also retains
+the decimal PDF image-coordinate serialization fix; do not overwrite an older
+archive using the new bytes. Project Control owns cross-repository acceptance.
