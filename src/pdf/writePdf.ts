@@ -1,6 +1,6 @@
 import {validateExternalUrl} from '../composition/linkContract.js';
 import { createHash } from 'node:crypto';
-import { parseSfnt, unicodeAssignments, buildPageContent, assemblePdf } from './primitives.js';
+import { formatNumber, parseSfnt, unicodeAssignments, buildPageContent, assemblePdf } from './primitives.js';
 import type { DrawDocument, PdfFontResource } from './drawContract.js';
 import {deflateSync} from 'node:zlib';
 import {validateImageResources} from './imageResources.js';
@@ -72,7 +72,7 @@ export function writePdf(draw: DrawDocument, resources: PdfFontResource[],images
   for(const image of imageUsages){identity.update(image.bytes);if(image.alpha)identity.update(image.alpha);}
   const fingerprint='sha256:'+identity.digest('hex');
   return assemblePdf({...draw,fingerprint},usages,imageUsages,draw.pages.map(p=>{
-   const imageContent=(p.images??[]).map(i=>{if(![i.xPt,i.yPt,i.widthPt,i.heightPt].every(Number.isFinite)||i.widthPt<=0||i.heightPt<=0)throw Error('Invalid image geometry');return `q ${i.widthPt} 0 0 ${i.heightPt} ${i.xPt} ${p.heightPt-i.yPt-i.heightPt} cm /${imageUsages.find(r=>r.id===i.resourceId)!.name} Do Q\n`;}).join('');
+   const imageContent=(p.images??[]).map(i=>{if(![i.xPt,i.yPt,i.widthPt,i.heightPt].every(Number.isFinite)||i.widthPt<=0||i.heightPt<=0)throw Error('Invalid image geometry');return `q ${formatNumber(i.widthPt)} 0 0 ${formatNumber(i.heightPt)} ${formatNumber(i.xPt)} ${formatNumber(p.heightPt-i.yPt-i.heightPt)} cm /${imageUsages.find(r=>r.id===i.resourceId)!.name} Do Q\n`;}).join('');
    return Buffer.concat([buildPageContent(p,usages,runs),Buffer.from(imageContent,'ascii')]);
   }));
 }

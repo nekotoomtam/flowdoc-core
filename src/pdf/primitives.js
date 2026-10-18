@@ -1,7 +1,16 @@
 // Text/font PDF primitives extracted from flowdoc-vnext-core fa76c74356e5cfc9296f6a86c0bfac690e8416f6.
 // Private JavaScript preserves the existing glyph/Unicode/object assembly algorithms.
 function formatNumber(value) {
-    return Number(value.toFixed(6)).toString();
+    if (!Number.isFinite(value))
+        throw new Error('Invalid PDF number');
+    // Keep the existing six-decimal precision and normalize negative zero.
+    const text = Number(value.toFixed(6)).toString();
+    // toFixed/toString use exponent notation at >= 1e21; PDF numbers cannot.
+    if (!text.includes('e'))
+        return text;
+    const [coefficient, exponent] = text.split('e');
+    const [integer, fraction = ''] = coefficient.split('.');
+    return integer + fraction + '0'.repeat(Number(exponent) - fraction.length);
 }
 function scaleMetric(value, unitsPerEm) {
     return Math.round(value / unitsPerEm * 1000);
@@ -354,4 +363,4 @@ function assemblePdf(contract, usages, imageUsages, pageContents) {
     parts.push(Buffer.from(trailer, "ascii"));
     return Buffer.concat(parts);
 }
-export { parseSfnt, unicodeAssignments, buildPageContent, assemblePdf };
+export { formatNumber, parseSfnt, unicodeAssignments, buildPageContent, assemblePdf };
