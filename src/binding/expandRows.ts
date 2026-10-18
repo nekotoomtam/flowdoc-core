@@ -14,7 +14,7 @@ export function expandRows(format:Format,global:PreparedData,local:PreparedData,
  const repeats=new Map(format.repeats.map(r=>[r.rowTemplateId,r]));
  const cellRepeats=new Map((format.cellRepeats??[]).map(r=>[r.cellId,r]));
  const groupStarts=new Map((format.rowGroups??[]).map(g=>[g.rowTemplateIds[0]!,g]));
- type GroupContext={groupId:string;groupIndex:number;data:PreparedItem};
+ type GroupContext={groupId:string;groupIndex:number;data:PreparedItem;labelCellTemplateId?:string|undefined};
  const clone=(sourceId:string,itemIndex?:number,item:PreparedItem={},repeatId?:string,group?:GroupContext):string=>{
   options.budget?.take();
   const scopes={...options.scopes,global,local,item,...group?{group:group.data}:{}};
@@ -32,11 +32,25 @@ export function expandRows(format:Format,global:PreparedData,local:PreparedData,
     if(declaration){
      const values=scopes[declaration.source.scope]![declaration.source.key] as PreparedItem[];
      values.forEach((data,groupIndex)=>{
-      const context={groupId:declaration.id,groupIndex,data},prefixRowIds=declaration.rowTemplateIds.slice(0,-2).map(row=>clone(row,undefined,{},undefined,context));
+      const context={groupId:declaration.id,groupIndex,data,labelCellTemplateId:declaration.groupLabel?.cellTemplateId},prefixRowIds=declaration.rowTemplateIds.slice(0,-2).map(row=>clone(row,undefined,{},undefined,context));
       const members=data[declaration.memberRepeat.source.key] as PreparedItem[];
       const memberIds=members.length?members.map((value,i)=>clone(declaration.memberRepeat.rowTemplateId,i,value,undefined,context)):[clone(declaration.memberRepeat.emptyRowTemplateId,undefined,{},undefined,context)];
+      let groupLabel:import('../composition/resolvedDocument.js').ResolvedGroupLabel|undefined;
+      if(declaration.groupLabel){
+       const first=nodes[memberIds[0]!] as import('../composition/resolvedDocument.js').TableRow;
+       const sourceCellId=members.length?declaration.groupLabel.cellTemplateId:declaration.groupLabel.emptyCellTemplateId;
+       let cellId:string;
+       if(members.length){
+        cellId=clone(sourceCellId,undefined,{},undefined,context);
+        const row=format.fragment.nodes[declaration.memberRepeat.rowTemplateId] as import('../composition/resolvedDocument.js').TableRow;
+        first.cellIds.splice(row.cellIds.indexOf(sourceCellId),0,cellId);
+       }else cellId=first.cellIds.find(id=>sourceMap[id]!.sourceId===sourceCellId)!;
+       const cell=nodes[cellId] as import('../composition/resolvedDocument.js').TableCell;
+       cell.props.rowSpan=Math.max(1,members.length);
+       groupLabel={cellId,sourceCellId,memberCount:members.length};
+      }
       const expanded=[...prefixRowIds,...memberIds];for(const row of expanded)rowIds.push(row);
-      groups.push({groupId:declaration.id,groupIndex,rowIds:expanded,prefixRowIds,firstMemberRowId:memberIds[0]!,empty:members.length===0,keepStart:declaration.pagination?.keepStart??false});
+      groups.push({groupId:declaration.id,groupIndex,rowIds:expanded,prefixRowIds,firstMemberRowId:memberIds[0]!,empty:members.length===0,keepStart:declaration.pagination?.keepStart??!!declaration.groupLabel,...groupLabel?{groupLabel}:{}});
      });
      ri+=declaration.rowTemplateIds.length-1;
     }else if(!repeat)rowIds.push(clone(rid));else{
@@ -45,7 +59,7 @@ export function expandRows(format:Format,global:PreparedData,local:PreparedData,
     }
    }
    nodes[id]={...structuredClone(source),id,rowIds,...groups.length?{rowGroups:groups}:{}};
-  }else if(source.type==='table-row')nodes[id]={...structuredClone(source),id,cellIds:source.cellIds.map(cid=>clone(cid,itemIndex,item,repeatId,group))};
+  }else if(source.type==='table-row')nodes[id]={...structuredClone(source),id,cellIds:source.cellIds.filter(cid=>!(itemIndex!==undefined&&cid===group?.labelCellTemplateId)).map(cid=>clone(cid,itemIndex,item,repeatId,group))};
   else if(source.type==='area')throw Error('Area must expand as a child sequence');
   else {
    const repeat=cellRepeats.get(sourceId),childIds:string[]=[];

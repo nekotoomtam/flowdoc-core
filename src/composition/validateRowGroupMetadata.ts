@@ -13,12 +13,12 @@ export function validateRowGroupMetadata(d: Record<string, any>): Issue[] {
             fail(path);
             continue;
         }
-        const groupRowIds = new Set<string>(), rowPositions = new Map<string, number>(t.rowIds.map((id: string, i: number) => [id, i]));
+        const labelCellIds = new Set<string>(), groupRowIds = new Set<string>(), rowPositions = new Map<string, number>(t.rowIds.map((id: string, i: number) => [id, i]));
         const nextIndex = new Map<string, number>();
         let previousEnd = t.props?.headerRowCount ?? 0;
         for (const [index, g] of t.rowGroups.entries()) {
             const p = path + `[${index}]`;
-            if (!object(g) || !keys(g, ['groupId', 'groupIndex', 'rowIds', 'prefixRowIds', 'firstMemberRowId', 'empty', 'keepStart']) || !name(g.groupId) || g.groupId.includes('~') || !Number.isSafeInteger(g.groupIndex) || g.groupIndex !== (nextIndex.get(g.groupId) ?? 0) || !Array.isArray(g.rowIds) || !g.rowIds.length || !g.rowIds.every(name) || !Array.isArray(g.prefixRowIds) || !g.prefixRowIds.length || !g.prefixRowIds.every(name) || typeof g.empty !== 'boolean' || typeof g.keepStart !== 'boolean') {
+            if (!object(g) || !keys(g, ['groupId', 'groupIndex', 'rowIds', 'prefixRowIds', 'firstMemberRowId', 'empty', 'keepStart', ...(d.nodeModelVersion===19?['groupLabel']:[])]) || !name(g.groupId) || g.groupId.includes('~') || !Number.isSafeInteger(g.groupIndex) || g.groupIndex !== (nextIndex.get(g.groupId) ?? 0) || !Array.isArray(g.rowIds) || !g.rowIds.length || !g.rowIds.every(name) || !Array.isArray(g.prefixRowIds) || (!g.prefixRowIds.length&&!own(g,'groupLabel')) || !g.prefixRowIds.every(name) || typeof g.empty !== 'boolean' || typeof g.keepStart !== 'boolean') {
                 fail(p);
                 continue;
             }
@@ -29,38 +29,49 @@ export function validateRowGroupMetadata(d: Record<string, any>): Issue[] {
                 continue;
             }
             previousEnd = start + g.rowIds.length;
+            if(own(g,'groupLabel')){
+                const label=g.groupLabel,first=d.nodes[g.firstMemberRowId];
+                if(!object(label)||!keys(label,['cellId','sourceCellId','memberCount'])||!name(label.cellId)||!name(label.sourceCellId)||label.sourceCellId.includes('~')||!Number.isSafeInteger(label.memberCount)||label.memberCount!==(g.empty?0:g.rowIds.length-prefix)||!g.keepStart||!first?.cellIds?.includes(label.cellId)){
+                    fail(p+'.groupLabel');continue;
+                }
+                const cell=d.nodes[label.cellId],s=d.sourceMap[label.cellId],text=cell?.childIds?.length===1?d.nodes[cell.childIds[0]]:undefined;
+                if(cell?.type!=='table-cell'||cell.props.rowSpan!==Math.max(1,label.memberCount)||s?.sourceId!==label.sourceCellId||text?.type!=='text-block'||!Array.isArray(text.children)||text.children.some((c:any)=>c.type!=='text'&&c.type!=='line-break')||!text.children.map((c:any)=>c.type==='line-break'?'\n':c.text).join('').trim()||text.props?.heightMode==='fixed'||own(text.props,'anchorId')||own(text.props,'toc')||(g.empty&&first.props?.allowBreak!==false)){
+                    fail(p+'.groupLabel');continue;
+                }
+                labelCellIds.add(label.cellId);
+            }
             for (const rid of g.rowIds)
                 groupRowIds.add(rid);
             for (const [r, rid] of g.rowIds.entries()) {
-                const itemIndex = r < prefix || g.empty ? undefined : r - prefix, pending = [rid];
+                const itemIndex = r < prefix || g.empty ? undefined : r - prefix, pending:{id:string;label:boolean}[] = [{id:rid,label:false}];
                 while (pending.length) {
-                    const id = pending.pop()!;
+                    const entry = pending.pop()!,id=entry.id,label=entry.label||id===g.groupLabel?.cellId;
                     if (covered.has(id)) {
                         fail(p);
                         break;
                     }
                     covered.add(id);
                     const s = d.sourceMap[id], node = d.nodes[id];
-                    if (!object(s) || s.groupId !== g.groupId || s.groupIndex !== g.groupIndex || s.itemIndex !== itemIndex || s.repeatId !== undefined) {
+                    if (!object(s) || s.groupId !== g.groupId || s.groupIndex !== g.groupIndex || s.itemIndex !== (label?undefined:itemIndex) || s.repeatId !== undefined) {
                         fail('sourceMap.' + id);
                         continue;
                     }
                     if (node?.type === 'table-row')
-                        pending.push(...node.cellIds);
+                        pending.push(...node.cellIds.map((id:string)=>({id,label})));
                     else if (node?.type === 'table-cell') {
-                        if ((node.props?.rowSpan ?? 1) > 1)
+                        if ((node.props?.rowSpan ?? 1) > 1&&!labelCellIds.has(id))
                             fail(p);
-                        pending.push(...node.childIds);
+                        pending.push(...node.childIds.map((id:string)=>({id,label})));
                     }
                     else if (node?.type === 'text-block')
-                        pending.push(...node.children.map((c: any) => c.id));
+                        pending.push(...node.children.map((c: any) => ({id:c.id,label})));
                 }
             }
         }
         for (const [row, rid] of t.rowIds.entries())
             for (const cid of d.nodes[rid].cellIds) {
                 const span = d.nodes[cid].props.rowSpan ?? 1;
-                if (span > 1 && t.rowIds.slice(row, row + span).some((id: string) => groupRowIds.has(id)))
+                if (span > 1 && !labelCellIds.has(cid) && t.rowIds.slice(row, row + span).some((id: string) => groupRowIds.has(id)))
                     fail('nodes.' + cid + '.props.rowSpan');
             }
     }
