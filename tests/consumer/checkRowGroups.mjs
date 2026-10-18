@@ -46,4 +46,34 @@ assert.equal(labelDoc.nodes[labelGroups[0].groupLabel.cellId].props.rowSpan,2);
 assert.equal(labelDoc.sourceMap[labelGroups[0].groupLabel.cellId].itemIndex,undefined);
 for(const g of labelGroups){const cell=labelDoc.nodes[g.groupLabel.cellId],text=labelDoc.nodes[cell.childIds[0]];assert.equal(text.children.map(c=>c.type==='line-break'?'\n':c.text).join(''),'Same\nA');}
 await writeFile('/consumer/output/group-labels.resolved.json',JSON.stringify(labelDoc));
-await writeFile('/consumer/output/row-groups-result.json',JSON.stringify({status:'PASS',pageCount:pdf.pageCount,groups:2,rows:texts.length,keepStart:'supported',fallbackWarnings:relaxed.warnings,groupLabelSpans:{stage:1,composition:'PASS',memberCounts:[2,0],multiline:true,layout:'not_checked'}},null,2));
+const labelCases=[];
+async function labelCase(name,groups,{fixed=false,bands=false,protectedRows=false,height=180}={}){
+ const def=structuredClone(labels),f=def.areaFormats.meeting,section=def.sections[0],page=def.pageLayouts[def.book.defaultPageLayoutId].page;
+ page.margin.top={value:10,unit:'pt'};page.margin.bottom={value:297*72/25.4-10-height,unit:'pt'};
+ f.fragment.nodes.table.props.headerRowCount=1;f.fragment.nodes.table.props.repeatHeaderRows=true;
+ if(protectedRows)f.fragment.nodes.member.props.allowBreak=false;
+ if(fixed)f.sizing={mode:'fixed',height:{value:300,unit:'pt'}};
+ if(bands)for(const kind of ['header','footer'])section[kind]={
+  baseTextStyleId:'body',inputSchema:{type:'object',fields:{}},sizing:{mode:'fixed',height:{value:20,unit:'pt'}},gap:{value:4,unit:'pt'},
+  fragment:{rootIds:[kind],nodes:{[kind]:{id:kind,type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body'},children:[{id:kind+'-leaf',type:'text',text:kind.toUpperCase()}]}}}
+ };
+ const req={docKey:def.docKey,data:{},sections:[{id:section.id,data:{details:[{format:'meeting',data:{companies:groups}}]},...(bands?{header:{},footer:{}}:{})}]};
+ const tpl=ok(validateTemplate(def)),resolved=ok(composeDocument(tpl,ok(prepareGeneration(tpl,req)))),result=await engine.generatePdf(resolved);
+ if(name==='impossible'){
+  assert.equal(result.ok,false);assert(result.issues.some(i=>i.code==='LAYOUT_FAILED'&&i.reason==='group-label-does-not-fit'&&i.groupId==='companies'&&i.groupIndex===0));
+  labelCases.push({name,status:'PASS',expectedFailure:result.issues});return;
+ }
+ const artifact=ok(result);if(!fixed)assert(artifact.pageCount>1);else{assert.equal(artifact.pageCount,1);assert(result.warnings.some(w=>w.code==='FORMAT_CONTENT_OMITTED'));}
+ await writeFile('/consumer/output/group-label-'+name+'.pdf',artifact.bytes);
+ await writeFile('/consumer/output/group-label-'+name+'.resolved.json',JSON.stringify(resolved));
+ labelCases.push({name,status:'PASS',pageCount:artifact.pageCount,warnings:result.warnings,members:groups.flatMap(g=>g.members.map(m=>m.name)),labels:groups.map(g=>g.name)});
+}
+await labelCase('groups',[0,1].map(g=>({name:'กลุ่ม A',members:Array.from({length:8},(_,i)=>({name:`G${g}R${i}`}))})),{bands:true,height:200});
+await labelCase('long',[{name:'กลุ่ม A',members:[{name:Array.from({length:24},(_,i)=>'L'+String(i).padStart(2,'0')).join('\n')}]}]);
+await labelCase('multiline',[{name:'Group A\nงานทดสอบ',members:Array.from({length:15},(_,i)=>({name:'M'+String(i).padStart(2,'0')}))}]);
+await labelCase('fixed',[{name:'กลุ่ม A',members:Array.from({length:12},(_,i)=>({name:'F'+String(i).padStart(2,'0')}))}],{fixed:true,height:120});
+await labelCase('protected',[{name:'Top\nMid\nBot',members:Array.from({length:6},(_,i)=>({name:'P'+String(i).padStart(2,'0')}))}],{protectedRows:true,height:100});
+await labelCase('fixed-protected',[{name:'Top\nMid\nBot',members:Array.from({length:6},(_,i)=>({name:'Q'+String(i).padStart(2,'0')}))}],{fixed:true,protectedRows:true,height:100});
+await labelCase('impossible',[{name:Array(9).fill('NAME').join('\n'),members:[]}],{height:100});
+await writeFile('/consumer/output/group-label-cases.json',JSON.stringify(labelCases,null,2));
+await writeFile('/consumer/output/row-groups-result.json',JSON.stringify({status:'PASS',pageCount:pdf.pageCount,groups:2,rows:texts.length,keepStart:'supported',fallbackWarnings:relaxed.warnings,groupLabelSpans:{stage:2,composition:'PASS',memberCounts:[2,0],multiline:true,layout:'PASS',cases:labelCases}},null,2));

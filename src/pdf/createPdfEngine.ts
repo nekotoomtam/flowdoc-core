@@ -89,7 +89,7 @@ export function createEngine(resources: ExportResources, deps: Dependencies): Pd
                 if(error instanceof FontError)result={ok:false,issues:[{code:error.code,path:error.path,message:error.message}],warnings:[]};
                 else if (error instanceof LayoutError) {
                     const source = document.sourceMap[error.nodeId];
-                    result = { ok: false, issues: [{ code: 'LAYOUT_FAILED', path: error.path ?? 'nodes.' + error.nodeId, ...(error.sectionId ? { sectionId: error.sectionId } : {}), ...(error.reason?{reason:error.reason}:{}), nodeId: error.nodeId, message: error.message, ...(source?.origin === 'authored' ? { sectionId: source.sectionId } : source ? { contentIndex: source.contentIndex, format: source.format, ...(source.sectionId ? { sectionId: source.sectionId } : {}) } : {}) }], warnings:document.formatInstances?[...warnings,...(error.warnings??[])]:[] };
+                    result = { ok: false, issues: [{ code: 'LAYOUT_FAILED', path: error.path ?? 'nodes.' + error.nodeId, ...(error.sectionId ? { sectionId: error.sectionId } : {}), ...(error.reason?{reason:error.reason}:{}), ...(source?.groupId?{groupId:source.groupId,groupIndex:source.groupIndex}:{}), nodeId: error.nodeId, message: error.message, ...(source?.origin === 'authored' ? { sectionId: source.sectionId } : source ? { contentIndex: source.contentIndex, format: source.format, ...(source.sectionId ? { sectionId: source.sectionId } : {}) } : {}) }], warnings:document.formatInstances?[...warnings,...(error.warnings??[])]:[] };
                 }
                 else
                     result = fail(stage === 'writer' ? 'PDF_RENDER_FAILED' : 'RESOURCE_UNAVAILABLE', stage === 'writer' ? 'PDF writing failed' : 'Text or font runtime failed');
