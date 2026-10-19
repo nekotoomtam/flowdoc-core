@@ -42,3 +42,13 @@ it('enforces page limit while layout is running instead of retaining excess page
  const d:any=document();d.nodes.t={id:'t',type:'image',props:{resourceId:'missing',width:{value:20,unit:'pt'},height:{value:700,unit:'pt'}}};d.nodes.u={...structuredClone(d.nodes.t),id:'u'};d.rootIds.push('u');
  await expect(flow.documentFlow(d,fakeRuntime,{}, {maxPages:1})).rejects.toThrow('Page limit exceeded');
 });
+it('counts body and repeated band placements during layout before subsetting',async()=>{
+ const d:any=document();d.nodes={};d.rootIds.splice(0);d.sourceMap={};
+ const header:any={baseTextStyleId:'body',rootIds:[],nodes:{},sourceMap:{}};
+ for(let i=0;i<100;i++){const id='logo'+i;header.rootIds.push(id);header.nodes[id]={id,type:'image',props:{resourceId:'photo',width:{value:1,unit:'pt'},height:{value:0.01,unit:'pt'}}};header.sourceMap[id]={origin:'authored',sectionId:'main',sourceId:id};}
+ d.sections[0].header=header;
+ for(let i=0;i<101;i++){const id='image'+i;d.nodes[id]={id,type:'image',props:{resourceId:'photo',width:{value:100,unit:'pt'},height:{value:600,unit:'pt'}}};d.rootIds.push(id);d.sourceMap[id]={origin:'authored',sectionId:'main',sourceId:id};}
+ let measured=0;const runtime={...fakeRuntime,async shape(...args:any[]){measured++;return fakeRuntime.shape(args[0]);}};
+ await expect(flow.documentFlow(d,runtime,{photo:{width:2,height:2}},{maxPages:2000,maxImagePlacements:10000} as any)).rejects.toThrow('Image placement limit exceeded');
+ expect(measured).toBe(0);
+});

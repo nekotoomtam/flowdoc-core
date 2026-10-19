@@ -87,7 +87,7 @@ export function createEngine(resources: ExportResources, deps: Dependencies): Pd
                     session = deps.runtime(current);
                 runtime = cacheTextRuntime(session ?? deps.runtime as TextRuntime);
                 streaming?.options.signal?.throwIfAborted();
-                const draw = await documentFlow(document, runtime, images,streaming?{maxPages:2000,signal:streaming.options.signal}:undefined);
+                const draw = await documentFlow(document, runtime, images,streaming?{maxPages:2000,maxImagePlacements:10000,signal:streaming.options.signal}:undefined);
                 warnings.push(...draw.warnings ?? []);
                 const anchors = indexDestinations(document, draw);
                 await fillContentsNumbers(draw, anchors, runtime, true);

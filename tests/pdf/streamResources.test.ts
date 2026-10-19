@@ -1,5 +1,5 @@
 import {it,expect,vi} from 'vitest';
-import {createHash} from 'node:crypto';
+import {createHash,randomBytes} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {deflateSync} from 'node:zlib';
 import * as api from '../../src/pdf/streamResources.js';
@@ -40,4 +40,11 @@ it('rejects non-metadata before cloning any caller-owned raster',()=>{
  const bytes=new Uint8Array(1000000),p:any={contract:'flowdoc-pdf-stream/1',images:{p:{kind:'rgb-deflate',width:2,height:2,content:ref(new Uint8Array([1])),bytes}},open:async function*(){}};
  const original=structuredClone,clone=vi.spyOn(globalThis,'structuredClone').mockImplementation((value:any)=>{if(value===p.images)throw Error('raster cloned');return original(value);});
  try{expect(()=>api.snapshotImageProvider(p)).toThrow('Invalid image metadata');}finally{clone.mockRestore();}
+});
+it.each([false,true])('owns verified compressed bytes across inflate awaits (alpha=%s)',async alpha=>{
+ const b=deflateSync(randomBytes(100*100*(alpha?1:3))),reference=ref(b),original=Buffer.from(b);
+ const image:any={kind:'rgb-deflate',width:100,height:100,content:alpha?{...reference,key:'rgb'}:reference,...(alpha?{alpha:reference}:{})};
+ const p=api.snapshotImageProvider({contract:'flowdoc-pdf-stream/1',images:{p:image},async *open(){setImmediate(()=>b.fill(0));yield b;}});
+ const emitted:Buffer[]=[];for await(const c of api.verifiedImageStream(p,p.images.p!,alpha))emitted.push(Buffer.from(c));
+ expect(createHash('sha256').update(Buffer.concat(emitted)).digest('hex')).toBe(createHash('sha256').update(original).digest('hex'));
 });

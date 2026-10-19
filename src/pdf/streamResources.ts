@@ -66,8 +66,11 @@ export async function* verifiedImageStream(provider:PdfImageProvider,image:Strea
  const complete=inflate?finished(inflate).catch((e:Error)=>{decodeError=e;}):undefined;
  const abort=()=>inflate?.destroy(Error('Image read aborted'));signal?.addEventListener('abort',abort,{once:true});
  try{
-  for await(const chunk of provider.open(reference,signal)){
-   signal?.throwIfAborted();if(!(chunk instanceof Uint8Array)||!chunk.length||chunk.length>PDF_CHUNK_BYTES)throw Error('Invalid image stream chunk');
+  for await(const incoming of provider.open(reference,signal)){
+   signal?.throwIfAborted();if(!(incoming instanceof Uint8Array)||!incoming.length||incoming.length>PDF_CHUNK_BYTES)throw Error('Invalid image stream chunk');
+   // Provider storage can be reused/mutated while zlib or output is awaiting.
+   // Hash, validation and emission must consume the same bounded owned bytes.
+   const chunk=Uint8Array.from(incoming);
    bytes+=chunk.length;if(bytes>reference.byteLength)throw Error('Image stream length exceeded');
    hash.update(chunk);if(jpeg)jpeg.push(chunk);
    if(inflate)await new Promise<void>((resolve,reject)=>{
