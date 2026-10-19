@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-Development candidate `0.4.6` adds model19 Section instances: UUID `id`,
+Development candidate `0.4.7` adds model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -38,10 +38,26 @@ legacy prepared snapshot, renderer capability, public endpoint or PDF readiness 
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.6, an unpromoted development candidate after 0.4.3.
+Package version: 0.4.7, an unpromoted development candidate after 0.4.3.
 This candidate includes Section19, scoped contents, Format sizing v2 and the opt-in height calculation below; it has no release tag.
 Release identity requires the matching tagged snapshot and acceptance gates.
 Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
+
+## Internal bounded task composition
+
+`composeTaskDocument(validatedTemplate, normalizedValueHandle, {signal?})` consumes
+`flowdoc-task-input/1` with its exact template pin. Source collections are replayed
+lazily through the same binding expansion steps as legacy composition. Each record
+is bounded to256 KiB; source/prepared payloads are never loaded as complete objects.
+Canonical normalized values are validated separately from raw request defaults.
+One resolved graph remains bounded to50,000 node/inline identities and2,000 Section
+instances. This is not layout spooling or a whole Service RAM guarantee.
+Available image markers bind to their asset IDs; unavailable markers retain frames
+using `unavailable-<findingId>` and do not add composition findings. The caller must
+retain existing source findings and suppress duplicate unavailable-image diagnostics.
+Source handles must describe the same sealed, pinned bytes on each replay; the
+Service adapter owns file integrity and lifetime. Abort closes all active iterators.
+Legacy prepared schema1/2 APIs and their bounds are unchanged.
 
 ## Internal streamed PDF output
 

@@ -14,7 +14,10 @@ const esc=(k:string)=>k.replaceAll('~','~0').replaceAll('/','~1');
 const memory=(v:any):TaskValue=>({async byteLength(){return Buffer.byteLength(JSON.stringify(v));},async kind(){return Array.isArray(v)?'array':v!==null&&typeof v==='object'?'object':'scalar';},async scalar(){return v;},async *properties(){for(const [k,x] of Object.entries(v))yield [k,memory(x)] as const;},async *elements(){for(const x of v)yield memory(x);}});
 const get=async(v:TaskValue,k:string)=>{for await(const [name,value] of v.properties())if(name===k)return value;return undefined;};
 /** New task contract only. Never broadens legacy object-based prepareGeneration. */
-export async function normalizeTaskInput(template:ValidatedTemplate,input:TaskValue,options:TaskInputOptions):Promise<Result<TaskInputSummary>>{
+export function normalizeTaskInput(template:ValidatedTemplate,input:TaskValue,options:TaskInputOptions):Promise<Result<TaskInputSummary>>{return walkTaskInput(template,input,options,false);}
+// Internal canonical validation for the composition bridge; not a new raw API mode.
+export function validateNormalizedTaskInput(template:ValidatedTemplate,input:TaskValue,options:TaskInputOptions):Promise<Result<TaskInputSummary>>{return walkTaskInput(template,input,options,true);}
+async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:TaskInputOptions,normalized:boolean):Promise<Result<TaskInputSummary>>{
  const t=template.definition,index=buildAreaIndex(t),summary:TaskInputSummary={contract:'flowdoc-task-input/1',imagePlacements:0,omittedPlacements:0,warningCount:0};let collecting=true,records=0,collectedPlacements=0;const defaults:TaskInputLimits={recordBytes:256*1024,maxRecords:100000,maxImagePlacements:10000},limits={...defaults,...options.limits};
  for(const key of Object.keys(defaults) as (keyof TaskInputLimits)[])if(!Number.isSafeInteger(limits[key])||limits[key]<1||limits[key]>defaults[key])return {ok:false,issues:[{code:'LIMIT_EXCEEDED',path:'/limits',message:'Unsupported task bounds'}],warnings:[]};
  const fail=(code:string,path:string):never=>{throw new InputFailure(code,path);};
@@ -24,7 +27,7 @@ export async function normalizeTaskInput(template:ValidatedTemplate,input:TaskVa
  async function keys(v:TaskValue,path:string,allowed:string[],warnUnknown=false){
   check();if(await v.kind()!=='object')fail('TYPE_MISMATCH',path);const seen=new Set<string>();let bytes=0;
   for await(const [k] of v.properties()){check();bytes+=Buffer.byteLength(k)+64;if(bytes>8*1048576||Buffer.byteLength(k)>256)fail('LIMIT_EXCEEDED',path);if(seen.has(k))fail('INVALID_DATA',path+'/'+esc(k));seen.add(k);
-   if(!allowed.includes(k)){if(warnUnknown&&t.nodeModelVersion===18){if(collecting){summary.warningCount++;await options.onWarning?.({code:'UNKNOWN_VARIABLE',path:path+'/'+esc(k),message:'Undeclared variable',action:'ignored'});}}else fail('INVALID_DATA',path+'/'+esc(k));}
+   if(!allowed.includes(k)){if(warnUnknown&&t.nodeModelVersion===18&&!normalized){if(collecting){summary.warningCount++;await options.onWarning?.({code:'UNKNOWN_VARIABLE',path:path+'/'+esc(k),message:'Undeclared variable',action:'ignored'});}}else fail('INVALID_DATA',path+'/'+esc(k));}
   }
  }
  async function record(v:TaskValue,path:string,count=true){const bytes=await v.byteLength();if(!Number.isSafeInteger(bytes)||bytes<0)fail('INVALID_DATA',path);if(bytes>limits.recordBytes)fail('LIMIT_EXCEEDED',path);if(collecting&&count&&++records>limits.maxRecords)fail('LIMIT_EXCEEDED',path);}
@@ -51,7 +54,7 @@ export async function normalizeTaskInput(template:ValidatedTemplate,input:TaskVa
    if(await v.kind()!=='array')fail('TYPE_MISMATCH',path);const a=index.byId.get(f.areaId);if(!a)fail('INVALID_DATA',path);await write('[');let i=0;
    for await(const e of v.elements()){const p=path+'/'+i;await record(e,p);await keys(e,p,['format','data']);const name=await scalar(await get(e,'format'),p+'/format');const format=typeof name==='string'?a!.formatsByKey.get(name):undefined;if(!format)fail('UNKNOWN_FORMAT',p+'/format');const d=await get(e,'data');if(!d)fail('MISSING_REQUIRED',p+'/data');if(i++)await write(',');await write('{"format":'+JSON.stringify(name)+',"data":');await data(format!.format.inputSchema,d,p+'/data',sectionId);await write('}');}await write(']');return;
   }
-  const raw=f.type==='link'?await link(v,path):await scalar(v,path),issues:Issue[]=[];const prepared=validateField(f,raw,path,issues,[]);if(issues.length)fail(issues[0]!.code,path);await write(JSON.stringify(prepared));
+  const raw=f.type==='link'&&!(normalized&&await v.kind()==='scalar')?await link(v,path):await scalar(v,path),issues:Issue[]=[];const prepared=validateField(f,raw,path,issues,[],normalized?'prepared':'request');if(issues.length)fail(issues[0]!.code,path);await write(JSON.stringify(prepared));
  }
  async function section(s:typeof t.sections[number],entry:TaskValue,path:string){
   await keys(entry,path,t.nodeModelVersion===19?['id','data','header','footer','assets']:['data','header','footer','assets']);
