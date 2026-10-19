@@ -32,7 +32,7 @@ export async function composeTaskDocument(template:ValidatedTemplate,input:TaskV
   const contract=await get(input,'contract'),pin=await get(input,'template');if(!contract||!pin||await contract.scalar()!=='flowdoc-task-input/1')return fail('INVALID_DATA');
   if(!isDeepStrictEqual(plain(await small(pin)),{templateId:t.templateId,docKey:t.docKey,version:t.version,fingerprint:template.fingerprint,nodeModelVersion:t.nodeModelVersion}))return fail('INVALID_DATA');
   if(t.sections.length>2000)return fail('LIMIT_EXCEEDED');
-  const projected:TaskValue={...input,async *properties(){for await(const[k,v]of input.properties())if(k==='data'||k==='sections')yield[k,v];}};
+  const projected:TaskValue={kind:()=>input.kind(),byteLength:()=>input.byteLength(),scalar:()=>input.scalar(),elements:()=>input.elements(),async *properties(){for await(const[k,v]of input.properties())if(k==='data'||k==='sections')yield[k,v];}};
   let markerBytes=0;const markers=new Map<string,TaskImageResource>();
   const validation=await validateNormalizedTaskInput(template,projected,{...(signal?{signal}:{}),write:async()=>{},images:{collect:async(v,c)=>{check();if(!v)throw new TaskCompositionError('INVALID_DATA');const m=marker(await small(v));markerBytes+=Buffer.byteLength(c.pointer)+256;if(markerBytes>8*1048576)throw new TaskCompositionError('LIMIT_EXCEEDED');markers.set(c.pointer,m);},seal:async()=>{},resolve:async c=>markers.get(c.pointer)!}});
   if(!validation.ok)return validation;markers.clear();

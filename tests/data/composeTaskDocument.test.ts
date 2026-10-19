@@ -36,3 +36,9 @@ it('rejects expanded task identities before exceeding 50,000 and respects cancel
  const t=globalTable(),{v,n}=await fixture(t,{data:{rows:Array.from({length:13000},()=>({name:'x'}))},sections:[{id:sectionId,data:{}}]});
  expect(await api.composeTaskDocument(v,value(n))).toMatchObject({ok:false,issues:[{code:'EXPANSION_LIMIT'}]});const abort=new AbortController();abort.abort();await expect(api.composeTaskDocument(v,value(n),{signal:abort.signal})).rejects.toThrow();
 },30000);
+
+it('supports disk-style handles with prototype methods without materializing containers',async()=>{
+ const t=areaCover(),{v,n}=await fixture(t,{data:{},sections:[{id:sectionId,data:{parts:[{format:'panel',data:{}}]}}]});
+ class Handle{constructor(readonly raw:any){} async byteLength(){return Buffer.byteLength(JSON.stringify(this.raw));}async kind(){return Array.isArray(this.raw)?'array':this.raw&&typeof this.raw==='object'?'object':'scalar';}async scalar(){if(this.raw&&typeof this.raw==='object')throw Error('container forbidden');return this.raw;}async *properties(){for(const [k,x]of Object.entries(this.raw))yield [k,new Handle(x)];}async *elements(){for(const x of this.raw)yield new Handle(x);}}
+ expect(await api.composeTaskDocument(v,new Handle(n))).toEqual(await api.composeTaskDocument(v,value(n)));
+});
