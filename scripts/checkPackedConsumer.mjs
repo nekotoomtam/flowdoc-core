@@ -13,7 +13,7 @@ copyFileSync(join(root,'fixtures/images/red.jpg'),join(output,'red.jpg'));
 const tarball=join(output,`flowdoc-core-${corePackage.version}.tgz`);if(!existsSync(tarball))throw Error('Missing package artifact');
 const checksum=createHash('sha256').update(readFileSync(tarball)).digest('hex');
 const context=mkdtempSync(join(tmpdir(),'flowdoc-packed-consumer-'));
-for(const file of ['package.json','checkFormatSizing.mjs','checkScopedContents.mjs','checkAreaCover.mjs','checkFonts.mjs','checkRowGroups.mjs','checkResources.mjs','checkPdf.mjs','checkBinding.mjs','checkTable.mjs','checkImages.mjs','checkMergedTable.mjs','checkLinks.mjs','checkContents.mjs','checkCellContent.mjs','checkCellRepeats.mjs','checkAreas.mjs','checkPageSections.mjs','checkCoverPages.mjs','checkPageBands.mjs','checkSectionOwnership.mjs','checkPageNumbering.mjs','checkContentsSections.mjs'])copyFileSync(join(root,'tests/consumer',file),join(context,file));
+for(const file of ['package.json','checkStreamingPdf.mjs','checkStreamMemory.mjs','checkFormatSizing.mjs','checkScopedContents.mjs','checkAreaCover.mjs','checkFonts.mjs','checkRowGroups.mjs','checkResources.mjs','checkPdf.mjs','checkBinding.mjs','checkTable.mjs','checkImages.mjs','checkMergedTable.mjs','checkLinks.mjs','checkContents.mjs','checkCellContent.mjs','checkCellRepeats.mjs','checkAreas.mjs','checkPageSections.mjs','checkCoverPages.mjs','checkPageBands.mjs','checkSectionOwnership.mjs','checkPageNumbering.mjs','checkContentsSections.mjs'])copyFileSync(join(root,'tests/consumer',file),join(context,file));
 copyFileSync(join(root,'scripts/checkContentsResources.mjs'),join(context,'checkContentsResources.mjs'));
 cpSync(process.env.FONT_FIXTURE_DIR??join(root,'assets/fonts'),join(context,'font-fixtures'),{recursive:true});
 for(const name of ['template','request'])copyFileSync(join(root,'fixtures/row-groups',name+'.json'),join(context,'row-groups-'+name+'.json'));
@@ -36,6 +36,7 @@ for(const name of ['four-styles','overflow'])copyFileSync(join(root,'fixtures/pd
 writeFileSync(join(context,'expected-package.json'),JSON.stringify({name:corePackage.name,version:corePackage.version}));
 copyFileSync(tarball,join(context,'flowdoc-core.tgz'));
 copyFileSync(join(root,'fixtures/images/red.jpg'),join(context,'red.jpg'));
+cpSync(join(root,'fixtures/stream-images'),join(context,'stream-images'),{recursive:true});
 copyFileSync(join(root,'runtime/requirements.txt'),join(context,'requirements.txt'));
 copyFileSync(join(root,'Dockerfile.consumer'),join(context,'Dockerfile'));
 // Lock only this immutable tarball; Core has no npm runtime dependencies in this slice.
@@ -51,6 +52,8 @@ try{docker(['start','--attach',container]);}catch{throw Error(`Consumer failed; 
 const state=JSON.parse(docker(['inspect',container,'--format','{{json .State}}']));
 if(state.ExitCode!==0)throw Error(`Consumer failed; retained container ${container}`);
 docker(['cp',container+':/consumer/output/.',output]);
+const streamMemoryResult=JSON.parse(readFileSync(join(output,'stream-memory-result.json'),'utf8'));if(streamMemoryResult.status!=='PASS')throw Error('Stream memory consumer failed');
+const streamingPdfResult=JSON.parse(readFileSync(join(output,'streaming-pdf-result.json'),'utf8'));if(streamingPdfResult.status!=='PASS')throw Error('Streaming PDF consumer failed');
 const formatSizingResult=JSON.parse(readFileSync(join(output,'format-sizing-result.json'),'utf8'));if(formatSizingResult.status!=='PASS')throw Error('Format sizing consumer failed');
 const scopedContentsResult=JSON.parse(readFileSync(join(output,'scoped-contents-result.json'),'utf8'));if(scopedContentsResult.status!=='PASS')throw Error('Scoped contents consumer failed');
 const areaCoverResult=JSON.parse(readFileSync(join(output,'area-cover-result.json'),'utf8'));if(areaCoverResult.status!=='PASS')throw Error('Area cover consumer failed');
@@ -75,6 +78,6 @@ const mergedResult=JSON.parse(readFileSync(join(output,'merged-result.json'),'ut
 const tableResult=JSON.parse(readFileSync(join(output,'table-result.json'),'utf8'));
 if(imageResult.status!=='PASS')throw Error('Image consumer failed');
 if(resourceResult.status!=='PASS'||pdfResult.status!=='PASS'||bindingResult.status!=='PASS'||tableResult.status!=='PASS')throw Error('Consumer failed');
-writeFileSync(join(output,'result.json'),JSON.stringify({tarball,checksum,imageId,network:'none',mounts:[],formatSizingResult,scopedContentsResult,areaCoverResult,fontsResult,resourceResult,pdfResult,bindingResult,tableResult,imageResult,mergedResult,linksResult,contentsResult,contentsResources,cellContentResult,cellRepeatResult,areaResult,pageSectionsResult,coverPagesResult,pageBandsResult,sectionOwnershipResult,pageNumberingResult,contentsSectionsResult,rowGroupsResult},null,2)+'\n');
+writeFileSync(join(output,'result.json'),JSON.stringify({tarball,checksum,imageId,network:'none',mounts:[],streamingPdfResult,streamMemoryResult,formatSizingResult,scopedContentsResult,areaCoverResult,fontsResult,resourceResult,pdfResult,bindingResult,tableResult,imageResult,mergedResult,linksResult,contentsResult,contentsResources,cellContentResult,cellRepeatResult,areaResult,pageSectionsResult,coverPagesResult,pageBandsResult,sectionOwnershipResult,pageNumberingResult,contentsSectionsResult,rowGroupsResult},null,2)+'\n');
 docker(['rm',container]);
 console.log(JSON.stringify({output,...pdfResult,bindingResult,tableResult}));

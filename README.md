@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-Development candidate `0.4.5` adds model19 Section instances: UUID `id`,
+Development candidate `0.4.6` adds model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -38,10 +38,51 @@ legacy prepared snapshot, renderer capability, public endpoint or PDF readiness 
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.5, an unpromoted development candidate after 0.4.3.
+Package version: 0.4.6, an unpromoted development candidate after 0.4.3.
 This candidate includes Section19, scoped contents, Format sizing v2 and the opt-in height calculation below; it has no release tag.
 Release identity requires the matching tagged snapshot and acceptance gates.
 Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
+
+## Internal streamed PDF output
+
+`PDF_STREAM_CONTRACT` is `flowdoc-pdf-stream/1`. Engines additionally expose
+`generatePdfTo(resolvedDocument, provider, output, {signal?, maxBytes?})`.
+This is an isolated Core contract; Service/task/FlowDocMake activation is later work.
+The caller must check this exact capability and method; no buffered fallback.
+Legacy `generatePdf` retains its 20-image/64 MiB retained-image limits.
+
+`provider.images` maps each resolved image resource ID to
+`{kind:'jpeg'|'rgb-deflate', width, height, content:{key,byteLength,sha256}, alpha?}`.
+An alpha reference has the same shape as content and is permitted only with RGB.
+RGB/alpha streams are zlib-compressed interleaved RGB8/gray8 without PNG predictors;
+JPEG is normalized RGB8. Preparation/rotation/colour conversion and full raster
+decoding remain the caller's existing image-preparation responsibility. Core
+checks JPEG framing/dimensions and zlib decoded byte counts, not source image
+decoding or colour-profile trust. PNG alpha must be prepared separately, never
+flattened or silently recompressed to lower quality to satisfy capacity.
+
+`provider.open(frozenRef, signal)` returns an async iterable of nonempty chunks
+up to64 KiB. The adapter owns paths/handles, must honor cancellation and close on
+iterator return/error. Core verifies exact length/SHA-256 while embedding and
+never resolves a URL or client path. Manifests and functions are snapshotted before
+awaiting. Resource IDs control reuse; byte-identical distinct IDs stay distinct.
+Per-page resource dictionaries list only images actually drawn on that page.
+
+`output.write(chunk, signal)` must await actual bounded acceptance/backpressure;
+`output.abort(reasonCode)` must close/delete partial output or report failure.
+Callbacks must cooperate with cancellation; the Service process owner supplies
+deadline/forced-stop enforcement for stalled native or adapter work. Core owns
+neither the destination nor its success finalization. Publish only after a
+successful result AND closing/verifying the owned artifact. Failures abort even
+when final runtime/temp cleanup fails; cleanup failure is not successful output.
+Success is `{byteLength,sha256,mediaType,pageCount,fontUsage?}`, with no PDF bytes.
+
+Bounds: 2,000 prepared descriptors,8 MiB manifest,8 million pixels/derivative,
+50 MiB/compressed stream,10,000 placements,50,000 expanded nodes (including
+inlines/bands),2,000 pages,256 MiB output (maxBytes may only lower it). Images and
+PDF objects are emitted sequentially; one page content and bounded font/layout/
+glyph/xref metadata still remain. This does not certify whole-process RAM, giant
+structured-data composition, Service reservations or full UAT capacity.
 
 ## Opt-in font height calculation
 

@@ -17,9 +17,9 @@ import { LayoutError } from './textFlow.js';
 import type { TextRuntime } from './textFlow.js';
 import { measureText } from './measureText.js';
 import type { MeasuredLine } from './measureText.js';
-import type { PdfImageResources } from '../pdf/imageResources.js';
+import type { PdfImageMetadata } from '../pdf/streamResources.js';
 const epsilon = 1e-6;
-export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, images: PdfImageResources = {}): Promise<DrawDocument> {
+export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, images: PdfImageMetadata = {},bounds?:{maxPages:number;signal?:AbortSignal|undefined}): Promise<DrawDocument> {
     const warnings: Issue[] = [];
     const omittedNodeIds=new Set<string>();
     let fixed:{instance:FormatInstance;start:number;end:number}|undefined;
@@ -75,6 +75,8 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         return { top: nt, bottom: nb, h, f, hy, fy };
     };
     const nextPage = () => {
+        bounds?.signal?.throwIfAborted();
+        if(bounds&&pages.length>=bounds.maxPages)throw new LayoutError(activeNode,'Page limit exceeded',sectionId);
         if(fixed)throw new FormatStop('height-limit',[pending(activeNode,'node',{nodeType:d.nodes[activeNode]?.type??'table'})]);
         if (cover && sectionPageIndex > 0)
             throw new LayoutError(activeNode, 'Cover exceeds one page');
