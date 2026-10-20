@@ -1,14 +1,14 @@
 import type {ValidatedTemplate,ObjectSchema,AreaField,ArrayField,StringField,ImageField,LinkField} from '../template/types.js';
 import type {Result,Issue} from '../result.js';
-import {buildAreaIndex} from '../template/areas.js';
 import {validateField} from './validateValues.js';
+import {TemplateAccess} from '../template/taskAccess.js';
 import {retainTaskRecord} from './taskRecord.js';
 /** Storage-neutral handles. Containers are traversed; only bounded scalars are read. */
 export interface TaskValue {byteLength():Promise<number>;kind():Promise<'object'|'array'|'scalar'>;scalar():Promise<unknown>;properties():AsyncIterable<readonly [string,TaskValue]>;elements():AsyncIterable<TaskValue>;retainRecord?():Promise<{value:TaskValue;release():void}>}
 export interface TaskImageContext {sectionId:string|null;pointer:string;assetDefinition:boolean}
 export type TaskImageResource={kind:'task-image';version:1;availability:'available';assetId:string}|{kind:'task-image';version:1;availability:'unavailable';reason:string;findingId:string};
 export interface TaskInputLimits {recordBytes:number;maxRecords:number;maxImagePlacements:number}
-export interface TaskInputOptions {limits?:Partial<TaskInputLimits>;write:(chunk:string)=>Promise<void>;images:{collect:(value:TaskValue|undefined,context:TaskImageContext)=>Promise<void>;seal:()=>Promise<void>;resolve:(context:TaskImageContext)=>Promise<TaskImageResource>};onWarning?:(issue:Issue)=>Promise<void>;signal?:AbortSignal}
+export interface TaskInputOptions {templateAccess?:boolean;limits?:Partial<TaskInputLimits>;write:(chunk:string)=>Promise<void>;images:{collect:(value:TaskValue|undefined,context:TaskImageContext)=>Promise<void>;seal:()=>Promise<void>;resolve:(context:TaskImageContext)=>Promise<TaskImageResource>};onWarning?:(issue:Issue)=>Promise<void>;signal?:AbortSignal}
 export interface TaskInputSummary {contract:'flowdoc-task-input/1';imagePlacements:number;omittedPlacements:number;warningCount:number}
 class InputFailure extends Error {constructor(readonly code:string,readonly path:string){super('Invalid task input');}}
 const esc=(k:string)=>k.replaceAll('~','~0').replaceAll('/','~1');
@@ -17,9 +17,9 @@ const get=async(v:TaskValue,k:string)=>{for await(const [name,value] of v.proper
 /** New task contract only. Never broadens legacy object-based prepareGeneration. */
 export function normalizeTaskInput(template:ValidatedTemplate,input:TaskValue,options:TaskInputOptions):Promise<Result<TaskInputSummary>>{return walkTaskInput(template,input,options,false);}
 // Internal canonical validation for the composition bridge; not a new raw API mode.
-export function validateNormalizedTaskInput(template:ValidatedTemplate,input:TaskValue,options:TaskInputOptions):Promise<Result<TaskInputSummary>>{return walkTaskInput(template,input,options,true);}
-async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:TaskInputOptions,normalized:boolean):Promise<Result<TaskInputSummary>>{
- const t=template.definition,index=buildAreaIndex(t),summary:TaskInputSummary={contract:'flowdoc-task-input/1',imagePlacements:0,omittedPlacements:0,warningCount:0};let collecting=true,records=0,collectedPlacements=0;const defaults:TaskInputLimits={recordBytes:256*1024,maxRecords:100000,maxImagePlacements:10000},limits={...defaults,...options.limits};
+export function validateNormalizedTaskInput(template:ValidatedTemplate,input:TaskValue,options:TaskInputOptions,access?:TemplateAccess):Promise<Result<TaskInputSummary>>{return walkTaskInput(template,input,options,true,access);}
+async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:TaskInputOptions,normalized:boolean,sharedAccess?:TemplateAccess):Promise<Result<TaskInputSummary>>{
+ const access=sharedAccess??new TemplateAccess(template,options.templateAccess!==false);const t=template.definition,index=access.areaIndex,summary:TaskInputSummary={contract:'flowdoc-task-input/1',imagePlacements:0,omittedPlacements:0,warningCount:0};let collecting=true,records=0,collectedPlacements=0;const defaults:TaskInputLimits={recordBytes:256*1024,maxRecords:100000,maxImagePlacements:10000},limits={...defaults,...options.limits};
  for(const key of Object.keys(defaults) as (keyof TaskInputLimits)[])if(!Number.isSafeInteger(limits[key])||limits[key]<1||limits[key]>defaults[key])return {ok:false,issues:[{code:'LIMIT_EXCEEDED',path:'/limits',message:'Unsupported task bounds'}],warnings:[]};
  const fail=(code:string,path:string):never=>{throw new InputFailure(code,path);};
  const check=()=>options.signal?.throwIfAborted();
@@ -38,8 +38,8 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
   try{return await dataBody(schema,lease?.value??v,path,sectionId);}finally{lease?.release();}
  }
  async function dataBody(schema:ObjectSchema,v:TaskValue|undefined,path:string,sectionId:string|null){
-  const source=v??memory({});await keys(source,path,Object.keys(schema.fields),true);await write('{');let first=true;
-  for(const [k,f] of Object.entries(schema.fields)){check();if(!first)await write(',');first=false;await write(JSON.stringify(k)+':');const value=await get(source,k),p=path+'/'+esc(k);
+  const source=v??memory({}),plan=access.schema(schema);await keys(source,path,plan.keys,true);await write('{');let first=true;
+  for(const [k,f] of plan.entries){check();if(!first)await write(',');first=false;await write(JSON.stringify(k)+':');const value=await get(source,k),p=path+'/'+esc(k);
    await field(f,value,p,sectionId);
   }await write('}');
  }
@@ -78,5 +78,5 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
   for(const s of t.sections){if(i++)await write(',');if(t.nodeModelVersion===18)await write(JSON.stringify('key' in s?s.key:'')+':');const e=entries.get(s.id)!;await section(s,e.value,e.path);}await write(t.nodeModelVersion===19?']}': '}}');
  }
  try{await walk();await options.images.seal();collecting=false;await walk();return {ok:true,value:summary,warnings:[]};}
- catch(e){if(e instanceof InputFailure)return {ok:false,issues:[{code:e.code,path:e.path,message:'Invalid task input'}],warnings:[]};throw e;}
+ catch(e){if(e instanceof InputFailure)return {ok:false,issues:[{code:e.code,path:e.path,message:'Invalid task input'}],warnings:[]};throw e;}finally{if(!sharedAccess)access.clear();}
 }

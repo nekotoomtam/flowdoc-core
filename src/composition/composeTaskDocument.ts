@@ -1,3 +1,4 @@
+import {TemplateAccess} from '../template/taskAccess.js';
 import {isDeepStrictEqual} from 'node:util';
 import {validateNormalizedTaskInput,type TaskValue,type TaskImageResource} from '../data/taskInput.js';
 import type {ValidatedTemplate} from '../template/types.js';
@@ -24,8 +25,8 @@ function marker(v:any):TaskImageResource{
  throw new TaskCompositionError('INVALID_DATA');
 }
 /** Only the bounded normalized contract is consumed, never legacy PreparedInput. */
-export async function composeTaskDocument(template:ValidatedTemplate,input:TaskValue,options:{signal?:AbortSignal}={}):Promise<Result<ResolvedDocument>>{
- const t=template.definition,signal=options.signal,iterators=new Set<AsyncIterator<any>>();
+export async function composeTaskDocument(template:ValidatedTemplate,input:TaskValue,options:{signal?:AbortSignal;templateAccess?:boolean}={}):Promise<Result<ResolvedDocument>>{
+ const access=new TemplateAccess(template,options.templateAccess!==false);const t=template.definition,signal=options.signal,iterators=new Set<AsyncIterator<any>>();
  const check=()=>signal?.throwIfAborted();
  try{
   check();if(await input.kind()!=='object')return fail('INVALID_DATA');
@@ -35,7 +36,7 @@ export async function composeTaskDocument(template:ValidatedTemplate,input:TaskV
   if(t.sections.length>2000)return fail('LIMIT_EXCEEDED');
   const projected:TaskValue={kind:()=>input.kind(),byteLength:()=>input.byteLength(),scalar:()=>input.scalar(),elements:()=>input.elements(),async *properties(){for await(const[k,v]of input.properties())if(k==='data'||k==='sections')yield[k,v];}};
   let markerBytes=0;const markers=new Map<string,TaskImageResource>();
-  const validation=await validateNormalizedTaskInput(template,projected,{...(signal?{signal}:{}),write:async()=>{},images:{collect:async(v,c)=>{check();if(!v)throw new TaskCompositionError('INVALID_DATA');const m=marker(await small(v));markerBytes+=Buffer.byteLength(c.pointer)+256;if(markerBytes>8*1048576)throw new TaskCompositionError('LIMIT_EXCEEDED');markers.set(c.pointer,m);},seal:async()=>{},resolve:async c=>markers.get(c.pointer)!}});
+  const validation=await validateNormalizedTaskInput(template,projected,{...(signal?{signal}:{}),write:async()=>{},images:{collect:async(v,c)=>{check();if(!v)throw new TaskCompositionError('INVALID_DATA');const m=marker(await small(v));markerBytes+=Buffer.byteLength(c.pointer)+256;if(markerBytes>8*1048576)throw new TaskCompositionError('LIMIT_EXCEEDED');markers.set(c.pointer,m);},seal:async()=>{},resolve:async c=>markers.get(c.pointer)!}},access);
   if(!validation.ok)return validation;markers.clear();
   const global=await get(input,'data'),sectionInput=await get(input,'sections'),sections:any={};if(!global||!sectionInput)return fail('INVALID_DATA');
   const sectionById=new Map<string,TaskValue>();if(t.nodeModelVersion===19)for await(const entry of sectionInput.elements()){const id=await get(entry,'id');sectionById.set(await id!.scalar() as string,entry);}
@@ -49,14 +50,12 @@ export async function composeTaskDocument(template:ValidatedTemplate,input:TaskV
   const resolve=async(e:BindingEffect):Promise<any>=>{
    check();if(e.kind==='next'){const next=await e.iterator.next();if(next.done)iterators.delete(e.iterator);return next;}
    if(e.kind==='collection'||e.kind==='area')return collection(e.scope,e.key,e.kind==='area');
-   const scopes={...e.scopes},refs:any[]=[];const n=e.source;
-   if(n.type==='image')refs.push(n.props.source);
-   if(n.type==='text-block'){if(n.props.anchorId&&typeof n.props.anchorId==='object')refs.push(n.props.anchorId);for(const c of n.children){if(c.type==='field-ref')refs.push(c);else if(['url','link','reference'].includes(c.type))for(const v of Object.values(c))if(v&&typeof v==='object')refs.push(v);}}
+   const scopes={...e.scopes},refs=access.refs(e.source);
    const values:any={};for(const r of refs){values[r.scope]??=Object.create(null);if(!Object.hasOwn(values[r.scope],r.key))values[r.scope][r.key]=await scalar(e.scopes[r.scope],r.key);}return {...scopes,...values};
   };
-  const steps=composeSectionsSteps(t,{data:global,sections} as any,d,new ExpansionBudget(50000));let step=steps.next();try{while(!step.done){step=steps.next(await resolve(step.value));}}finally{steps.return();}
+  const steps=composeSectionsSteps(t,{data:global,sections} as any,d,new ExpansionBudget(50000),access);let step=steps.next();try{while(!step.done){step=steps.next(await resolve(step.value));}}finally{steps.return();}
   if(!d.rootIds.some(id=>d.nodes[id]?.type!=='page-break')&&!d.sections?.some(s=>s.role==='cover'||s.sourceKind==='blank'))return fail('EMPTY_CONTENT');
   const issues=validateResolvedDocument(d);return issues.length?{ok:false,issues,warnings:[]}:{ok:true,value:d,warnings:[]};
  }catch(e){if(e instanceof TaskCompositionError)return fail(e.code);if(e instanceof ExpansionLimitError)return fail('EXPANSION_LIMIT');check();return fail('INVALID_DATA');}
- finally{for(const it of iterators)await it.return?.();}
+ finally{try{for(const it of iterators)await it.return?.();}finally{access.clear();}}
 }

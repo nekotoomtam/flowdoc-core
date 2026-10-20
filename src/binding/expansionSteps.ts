@@ -14,7 +14,7 @@ function* each(scope:any,key:string,visit:(value:any,index:number)=>Steps<void>)
 export function* expandRowsSteps(format:Format,global:any,local:any,contentIndex:number|undefined,formatKey:string|undefined,nodes:Record<string,DocumentNode>,sourceMap:Record<string,SourceEntry>,options:ExpansionOptions={}):Steps<string[]>{
  if(options.origin?.origin!=='authored')throw Error('Missing authored Section origin');
  const prefix=options.prefix??`section-${options.origin.sectionId}~`,origin={...options.origin,...options.areaOrigin};
- const repeats=new Map(format.repeats.map(r=>[r.rowTemplateId,r])),cellRepeats=new Map((format.cellRepeats??[]).map(r=>[r.cellId,r])),groupStarts=new Map((format.rowGroups??[]).map(g=>[g.rowTemplateIds[0]!,g]));
+ const {repeats,cellRepeats,groupStarts}=options.access?.format(format)??{repeats:new Map(format.repeats.map(r=>[r.rowTemplateId,r])),cellRepeats:new Map((format.cellRepeats??[]).map(r=>[r.cellId,r])),groupStarts:new Map((format.rowGroups??[]).map(g=>[g.rowTemplateIds[0]!,g]))};
  type Group={groupId:string;groupIndex:number;data:any;labelCellTemplateId?:string|undefined};
  function* clone(sourceId:string,itemIndex?:number,item:any={},repeatId?:string,group?:Group):Steps<string>{
   options.budget?.take();const source=format.fragment.nodes[sourceId]!;
@@ -62,14 +62,14 @@ export function* expandRowsSteps(format:Format,global:any,local:any,contentIndex
  }
  function* children(id:string,itemIndex?:number,item:any={},repeatId?:string,group?:Group,rootOffset?:number):Steps<string[]>{
   const n=format.fragment.nodes[id]!;if(n.type!=='area')return [yield*clone(id,itemIndex,item,repeatId,group)];if(!options.areaIndex)throw Error('Missing area index');
-  return yield*expandAreaSteps({formatInstances:options.formatInstances,rootOffset,budget:options.budget,index:options.areaIndex,areaId:n.props.areaId,global,local,scopes:options.scopes,contentIndex,formatKey,nodes,sourceMap,prefix,origin:options.origin});
+  return yield*expandAreaSteps({access:options.access,formatInstances:options.formatInstances,rootOffset,budget:options.budget,index:options.areaIndex,areaId:n.props.areaId,global,local,scopes:options.scopes,contentIndex,formatKey,nodes,sourceMap,prefix,origin:options.origin});
  }
  const result:string[]=[];for(const id of format.fragment.rootIds)result.push(...yield*children(id,undefined,{},undefined,undefined,options.rootOffset===undefined?undefined:options.rootOffset+result.length));return result;
 }
 export function* expandAreaSteps(c:AreaExpansionContext):Steps<string[]>{
  const a=c.index.byId.get(c.areaId)!,scope=a.scope==='global'?c.global:c.scopes!.section!,iterator=yield {kind:'area',scope,key:a.key},result:string[]=[];
  for(;;){const next=yield {kind:'next',iterator};if(next.done)break;const e=next.value,f=a.formatsByKey.get(e.format)!;
-  const roots=yield*expandRowsSteps(f.format,c.global,e.data,c.contentIndex,c.formatKey,c.nodes,c.sourceMap,{budget:c.budget,origin:c.origin,scopes:c.scopes,prefix:`${c.prefix??`content-${c.contentIndex}~`}area-${c.areaId}~entry-${e.originalIndex}~format-${f.id}~`,areaOrigin:{areaId:c.areaId,areaEntryIndex:e.originalIndex,areaFormatId:f.id}});
+  const roots=yield*expandRowsSteps(f.format,c.global,e.data,c.contentIndex,c.formatKey,c.nodes,c.sourceMap,{access:c.access,budget:c.budget,origin:c.origin,scopes:c.scopes,prefix:`${c.prefix??`content-${c.contentIndex}~`}area-${c.areaId}~entry-${e.originalIndex}~format-${f.id}~`,areaOrigin:{areaId:c.areaId,areaEntryIndex:e.originalIndex,areaFormatId:f.id}});
   if(f.format.sizing)c.formatInstances?.push({sectionId:c.origin!.sectionId!,areaId:c.areaId,areaEntryIndex:e.originalIndex,areaFormatId:f.id,format:e.format,sizing:structuredClone(f.format.sizing),rootIds:roots,...(c.rootOffset===undefined?{}:{rootStartIndex:c.rootOffset+result.length})});result.push(...roots);
  }return result;
 }

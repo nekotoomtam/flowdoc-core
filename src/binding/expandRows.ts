@@ -1,6 +1,6 @@
 import type {ExpansionBudget} from './expansionBudget.js';
 import type {AreaIndex} from '../template/areas.js';
-export interface ExpansionOptions {formatInstances?:import('../composition/resolvedDocument.js').FormatInstance[]|undefined;rootOffset?:number|undefined;budget?:ExpansionBudget|undefined;scopes?:Partial<import('./bindInlines.js').BindingScopes>|undefined;origin?:SourceOrigin|undefined;areaIndex?:AreaIndex;prefix?:string;areaOrigin?:{areaId:string;areaEntryIndex:number;areaFormatId:string}}
+export interface ExpansionOptions {access?:import('../template/taskAccess.js').TemplateAccess|undefined;formatInstances?:import('../composition/resolvedDocument.js').FormatInstance[]|undefined;rootOffset?:number|undefined;budget?:ExpansionBudget|undefined;scopes?:Partial<import('./bindInlines.js').BindingScopes>|undefined;origin?:SourceOrigin|undefined;areaIndex?:AreaIndex;prefix?:string;areaOrigin?:{areaId:string;areaEntryIndex:number;areaFormatId:string}}
 import type {Format} from '../template/types.js';
 import type {PreparedData,PreparedItem} from '../data/types.js';
 import type {DocumentNode,SourceEntry,SourceOrigin} from '../composition/resolvedDocument.js';

@@ -7,6 +7,17 @@ const available={kind:'task-image',version:1,availability:'available',assetId:'2
 function value(v:any):any{return {async byteLength(){return Buffer.byteLength(JSON.stringify(v));},async kind(){return Array.isArray(v)?'array':v!==null&&typeof v==='object'?'object':'scalar';},async scalar(){if(v&&typeof v==='object')throw Error('container read forbidden');return v;},async *properties(){for(const[k,x]of Object.entries(v))yield[k,value(x)];},async *elements(){for(const x of v)yield value(x);}};}
 async function fixture(t:any,q:any,omitted=false){const v=validateTemplate(t);expect(v.ok,JSON.stringify(v)).toBe(true);if(!v.ok)throw Error();let text='';const n=await normalizeTaskInput(v.value,value(q),{write:async s=>{text+=s;},images:{collect:async()=>{},seal:async()=>{},resolve:async()=>omitted?{kind:'task-image',version:1,availability:'unavailable',reason:'IMAGE_SOURCE_MISSING',findingId:'30000000-0000-4000-8000-000000000001'}:available}});expect(n.ok,JSON.stringify(n)).toBe(true);return {v:v.value,n:JSON.parse(text)};}
 it('exposes bounded normalized composition at the package root',()=>expect(api.composeTaskDocument).toBeTypeOf('function'));
+it.each(['srs-basic','row-groups','page-bands','section-ownership','page-numbering','format-sizing'])('keeps compiled access and uncached validation/expansion identical including empty collections: %s',async name=>{
+ const t=JSON.parse(readFileSync(`fixtures/${name}/template.json`,'utf8')),q=JSON.parse(readFileSync(`fixtures/${name}/request.json`,'utf8'));const {docKey,version,uploadId,...input}=q;
+ const {v,n}=await fixture(t,input);expect(await api.composeTaskDocument(v,value(n),{templateAccess:false})).toEqual(await api.composeTaskDocument(v,value(n)));
+ const bad=structuredClone(n);bad.template.fingerprint='changed';for(const templateAccess of [true,false])expect((await api.composeTaskDocument(v,value(bad),{templateAccess})).ok).toBe(false);
+});
+it('preserves empty Area branches and clone-specific changed bindings without stale cross-call plans',async()=>{
+ const t=areaCover(),q={data:{},sections:[{id:sectionId,data:{parts:[]}}]},a=await fixture(t,q);
+ expect(await api.composeTaskDocument(a.v,value(a.n))).toEqual(await api.composeTaskDocument(a.v,value(a.n),{templateAccess:false}));
+ const clone=structuredClone(t);clone.areaFormats.panel.fragment.nodes.title.children=[{id:'changed',type:'text',text:'changed clone'}];const b=await fixture(clone,{data:{},sections:[{id:sectionId,data:{parts:[{format:'panel',data:{}}]}}]});
+ expect(b.v.fingerprint).not.toBe(a.v.fingerprint);expect(await api.composeTaskDocument(b.v,value(b.n))).toEqual(await api.composeTaskDocument(b.v,value(b.n),{templateAccess:false}));expect((await api.composeTaskDocument(b.v,value(a.n))).ok).toBe(false);
+});
 it.each(['srs-basic','row-groups','page-bands','section-ownership','page-numbering','format-sizing'])('matches legacy graph including IDs/source maps/format metadata: %s',async name=>{
  const t=JSON.parse(readFileSync(`fixtures/${name}/template.json`,'utf8')),q=JSON.parse(readFileSync(`fixtures/${name}/request.json`,'utf8'));const {docKey,version,uploadId,...input}=q;const {v,n}=await fixture(t,input);
  const convert=(x:any):any=>x?.kind==='task-image'?x.assetId:Array.isArray(x)?x.map(convert):x&&typeof x==='object'?Object.fromEntries(Object.entries(x).map(([k,v])=>[k,convert(v)])):x;
