@@ -303,7 +303,7 @@ that exact tarball; a Windows build alone does not verify its native PDF runtime
 Font verification covers exact selected faces/required glyphs and legacy Sarabun
 parity. Release promotion follows the gates above after this preparation.
 
-## Packaged Format sizing v2 development candidate
+## Packaged Format sizing v2
 
 Model19 Area Format definitions optionally declare `sizing: {mode: "auto"}` or
 `{mode: "fixed", height: {value: 300, unit: "pt"}}` (pt/mm). Omitted sizing retains
@@ -324,7 +324,7 @@ fit gate and remain immutable. Package 0.4.5 is untagged, not installed;
 Project Control owns cross-repository verification and release acceptance.
 
 
-## Group-label spans development candidate
+## Group-label spans
 
 Model19 (schema1 or2) rowGroups optionally declares
 `groupLabel:{cellTemplateId:"member-label",emptyCellTemplateId:"empty-label"}`.
@@ -353,6 +353,6 @@ ordinary rows, not a new aggregation or group-footer hook.
 Consumers must preserve the declaration and inspect groupLabelSpans.version1
 on a matched Service/FlowDocMake contract, with model19/schema1,2, diagnostics1
 and formatSizing.version2. The suffix uses the selected label font; missing
-glyphs block generation without fallback. This unpromoted candidate also retains
+glyphs block generation without fallback. This package also retains
 the decimal PDF image-coordinate serialization fix; do not overwrite an older
 archive using the new bytes. Project Control owns cross-repository acceptance.
