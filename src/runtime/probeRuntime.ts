@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import type { ExportResources } from './exportResources.js';
+import {NativeSegmenterSession} from './nativeSegmenterSession.js';
 const exec = promisify(execFile);
 export async function probeRuntime(resources: ExportResources): Promise<{ python: string; fontTools: string }> {
   const options = { timeout: 10_000, maxBuffer: 1024 * 1024, windowsHide: true };
@@ -11,6 +12,8 @@ export async function probeRuntime(resources: ExportResources): Promise<{ python
   if (shape.shaperRevision !== 'rustybuzz-0.20.1' || !shape.glyphs?.length || shape.glyphs.some((g: {glyphId:number}) => !Number.isInteger(g.glyphId)||g.glyphId<0||g.glyphId>65535)) throw Error('Incompatible shaper');
   const segmentation = JSON.parse((await exec(resources.segmenterPath, ['ก'], options)).stdout);
   if (segmentation.segmenterRevision !== 'icu_segmenter-2.2.0' || !Array.isArray(segmentation.breakByteOffsets)) throw Error('Incompatible segmenter');
+  const session=new NativeSegmenterSession(resources.segmenterPath);
+  try{await session.request('ก');await session.request('ภาษาไทย English');}finally{await session.close();}
   const result = JSON.parse((await exec(resources.pythonExecutable, ['-c', 'import sys,json,fontTools; print(json.dumps({"python":".".join(map(str,sys.version_info[:3])),"fontTools":fontTools.__version__}))'], options)).stdout);
   return result;
 }

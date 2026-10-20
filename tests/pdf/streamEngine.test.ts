@@ -9,6 +9,16 @@ import {document,fakeRuntime} from '../helpers/document.js';
 import {contentsDocument} from '../helpers/contents.js';
 import * as flow from '../../src/layout/documentFlow.js';
 const empty=()=>({contract:'flowdoc-pdf-stream/1' as const,images:{},async *open(){throw Error('unexpected read');}});
+it('passes generation cancellation to its runtime and closes before font subsetting',async()=>{
+ const tempRoot=await mkdtemp(join(tmpdir(),'session-owner-')),abort=new AbortController(),font=await readFile('assets/fonts/Sarabun-Regular.ttf');let received:AbortSignal|undefined;let closed=false;
+ const engine=createEngine({tempRoot,fonts:[]} as any,{runtime:(_resources,signal)=>{received=signal;return {...fakeRuntime,close:async()=>{closed=true;}};},subset:async()=>{expect(closed).toBe(true);return [{fontId:'font-regular',subsetBytes:font,subsetPrefix:'FDTEST',postScriptName:'FlowDocTest'}];},write:writePdf});
+ try{expect((await engine.generatePdfTo(document(),empty(),sink(),{signal:abort.signal})).ok).toBe(true);expect(received).toBe(abort.signal);expect(closed).toBe(true);}finally{await rm(tempRoot,{recursive:true,force:true});}
+});
+it('preserves generation failure together with runtime cleanup failure',async()=>{
+ const tempRoot=await mkdtemp(join(tmpdir(),'session-errors-'));
+ const engine=createEngine({tempRoot,fonts:[]} as any,{runtime:()=>({...fakeRuntime,shape:async()=>{throw Error('shape');},close:async()=>{throw Error('close');}}),subset:async()=>[],write:writePdf});
+ try{const result=await engine.generatePdfTo(document(),empty(),sink());expect(result.ok).toBe(false);if(!result.ok)expect(result.issues.map(i=>i.message)).toEqual(['Text or font runtime failed','Text runtime cleanup failed']);}finally{await rm(tempRoot,{recursive:true,force:true});}
+});
 async function setup(){const tempRoot=await mkdtemp(join(tmpdir(),'stream-engine-'));const font=await readFile('assets/fonts/Sarabun-Regular.ttf');const close=vi.fn(async()=>{});const engine=createEngine({tempRoot,fonts:[]} as any,{runtime:()=>({...fakeRuntime,close}),subset:async()=>[{fontId:'font-regular',subsetBytes:font,subsetPrefix:'FDTEST',postScriptName:'FlowDocTest'}],write:writePdf});return {tempRoot,engine,close};}
 function sink(){const parts:Buffer[]=[],abort=vi.fn(async()=>{});return {parts,abort,async write(c:Uint8Array){parts.push(Buffer.from(c));}};}
 it('exports a bounded receipt through the engine and matches legacy TOC, links and page-field output',async()=>{

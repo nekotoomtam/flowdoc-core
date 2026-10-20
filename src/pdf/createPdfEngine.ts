@@ -40,7 +40,7 @@ export interface PdfEngine {
 export interface PdfOutput extends PdfStreamSink {abort(reasonCode:string):Promise<void>}
 export interface PdfStreamArtifact extends PdfWriteReceipt {mediaType:'application/pdf';pageCount:number;fontUsage?:PdfArtifact['fontUsage']}
 interface Dependencies {
-    runtime: TextRuntime | ((resources:ExportResources) => TextRuntime & {
+    runtime: TextRuntime | ((resources:ExportResources,signal?:AbortSignal) => TextRuntime & {
         close(): Promise<void>;
     });
     subset: typeof subsetFonts;
@@ -84,7 +84,7 @@ export function createEngine(resources: ExportResources, deps: Dependencies): Pd
                 temp = await mkdtemp(join(resources.tempRoot, 'flowdoc-pdf-'));
                 const current=await snapshotFonts(resources,temp);
                 if (typeof deps.runtime === 'function')
-                    session = deps.runtime(current);
+                    session = deps.runtime(current,streaming?.options.signal);
                 runtime = cacheTextRuntime(session ?? deps.runtime as TextRuntime);
                 streaming?.options.signal?.throwIfAborted();
                 const draw = await documentFlow(document, runtime, images,streaming?{maxPages:2000,maxImagePlacements:10000,signal:streaming.options.signal}:undefined);
@@ -95,6 +95,7 @@ export function createEngine(resources: ExportResources, deps: Dependencies): Pd
 
                 // Page fields are the last text-runtime consumer; avoid retaining layout cache during PDF output.
                 runtime.dispose();
+                if(session){await session.close();session=undefined;}
                 resolveLinkGeometry(document, draw, anchors);
                 const fonts = await deps.subset(draw, current, temp);
                 stage = 'writer';
@@ -118,14 +119,16 @@ export function createEngine(resources: ExportResources, deps: Dependencies): Pd
                         await session.close();
                     }
                     catch {
-                        result = fail('RESOURCE_UNAVAILABLE', 'Text runtime cleanup failed');
+                        const cleanup=fail('RESOURCE_UNAVAILABLE', 'Text runtime cleanup failed');
+                        result=result!&&!result.ok&&!cleanup.ok?{...result,issues:[...result.issues,...cleanup.issues]}:cleanup;
                     }
                 if (temp)
                     try {
                         await rm(temp, { recursive: true, force: true });
                     }
                     catch {
-                        result = fail('RESOURCE_UNAVAILABLE', 'Temporary output cleanup failed');
+                        const cleanup=fail('RESOURCE_UNAVAILABLE', 'Temporary output cleanup failed');
+                        result=result!&&!result.ok&&!cleanup.ok?{...result,issues:[...result.issues,...cleanup.issues]}:cleanup;
                     }
             }
             return result!;
@@ -156,7 +159,7 @@ export async function createPdfEngine(resources: ExportResources): Promise<Resul
         const versions = await probeRuntime(snapshot);
         if (!versions.python.startsWith('3.11.') || versions.fontTools !== '4.58.2')
             throw Error('Invalid Python');
-        return { ok: true, value: createEngine(snapshot, { runtime: current => createTextRuntime(current), subset: subsetFonts, write: writePdf }), warnings: [] };
+        return { ok: true, value: createEngine(snapshot, { runtime: (current,signal) => createTextRuntime(current,signal), subset: subsetFonts, write: writePdf }), warnings: [] };
     }
     catch(error) {
         if(error instanceof FontError)return {ok:false,issues:[{code:error.code,path:error.path,message:error.message}],warnings:[]};
