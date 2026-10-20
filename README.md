@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-Development candidate `0.4.7` adds model19 Section instances: UUID `id`,
+Package `0.4.7` supports model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -19,12 +19,12 @@ Empty scopes add no page. Target numbers follow continue/restart/exclude; hidden
 numbers remain in contents and excluded targets retain title links without numbers.
 Pagination has one layout pass: fixed number slots are filled afterwards without
 reflow; an oversized number fails rather than guessing or retrying. Model18 keeps
-its existing unscoped contract. This is a development package, not an installation
-or release claim. Shared contract: Project Control Section–Area Stage0–3.
+its existing unscoped contract. Release identity is the matching annotated tag on
+the release snapshot; installation is separate. Shared contract: Project Control Section–Area Stage0–3.
 
 ## Internal task input reader
 
-Unreleased `normalizeTaskInput(template, valueHandle, options)` validates model18/19
+`normalizeTaskInput(template, valueHandle, options)` validates model18/19
 values and writes `flowdoc-task-input/1` incrementally. Storage-neutral handles expose
 object properties, array elements and bounded scalars; Core never loads a whole
 Section or Area entry. A collection pass precedes resolution so property order and
@@ -32,14 +32,15 @@ forward image references do not select a first winner. Service owns file/image
 metadata and Section asset keys. Only typed image slots invoke its adapter; omitted
 images retain explicit version1 unavailable resources and reasons, including required
 fields. Legacy `prepareGeneration` still accepts its original UUID image values only.
-This normalized contract is internal input for future task processing, not a new
+This normalized contract is internal input for Service task processing, not a new
 legacy prepared snapshot, renderer capability, public endpoint or PDF readiness claim.
 ## Authority Boundary
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.7, an unpromoted development candidate after 0.4.3.
-This candidate includes Section19, scoped contents, Format sizing v2 and the opt-in height calculation below; it has no release tag.
+Package version: 0.4.7, prepared after release 0.4.3.
+This package includes Section19, scoped contents, Format sizing v2, group-label
+spans, streamed task images/PDF and the opt-in height calculation below.
 Release identity requires the matching tagged snapshot and acceptance gates.
 Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
 
@@ -60,6 +61,20 @@ Service adapter owns file integrity and lifetime. Abort closes all active iterat
 Legacy prepared schema1/2 APIs and their bounds are unchanged.
 
 ## Internal streamed PDF output
+
+The Linux/amd64 native helper supports the bounded `--serve` protocol used by
+one ICU line-segmenter session per generation; the original one-shot interface
+remains available. Measurement/shaping and line-break rules are unchanged.
+Abort/deadlines close the owned sessions; helpers are closed after final layout
+before font subsetting/PDF writing. Use the complete packaged resources: mixing
+this Core with an older helper fails resource probing. Service task containers
+require a reaping init, including when the render worker is forcibly killed.
+Core does not own container supervision or HTTP/database/storage policy.
+
+Task composition may reuse bounded template-access metadata for that call only;
+source/fingerprint checks and all validation passes remain. The Service adapter
+owns read-cache, field-index and record-byte budgets, fallback and file lifetime.
+Neither mechanism creates a cross-job cache or permits stale inputs.
 
 `PDF_STREAM_CONTRACT` is `flowdoc-pdf-stream/1`. Engines additionally expose
 `generatePdfTo(resolvedDocument, provider, output, {signal?, maxBytes?})`.
