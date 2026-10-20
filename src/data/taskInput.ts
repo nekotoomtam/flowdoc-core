@@ -2,8 +2,9 @@ import type {ValidatedTemplate,ObjectSchema,AreaField,ArrayField,StringField,Ima
 import type {Result,Issue} from '../result.js';
 import {buildAreaIndex} from '../template/areas.js';
 import {validateField} from './validateValues.js';
+import {retainTaskRecord} from './taskRecord.js';
 /** Storage-neutral handles. Containers are traversed; only bounded scalars are read. */
-export interface TaskValue {byteLength():Promise<number>;kind():Promise<'object'|'array'|'scalar'>;scalar():Promise<unknown>;properties():AsyncIterable<readonly [string,TaskValue]>;elements():AsyncIterable<TaskValue>}
+export interface TaskValue {byteLength():Promise<number>;kind():Promise<'object'|'array'|'scalar'>;scalar():Promise<unknown>;properties():AsyncIterable<readonly [string,TaskValue]>;elements():AsyncIterable<TaskValue>;retainRecord?():Promise<{value:TaskValue;release():void}>}
 export interface TaskImageContext {sectionId:string|null;pointer:string;assetDefinition:boolean}
 export type TaskImageResource={kind:'task-image';version:1;availability:'available';assetId:string}|{kind:'task-image';version:1;availability:'unavailable';reason:string;findingId:string};
 export interface TaskInputLimits {recordBytes:number;maxRecords:number;maxImagePlacements:number}
@@ -33,6 +34,10 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
  async function record(v:TaskValue,path:string,count=true){const bytes=await v.byteLength();if(!Number.isSafeInteger(bytes)||bytes<0)fail('INVALID_DATA',path);if(bytes>limits.recordBytes)fail('LIMIT_EXCEEDED',path);if(collecting&&count&&++records>limits.maxRecords)fail('LIMIT_EXCEEDED',path);}
  async function link(v:TaskValue,path:string){await record(v,path,false);await keys(v,path,['type','value','text','url','target']);const out:Record<string,unknown>=Object.create(null);for await(const [k,x] of v.properties())out[k]=await scalar(x,path+'/'+esc(k));return out;}
  async function data(schema:ObjectSchema,v:TaskValue|undefined,path:string,sectionId:string|null){
+  const lease=v?await retainTaskRecord(v):undefined;
+  try{return await dataBody(schema,lease?.value??v,path,sectionId);}finally{lease?.release();}
+ }
+ async function dataBody(schema:ObjectSchema,v:TaskValue|undefined,path:string,sectionId:string|null){
   const source=v??memory({});await keys(source,path,Object.keys(schema.fields),true);await write('{');let first=true;
   for(const [k,f] of Object.entries(schema.fields)){check();if(!first)await write(',');first=false;await write(JSON.stringify(k)+':');const value=await get(source,k),p=path+'/'+esc(k);
    await field(f,value,p,sectionId);

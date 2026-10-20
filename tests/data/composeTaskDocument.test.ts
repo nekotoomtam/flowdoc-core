@@ -27,6 +27,19 @@ it('rejects a stale normalized template pin and malformed image markers',async()
  const bad=structuredClone(n);bad.sections.evidence.data.details[0].data.photo.assetId='bad';expect((await api.composeTaskDocument(v,value(bad))).ok).toBe(false);
 });
 function globalTable(){const t=areaCover();t.areaFormats={};t.globalSchema={type:'object',fields:{rows:{type:'array',items:{type:'object',fields:{name:{type:'string',required:true}}}}}};const s=t.sections[0];s.inputSchema={type:'object',fields:{}};s.source={kind:'authored',repeats:[{tableId:'table',rowTemplateId:'row',source:{scope:'global',key:'rows'}}],fragment:{rootIds:['table'],nodes:{table:{id:'table',type:'table',props:{headerRowCount:0,repeatHeaderRows:false},columns:[{width:{value:200,unit:'pt'}}],rowIds:['row']},row:{id:'row',type:'table-row',props:{allowBreak:true},cellIds:['cell']},cell:{id:'cell',type:'table-cell',props:{},childIds:['text']},text:{id:'text',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body'},children:[{id:'name',type:'field-ref',scope:'item',key:'name'}]}}}};return t;}
+it('scopes optional record leases without changing repeated rows, clone order or source identities',async()=>{
+ const t=globalTable(),s=structuredClone(t.sections[0]);s.id='10000000-0000-4000-8000-000000000002';s.label='Document2';t.sections.push(s);
+ const {v,n}=await fixture(t,{data:{rows:[{name:'same'},{name:'same'},{name:'last'}]},sections:t.sections.map((s:any)=>({id:s.id,data:{}}))});let active=0,acquired=0,peak=0;
+ const wrap=(raw:any,cached=false):any=>({...value(raw),async *properties(){for(const[k,x]of Object.entries(raw))yield[k,wrap(x,cached)];},async *elements(){for(const x of raw)yield wrap(x,cached);},async retainRecord(){if(cached)return {value:wrap(raw,true),release(){}};acquired++;peak=Math.max(peak,++active);let done=false;return {value:wrap(raw,true),release(){if(!done){done=true;active--;}}};}});
+ const expected=await api.composeTaskDocument(v,value(n));expect(await api.composeTaskDocument(v,wrap(n))).toEqual(expected);expect(acquired).toBeGreaterThan(0);expect(peak).toBeLessThanOrEqual(2);expect(active).toBe(0);
+});
+it('releases suspended record leases when binding fails or cancellation interrupts a generator',async()=>{
+ const t=globalTable(),{v,n}=await fixture(t,{data:{rows:[{name:'one'},{name:'two'}]},sections:[{id:sectionId,data:{}}]});
+ for(const mode of ['error','abort']){let active=0,acquired=0;const abort=new AbortController(),reason=Error('cancel record');
+ // Two validation walks each lease global data and the Section data (4 total).
+ const wrap=(raw:any,cached=false):any=>({...value(raw),async scalar(){if(cached&&raw==='one'&&acquired>4){if(mode==='abort')abort.abort(reason);else throw Error('scalar IO');}return value(raw).scalar();},async *properties(){for(const[k,x]of Object.entries(raw))yield[k,wrap(x,cached)];},async *elements(){for(const x of raw)yield wrap(x,cached);},async retainRecord(){if(cached)return {value:wrap(raw,true),release(){}};acquired++;active++;let done=false;return {value:wrap(raw,true),release(){if(!done){done=true;active--;}}};}});
+ const result=api.composeTaskDocument(v,wrap(n),{signal:abort.signal});if(mode==='abort')await expect(result).rejects.toBe(reason);else expect((await result).ok).toBe(false);expect(acquired).toBeGreaterThan(4);expect(active).toBe(0);}
+});
 it('replays a shared global collection for two cloned Sections with stable separate identities',async()=>{
  const t=globalTable(),s=structuredClone(t.sections[0]);s.id='10000000-0000-4000-8000-000000000002';s.label='Document2';t.sections.push(s);
  const q={data:{rows:Array.from({length:2000},(_,i)=>({name:'record'+i}))},sections:t.sections.map((s:any)=>({id:s.id,data:{}}))},{v,n}=await fixture(t,q);

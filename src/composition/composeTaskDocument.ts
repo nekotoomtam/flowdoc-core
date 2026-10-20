@@ -7,6 +7,7 @@ import {validateResolvedDocument} from './validateResolvedDocument.js';
 import {ExpansionBudget,ExpansionLimitError} from '../binding/expansionBudget.js';
 import {composeSectionsSteps} from './composeSections.js';
 import type {BindingEffect} from '../binding/expansionSteps.js';
+import {retainTaskRecord} from '../data/taskRecord.js';
 class TaskCompositionError extends Error {constructor(readonly code:string){super(code);}}
 const fail=(code:string):Result<never>=>({ok:false,issues:[{code,path:'task.input',message:'Invalid or oversized normalized task input'}],warnings:[]});
 const get=async(v:TaskValue,k:string)=>{for await(const [name,x]of v.properties())if(name===k)return x;return undefined;};
@@ -42,7 +43,7 @@ export async function composeTaskDocument(template:ValidatedTemplate,input:TaskV
   const d:ResolvedDocument={schemaVersion:t.schemaVersion,nodeModelVersion:t.nodeModelVersion,template:{templateId:t.templateId,docKey:t.docKey,version:t.version},book:{contentSlot:'body',page:structuredClone(t.pageLayouts[t.book.defaultPageLayoutId]!.page)},styles:structuredClone(t.styles),rootIds:[],nodes:Object.create(null),sourceMap:Object.create(null)};
   const lookup=async(scope:any,key:string):Promise<TaskValue>=>{if(!scope||typeof scope.properties!=='function')throw new TaskCompositionError('INVALID_DATA');const found=await get(scope,key);if(!found)throw new TaskCompositionError('INVALID_DATA');return found;};
   const collection=async(scope:any,key:string,area=false)=>{const list=await lookup(scope,key);if(await list.kind()!=='array')throw new TaskCompositionError('INVALID_DATA');
-   const it=(async function*(){let i=0;for await(const record of list.elements()){check();const bytes=await record.byteLength();if(bytes>256*1024)throw new TaskCompositionError('LIMIT_EXCEEDED');if(area){const format=await get(record,'format'),data=await get(record,'data');yield {format:await format!.scalar(),originalIndex:i++,data};}else yield record;}})();iterators.add(it);return it;
+   const it=(async function*(){let i=0;for await(const record of list.elements()){check();const bytes=await record.byteLength();if(bytes>256*1024)throw new TaskCompositionError('LIMIT_EXCEEDED');const lease=await retainTaskRecord(record);try{if(area){const format=await get(lease.value,'format'),data=await get(lease.value,'data');yield {format:await format!.scalar(),originalIndex:i++,data};}else yield lease.value;}finally{lease.release();}}})();iterators.add(it);return it;
   };
   const scalar=async(scope:any,key:string)=>{const v=await small(await lookup(scope,key));if(v?.kind==='task-image'){const m=marker(v);return m.availability==='available'?m.assetId:'unavailable-'+m.findingId;}return plain(v);};
   const resolve=async(e:BindingEffect):Promise<any>=>{
