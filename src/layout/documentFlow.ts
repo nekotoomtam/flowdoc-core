@@ -12,14 +12,14 @@ import { collectContents } from '../composition/contents.js';
 import { measureContents } from './measureContents.js';
 import { toPt } from '../composition/resolvedDocument.js';
 import type { ResolvedDocument, Table } from '../composition/resolvedDocument.js';
-import type { DrawDocument, DrawPage } from '../pdf/drawContract.js';
+import type { DrawDocument, DrawPage, DrawImage } from '../pdf/drawContract.js';
 import { LayoutError } from './textFlow.js';
 import type { TextRuntime } from './textFlow.js';
 import { measureText } from './measureText.js';
 import type { MeasuredLine } from './measureText.js';
-import type { PdfImageResources } from '../pdf/imageResources.js';
+import type { PdfImageMetadata } from '../pdf/streamResources.js';
 const epsilon = 1e-6;
-export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, images: PdfImageResources = {}): Promise<DrawDocument> {
+export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, images: PdfImageMetadata = {},bounds?:{maxPages:number;maxImagePlacements?:number;signal?:AbortSignal|undefined}): Promise<DrawDocument> {
     const warnings: Issue[] = [];
     const omittedNodeIds=new Set<string>();
     let fixed:{instance:FormatInstance;start:number;end:number}|undefined;
@@ -61,6 +61,12 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     let hideNumbers = false;
     const pages: DrawPage[] = [];
     let current!: DrawPage, y = top, serial = 0;
+    let imagePlacements=0;
+    const addImage=(image:DrawImage)=>{
+        bounds?.signal?.throwIfAborted();
+        if(bounds&&imagePlacements>=(bounds.maxImagePlacements??10000))throw new LayoutError(image.nodeId,'Image placement limit exceeded',sectionId);
+        imagePlacements++;current.images??=[];current.images.push(image);
+    };
     const bandRegion = (kind: 'header' | 'footer') => { const p = activeBands[kind]?.placement; return p ? { left: toPt(p.left), width: widthPt - toPt(p.left) - toPt(p.right), edge: kind === 'header' ? toPt(p.offset) : heightPt - toPt(p.offset) } : { left, width: available, edge: kind === 'header' ? innerTop : innerBottom }; };
     const geometry = (index: number) => {
         const shown = selectPageBands(modes, pageRole, index), h = shown.header ? bands.header : undefined, f = shown.footer ? bands.footer : undefined;
@@ -75,6 +81,8 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         return { top: nt, bottom: nb, h, f, hy, fy };
     };
     const nextPage = () => {
+        bounds?.signal?.throwIfAborted();
+        if(bounds&&pages.length>=bounds.maxPages)throw new LayoutError(activeNode,'Page limit exceeded',sectionId);
         if(fixed)throw new FormatStop('height-limit',[pending(activeNode,'node',{nodeType:d.nodes[activeNode]?.type??'table'})]);
         if (cover && sectionPageIndex > 0)
             throw new LayoutError(activeNode, 'Cover exceeds one page');
@@ -102,9 +110,8 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                 for (const t of m.pageTexts)
                     pageTexts.push({ ...t, pageIndex: pages.length - 1, sectionId: sectionId!, xPt: bandRegion(kind).left + t.xPt, yPt: at + t.yPt });
             if (m.images.length) {
-                current.images ??= [];
                 for (const image of m.images)
-                    current.images.push({ ...image, xPt: bandRegion(kind).left + image.xPt, yPt: at + image.yPt });
+                    addImage({ ...image, xPt: bandRegion(kind).left + image.xPt, yPt: at + image.yPt });
             }
         }
     };
@@ -130,8 +137,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                         return;
                     const fw = item.frameWidth, fh = item.heightPt, scale = Math.min(fw / image.width, fh / image.height), iw = image.width * scale, ih = image.height * scale;
                     const frameLeft = x + (item.align === 'right' ? width - fw : item.align === 'center' ? (width - fw) / 2 : 0);
-                    current.images ??= [];
-                    current.images.push({ nodeId: item.nodeId, resourceId: item.resourceId, xPt: frameLeft + (fw - iw) / 2, yPt: at + (fh - ih) / 2, widthPt: iw, heightPt: ih });
+                    addImage({ nodeId: item.nodeId, resourceId: item.resourceId, xPt: frameLeft + (fw - iw) / 2, yPt: at + (fh - ih) / 2, widthPt: iw, heightPt: ih });
                 }, border(x1Pt, y1Pt, x2Pt, y2Pt, nodeId) { if(bounded){x1Pt=Math.max(left+.25,Math.min(left+available-.25,x1Pt));x2Pt=Math.max(left+.25,Math.min(left+available-.25,x2Pt));} current.borders ??= []; current.borders.push({ x1Pt, y1Pt, x2Pt, y2Pt, nodeId, widthPt: 0.5, color: t.props.borderColor ?? '000000' }); }
             });
             if(bounded)y+=.25;
@@ -250,8 +256,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                 const frameLeft = left + (n.props.align === 'right' ? available - fw : n.props.align === 'center' ? (available - fw) / 2 : 0);
                 if (image) {
                     const scale = Math.min(fw / image.width, fh / image.height), iw = image.width * scale, ih = image.height * scale;
-                    current.images ??= [];
-                    current.images.push({ nodeId: id, resourceId: n.props.resourceId, xPt: frameLeft + (fw - iw) / 2, yPt: y + (fh - ih) / 2, widthPt: iw, heightPt: ih });
+                    addImage({ nodeId: id, resourceId: n.props.resourceId, xPt: frameLeft + (fw - iw) / 2, yPt: y + (fh - ih) / 2, widthPt: iw, heightPt: ih });
                 }
                 y += fh;
             }

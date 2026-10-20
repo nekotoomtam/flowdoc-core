@@ -5,13 +5,17 @@ export {calculateFontHeightAdjustment,FONT_HEIGHT_METHOD} from './fonts/heightAd
 export type {FontHeightAdjustmentMetric,FontHeightAdjustmentInput,FontHeightAdjustmentResult,FontHeightAdjustmentErrorCode} from './fonts/heightAdjustment.js';
 export type {FontSelection,LibraryTextStyle,LibraryFontInput,FontLicense} from './fonts/types.js';
 export {createPdfEngine} from './pdf/createPdfEngine.js';
-export type {PdfEngine,PdfArtifact} from './pdf/createPdfEngine.js';
+export type {PdfEngine,PdfArtifact,PdfStreamArtifact,PdfOutput} from './pdf/createPdfEngine.js';
+export {PDF_STREAM_CONTRACT} from './pdf/streamResources.js';
+export type {PdfImageProvider,PdfStreamRef,StreamPdfImage} from './pdf/streamResources.js';
+export type {PdfStreamOptions} from './pdf/writePdfTo.js';
 export type {ResolvedDocument,TextBlock,TextInline,TextStyle,SourceEntry,Length} from './composition/resolvedDocument.js';
 export type { ExportResources, ResourceOptions, FontResource } from './runtime/exportResources.js';
 export type { Result, Issue } from './result.js';
 export {validateTemplate} from './template/validateTemplate.js';
 export {prepareGeneration} from './data/prepareGeneration.js';
 export {composeDocument} from './composition/composeDocument.js';
+export {composeTaskDocument} from './composition/composeTaskDocument.js';
 export type {TemplateDefinition,ValidatedTemplate,Format,Fragment,Repeat,CellRepeat,ObjectSchema,StringField,ImageField,TemplateImageBlock,ArrayField,FieldRef,TemplateNode} from './template/types.js';
 export type {PreparedInput,PreparedData} from './data/types.js';
 export type {DocumentNode,PageBreak,Table,TableRow,TableCell} from './composition/resolvedDocument.js';
@@ -30,7 +34,9 @@ export type {PreparedSection} from './data/types.js';
 
 export type {SystemPageField} from "./composition/resolvedDocument.js";
 
-export type {ResolvedRowGroup} from './composition/resolvedDocument.js';
+export type {ResolvedRowGroup,ResolvedGroupLabel} from './composition/resolvedDocument.js';
 
-export type {Template18,Template19,InstanceSection,AreaSection,BindingScope,PageNumbering,RowGroup} from './template/types.js';
+export type {Template18,Template19,InstanceSection,AreaSection,BindingScope,PageNumbering,RowGroup,GroupLabel} from './template/types.js';
 export type {PreparedSection19} from './data/types.js';
+export {normalizeTaskInput} from './data/taskInput.js';
+export type {TaskValue,TaskImageContext,TaskImageResource,TaskInputOptions,TaskInputLimits,TaskInputSummary} from './data/taskInput.js';

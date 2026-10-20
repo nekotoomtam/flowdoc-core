@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-Development candidate `0.4.3` adds model19 Section instances: UUID `id`,
+Package `0.4.7` supports model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -19,17 +19,101 @@ Empty scopes add no page. Target numbers follow continue/restart/exclude; hidden
 numbers remain in contents and excluded targets retain title links without numbers.
 Pagination has one layout pass: fixed number slots are filled afterwards without
 reflow; an oversized number fails rather than guessing or retrying. Model18 keeps
-its existing unscoped contract. This is a development package, not an installation
-or release claim. Shared contract: Project Control Section–Area Stage0–3.
+its existing unscoped contract. Release identity is the matching annotated tag on
+the release snapshot; installation is separate. Shared contract: Project Control Section–Area Stage0–3.
 
+## Internal task input reader
+
+`normalizeTaskInput(template, valueHandle, options)` validates model18/19
+values and writes `flowdoc-task-input/1` incrementally. Storage-neutral handles expose
+object properties, array elements and bounded scalars; Core never loads a whole
+Section or Area entry. A collection pass precedes resolution so property order and
+forward image references do not select a first winner. Service owns file/image
+metadata and Section asset keys. Only typed image slots invoke its adapter; omitted
+images retain explicit version1 unavailable resources and reasons, including required
+fields. Legacy `prepareGeneration` still accepts its original UUID image values only.
+This normalized contract is internal input for Service task processing, not a new
+legacy prepared snapshot, renderer capability, public endpoint or PDF readiness claim.
 ## Authority Boundary
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.3, a development candidate after 0.4.0.
-This candidate includes Section19, scoped contents, Format sizing v2 and the opt-in height calculation below; it has no release tag.
+Package version: 0.4.7, prepared after release 0.4.3.
+This package includes Section19, scoped contents, Format sizing v2, group-label
+spans, streamed task images/PDF and the opt-in height calculation below.
 Release identity requires the matching tagged snapshot and acceptance gates.
 Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
+
+## Internal bounded task composition
+
+`composeTaskDocument(validatedTemplate, normalizedValueHandle, {signal?})` consumes
+`flowdoc-task-input/1` with its exact template pin. Source collections are replayed
+lazily through the same binding expansion steps as legacy composition. Each record
+is bounded to256 KiB; source/prepared payloads are never loaded as complete objects.
+Canonical normalized values are validated separately from raw request defaults.
+One resolved graph remains bounded to50,000 node/inline identities and2,000 Section
+instances. This is not layout spooling or a whole Service RAM guarantee.
+Available image markers bind to their asset IDs; unavailable markers retain frames
+using `unavailable-<findingId>` and do not add composition findings. The caller must
+retain existing source findings and suppress duplicate unavailable-image diagnostics.
+Source handles must describe the same sealed, pinned bytes on each replay; the
+Service adapter owns file integrity and lifetime. Abort closes all active iterators.
+Legacy prepared schema1/2 APIs and their bounds are unchanged.
+
+## Internal streamed PDF output
+
+The Linux/amd64 native helper supports the bounded `--serve` protocol used by
+one ICU line-segmenter session per generation; the original one-shot interface
+remains available. Measurement/shaping and line-break rules are unchanged.
+Abort/deadlines close the owned sessions; helpers are closed after final layout
+before font subsetting/PDF writing. Use the complete packaged resources: mixing
+this Core with an older helper fails resource probing. Service task containers
+require a reaping init, including when the render worker is forcibly killed.
+Core does not own container supervision or HTTP/database/storage policy.
+
+Task composition may reuse bounded template-access metadata for that call only;
+source/fingerprint checks and all validation passes remain. The Service adapter
+owns read-cache, field-index and record-byte budgets, fallback and file lifetime.
+Neither mechanism creates a cross-job cache or permits stale inputs.
+
+`PDF_STREAM_CONTRACT` is `flowdoc-pdf-stream/1`. Engines additionally expose
+`generatePdfTo(resolvedDocument, provider, output, {signal?, maxBytes?})`.
+This is an isolated Core contract; Service/task/FlowDocMake activation is later work.
+The caller must check this exact capability and method; no buffered fallback.
+Legacy `generatePdf` retains its 20-image/64 MiB retained-image limits.
+
+`provider.images` maps each resolved image resource ID to
+`{kind:'jpeg'|'rgb-deflate', width, height, content:{key,byteLength,sha256}, alpha?}`.
+An alpha reference has the same shape as content and is permitted only with RGB.
+RGB/alpha streams are zlib-compressed interleaved RGB8/gray8 without PNG predictors;
+JPEG is normalized RGB8. Preparation/rotation/colour conversion and full raster
+decoding remain the caller's existing image-preparation responsibility. Core
+checks JPEG framing/dimensions and zlib decoded byte counts, not source image
+decoding or colour-profile trust. PNG alpha must be prepared separately, never
+flattened or silently recompressed to lower quality to satisfy capacity.
+
+`provider.open(frozenRef, signal)` returns an async iterable of nonempty chunks
+up to64 KiB. The adapter owns paths/handles, must honor cancellation and close on
+iterator return/error. Core verifies exact length/SHA-256 while embedding and
+never resolves a URL or client path. Manifests and functions are snapshotted before
+awaiting. Resource IDs control reuse; byte-identical distinct IDs stay distinct.
+Per-page resource dictionaries list only images actually drawn on that page.
+
+`output.write(chunk, signal)` must await actual bounded acceptance/backpressure;
+`output.abort(reasonCode)` must close/delete partial output or report failure.
+Callbacks must cooperate with cancellation; the Service process owner supplies
+deadline/forced-stop enforcement for stalled native or adapter work. Core owns
+neither the destination nor its success finalization. Publish only after a
+successful result AND closing/verifying the owned artifact. Failures abort even
+when final runtime/temp cleanup fails; cleanup failure is not successful output.
+Success is `{byteLength,sha256,mediaType,pageCount,fontUsage?}`, with no PDF bytes.
+
+Bounds: 2,000 prepared descriptors,8 MiB manifest,8 million pixels/derivative,
+50 MiB/compressed stream,10,000 placements,50,000 expanded nodes (including
+inlines/bands),2,000 pages,256 MiB output (maxBytes may only lower it). Images and
+PDF objects are emitted sequentially; one page content and bounded font/layout/
+glyph/xref metadata still remain. This does not certify whole-process RAM, giant
+structured-data composition, Service reservations or full UAT capacity.
 
 ## Opt-in font height calculation
 
@@ -219,7 +303,7 @@ that exact tarball; a Windows build alone does not verify its native PDF runtime
 Font verification covers exact selected faces/required glyphs and legacy Sarabun
 parity. Release promotion follows the gates above after this preparation.
 
-## Packaged Format sizing v2 development candidate
+## Packaged Format sizing v2
 
 Model19 Area Format definitions optionally declare `sizing: {mode: "auto"}` or
 `{mode: "fixed", height: {value: 300, unit: "pt"}}` (pt/mm). Omitted sizing retains
@@ -236,5 +320,39 @@ Visible references/TOC to omitted content fail LAYOUT_FAILED with reason
 omitted-destination and collected warnings. No Area sizing or request override.
 Matched consumers require formatSizing.version2, diagnosticsVersion1 and the
 exact new artifact checksum. Version1 archives describe the earlier whole-frame
-fit gate and remain immutable. Package 0.4.3 is untagged, not installed;
+fit gate and remain immutable. Package 0.4.5 is untagged, not installed;
 Project Control owns cross-repository verification and release acceptance.
+
+
+## Group-label spans
+
+Model19 (schema1 or2) rowGroups optionally declares
+`groupLabel:{cellTemplateId:"member-label",emptyCellTemplateId:"empty-label"}`.
+The member and empty label cells bind the same group field, occupy the same grid column/colSpan, have no
+authored rowSpan, and each contains one text-block with a required nonempty
+string field-ref in group scope. Labels cannot contain links, anchors, images
+or TOCs. The group needs member/empty row templates; a prefix is optional here.
+Normal rowGroups without groupLabel retain their existing contract. Model18
+rejects this optional declaration; it is not silently discarded.
+
+The empty template row must set allowBreak:false. Core derives span from member count (empty uses one fallback row). An empty
+group collection emits no group; equal names remain distinct instances.
+keepStart is always true for groupLabel and cannot be set false. In auto,
+each actual continuation fragment repeats the complete name plus ` (ต่อ)`;
+members keep their logical identity and flow once. A complete label that cannot
+fit fails LAYOUT_FAILED with reason group-label-does-not-fit and group context.
+
+Format sizing.fixed still reserves the lesser of maximum height and current
+page remainder. It closes the visible table and stops this Format; remaining
+members never continue onto another page. FORMAT_CONTENT_OMITTED retains
+formatOmission.version1; pending groupId/groupIndex/itemIndex identify where
+content stopped (no itemIndex for group labels/empty rows). Input stays complete;
+a successful partial PDF must be reported as incomplete. Totals remain authored
+ordinary rows, not a new aggregation or group-footer hook.
+
+Consumers must preserve the declaration and inspect groupLabelSpans.version1
+on a matched Service/FlowDocMake contract, with model19/schema1,2, diagnostics1
+and formatSizing.version2. The suffix uses the selected label font; missing
+glyphs block generation without fallback. This package also retains
+the decimal PDF image-coordinate serialization fix; do not overwrite an older
+archive using the new bytes. Project Control owns cross-repository acceptance.

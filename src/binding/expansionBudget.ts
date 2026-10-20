@@ -3,5 +3,6 @@ export class ExpansionLimitError extends Error {}
 // One counter per document, shared by sections, format instances and Areas.
 export class ExpansionBudget {
  private count=0;
- take():void {if(++this.count>MAX_EXPANDED_IDENTITIES)throw new ExpansionLimitError(`Expanded document exceeds ${MAX_EXPANDED_IDENTITIES} node/inline identities`);}
+ constructor(private readonly maximum=MAX_EXPANDED_IDENTITIES){}
+ take():void {if(++this.count>this.maximum)throw new ExpansionLimitError(`Expanded document exceeds ${this.maximum} node/inline identities`);}
 }

@@ -4,7 +4,7 @@ import type {ResolvedBand,TextStyle} from '../composition/resolvedDocument.js';
 import {toPt} from '../composition/resolvedDocument.js';
 import type {BandMode} from '../template/types.js';
 import type {GlyphRun,DrawImage} from '../pdf/drawContract.js';
-import type {PdfImageResources} from '../pdf/imageResources.js';
+import type {PdfImageMetadata} from '../pdf/streamResources.js';
 import {LayoutError,type TextRuntime} from './textFlow.js';
 import {measureText} from './measureText.js';
 export interface MeasuredBand {borders:import("../pdf/drawContract.js").Border[];heightPt:number;commands:GlyphRun[];images:DrawImage[];pageFields:RelativePageField[];numberBlocks:Set<string>;pageTexts:Omit<import('../pdf/drawContract.js').PageText,'pageIndex'|'sectionId'>[]}
@@ -12,7 +12,7 @@ export function selectPageBands(modes:{headerMode?:BandMode;footerMode?:BandMode
  const show=(mode:BandMode='all')=>role==='body'&&(mode==='all'||mode==='first'&&index===0||mode==='continuation'&&index>0);
  return {header:show(modes.headerMode),footer:show(modes.footerMode)};
 }
-export async function measurePageBand(b:ResolvedBand,styles:Record<string,TextStyle>,widthPt:number,runtime:TextRuntime,images:PdfImageResources):Promise<MeasuredBand>{
+export async function measurePageBand(b:ResolvedBand,styles:Record<string,TextStyle>,widthPt:number,runtime:TextRuntime,images:PdfImageMetadata):Promise<MeasuredBand>{
  const out:MeasuredBand={borders:[],heightPt:0,commands:[],images:[],pageFields:[],pageTexts:[],numberBlocks:new Set()};let serial=0;
  const stack=async(ids:string[],x:number,y:number,width:number):Promise<number>=>{let at=y;for(const id of ids){const n=b.nodes[id]!;
   if(n.type==='columns'){const gap=n.props.gap?toPt(n.props.gap):0,remaining=width-gap*(n.columns.length-1),weight=n.columns.reduce((s,c)=>s+c.weight,0);if(remaining<=0||!Number.isFinite(weight))throw new LayoutError(id,'Columns exceed page band width');let cx=x,high=0;for(const c of n.columns){const cw=remaining*c.weight/weight;high=Math.max(high,await stack(c.childIds,cx,at,cw));cx+=cw+gap;}at+=high;}

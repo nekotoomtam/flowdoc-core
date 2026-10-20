@@ -1,12 +1,14 @@
-# FlowDoc Core 0.4.3 template entrypoint
+# FlowDoc Core 0.4.7 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes development package 0.4.3 after release 0.4.0.
-It adds an opt-in pure font-height calculation; template schema and ordinary pt
-rendering are unchanged. See the root README's font-height API for inputs/errors.
+This describes package 0.4.7 after release 0.4.3, including opt-in font-height
+calculation, Section19, group-label continuation and streamed task input/PDF.
+Ordinary pt rendering is unchanged. See the root README for the exact native
+helper/session contract and font-height API inputs/errors. Service owns task
+storage, credentials, streaming delivery and process supervision.
 Height adjustment does not keep text width, wrapping, or line clearance constant.
 Release identity is established by the matching snapshot/tag after the release gates.
 
@@ -93,5 +95,39 @@ Visible references/TOC to omitted content fail LAYOUT_FAILED with reason
 omitted-destination and collected warnings. No Area sizing or request override.
 Matched consumers require formatSizing.version2, diagnosticsVersion1 and the
 exact new artifact checksum. Version1 archives describe the earlier whole-frame
-fit gate and remain immutable. Package 0.4.3 is untagged, not installed;
+fit gate and remain immutable. Package 0.4.4 is untagged, not installed;
 Project Control owns cross-repository verification and release acceptance.
+
+
+## Group-label spans development candidate
+
+Model19 (schema1 or2) rowGroups optionally declares
+`groupLabel:{cellTemplateId:"member-label",emptyCellTemplateId:"empty-label"}`.
+The member and empty label cells bind the same group field, occupy the same grid column/colSpan, have no
+authored rowSpan, and each contains one text-block with a required nonempty
+string field-ref in group scope. Labels cannot contain links, anchors, images
+or TOCs. The group needs member/empty row templates; a prefix is optional here.
+Normal rowGroups without groupLabel retain their existing contract. Model18
+rejects this optional declaration; it is not silently discarded.
+
+The empty template row must set allowBreak:false. Core derives span from member count (empty uses one fallback row). An empty
+group collection emits no group; equal names remain distinct instances.
+keepStart is always true for groupLabel and cannot be set false. In auto,
+each actual continuation fragment repeats the complete name plus ` (ต่อ)`;
+members keep their logical identity and flow once. A complete label that cannot
+fit fails LAYOUT_FAILED with reason group-label-does-not-fit and group context.
+
+Format sizing.fixed still reserves the lesser of maximum height and current
+page remainder. It closes the visible table and stops this Format; remaining
+members never continue onto another page. FORMAT_CONTENT_OMITTED retains
+formatOmission.version1; pending groupId/groupIndex/itemIndex identify where
+content stopped (no itemIndex for group labels/empty rows). Input stays complete;
+a successful partial PDF must be reported as incomplete. Totals remain authored
+ordinary rows, not a new aggregation or group-footer hook.
+
+Consumers must preserve the declaration and inspect groupLabelSpans.version1
+on a matched Service/FlowDocMake contract, with model19/schema1,2, diagnostics1
+and formatSizing.version2. The suffix uses the selected label font; missing
+glyphs block generation without fallback. This unpromoted candidate also retains
+the decimal PDF image-coordinate serialization fix; do not overwrite an older
+archive using the new bytes. Project Control owns cross-repository acceptance.

@@ -1,11 +1,9 @@
-import {execFile} from 'node:child_process';
-import {promisify} from 'node:util';
 import {NativeShapeSession} from './nativeShapeSession.js';
+import {NativeSegmenterSession} from './nativeSegmenterSession.js';
 import {selectFont} from '../fonts/selection.js';
 import {FontError} from '../fonts/types.js';
 import type {ExportResources} from './exportResources.js';
 import type {ShapedText,TextRuntime} from '../layout/textFlow.js';
-const exec=promisify(execFile);
 export const subprocessOptions={timeout:30_000,maxBuffer:16*1024*1024,windowsHide:true};
 export function byteOffsets(text:string):Map<number,number>{
  if(!text.isWellFormed())throw Error('Malformed Unicode');
@@ -31,18 +29,29 @@ export function decodeShape(raw:any,text:string,sizePt:number):ShapedText{
  });
  return {glyphs,ascentPt:top,descentPt:bottom,inkLeftPt:left,inkRightPt:right,glyphInkBoundsPt:raw.glyphs.map((g:any)=>g.ink?{left:(g.xOffset+g.ink.xMin)*scale,right:(g.xOffset+g.ink.xMax)*scale}:null)};
 }
-export function createTextRuntime(resources:ExportResources):TextRuntime&{close():Promise<void>}{
+export function createTextRuntime(resources:ExportResources,signal?:AbortSignal):TextRuntime&{close():Promise<void>}{
  const sessions=new Map<string,NativeShapeSession>();
+ let segmenter:NativeSegmenterSession|undefined,closed=false,closing:Promise<void>|undefined;
+ const close=()=>{
+  if(closing)return closing;closed=true;signal?.removeEventListener('abort',abort);
+  closing=(async()=>{
+   const results=await Promise.allSettled([...sessions.values()].map(s=>s.close()).concat(segmenter?[segmenter.close()]:[]));
+   sessions.clear();segmenter=undefined;
+   const errors=results.filter(r=>r.status==='rejected');if(errors.length)throw new AggregateError(errors.map(r=>r.reason),'Text runtime cleanup failed');
+  })();return closing;
+ };
+ const abort=()=>{void close().catch(()=>{});};
+ signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort();
  return {
   fontId:style=>selectFont(style,resources.fonts).id,
-  async close(){await Promise.all([...sessions.values()].map(s=>s.close()));sessions.clear();},
+  close,
   async breaks(text){
-   const raw=JSON.parse((await exec(resources.segmenterPath,[text],subprocessOptions)).stdout);
-   const map=byteOffsets(text);
-   if(raw.segmenterRevision!=='icu_segmenter-2.2.0'||!Array.isArray(raw.breakByteOffsets)||raw.breakByteOffsets.some((b:unknown)=>typeof b!=='number'||!map.has(b)))throw Error('Invalid break offsets');
-   return raw.breakByteOffsets.map((b:number)=>map.get(b)!);
+   if(closed)throw Error('Text runtime closed');signal?.throwIfAborted();
+   segmenter??=new NativeSegmenterSession(resources.segmenterPath,['--serve'],{signal});
+   return segmenter.request(text);
   },
   async shape(text,fontId,sizePt){
+   if(closed)throw Error('Text runtime closed');signal?.throwIfAborted();
    const font=resources.fonts.find(f=>f.id===fontId);if(!font)throw Error('Missing font');
    let session=sessions.get(fontId);
    if(!session){session=new NativeShapeSession(resources.shaperPath,['--serve',font.path,fontId]);sessions.set(fontId,session);}

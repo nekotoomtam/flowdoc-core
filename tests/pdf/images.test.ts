@@ -19,6 +19,24 @@ it('retains right frame alignment after a whole-frame page break',async()=>{
 });
 it('accepts Area18 image roots while rejecting retired version 4',()=>{const d=imageDoc();expect(validateResolvedDocument(d)).toEqual([]);d.nodeModelVersion=4;expect(validateResolvedDocument(d).length).toBeGreaterThan(0);});
 it('fits proportionally inside the authored frame and embeds RGB plus soft mask',async()=>{const d=imageDoc();const draw=await documentFlow(d,fakeRuntime,resources as any);expect(draw.pages[0].images[0]).toMatchObject({resourceId:'photo',widthPt:100,heightPt:100});const pdf=Buffer.from(writePdf(draw,[],resources as any)).toString('latin1');expect(pdf).toContain('/Subtype /Image');expect(pdf).toContain('/SMask');expect(pdf).toContain('/Im1 Do');});
+it('writes legal decimal image matrices for the UAT header and near-zero coordinates',()=>{
+ const cases=[
+  {widthPt:595.27559,heightPt:76.2989268923821,xPt:2.755905939011427e-7,yPt:1.35},
+  {widthPt:200,heightPt:100,xPt:-2.755905939011427e-7,yPt:741.8899997244094},
+  {widthPt:0.000001,heightPt:0.000001,xPt:0.000001,yPt:0.000001},
+  {widthPt:200,heightPt:100,xPt:40.125,yPt:70.25},
+  {widthPt:1e21,heightPt:2e21,xPt:-1e21,yPt:0},
+ ];
+ for(const geometry of cases){
+  const page={widthPt:595.275590551181,heightPt:841.89,backgroundColor:'FFFFFF',commands:[],images:[{resourceId:'photo',nodeId:'header',...geometry}]};
+  const pdf=Buffer.from(writePdf({pages:[page]},[],resources as any)).toString('latin1');
+  const matrix=/q ([^\n]+) cm \/Im1 Do Q/.exec(pdf)![1]!.split(' ');
+  expect(matrix).toHaveLength(6);
+  for(const token of matrix)expect(token).toMatch(/^-?\d+(?:\.\d+)?$/);
+  const expected=[geometry.widthPt,0,0,geometry.heightPt,geometry.xPt,page.heightPt-geometry.yPt-geometry.heightPt];
+  matrix.forEach((token,i)=>expect(Math.abs(Number(token)-expected[i]!)).toBeLessThanOrEqual(0.00000051));
+ }
+});
 it('moves whole frames across pages and rejects over-page frames',async()=>{const d=imageDoc();d.nodes.t.props.height.value=450;d.nodes.u=structuredClone(d.nodes.t);d.nodes.u.id='u';d.rootIds.push('u');d.sourceMap.u={origin:'authored',sectionId:'main',sourceId:'u'};expect((await documentFlow(d,fakeRuntime,resources as any)).pages).toHaveLength(2);d.nodes.t.props.height.value=1000;await expect(documentFlow(d,fakeRuntime,resources as any)).rejects.toThrow();});
 it('keeps the frame when no resource is available',async()=>{const d=imageDoc();d.nodes.u=structuredClone(d.nodes.t);d.nodes.u.id='u';d.nodes.u.props.resourceId='missing';d.rootIds.unshift('u');const draw=await documentFlow(d,fakeRuntime,resources as any);expect(draw.pages[0].images).toHaveLength(1);expect(draw.pages[0].images[0].yPt).toBeCloseTo(20*72/25.4+100);});
 import {validateImageResources} from '../../src/pdf/imageResources.js';

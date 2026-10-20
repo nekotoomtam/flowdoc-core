@@ -7,7 +7,7 @@ import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat,CellRepeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {scopedContents?:boolean;sectionIds?:string[]|undefined;pageBreaks?:boolean;rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
+export interface GraphContext {groupLabelSpans?:boolean;scopedContents?:boolean;sectionIds?:string[]|undefined;pageBreaks?:boolean;rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -46,7 +46,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
   if(forbidden){fail(p);continue;}
   for(const id of r.childTemplateIds)cellItems.set(id,field.items);
  }
- const groupRows=validateRowGroups(ctx.rowGroups?ctx.groupDeclarations:undefined,nodes,scopes,repeatItems,cellOwners,repeatIds,path+'.rowGroups',issues);
+ const groupRows=validateRowGroups(ctx.rowGroups?ctx.groupDeclarations:undefined,nodes,scopes,repeatItems,cellOwners,repeatIds,path+'.rowGroups',issues,ctx.groupLabelSpans);
  for(const [id,n] of Object.entries(nodes)){
   currentNode=id;
   const p=path+'.nodes.'+id;unique(id,p);

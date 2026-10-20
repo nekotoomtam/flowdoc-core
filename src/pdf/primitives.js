@@ -1,7 +1,16 @@
 // Text/font PDF primitives extracted from flowdoc-vnext-core fa76c74356e5cfc9296f6a86c0bfac690e8416f6.
 // Private JavaScript preserves the existing glyph/Unicode/object assembly algorithms.
 function formatNumber(value) {
-    return Number(value.toFixed(6)).toString();
+    if (!Number.isFinite(value))
+        throw new Error('Invalid PDF number');
+    // Keep the existing six-decimal precision and normalize negative zero.
+    const text = Number(value.toFixed(6)).toString();
+    // toFixed/toString use exponent notation at >= 1e21; PDF numbers cannot.
+    if (!text.includes('e'))
+        return text;
+    const [coefficient, exponent] = text.split('e');
+    const [integer, fraction = ''] = coefficient.split('.');
+    return integer + fraction + '0'.repeat(Number(exponent) - fraction.length);
 }
 function scaleMetric(value, unitsPerEm) {
     return Math.round(value / unitsPerEm * 1000);
@@ -232,7 +241,7 @@ function buildPageContent(page, usages, resolvedRuns) {
         appendText(content, page, command, usages, resolvedRuns);
     return Buffer.from(content.join('\n')+'\n', 'ascii');
 }
-function assemblePdf(contract, usages, imageUsages, pageContents) {
+function planPdfObjects(contract, usages, imageUsages, pageContents) {
     const objects = new Map();
     const catalogId = 1;
     const pagesId = 2;
@@ -254,8 +263,8 @@ function assemblePdf(contract, usages, imageUsages, pageContents) {
     const imageIds = imageUsages.map(image => {const id = nextId++; const mask = image.alpha ? nextId++ : null; return {id,mask};});
     const annotationIds=contract.pages.map(page=>(page.annotations??[]).map(()=>nextId++));
     const infoId = nextId;
-    objects.set(catalogId, plainObject(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`));
-    objects.set(pagesId, plainObject(`<< /Type /Pages /Kids [${pageObjectIds.map((pageId) => `${pageId} 0 R`).join(" ")}] /Count ${contract.pages.length} >>`));
+    objects.set(catalogId, ()=>plainObject(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`));
+    objects.set(pagesId, ()=>plainObject(`<< /Type /Pages /Kids [${pageObjectIds.map((pageId) => `${pageId} 0 R`).join(" ")}] /Count ${contract.pages.length} >>`));
     contract.pages.forEach((page, pageIndex) => {
         const pageId = pageObjectIds[pageIndex];
         const contentId = contentObjectIds[pageIndex];
@@ -265,36 +274,37 @@ function assemblePdf(contract, usages, imageUsages, pageContents) {
         const fontResources = usages.map((usage, index) => (pageFontIds.has(usage.asset.fontId)
             ? `/${usage.pdfResourceName} ${fontObjectIds[index].type0} 0 R`
             : null)).filter((value) => value != null).join(" ");
-        const imageResources = imageUsages.map((image,index)=>`/${image.name} ${imageIds[index].id} 0 R`).join(" ");
-        const resources = `/Resources << /Font << ${fontResources} >>${imageUsages.length ? ` /XObject << ${imageResources} >>` : ""} >>`;
-        objects.set(pageId, plainObject([
+        const pageImages = new Set((page.images ?? []).map(image=>image.resourceId));
+        const imageResources = imageUsages.map((image,index)=>pageImages.has(image.id) ? `/${image.name} ${imageIds[index].id} 0 R` : null).filter(Boolean).join(" ");
+        const resources = `/Resources << /Font << ${fontResources} >>${imageResources ? ` /XObject << ${imageResources} >>` : ""} >>`;
+        objects.set(pageId, ()=>plainObject([
             "<< /Type /Page",
             `/Parent ${pagesId} 0 R`,
             `/MediaBox [0 0 ${formatNumber(page.widthPt)} ${formatNumber(page.heightPt)}]`,
             resources,
             `/Contents ${contentId} 0 R${annotationIds[pageIndex].length ? ` /Annots [${annotationIds[pageIndex].map(id=>`${id} 0 R`).join(" ")}]` : ""} >>`,
         ].join(" ")));
-        objects.set(contentId, streamObject("", pageContents[pageIndex]));
+        objects.set(contentId, ()=>streamObject("", typeof pageContents === "function" ? pageContents(pageIndex) : pageContents[pageIndex]));
         (page.annotations??[]).forEach((a,index)=>{
             const r=a.rect,d=a.destination;
             const rect=[r.xPt,page.heightPt-r.yPt-r.heightPt,r.xPt+r.widthPt,page.heightPt-r.yPt].map(formatNumber).join(' ');
             let action;
             if(d.type==='external')action=`/A << /S /URI /URI <${Buffer.from(new URL(d.url).href,'utf8').toString('hex').toUpperCase()}> >>`;
             else {const dest=contract.anchors[d.target];action=`/Dest [${pageObjectIds[dest.pageIndex]} 0 R /XYZ ${formatNumber(dest.xPt)} ${formatNumber(contract.pages[dest.pageIndex].heightPt-dest.yPt)} null]`;}
-            objects.set(annotationIds[pageIndex][index],plainObject(`<< /Type /Annot /Subtype /Link /Rect [${rect}] /Border [0 0 0] ${action} >>`));
+            objects.set(annotationIds[pageIndex][index],()=>plainObject(`<< /Type /Annot /Subtype /Link /Rect [${rect}] /Border [0 0 0] ${action} >>`));
         });
     });
     usages.forEach((usage, index) => {
         const ids = fontObjectIds[index];
         const metrics = usage.metrics;
-        objects.set(ids.type0, plainObject([
+        objects.set(ids.type0, ()=>plainObject([
             "<< /Type /Font /Subtype /Type0",
             `/BaseFont /${usage.pdfBaseFontName}`,
             "/Encoding /Identity-H",
             `/DescendantFonts [${ids.cidFont} 0 R]`,
             `/ToUnicode ${ids.toUnicode} 0 R >>`,
         ].join(" ")));
-        objects.set(ids.cidFont, plainObject([
+        objects.set(ids.cidFont, ()=>plainObject([
             "<< /Type /Font /Subtype /CIDFontType2",
             `/BaseFont /${usage.pdfBaseFontName}`,
             "/CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >>",
@@ -303,7 +313,7 @@ function assemblePdf(contract, usages, imageUsages, pageContents) {
             `/W [1 [${widths(usage)}]]`,
             `/CIDToGIDMap ${ids.cidToGid} 0 R >>`,
         ].join(" ")));
-        objects.set(ids.descriptor, plainObject([
+        objects.set(ids.descriptor, ()=>plainObject([
             "<< /Type /FontDescriptor",
             `/FontName /${usage.pdfBaseFontName}`,
             "/Flags 4",
@@ -315,18 +325,28 @@ function assemblePdf(contract, usages, imageUsages, pageContents) {
             "/StemV 80",
             `/FontFile2 ${ids.fontFile} 0 R >>`,
         ].join(" ")));
-        objects.set(ids.fontFile, streamObject(`/Length1 ${usage.resource.subsetBytes.byteLength}`, usage.resource.subsetBytes));
-        objects.set(ids.toUnicode, streamObject("", toUnicodeCMap(usage)));
-        objects.set(ids.cidToGid, streamObject("", cidToGidMap(usage)));
+        objects.set(ids.fontFile, ()=>streamObject(`/Length1 ${usage.resource.subsetBytes.byteLength}`, usage.resource.subsetBytes));
+        objects.set(ids.toUnicode, ()=>streamObject("", toUnicodeCMap(usage)));
+        objects.set(ids.cidToGid, ()=>streamObject("", cidToGidMap(usage)));
     });
-    imageUsages.forEach((image,index)=>{const ids=imageIds[index];objects.set(ids.id,streamObject(`/Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /${image.filter}${ids.mask ? ` /SMask ${ids.mask} 0 R` : ""}`,image.bytes));if(ids.mask)objects.set(ids.mask,streamObject(`/Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode`,image.alpha));});
-    objects.set(infoId, plainObject("<< /Title (FlowDoc Document) /Producer (FlowDoc Core) >>"));
+    imageUsages.forEach((image,index)=>{
+        const ids=imageIds[index];
+        objects.set(ids.id,()=>({dictionary:`/Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /${image.filter}${ids.mask ? ` /SMask ${ids.mask} 0 R` : ""}`,stream:image.bytes,byteLength:image.byteLength ?? image.bytes.byteLength}));
+        if(ids.mask)objects.set(ids.mask,()=>({dictionary:`/Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode`,stream:image.alpha,byteLength:image.alphaByteLength ?? image.alpha.byteLength}));
+    });
+    objects.set(infoId, ()=>plainObject("<< /Title (FlowDoc Document) /Producer (FlowDoc Core) >>"));
+    return {objects,infoId};
+}
+function assemblePdf(contract, usages, imageUsages, pageContents) {
+    const {objects,infoId}=planPdfObjects(contract,usages,imageUsages,pageContents);
+    const catalogId=1;
     const header = Buffer.from("%PDF-1.7\n%\xE2\xE3\xCF\xD3\n", "binary");
     const parts = [header];
     const offsets = new Array(infoId + 1).fill(0);
     let byteOffset = header.length;
     for (let objectId = 1; objectId <= infoId; objectId += 1) {
-        const body = objects.get(objectId);
+        const planned = objects.get(objectId)?.();
+        const body = planned?.stream ? streamObject(planned.dictionary,planned.stream) : planned;
         if (body == null)
             throw new Error(`missing PDF object ${objectId}`);
         const prefix = Buffer.from(`${objectId} 0 obj\n`, "ascii");
@@ -354,4 +374,4 @@ function assemblePdf(contract, usages, imageUsages, pageContents) {
     parts.push(Buffer.from(trailer, "ascii"));
     return Buffer.concat(parts);
 }
-export { parseSfnt, unicodeAssignments, buildPageContent, assemblePdf };
+export { formatNumber, parseSfnt, unicodeAssignments, buildPageContent, assemblePdf, planPdfObjects };
