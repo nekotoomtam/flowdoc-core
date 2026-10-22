@@ -15,6 +15,9 @@ export interface ResourceFont {
     };
 }
 export interface ResourceImage {
+    kind?: 'png'|'jpeg';
+    width?: number;
+    height?: number;
     id: string;
     bytes: Uint8Array;
     sha256: string;

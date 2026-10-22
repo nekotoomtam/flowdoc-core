@@ -436,3 +436,5 @@ export function requireIntentGlyphs(intent: ExportIntent, fontId: string, text: 
     fail('FONT_FACE_UNAVAILABLE', path, 'Verified font missing'); for (const ch of text)
     if (ch !== '\n' && !/\p{Default_Ignorable_Code_Point}/u.test(ch) && !font!.glyph(ch.codePointAt(0)!))
         fail('FONT_GLYPH_MISSING', path, 'Generated content requires missing glyph U+' + ch.codePointAt(0)!.toString(16)); }
+
+export function snapshotDocxDocument(input:unknown):ResolvedDocument {return jsonSnapshot(input,defaultProfile.limits.maxNodes);}

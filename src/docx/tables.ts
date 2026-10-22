@@ -51,7 +51,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
             fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + nodeId, 'Expected source body table');
         if (!n.rowIds.length)
             fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + nodeId, 'Native empty table without rows is unsupported');
-        const unmergedPlainGrid = mapped.cells.every(cell => { const c = nodes[cell.nodeId]; return (c.props.colSpan ?? 1) === 1 && (c.props.rowSpan ?? 1) === 1 && c.childIds.every((id: string) => nodes[id].type === 'text-block' && nodes[id].props.heightMode === 'content'); });
+        const unmergedPlainGrid = mapped.cells.every(cell => { const c = nodes[cell.nodeId]; return (c.props.colSpan ?? 1) === 1 && (c.props.rowSpan ?? 1) === 1 && c.childIds.every((id: string) => nodes[id].type === 'text-block' && nodes[id].props.heightMode !== 'fixed'); });
         const sourcePoints = mapped.cells.map(cell => { const padding = nodes[cell.nodeId].props.padding; return { sourceTopPt: padding?.top ? toPoints(padding.top) : 4, sourceBottomPt: padding?.bottom ? toPoints(padding.bottom) : 4 }; });
         const decisions = mapped.cells.map((cell, i) => deriveTableSpace({ unmergedPlainGrid, uniformSingleHalfPointBorder: true, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom }));
         const allPadding = decisions.every(d => d.policy === 'border-centre-inset');

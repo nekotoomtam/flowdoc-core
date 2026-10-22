@@ -31,7 +31,7 @@ export function snapshotImageProvider(provider:PdfImageProvider):PdfImageProvide
 
 // Parse only JPEG framing/SOF/SOS, never retain the image or decompress pixels.
 // Raster decoding/orientation/colour normalization belong to the preparer.
-class JpegCheck {
+export class JpegCheck {
  private phase='soi0';private marker=0;private length=0;private remaining=0;private segment:number[]=[];private found=false;private scan=false;private last=-1;private beforeLast=-1;
  constructor(private width:number,private height:number){}
  push(chunk:Uint8Array){
