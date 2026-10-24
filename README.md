@@ -301,7 +301,10 @@ Current PDF font CIDs are limited to 65535 per font per document; exceeding that
 returns PDF_RENDER_FAILED. High-volume queueing is a later Service concern.
 
 Tables have one optional header row and default 4 pt cell padding with 0.5 pt black
-borders. Column widths must fit the page; text must fit the remaining cell width.
+borders. Optional table `props.borderStyle:"none"` suppresses outer and internal
+strokes in PDF and DOCX while retaining cell fills and the existing spacing
+rules. Omitted or `"single"` keeps the usual border; explicit `borderColor` values,
+including white, remain unchanged. Column widths must fit the page; text must fit the remaining cell width.
 The tallest cell determines row height. Multiple TextBlocks per cell flow in
 order. `allowBreak:true` continues at measured whole-line boundaries, retaining
 row identity; finished cells remain blank on later fragments. `allowBreak:false`

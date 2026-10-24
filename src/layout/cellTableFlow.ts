@@ -72,7 +72,8 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
    if(c.label){let y=top+c.padding.top;for(const line of c.label.active){s.emitItem(line,x+c.padding.left,y,c.contentWidth);y+=line.heightPt;}c.label.shown=true;}
    for(const l of c.lines){const y=start+l.offset;if(!l.drawn&&y>=from-eps&&y+l.line.heightPt<=to+eps){s.emitItem(l.line,x+c.padding.left,at+y-from,c.contentWidth);l.drawn=true;}}
   }
-  for(const e of edges.values()){e.segments.sort((a,b)=>a[0]-b[0]);let [a,b]=e.segments[0]!;const emit=()=>e.axis==='h'?s.border(a,e.fixed,b,e.fixed,t.id):s.border(e.fixed,a,e.fixed,b,t.id);
+  // Hiding strokes does not change the existing cell measurement or page cuts.
+  for(const e of t.props.borderStyle==='none'?[]:edges.values()){e.segments.sort((a,b)=>a[0]-b[0]);let [a,b]=e.segments[0]!;const emit=()=>e.axis==='h'?s.border(a,e.fixed,b,e.fixed,t.id):s.border(e.fixed,a,e.fixed,b,t.id);
    for(const [lo,hi] of e.segments.slice(1)){if(lo<=b+eps)b=Math.max(b,hi);else{emit();a=lo;b=hi;}}emit();}
  };
  const drawHeader=()=>{for(const c of headerCells)for(const l of c.lines)l.drawn=false;paint(headerCells,[0,headerHeight],0,headerHeight,s.y);s.y+=headerHeight;};

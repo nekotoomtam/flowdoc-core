@@ -245,7 +245,9 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile): Omit<Capsul
             }
             else if (n.type === 'table') {
                 keys(n, ['id', 'type', 'props', 'columns', 'rowIds', 'rowGroups'], at);
-                keys(p, ['headerRowCount', 'repeatHeaderRows', 'headerFillColor', 'borderColor'], at + '.props');
+                keys(p, ['headerRowCount', 'repeatHeaderRows', 'headerFillColor', 'borderColor', 'borderStyle'], at + '.props');
+                if (own(p, 'borderStyle'))
+                    requireValue(['single','none'].includes(p.borderStyle), at + '.props.borderStyle', 'Invalid table border style');
                 idList(n.rowIds, at + '.rowIds');
                 requireValue(Array.isArray(n.columns) && n.columns.length > 0 && Number.isSafeInteger(p.headerRowCount) && p.headerRowCount >= 0 && p.headerRowCount <= n.rowIds.length && typeof p.repeatHeaderRows === 'boolean', at + '.props', 'Invalid table/header');
                 for (const k of ['borderColor', 'headerFillColor'])

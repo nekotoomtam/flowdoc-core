@@ -69,6 +69,16 @@ headings and protected content retain their own keep rules. There is no blanket
 keep-whole-list promise. Table/cell insets and border quantization have explicit
 adaptation receipts; a structurally valid package does not prove native fit.
 
+Table `props.borderStyle` optionally accepts `"single"` or `"none"` in models18
+and19. Omission retains a single0.5pt border, with `props.borderColor` defaulting
+to `"000000"`. Set `borderStyle:"none"` to suppress all outer and internal table
+strokes in PDF and DOCX, including merged cells; color is ignored for painting
+in this mode but must still be valid RGB if supplied. Cell fills remain visible.
+This is table-wide, not a per-cell override. Existing measurement, padding and
+pagination rules remain in place; native Word can still lay out borderless
+tables differently. Explicit `borderColor:"FFFFFF"` remains a painted white
+border and is never converted automatically. Existing templates are unchanged.
+
 Static TrueType font bytes and licenses are verified and embedded. Family
 signatures come from the actual regular face OS/2 table, including Thai coverage;
 no fixed Latin signature is reused for every font. Missing coverage/unsupported
