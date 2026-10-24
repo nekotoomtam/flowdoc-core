@@ -144,6 +144,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
 }
 export function buildBodyFlow(intent: ExportIntent, options: {
     sectionId?: string;
+    rootIds?: readonly string[];
     navigation?: NavigationContext;
     omittedRootIds?: ReadonlySet<string>;
     special?: (id: string) => FileChild[];
@@ -165,7 +166,7 @@ export function buildBodyFlow(intent: ExportIntent, options: {
         for (const section of (intent.document.sections as any[]).filter(s => !options.sectionId || s.sectionId === options.sectionId)) {
             previous = '';
             let hasRoot = false, pendingBreak: string | undefined;
-            for (const id of section.rootIds) {
+            for (const id of options.rootIds??section.rootIds) {
                 if (options.omittedRootIds?.has(id)) continue;
                 const n = nodes[id];
                 if (n.type === 'page-break') {

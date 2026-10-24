@@ -191,6 +191,39 @@ Sarabun output with its confirmed baseline. A successful validator or preview jo
 ID alone does not prove the final PDF is complete: inspect its content, pagination,
 links and every rendered page.
 
+## Final Area bottom alignment experimental candidate
+
+An authored Area placement can set `props.verticalAlign: "bottom"` (or `"top"`
+for default flow). Bottom is allowed only for the final top-level root Area of a
+body Section, in models18/19. It is not available in cells or cover Sections;
+fixed Format budgets, page breaks and TOCs inside that Area are rejected. Data
+still supplies ordinary Area Format entries, not positions or fit hints. Multiple
+entries form one ending Area; no entries add no visible block or page.
+
+Composition retains `sections[].endingArea` with its Area ID, complete root suffix
+and start index. Both renderer admission paths validate ownership and the suffix.
+PDF measures through shared flow: one-page content stays together in the current
+remainder or on the next page using actual band capacity, then aligns to the
+body bottom. Oversized Areas retain normal flow and their last-page fragment
+aligns down; order, fills, borders, images and link geometry are preserved.
+
+DOCX uses one native page-bottom footnote per nonempty ending Area, referenced
+after body content by an invisible custom mark. Reference numbers and separator
+lines are suppressed. There is no repeated footer, floating box or extra Section.
+Ending content remains native editable paragraphs/tables/images/links, outside
+source-word boxes; editing takes place in Word's note area. A bounded source
+envelope keeps short groups together; unbounded/oversized groups use native note
+overflow. The `ending-area` adaptation records storage, envelope, keepTogether
+and `wordVerified:false`; this is not a PDF-position import or a Word fit proof.
+
+The SB1 short/30-row PDF trial has one final-page signing block. In the retained
+LibreOffice preview, the native note reference is invisible but most table-note
+content is not displayed. A normal numbered-note control has the same loss,
+whereas a paragraph-only control displays every label. The DOCX XML retains all
+cells/text; this observation does not establish native Word correctness. Word
+conversion and visual acceptance remain pending. Do not claim arbitrary Area
+content parity or release readiness from this experiment.
+
 ## Packaged Format sizing v2 development candidate
 
 Model19 Area Format definitions optionally declare `sizing: {mode: "auto"}` or

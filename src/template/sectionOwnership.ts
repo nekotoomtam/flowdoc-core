@@ -93,6 +93,7 @@ function validateOwnedAreas(t: import('./types.js').TemplateDefinition): Issue[]
             for (const n of Object.values(f.fragment.nodes))
                 if (n.type === 'area') {
                     const a = index.byId.get(n.props.areaId), p = `sections.${s.id}.area.${n.props.areaId}`;
+                    if(n.props.verticalAlign==='bottom' && (s.role==='cover'||f.fragment.rootIds.at(-1)!==n.id||[...(a?.formatsByKey.values()??[])].some(v=>v.format.sizing?.mode==='fixed'||Object.values(v.format.fragment.nodes).some(n=>n.type==='page-break'||n.type==='table-of-contents'))))fail(p+'.verticalAlign');
                     if (!a || (a.sectionId !== undefined && a.sectionId !== s.id)) {
                         fail(p);
                         continue;

@@ -10,10 +10,11 @@ import { anchorBookmarks, bookmarkName, type NavigationContext } from './fields.
 import { buildBand, nativeRule } from './bands.js';
 import { textEnvelope, concreteFontBounds } from './font-envelope.js';
 import {hasReadingMeasurements,measuredReadingExtent} from './reading-measurements.js';
+import {endingAreaAnchor,endingAreaEnvelope} from './ending-area.js';
 const take = (r: any) => { if (!r.ok)
     fail(r.issues[0].code, r.issues[0].path, r.issues[0].message); return r.value; };
 export function buildSections(intent: ExportIntent) {
-    const sections: ISectionOptions[] = [], receipts: any[] = [], anchors = anchorBookmarks(intent), nodes: any = intent.document.nodes, sourceSections = intent.document.sections as any[];
+    const sections: ISectionOptions[] = [], receipts: any[] = [], endingAreas:any[]=[], footnotes:Record<string,{children:Paragraph[]}>={}, anchors = anchorBookmarks(intent), nodes: any = intent.document.nodes, sourceSections = intent.document.sections as any[];
     const emptyContents = new Set<string>((Object.values(nodes) as any[]).filter(n => intent.document.nodeModelVersion === 19 && n.type === 'table-of-contents' && collectContents(intent.document, n.props.scope?.kind === 'section' ? (intent.document.sourceMap as any)[n.id].sectionId : undefined).length === 0).map(n => n.id));
     const visibleSections = new Set(sourceSections.filter(s => s.role === 'cover' || s.sourceKind === 'blank' || s.rootIds.some((id: string) => nodes[id].type !== 'page-break' && !emptyContents.has(id)) || intent.document.formatInstances?.some(f => f.sectionId === s.sectionId && f.sizing.mode === 'fixed')));
     const omittedSections = sourceSections.filter(s => !visibleSections.has(s)).map(s => ({sectionId: s.sectionId, reason: 'no-layout-content'}));
@@ -129,8 +130,24 @@ export function buildSections(intent: ExportIntent) {
             return [new Paragraph({ children: [new PageBreak()], run: { size: 2, sizeComplexScript: 2 }, spacing: { before: 0, after: 0, line: 20 } })]; if (n.type === 'line')
             return [nativeRule(n, pw - toPoints(page.margin.left) - toPoints(page.margin.right)).paragraph]; if (n.type === 'table-of-contents')
             return [new TableOfContents('Contents', { headingStyleRange: '1-3', useAppliedParagraphOutlineLevel: true, hyperlink: true, beginDirty: true, ...(n.props.scope?.kind === 'section' ? { entriesFromBookmark: ctx.sectionName } : {}) })]; fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + id, 'Unknown body capability'); };
-        const flow = take(buildBodyFlow(intent, { sectionId: s.sectionId, navigation: ctx, special, omittedRootIds: emptyContents }));
+        const ending=s.endingArea?.rootIds.length?s.endingArea:undefined;
+        const flow = take(buildBodyFlow(intent, { sectionId: s.sectionId, navigation: ctx, special, omittedRootIds: new Set([...emptyContents,...ending?.rootIds??[]]) }));
         let children: FileChild[] = flow.children;
+        if(ending){
+            const note=take(buildBodyFlow(intent,{sectionId:s.sectionId,rootIds:ending.rootIds,navigation:ctx,special}));
+            const envelope=endingAreaEnvelope(intent,ending.rootIds,pw-toPoints(page.margin.left)-toPoints(page.margin.right));
+            const keepTogether=envelope+2<=bodyHeight;
+            // The library's first note child must be a Paragraph. A structural
+            // first paragraph also keeps tables/images in native block order.
+            const id=endingAreas.length+1;
+            footnotes[id]={children:[structuralParagraph(),...note.children,...(note.children.at(-1) instanceof Paragraph?[]:[structuralParagraph()])] as Paragraph[]};
+            const preceding=s.rootIds.slice(0,ending.rootStartIndex).filter((id:string)=>!emptyContents.has(id));
+            const last=preceding.at(-1);
+            if(last&&nodes[last].type==='page-break'&&preceding.some((id:string)=>nodes[id].type!=='page-break'))children.push(...special(last));
+            children.push(endingAreaAnchor(id));
+            flow.receipt.tableSpaces.push(...note.receipt.tableSpaces);
+            endingAreas.push({kind:'ending-area',sectionId:s.sectionId,areaId:ending.areaId,rootIds:ending.rootIds,storage:'native-page-bottom-note',keepTogether,envelopePt:Number.isFinite(envelope)?envelope:null,editBehavior:'editable-in-word-note-area',wordVerified:false});
+        }
         if (!children.length)
             children = [structuralParagraph()];
         if (hasScopedToc) {
@@ -145,5 +162,5 @@ export function buildSections(intent: ExportIntent) {
         sections.push({ properties: { type: SectionType.NEXT_PAGE, titlePage: true, page: { size: { width: Math.round(210 * 72 / 25.4 * 20), height: Math.round(297 * 72 / 25.4 * 20), orientation: page.orientation === 'portrait' ? PageOrientation.PORTRAIT : PageOrientation.LANDSCAPE }, margin, pageNumbers: startAt === undefined ? {} : { start: startAt } } }, headers: groups.header, footers: groups.footer, children });
         receipts.push({ sectionId: s.sectionId, role: s.role, sourceKind: s.sourceKind, numbering: { ...numbering, visibility: hideNumbers ? 'hide' : 'show', nativeStart: startAt }, header: bandReceipt.header, footer: bandReceipt.footer, sourceMarginTwips: sourceMargin, reservedMarginTwips: margin, nativeMarginTwips: { ...margin }, estimatedMaximumMarginTwips: { ...estimated }, capacityByPageType, maximumBandReservation: !dynamicHeader, bodyHeightBasis: 'minimum-estimated-page-type', bodyHeightPt: bodyHeight, structuralScopeParagraphs: hasScopedToc ? 2 : 0, tableSpaces: flow.receipt.tableSpaces, tableSeparators: flow.receipt.tableSeparators, wordPaginationVerified: false });
     }
-    return { sections, receipts, omittedSections, anchors: [...anchors].map(([source]) => ({ source, name: bookmarkName('a', source) })), leadingExcluded, imageReferences };
+    return { sections, receipts, omittedSections, footnotes,endingAreas,anchors: [...anchors].map(([source]) => ({ source, name: bookmarkName('a', source) })), leadingExcluded, imageReferences };
 }

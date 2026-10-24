@@ -89,7 +89,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    }
    if(ctx.resolved&&own(n.props,'toc')&&!issues.length&&!contentsTitle(n as import('../composition/resolvedDocument.js').TextBlock))fail(p+'.props.toc');
   }else if(n.type==='area'&&ctx.areas&&!ctx.resolved){
-   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['areaId'])||!validId(n.props.areaId))fail(p);
+   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['areaId','verticalAlign'])||!validId(n.props.areaId)||own(n.props,'verticalAlign')&&!['top','bottom'].includes(n.props.verticalAlign))fail(p);
   }else if(n.type==='table-of-contents'&&ctx.contents){
    if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['textStyleId',...(ctx.scopedContents?['scope']:[])])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId))fail(p);
    if(ctx.scopedContents&&(!object(n.props?.scope)||!keys(n.props.scope,['kind'])||!['section','document'].includes(n.props.scope.kind)))fail(p+'.props.scope');

@@ -51,6 +51,7 @@ export async function prepareSourceLayout(intent:ExportIntent,resources:Pick<Exp
   const fontMetrics=new Map<string,SourceFontMetrics>();
   for(const block of intent.textBlocks){
    cancel();const node=nodes[block.nodeId],retain=(reason:string)=>c.fallbacks.push({nodeId:block.nodeId,reason});
+   if(d.sections?.some(s=>s.endingArea&&s.endingArea.areaId===d.sourceMap[block.nodeId]?.areaId&&s.sectionId===d.sourceMap[block.nodeId]?.sectionId)){retain('native-ending-area');continue;}
    if(block.scope!=='nodes'||node?.type!=='text-block'||node.props.heightMode==='fixed'||node.props.toc||node.props.anchorId||node.props.textAlign&&node.props.textAlign!=='left'||block.spans.some(s=>s.type!=='text')){retain('protected-or-nonplain-native-content');continue;}
    if(!block.text.trim()||!/^[\u0020-\u007e\u0e00-\u0e7f\p{Script=Latin}\u0300-\u036f]+$/u.test(block.text)){retain('outside-source-word-script-or-authored-line-profile');continue;}
    if(block.text.length>4096||block.text.length>remaining){retain('source-measurement-budget');continue;}

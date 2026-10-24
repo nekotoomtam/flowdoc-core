@@ -30,6 +30,7 @@ export async function prepareReadingMeasurements(intent:ExportIntent,runtime:Tex
  };
  for(const [index,s]of intent.document.sections!.entries()){
   const p=s.page,width=(p.orientation==='portrait'?210:297)*72/25.4-toPoints(p.margin.left)-toPoints(p.margin.right);slot(s.rootIds,width);
+  if(s.endingArea)for(const id of s.endingArea.rootIds){const n=nodes[id];if(n.type==='text-block')add('nodes',id,width);else if(n.type==='table')for(const rid of n.rowIds)row(n,rid);}
   if(s.role==='cover')for(const id of s.rootIds){const n=nodes[id];if(n.type==='text-block')add('nodes',id,width);else if(n.type==='table')for(const rid of n.rowIds)row(n,rid);}
   for(let i=0;i<s.rootIds.length;i++){
    const id=s.rootIds[i]!,n=nodes[id];if(n.type!=='text-block'||!n.props.toc)continue;

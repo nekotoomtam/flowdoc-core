@@ -1,4 +1,5 @@
 import { required } from './types.js';
+import {validEndingArea} from '../composition/endingArea.js';
 import type { ResolvedDocument, ResourceSnapshot, DocxProfile, Preflight, ExportIntent, EffectiveStyle, Result, NormalizedText } from './types.js';
 import { capture, fail, freeze } from './types.js';
 import { hash, snapshotResources, type PrivateResources } from './resources.js';
@@ -356,10 +357,11 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile): Omit<Capsul
         const roots: string[] = [];
         for (const [i, s] of d.sections.entries()) {
             const p = 'sections.' + i;
-            keys(s, ['numbering', 'header', 'footer', 'headerMode', 'footerMode', 'role', 'sourceKind', 'sectionId', 'pageLayoutId', 'page', 'rootIds'], p);
+            keys(s, ['endingArea','numbering', 'header', 'footer', 'headerMode', 'footerMode', 'role', 'sourceKind', 'sectionId', 'pageLayoutId', 'page', 'rootIds'], p);
             requireValue(name(s.pageLayoutId) && !s.pageLayoutId.includes('~') && ['body', 'cover'].includes(s.role) && ['authored', 'blank'].includes(s.sourceKind) && (s.role !== 'cover' || i === 0 && s.sourceKind === 'authored') && (s.sourceKind !== 'blank' || s.rootIds?.length === 0), p, 'Invalid section');
             const bodyWidth = page(s.page, p + '.page');
             idList(s.rootIds, p + '.rootIds');
+            requireValue(validEndingArea(s,d),p+'.endingArea','Invalid final Area boundary');
             for (const root of s.rootIds)
                 rootWidths.set(root, bodyWidth);
             roots.push(...s.rootIds);

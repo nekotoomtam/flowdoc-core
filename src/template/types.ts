@@ -14,7 +14,7 @@ export type TemplateTextBlock=Omit<TextBlock,'children'|'props'>&{props:Omit<Tex
 export type TemplateImageBlock=Omit<ImageBlock,'props'>&{props:{width:ImageBlock['props']['width'];height:ImageBlock['props']['height'];align?:ImageBlock['props']['align'];source:{scope:BindingScope;key:string}}};
 export interface AreaEntry {format:string;data:Record<string,unknown>}
 export interface AreaField {type:'area';areaId:string;required?:boolean;default?:AreaEntry[];label?:string;description?:string}
-export interface TemplateArea {id:string;type:'area';props:{areaId:string}}
+export interface TemplateArea {id:string;type:'area';props:{areaId:string;verticalAlign?:'top'|'bottom'}}
 export type TemplateNode=PageBreak|LineBlock|TemplateArea|TemplateTextBlock|Table|TableRow|TableCell|TemplateImageBlock|ContentsBlock;
 export interface Fragment {rootIds:string[];nodes:Record<string,TemplateNode>}
 export interface Repeat {tableId:string;rowTemplateId:string;source:{scope:'global'|'section'|'local';key:string}}

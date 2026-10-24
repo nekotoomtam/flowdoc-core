@@ -20,7 +20,7 @@ import { measureText } from './measureText.js';
 import type { MeasuredLine } from './measureText.js';
 import type { PdfImageMetadata } from '../pdf/streamResources.js';
 const epsilon = 1e-6;
-export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, images: PdfImageMetadata = {},bounds?:{maxPages:number;maxImagePlacements?:number;signal?:AbortSignal|undefined}): Promise<DrawDocument> {
+export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, images: PdfImageMetadata = {},bounds?:{maxPages:number;maxImagePlacements?:number;signal?:AbortSignal|undefined;onSectionEnd?:(extent:{y:number;top:number;bottom:number})=>void}): Promise<DrawDocument> {
     const warnings: Issue[] = [];
     const omittedNodeIds=new Set<string>();
     let fixed:{instance:FormatInstance;start:number;end:number}|undefined;
@@ -294,8 +294,47 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                 throw new LayoutError(id, 'Unsupported root');
         };
         const instances=(d.formatInstances??[]).filter(f=>f.sectionId===section.sectionId&&f.rootStartIndex!==undefined).sort((a,b)=>a.rootStartIndex!-b.rootStartIndex!);
+        const ending=section.endingArea;
+        const renderEnding=async()=>{
+            if(!ending?.rootIds.length)return;
+            if(pendingBreak){if(y>top+epsilon)nextPage();pendingBreak=false;}
+            // Measure only this Area with the same shared flow, never caller fit
+            // hints. It has no endingArea, so this bounded probe cannot recurse.
+            const measure=async(g:{top:number;bottom:number})=>{
+                const {endingArea:_,header:__,footer:___,...source}=section;
+                let extent=0;
+                const probe:ResolvedDocument={...d,rootIds:ending.rootIds,sections:[{...source,rootIds:ending.rootIds,headerMode:'none',footerMode:'none',page:{...section.page,margin:{...section.page.margin,top:{unit:'pt',value:g.top},bottom:{unit:'pt',value:heightPt-g.bottom}}}}],
+                    formatInstances:(d.formatInstances??[]).filter(f=>f.sectionId===section.sectionId&&f.areaId===ending.areaId).map(f=>({...f,...f.rootStartIndex===undefined?{}:{rootStartIndex:f.rootStartIndex-ending.rootStartIndex}}))};
+                const draw=await documentFlow(probe,runtime,images,{maxPages:bounds?.maxPages??10000,...bounds?.signal?{signal:bounds.signal}:{},maxImagePlacements:bounds?.maxImagePlacements??10000,onSectionEnd:e=>{extent=e.y-e.top;}});
+                return {pages:draw.pages.length,height:extent};
+            };
+            let size=await measure({top,bottom});
+            const adjacent=previousRoot&&d.nodes[previousRoot]?.type==='table'&&d.nodes[ending.rootIds[0]!]?.type==='table';
+            const gap=adjacent?(runtime.spacingProbe?.tableBoundaryPt?.(previousRoot!,ending.rootIds[0]!)??0):0;
+            if(!Number.isFinite(gap)||gap<0||gap>100)throw new LayoutError(ending.rootIds[0]!,'Invalid spacing probe table boundary');
+            if(size.pages===1&&y+gap+size.height<=bottom+epsilon){y=bottom-size.height;previousRoot=undefined;}
+            else{
+                const next=geometry(sectionPageIndex),nextSize=await measure(next);
+                if(nextSize.pages===1&&nextSize.height<=next.bottom-next.top+epsilon){nextPage();size=nextSize;y=bottom-size.height;previousRoot=undefined;}
+            }
+            // Oversized Areas keep ordinary flow. Only their last-page fragment
+            // moves down, and all geometries/field slots move together.
+            const firstPage=pages.length-1;
+            for(const id of ending.rootIds)await renderRoot(id);
+            const delta=Math.max(0,bottom-y),lastPage=pages.length-1;
+            const owns=(id:string)=>d.sourceMap[id]?.sectionId===section.sectionId&&d.sourceMap[id]?.areaId===ending.areaId;
+            if(delta>epsilon){
+                for(const c of current.commands)if(owns(c.nodeId))c.bounds={...c.bounds,yPt:c.bounds.yPt+delta};
+                for(const b of current.borders??[])if(owns(b.nodeId)){b.y1Pt+=delta;b.y2Pt+=delta;}
+                for(const f of current.fills??[])if(owns(f.nodeId))f.yPt+=delta;
+                for(const i of current.images??[])if(owns(i.nodeId))i.yPt+=delta;
+                for(const slot of [...pageTexts,...pageFieldSlots,...contentsSlots])if(slot.pageIndex===lastPage&&owns('nodeId' in slot?slot.nodeId:slot.node.id))slot.yPt+=delta;
+            }
+            if(lastPage>=firstPage)y=bottom;
+        };
         let position=0,fi=0;
         while(position<section.rootIds.length||fi<instances.length){
+            if(ending?.rootIds.length&&position===ending.rootStartIndex){await renderEnding();position=section.rootIds.length;fi=instances.length;continue;}
             const f=instances[fi];
             if(!f||f.rootStartIndex!==position){await renderRoot(section.rootIds[position++]!);continue;}
             fi++;
@@ -313,6 +352,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
             }
             position+=f.rootIds.length;
         }
+        bounds?.onSectionEnd?.({y,top,bottom});
     }
     if(d.nodeModelVersion===19&&!pages.length)throw new LayoutError(d.rootIds[0]??'document','No layout content in document');
     assignSystemPageNumbers(d, { pages });

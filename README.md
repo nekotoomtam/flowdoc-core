@@ -24,6 +24,14 @@ the release snapshot; installation is separate. Shared contract: Project Control
 
 ## DOCX development output in 0.4.8
 
+Final top-level Areas may opt into `props.verticalAlign: "bottom"`; the default
+remains ordinary flow. PDF keeps a fitting final Area together at the final body
+edge; oversized Areas flow and align their last fragment. The DOCX development
+adapter stores it once in editable native page-bottom note content, with no
+visible reference or separator. Native Word verification is pending; a retained
+LibreOffice preview drops table content in this note path. This remains an
+experimental candidate, not accepted Word parity. See the template guide.
+
 `createDocxEngine` exports the shared resolved document as DOCX with embedded
 fonts, tables, page bands, links and refreshable Word fields. Font signatures
 come from each embedded family's actual regular font, including Thai coverage.

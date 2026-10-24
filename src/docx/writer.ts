@@ -11,6 +11,7 @@ import { hash } from './resources.js';
 import { buildSections } from './sections.js';
 import { nativeRunStyle } from './text.js';
 import { fieldDigitBudget } from './fields.js';
+import {finishEndingAreas} from './ending-area.js';
 import {correctFontSignatures} from './font-signature.js';
 import {baselineReceipts} from './metric-baseline.js';
 import {sourceLayoutReceipts,appliedSourceGuides} from './source-layout.js';
@@ -121,11 +122,12 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
         cancelled(options);
         await Promise.resolve();
         cancelled(options);
-        let bytes = await Packer.toBuffer(new Document({ sections: built.sections, fonts, features: { updateFields: true }, ...(styles ? { styles } : {}) }));
+        let bytes = await Packer.toBuffer(new Document({ sections: built.sections, fonts,...built.endingAreas.length?{footnotes:built.footnotes}:{}, features: { updateFields: true }, ...(styles ? { styles } : {}) }));
         cancelled(options);
         if (bytes.length > (options.maxOutputBytes ?? 32 * 1024 * 1024))
             fail('DOCX_OUTPUT_BUDGET_EXCEEDED', 'output', 'Buffered DOCX exceeds output byte budget');
         const zip = await JSZip.loadAsync(bytes);
+        if(built.endingAreas.length)await finishEndingAreas(zip,built.endingAreas);
         const fontTable=zip.file('word/fontTable.xml');
         if(!fontTable)fail('DOCX_SERIALIZATION_FAILED','word/fontTable.xml','Missing embedded font table');
         const originalFontTable=await fontTable.async('string'),correctedFontTable=correctFontSignatures(originalFontTable,fonts),fontSignatureChanged=correctedFontTable!==originalFontTable;
@@ -176,12 +178,12 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
                 }
             }
         }
-        if(sourceSerialized||fontSignatureChanged){
+        if(sourceSerialized||fontSignatureChanged||built.endingAreas.length){
             bytes=await zip.generateAsync({type:'nodebuffer',compression:'DEFLATE'});
             cancelled(options);
             if(bytes.length>(options.maxOutputBytes??32*1024*1024))fail('DOCX_OUTPUT_BUDGET_EXCEEDED','output','Final DOCX exceeds output byte budget');
         }
-        const adaptations: any[] = [...baselineReceipts(intent),...sourceLayoutReceipts(intent), ...built.omittedSections.map(s => ({kind: 'empty-section-omission', ...s})), ...built.receipts.flatMap(s => s.tableSpaces.map((t: any) => ({ kind: 'table-space-policy', ...t })))], columnPaths = new Set<string | undefined>();
+        const adaptations: any[] = [...built.endingAreas,...baselineReceipts(intent),...sourceLayoutReceipts(intent), ...built.omittedSections.map(s => ({kind: 'empty-section-omission', ...s})), ...built.receipts.flatMap(s => s.tableSpaces.map((t: any) => ({ kind: 'table-space-policy', ...t })))], columnPaths = new Set<string | undefined>();
         for (const table of intent.tables) {
             const source: any = (intent.document.nodes as any)[table.nodeId];
             for (const group of source.rowGroups ?? []) if (group.groupLabel) {
