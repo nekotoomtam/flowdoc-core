@@ -13,6 +13,7 @@ import type { NavigationContext } from './fields.js';
 export type TableSpaceReceipt = {
     nodeId: string;
     scope: 'nodes';
+    cellBorderPolicy: 'explicit-merged-cell-perimeter';
     policy: TableSpaceDecision['policy'];
     reason: string;
     horizontalPolicy: 'border-centre-inset' | 'border-centre-inset-preserve-width' | 'retain-native';
@@ -88,7 +89,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
         });
         const preserveWidth=horizontal&&!tableWidthProven(intent,nodeId);
         const metricParagraphs=mapped.cells.some(cell=>nodes[cell.nodeId].childIds.some((id:string)=>baselineDecision(intent,'nodes',id)!==undefined));
-        const spacePolicy: TableSpaceReceipt = { nodeId, scope: 'nodes', terminalStrokeCompensationPt, policy: adapted ? 'border-centre-inset' : 'retain-native', horizontalPolicy: horizontal?(preserveWidth?'border-centre-inset-preserve-width':'border-centre-inset'):'retain-native', reason: !plainTextGrid ? 'unverified-grid-or-content' : !allPadding ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset', cells: mapped.cells.map((cell, i) => ({ nodeId: cell.nodeId, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom, nativeTopTwips: adapted ? required(decisions[i], 'table.decision').nativeTopTwips : cell.paddingTwips.top, nativeBottomTwips: (adapted ? required(decisions[i], 'table.decision').nativeBottomTwips : cell.paddingTwips.bottom)-(terminalCells.has(cell.nodeId)?Math.round(terminalStrokeCompensationPt*20):0),
+        const spacePolicy: TableSpaceReceipt = { nodeId, scope: 'nodes', cellBorderPolicy: 'explicit-merged-cell-perimeter', terminalStrokeCompensationPt, policy: adapted ? 'border-centre-inset' : 'retain-native', horizontalPolicy: horizontal?(preserveWidth?'border-centre-inset-preserve-width':'border-centre-inset'):'retain-native', reason: !plainTextGrid ? 'unverified-grid-or-content' : !allPadding ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset', cells: mapped.cells.map((cell, i) => ({ nodeId: cell.nodeId, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom, nativeTopTwips: adapted ? required(decisions[i], 'table.decision').nativeTopTwips : cell.paddingTwips.top, nativeBottomTwips: (adapted ? required(decisions[i], 'table.decision').nativeBottomTwips : cell.paddingTwips.bottom)-(terminalCells.has(cell.nodeId)?Math.round(terminalStrokeCompensationPt*20):0),
             sourceLeftTwips:cell.paddingTwips.left,sourceRightTwips:cell.paddingTwips.right,
             nativeLeftTwips:cell.paddingTwips.left-(horizontal?5:0),nativeRightTwips:cell.paddingTwips.right+(horizontal?(preserveWidth?5:-5):0) })), baselinePolicy: metricParagraphs?'per-paragraph-metric-or-native':'native-at-least-unmatched', baselineMatchVerified: false };
         const plan = take(deriveReadingPlan(intent));
@@ -126,7 +127,11 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                     structuralEmptyParagraphs++;
                 }
                 const fill = c.props.fillColor ?? (pos.row < n.props.headerRowCount ? n.props.headerFillColor : undefined);
-                cells.push(new TableCell({ children, width: { type: WidthType.DXA, size: grid.slice(col, col + pos.span).reduce((a, b) => a + b, 0) }, ...(pos.span > 1 ? { columnSpan: pos.span } : {}), ...(pos.rowSpan > 1 ? { verticalMerge: continuation ? VerticalMergeType.CONTINUE : VerticalMergeType.RESTART } : {}), margins: { top: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeTopTwips, right: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeRightTwips, bottom: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeBottomTwips, left: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeLeftTwips }, ...(fill ? { shading: { fill } } : {}) }));
+                // Make the perimeter explicit on each physical cell. A native
+                // vertical merge has no horizontal edge between its members.
+                const noBorder = { style: BorderStyle.NONE, size: 0, color: border.color };
+                const cellBorders = { top: continuation ? noBorder : border, bottom: row < pos.row + pos.rowSpan - 1 ? noBorder : border, left: border, right: border };
+                cells.push(new TableCell({ children, borders: cellBorders, width: { type: WidthType.DXA, size: grid.slice(col, col + pos.span).reduce((a, b) => a + b, 0) }, ...(pos.span > 1 ? { columnSpan: pos.span } : {}), ...(pos.rowSpan > 1 ? { verticalMerge: continuation ? VerticalMergeType.CONTINUE : VerticalMergeType.RESTART } : {}), margins: { top: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeTopTwips, right: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeRightTwips, bottom: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeBottomTwips, left: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeLeftTwips }, ...(fill ? { shading: { fill } } : {}) }));
                 col += pos.span;
             }
             rows.push(new TableRow({ children: cells, tableHeader: n.props.repeatHeaderRows && row < n.props.headerRowCount, cantSplit: !nodes[rid].props.allowBreak, keepNext: plan.keptRows[nodeId]?.includes(rid) ?? false }));
