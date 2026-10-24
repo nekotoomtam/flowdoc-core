@@ -4,7 +4,7 @@
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes package 0.4.8 after release 0.4.3, including opt-in font-height
+This describes development package0.4.8 after release0.4.7, including opt-in font-height
 calculation, Section19, group-label continuation and streamed task input/PDF.
 Ordinary pt rendering is unchanged. See the root README for the exact native
 helper/session contract and font-height API inputs/errors. Service owns task
@@ -20,29 +20,77 @@ Code contracts: [template types](../src/template/types.ts), [prepared data](../s
 
 ## DOCX development output in 0.4.8
 
-The DOCX writer consumes the same `ResolvedDocument` and prepared
-image provider as PDF. `createDocxEngine(resources).generateDocxTo(document,
-images, output, {signal?, maxBytes?, maxXmlNodes?})` writes a buffered, editable
-Word package. Word must refresh fields/contents; generation alone does not
-certify native pagination or PDF fidelity. Existing PDFs are not rewritten.
+PDF and DOCX consume the same validated `ResolvedDocument` and prepared image
+provider. DOCX does not import a PDF or its captured positions. Initialization
+returns a `Result`; use its engine only after checking `ok`:
 
-Supplying both native shaping and segmentation capabilities selects measured
-line paragraphs and individually editable VML word boxes. Word edits to text or
-fonts may require regeneration to restore source layout; ordinary Word reflow
-is not promised in this mode. Embedded font-table signatures are read from each
-family's actual regular face OS/2 table rather than a fixed Latin signature.
-The private SRS PDF spacing/calibration probes remain explicit experiments and
-do not change ordinary PDF generation defaults.
+```ts
+const initialized = await createDocxEngine(resources);
+if (!initialized.ok) throw new Error(initialized.issues[0]?.code);
+const result = await initialized.value.generateDocxTo(
+  document, images, stagedOutput, {signal, maxBytes: 32 * 1024 * 1024},
+);
+```
 
-`maxXmlNodes` explicitly selects the expanded XML-element budget, default50000,
-maximum300000. A larger selection does not raise the source-node50000,
-image-reference10000, resource16MiB or output32MiB limits. Its receipt records
-the selected limit and actual XML count. Whole-document experiments with a
-larger budget are not passes of the default profile or total-memory guarantees.
-Reading relationships, bands and cover admission use private measurements from
-the actual text/font resources; native Word fit still requires visual review.
-Rule thickness is rounded to the nearest representable eighth-point, within
-the supported0.25–12pt range, with an explicit source/native difference receipt.
+Import `createDocxEngine` from `@flowdoc/core`. Here `document` is the shared
+resolved document; `images` implements the verified `PreparedImageProvider`
+stream contract, including the empty provider for documents without images.
+`stagedOutput` implements awaited `write(Uint8Array)` and `abort(reasonCode)`;
+publish/rename staged bytes only after `result.ok`. The package is buffered
+before chunk delivery, not constant-memory streaming. Cooperative cancellation
+does not replace a caller-owned process deadline for stalled native work.
+
+### Resource selection and Word editing
+
+| Resources passed to `createDocxEngine` | Layout path |
+| --- | --- |
+| `{fonts}` only | Word lays out native paragraphs; font-metric/source guides are absent. |
+| `fonts` plus `shaperPath` | Eligible font-metric baseline rules; Word still lays out native paragraphs. |
+| `fonts`, `shaperPath`, `segmenterPath` | Also measures eligible source text into line paragraphs and editable VML word boxes. |
+
+`loadBundledResources` returns both native paths, so passing that whole resource
+object selects the third path automatically. Paths must be absolute; use the
+verified packaged Linux/amd64 runtime. Protected/nonplain content can retain
+native layout; inspect `source-word-layout` adaptations and their fallbacks.
+Source-layout mode records `editBehavior:regenerate-after-edit` and, when applied,
+`customXml/flowdoc-paragraphs.xml`. Text remains editable, but changing text or
+fonts in Word may require regeneration to restore layout. Do not promise free
+Word reflow or source-guided placement for every block.
+
+Ordinary body/cell paragraphs are eligible to flow between lines/pages. Row
+splitting still follows the source row `allowBreak`; headers, grouped rows,
+headings and protected content retain their own keep rules. There is no blanket
+keep-whole-list promise. Table/cell insets and border quantization have explicit
+adaptation receipts; a structurally valid package does not prove native fit.
+
+Static TrueType font bytes and licenses are verified and embedded. Family
+signatures come from the actual regular face OS/2 table, including Thai coverage;
+no fixed Latin signature is reused for every font. Missing coverage/unsupported
+relations fail explicitly; generated metadata is not an arbitrary-font guarantee.
+
+### Limits, receipts and comparison
+
+The optional `maxBytes` can lower the32MiB output cap. `maxXmlNodes` selects the
+expanded XML-element budget: default50000, maximum300000. Raising it does not
+raise the source-node50000, image-reference10000 or combined resource16MiB
+limits. An explicit selection returns `expanded-xml-budget` with limit/count.
+Whole-SRS experiments using300000 are not passes of the default profile or
+whole-job RAM guarantees. Rule thickness rounds to the nearest eighth-point
+within0.25–12pt, with an explicit source/native difference receipt.
+
+Success includes MIME type, byte length, SHA256, `pageCount:null`,
+`fieldRefresh:'required'`, `wordVerified:false`, `buffered:true` and adaptations.
+Word must refresh fields/contents; the receipt cannot establish final page count
+or fidelity. To compare, preserve source/font hashes and original PDFs, convert
+the exact DOCX through native Word, and inspect page/line breaks, table
+continuations, text positions, Thai marks, fields and contents across the scope.
+Record Word version/export options or their unknowns. LibreOffice QA is separate.
+
+Sarabun/Bai Jamjuree trials and a Prompt signature control are bounded evidence,
+not a percentage guarantee. The Prompt control no longer contains Angsana New,
+but native Word102 versus FlowDoc101 pages remains open. The private SRS PDF
+spacing/calibration probes remain opt-in experiments; ordinary PDF defaults are
+not calibrated automatically. Existing PDF baselines stay immutable.
 
 ## Font styles and resources in 0.4.0
 
@@ -95,7 +143,7 @@ Schema 2 validation alone does not establish readiness for the actual input.
 - `fixtures/table/`: short, empty and long tables with continuation.
 - `fixtures/row-groups/`: repeated logical table groups.
 
-Always validate a template and prepare its matching request before composition. The `sections` request object uses Section keys; the prepared snapshot uses Section IDs. Area formats use explicit ownerAreaId and key. They cannot declare another Area in their input schema. A reusable format with business arrays is distinct from an Area placement.
+Always validate a template and prepare its matching request before composition. Model18 uses a `sections` request object keyed by Section keys; model19 uses the Section-ID array described above. The prepared snapshot retains Section IDs. Area formats use explicit ownerAreaId and key. They cannot declare another Area in their input schema. A reusable format with business arrays is distinct from an Area placement.
 
 Run the Core build/tests and packed Linux consumer described in [README](../README.md).
 For a font-aware consumer, exercise every selected face and required character set,

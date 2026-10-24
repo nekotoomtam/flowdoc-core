@@ -32,7 +32,10 @@ uses measured line paragraphs and individually editable VML word boxes. Changes
 to text or fonts in Word may require regeneration to restore source layout.
 Native Word pagination and full PDF fidelity are not guaranteed. The private
 SRS PDF calibration probes remain opt-in experiments, separate from ordinary PDF
-output. See [template guide](docs/template-guide.md) for budgets and limitations.
+output. See [template guide](docs/template-guide.md#docx-development-output-in-048)
+for the two layout paths, API/receipts, budgets and verification limits. This
+version is a development integration; release, installation and Service pinning
+are separate steps.
 
 ## Internal task input reader
 
@@ -50,11 +53,11 @@ legacy prepared snapshot, renderer capability, public endpoint or PDF readiness 
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.8, prepared after release 0.4.3.
+Package version: 0.4.8 on development; the latest release snapshot remains0.4.7.
 This package includes Section19, scoped contents, Format sizing v2, group-label
 spans, streamed task images/PDF and the opt-in height calculation below.
 Release identity requires the matching tagged snapshot and acceptance gates.
-Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
+Historical0.4.0 accepted **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
 
 ## Internal bounded task composition
 
@@ -211,9 +214,14 @@ local installation does not establish a release. This local release is not a pub
 
 ## Local development
 
-Use Node 24 and `npm ci`, then `npm run build` and `npm test`. The resource runtime
+Use Node >=24.15.0 <25 and `npm ci`, then `npm run build` and `npm test`. The resource runtime
 supports Linux/amd64 with glibc. Windows can build/test the TypeScript boundary;
 native execution is checked through Docker Desktop's Linux engine.
+
+Linux tests and `check:package` also require `FLOWDOC_LEGACY_SEGMENTER`: an
+explicit absolute path to the retained prior one-shot Linux ELF helper used by
+compatibility tests. It is a test fixture, not the current serving helper. Keep
+its provenance/hash with proof; do not replace it with a mock or the new helper.
 
 Run `npm run check:package` to build native tools using the retained Cargo.lock,
 generate resource hashes, pack the package, and install the exact tarball in a
