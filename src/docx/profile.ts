@@ -92,7 +92,7 @@ function deriveStyles(d: any, r: PrivateResources) {
         if (matches.length !== 1)
             fail('FONT_FACE_UNAVAILABLE', p + '.font', 'Expected exactly one concrete source face');
         const identity = required(matches[0], p + '.font').identity;
-        styles[id] = { font: identity, sizeHalfPoints: s.fontSize.value * 2, bold: d.schemaVersion === 1 ? s.fontWeight === 'bold' : identity.weight >= 700, italic: identity.style === 'italic', line: { rule: 'atLeast', twips: toTwips({ unit: 'pt', value: s.lineHeightPt }, p + '.lineHeightPt') } };
+        styles[id] = { font: identity, sizeHalfPoints: s.fontSize.value * 2, bold: !identity.nativeFamily && (d.schemaVersion === 1 ? s.fontWeight === 'bold' : identity.weight >= 700), italic: identity.style === 'italic', line: { rule: 'atLeast', twips: toTwips({ unit: 'pt', value: s.lineHeightPt }, p + '.lineHeightPt') } };
     }
     return styles;
 }
@@ -276,8 +276,13 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile): Omit<Capsul
                         idList(g.rowIds, at + '.rowGroups.rowIds');
                         idList(g.prefixRowIds, at + '.rowGroups.prefixRowIds');
                         requireValue(g.rowIds.every((x: string) => n.rowIds.includes(x)) && g.prefixRowIds.every((x: string) => g.rowIds.includes(x)) && g.rowIds.includes(g.firstMemberRowId) && typeof g.empty === 'boolean' && typeof g.keepStart === 'boolean', at + '.rowGroups', 'Invalid group membership');
-                        if (g.groupLabel !== undefined)
-                            fail('DOCX_CAPABILITY_UNSUPPORTED', at + '.rowGroups.groupLabel', 'Per-fragment group labels are deferred', id);
+                        if (g.groupLabel !== undefined) {
+                            const label = g.groupLabel, lp = at + '.rowGroups.groupLabel';
+                            keys(label, ['cellId', 'sourceCellId', 'memberCount'], lp);
+                            const first = nodes[g.firstMemberRowId], cell = nodes[label.cellId];
+                            requireValue(name(label.cellId) && name(label.sourceCellId) && Number.isSafeInteger(label.memberCount) && label.memberCount === (g.empty ? 0 : g.rowIds.length - g.prefixRowIds.length), lp, 'Invalid group label membership');
+                            requireValue(g.keepStart && first?.cellIds?.includes(label.cellId) && cell?.type === 'table-cell' && cell.props.rowSpan === Math.max(1, label.memberCount), lp, 'Group label must be the native merge origin at the first member');
+                        }
                     }
                 }
                 tables.push({ nodeId: id, scope: path, sourceId: map?.[id]?.sourceId, columnTwips: grid, cells });

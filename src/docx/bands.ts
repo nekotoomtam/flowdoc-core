@@ -15,17 +15,18 @@ export function nativeRule(node: any, width: number) { const p = node.props, w =
 export function buildBand(intent: ExportIntent, band: any, scope: string, page: any, ctx: NavigationContext, options: {
     mapHeaderGap?: boolean;
 } = {}) {
-    if (band.sizing && (band.sizing.mode !== 'content' || band.sizing.minHeight !== undefined || band.sizing.maxHeight !== undefined))
-        fail('DOCX_CAPABILITY_UNSUPPORTED', scope + '.sizing', 'Fixed/min/max band fit awaits Word acceptance');
+    if (band.sizing?.mode === 'content' && (band.sizing.minHeight !== undefined || band.sizing.maxHeight !== undefined))
+        fail('DOCX_CAPABILITY_UNSUPPORTED', scope + '.sizing', 'Min/max band fit awaits Word acceptance');
     const physicalWidth = (page.orientation === 'portrait' ? 210 : 297) * 72 / 25.4, left = band.placement ? toPoints(band.placement.left) : toPoints(page.margin.left), right = band.placement ? toPoints(band.placement.right) : toPoints(page.margin.right), width = physicalWidth - left - right;
     let imageReferences = 0;
     const quantization: any[] = [];
     function stack(ids: string[], available: number, afterTwips = 0): {
         children: (Paragraph | Table)[];
         height: number;
+        overhead: number;
     } {
         const children: (Paragraph | Table)[] = [];
-        let height = 0;
+        let height = 0, overhead = 0;
         for (const id of ids) {
             const n = band.nodes[id];
             if (n.type === 'text-block') {
@@ -39,6 +40,7 @@ export function buildBand(intent: ExportIntent, band: any, scope: string, page: 
                 if (toPoints(n.props.width) > available)
                     fail('DOCX_GEOMETRY_UNREPRESENTABLE', scope + '.' + id, 'Band image exceeds column');
                 height += toPoints(n.props.height) + 1;
+                overhead += 1;
                 imageReferences++;
                 children.push(take(buildImageParagraph(intent, id, scope)).paragraph);
             }
@@ -55,6 +57,7 @@ export function buildBand(intent: ExportIntent, band: any, scope: string, page: 
                 const lengths: any[] = [], parts: {
                     children: (Paragraph | Table)[];
                     height: number;
+                    overhead: number;
                 }[] = [];
                 for (const [i, c] of n.columns.entries()) {
                     const cw = usable * c.weight / total;
@@ -62,7 +65,7 @@ export function buildBand(intent: ExportIntent, band: any, scope: string, page: 
                     parts.push(stack(c.childIds, cw));
                     if (i < n.columns.length - 1 && gap > 0) {
                         lengths.push({ unit: 'pt', value: gap });
-                        parts.push({ children: [], height: 1 });
+                        parts.push({ children: [], height: 1, overhead: 1 });
                     }
                 }
                 const grid = columnGrid(lengths);
@@ -71,6 +74,7 @@ export function buildBand(intent: ExportIntent, band: any, scope: string, page: 
                 const cells = parts.map((p, i) => new TableCell({ children: p.children.length ? p.children : [structuralParagraph()], width: { type: WidthType.DXA, size: required(grid[i], 'band.column.width') }, margins: { top: 0, right: 0, bottom: 0, left: 0 } }));
                 children.push(new Table({ rows: [new TableRow({ children: cells, cantSplit: true })], columnWidths: grid, width: { type: WidthType.DXA, size: grid.reduce((a, b) => a + b, 0) }, layout: TableLayoutType.FIXED, borders }));
                 height += Math.max(...parts.map(p => p.height), 1);
+                overhead += parts.reduce((a,b)=>a.height>=b.height?a:b).overhead;
             }
             else
                 fail('DOCX_CAPABILITY_UNSUPPORTED', scope + '.' + id, 'Unsupported band node');
@@ -78,8 +82,9 @@ export function buildBand(intent: ExportIntent, band: any, scope: string, page: 
         if (children.at(-1) instanceof Table) {
             children.push(structuralParagraph(afterTwips));
             height += 1;
+            overhead += 1;
         }
-        return { children, height };
+        return { children, height, overhead };
     }
     const built = stack(band.rootIds, width, options.mapHeaderGap && band.gap ? toTwips(band.gap) : 0);
     if (left !== toPoints(page.margin.left) || right !== toPoints(page.margin.right)) {
@@ -87,6 +92,18 @@ export function buildBand(intent: ExportIntent, band: any, scope: string, page: 
         const wrapper = new Table({ rows: [new TableRow({ children: [new TableCell({ children: built.children.length ? built.children : [structuralParagraph()], margins: { top: 0, right: 0, bottom: 0, left: 0 }, width: { type: WidthType.DXA, size: required(grid[0], 'band.wrapper.width') } })], cantSplit: true })], columnWidths: grid, width: { type: WidthType.DXA, size: required(grid[0], 'band.wrapper.width') }, indent: { type: WidthType.DXA, size: Math.round((left - toPoints(page.margin.left)) * 20) }, layout: TableLayoutType.FIXED, borders });
         built.children = [wrapper, structuralParagraph()];
         built.height += 1;
+        built.overhead += 1;
+    }
+    if (band.sizing?.mode === 'fixed') {
+        const sourceHeightPt = toPoints(band.sizing.height), structuralOverheadPt = built.overhead, contentBoundPt = built.height - structuralOverheadPt;
+        if (contentBoundPt > sourceHeightPt + 1e-6)
+            fail('DOCX_CAPABILITY_UNSUPPORTED', scope + '.sizing', 'Band content exceeds the fixed source height');
+        // Retain every native paragraph and image; never force an Exact row
+        // that clips content. Account for Word's required structural paragraphs.
+        const slackTwips = Math.max(0, Math.round((sourceHeightPt - contentBoundPt) * 20));
+        if (slackTwips) built.children.push(new Paragraph({run:{size:2,sizeComplexScript:2},spacing:{before:0,after:0,line:slackTwips,lineRule:LineRuleType.EXACT}}));
+        built.height += slackTwips / 20;
+        quantization.push({kind:'fixed-band-native-reservation',scope,sourceHeightPt,contentBoundPt,structuralOverheadPt,nativeReservedHeightPt:built.height,policy:'source-height-plus-native-structural-overhead',wordVerified:false});
     }
     return { children: built.children.length ? built.children : [structuralParagraph()], reservedHeightTwips: Math.max(20, Math.ceil(built.height * 20)), imageReferences, offsetTwips: band.placement ? toTwips(band.placement.offset) : undefined, gapTwips: band.gap ? toTwips(band.gap) : 0, provisional: true, wordFootprintVerified: false, quantization };
 }

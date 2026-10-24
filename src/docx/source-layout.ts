@@ -33,7 +33,7 @@ export function sourceLayoutReceipts(intent:ExportIntent){
   ...(c.applied.size?{paragraphMap:'customXml/flowdoc-paragraphs.xml'}:{}),fallbacks}];
 }
 /** Pure source measurement; no PDF engine, pagination result or captured draw input. */
-export async function prepareSourceLayout(intent:ExportIntent,resources:Pick<ExportResources,'fonts'|'shaperPath'|'segmenterPath'>,signal?:AbortSignal){
+export async function prepareSourceLayout(intent:ExportIntent,resources:Pick<ExportResources,'fonts'|'shaperPath'|'segmenterPath'>,signal?:AbortSignal,nativeOnly=false){
  requireGenuineIntent(intent);if(!isAbsolute(resources.shaperPath)||!isAbsolute(resources.segmenterPath))fail('DOCX_RESOURCE_INVALID','resources','Shared source executables require absolute paths');
  const c:Capsule={guides:new Map(),applied:new Map(),fallbacks:[]},d=intent.document,nodes=d.nodes;
  const cancel=()=>{if(signal?.aborted)fail('DOCX_CANCELLED','options.signal','Export cancelled during source measurement');};
@@ -47,6 +47,7 @@ export async function prepareSourceLayout(intent:ExportIntent,resources:Pick<Exp
   runtime=createTextRuntime({...resources,fonts:owned},signal);
   await prepareReadingMeasurements(intent,runtime,signal);
   const reading=deriveReadingPlan(intent);if(!reading.ok){const issue=reading.issues[0]!;fail(issue.code,issue.path??'nodes',issue.message);}
+  if(nativeOnly){c.fallbacks.push(...intent.textBlocks.filter(b=>b.scope==='nodes').map(b=>({nodeId:b.nodeId,reason:'explicit-native-paragraph-flow'})));cancel();capsules.set(intent,c);return;}
   const fontMetrics=new Map<string,SourceFontMetrics>();
   for(const block of intent.textBlocks){
    cancel();const node=nodes[block.nodeId],retain=(reason:string)=>c.fallbacks.push({nodeId:block.nodeId,reason});

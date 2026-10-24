@@ -8,6 +8,11 @@ import JSZip from 'jszip';
 import {fonts,composedFixture,staged,noImages} from './helpers.js';
 
 describe('Core DOCX public port',()=>{
+ it.each(['invalid','source'])('rejects an invalid or unavailable explicit text layout: %s',async textLayout=>{
+  const e=await api.createDocxEngine(fonts());if(!e.ok)throw Error(JSON.stringify(e));const sink=staged();
+  const r=await e.value.generateDocxTo(composedFixture(),noImages,sink.output,{textLayout:textLayout as any});
+  expect(r.ok).toBe(false);if(!r.ok)expect(r.issues[0]?.path).toBe('options.textLayout');expect(sink.chunks).toEqual([]);expect(sink.aborts).toHaveLength(1);
+ });
  it.each([['binding-text','request.json'],['table','short.json']])('exports composed %s through the real root API without changing the source',async(name,request)=>{
   expect(api).toHaveProperty('createDocxEngine');
   const doc=composedFixture(name,request),before=JSON.stringify(doc),engine=await api.createDocxEngine(fonts());

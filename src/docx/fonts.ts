@@ -68,6 +68,8 @@ export function parseFont(f: ResourceFont, path: string): ParsedFont {
     const family = (names.find(x => x.id === 16) ?? names.find(x => x.id === 1))?.value;
     if (!family)
         bad('No supported Unicode family name');
+    const legacyFamily = names.find(x => x.id === 1)?.value, legacyStyle = names.find(x => x.id === 2)?.value;
+    const nativeFamily = ![400,700].includes(weight) && legacyFamily && legacyFamily !== family && legacyStyle === (f.style === 'italic' ? 'Italic' : 'Regular') ? legacyFamily : undefined;
     const cnt = b.readUInt16BE(cm.o + 2);
     if (4 + cnt * 8 > cm.l)
         bad('Invalid cmap directory');
@@ -146,7 +148,7 @@ export function parseFont(f: ResourceFont, path: string): ParsedFont {
             return g ? (g + d) & 0xffff : 0;
         } return 0; };
     });
-    return { bytes: Uint8Array.from(b), identity: { id: f.id, family: family!, ...(f.releaseId ? { releaseId: f.releaseId } : {}), weight: f.weight, style: f.style, sha256: f.sha256, licenseSha256: f.license.sha256, embedding: 'full' }, ...(f.legacyAlias ? { legacyAlias: f.legacyAlias } : {}), glyph: cp => { for (const lookup of lookups) {
+    return { bytes: Uint8Array.from(b), identity: { id: f.id, family: family!, ...(nativeFamily ? {nativeFamily} : {}), ...(f.releaseId ? { releaseId: f.releaseId } : {}), weight: f.weight, style: f.style, sha256: f.sha256, licenseSha256: f.license.sha256, embedding: 'full' }, ...(f.legacyAlias ? { legacyAlias: f.legacyAlias } : {}), glyph: cp => { for (const lookup of lookups) {
             const g = lookup(cp);
             if (g > 0 && g < numGlyphs)
                 return g;

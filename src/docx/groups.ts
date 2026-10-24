@@ -142,8 +142,6 @@ export function deriveReadingPlan(intent: ExportIntent): Result<ReadingPlan> {
             const n = nodes[t.nodeId], used = new Set<string>();
             plan.keptRows[t.nodeId] = [];
             for (const g of n.rowGroups ?? []) {
-                if (g.groupLabel !== undefined)
-                    unsupported(n.id, 'Per-fragment groupLabel is deferred');
                 const indices = g.rowIds.map((id: string) => n.rowIds.indexOf(id));
                 if (!indices.length || indices.some((x: number, i: number) => i > 0 && x !== indices[i - 1] + 1) || g.rowIds.some((id: string) => used.has(id)))
                     unsupported(n.id, 'Noncontiguous/overlapping row group');
@@ -160,7 +158,7 @@ export function deriveReadingPlan(intent: ExportIntent): Result<ReadingPlan> {
                 for (const [origin, rid] of n.rowIds.entries())
                     for (const cid of nodes[rid].cellIds) {
                         const span = nodes[cid].props.rowSpan ?? 1;
-                        if (span > 1 && origin <= end && origin + span - 1 >= start)
+                        if (span > 1 && cid !== g.groupLabel?.cellId && origin <= end && origin + span - 1 >= start)
                             unsupported(cid, 'Required row-start window intersects a vertical merge, including earlier origins');
                     }
                 let total = 0;
@@ -170,7 +168,7 @@ export function deriveReadingPlan(intent: ExportIntent): Result<ReadingPlan> {
                     let rowHeight = 0;
                     for (const cid of nodes[rid].cellIds) {
                         const c = nodes[cid], pad = t.cells.find(c => c.nodeId === cid)!.paddingTwips;
-                        if ((c.props.rowSpan ?? 1) > 1)
+                        if ((c.props.rowSpan ?? 1) > 1 && cid !== g.groupLabel?.cellId)
                             unsupported(cid, 'Required row start intersects a vertical merge');
                         let cell = (pad.top + pad.bottom) / 20;
                         for (const child of c.childIds)

@@ -57,6 +57,12 @@ Source-layout mode records `editBehavior:regenerate-after-edit` and, when applie
 fonts in Word may require regeneration to restore layout. Do not promise free
 Word reflow or source-guided placement for every block.
 
+`generateDocxTo(..., {textLayout:'native'})` explicitly retains ordinary native
+paragraphs without VML word boxes. With both capabilities present, it still
+measures required heading/row and band relationships. The default is unchanged;
+explicit `textLayout:'source'` requires both native capabilities. Inspect the
+`docx-text-layout` receipt. Native flow can wrap/page differently from source.
+
 Ordinary body/cell paragraphs are eligible to flow between lines/pages. Row
 splitting still follows the source row `allowBreak`; headers, grouped rows,
 headings and protected content retain their own keep rules. There is no blanket
@@ -67,6 +73,29 @@ Static TrueType font bytes and licenses are verified and embedded. Family
 signatures come from the actual regular face OS/2 table, including Thai coverage;
 no fixed Latin signature is reused for every font. Missing coverage/unsupported
 relations fail explicitly; generated metadata is not an arbitrary-font guarantee.
+
+The UAT development candidate maps group-label cells to native vertical merges.
+Each logical label occurs once; member rows retain `allowBreak` and are not kept
+as a whole group. Word determines page continuation; this DOCX path does not
+repeat the group name or append a continuation suffix. PDF group-label fragment
+behavior below is unchanged. Inspect `group-label-native-merge` adaptations.
+
+The public DOCX engine rounds fractional point sizes to the nearest half-point
+in its private document snapshot, with ties upward. Source sizes outside0.5–819pt
+fail. `font-size-quantization` records each source/native size and signed error;
+measurement uses the emitted size. Source input and PDF are unchanged. This is
+a font-size bound of0.25pt, not a position or pagination error guarantee. The
+low-level `preflightDocx` / writer still require native-representable sizes.
+
+Separately named static weights such as Sarabun Light use their verified legacy
+font-family name from the actual font, preserving the selected bytes and weight;
+`native-weight-family` records that mapping. Ambiguous names, missing regular
+slot faces and weights without a separate style-linked family still fail.
+
+Fixed page bands now admit content that fits their bounded source height.
+They reserve source height plus required native structural paragraphs, recorded
+in `fixed-band-native-reservation`; they do not clip an overflowing band to fit.
+Content min/max band sizing remains unsupported. Word fit still needs review.
 
 ### Limits, receipts and comparison
 
@@ -186,7 +215,7 @@ rejects this optional declaration; it is not silently discarded.
 
 The empty template row must set allowBreak:false. Core derives span from member count (empty uses one fallback row). An empty
 group collection emits no group; equal names remain distinct instances.
-keepStart is always true for groupLabel and cannot be set false. In auto,
+keepStart is always true for groupLabel and cannot be set false. In PDF auto flow,
 each actual continuation fragment repeats the complete name plus ` (ต่อ)`;
 members keep their logical identity and flow once. A complete label that cannot
 fit fails LAYOUT_FAILED with reason group-label-does-not-fit and group context.

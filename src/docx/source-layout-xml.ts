@@ -58,7 +58,7 @@ export async function serializeSourceLayout(intent:ExportIntent,zip:ZipLike,sign
   return id;
  };
  function characterStyle(g:SourceGuide,position:number,spacing:number|undefined,thai:boolean){
-  const s=g.style,f=esc(s.font.family),flag=(name:string,on:boolean)=>on?`<w:${name}/>`:`<w:${name} w:val="false"/>`;
+  const s=g.style,f=esc(s.font.nativeFamily??s.font.family),flag=(name:string,on:boolean)=>on?`<w:${name}/>`:`<w:${name} w:val="false"/>`;
   const xml=`<w:rPr><w:rFonts w:ascii="${f}" w:hAnsi="${f}" w:cs="${f}" w:eastAsia="${f}"/>${flag('b',s.bold)}${flag('bCs',s.bold)}${flag('i',s.italic)}${flag('iCs',s.italic)}<w:snapToGrid w:val="false"/><w:sz w:val="${s.sizeHalfPoints}"/><w:szCs w:val="${s.sizeHalfPoints}"/>${thai?'<w:cs/>':''}<w:position w:val="${position}"/><w:kern w:val="${spacing===undefined?s.sizeHalfPoints:0}"/>${spacing===undefined?'':`<w:spacing w:val="${spacing}"/>`}</w:rPr>`;
   return register('character',xml);
  }

@@ -12,6 +12,14 @@ import {bandTemplate} from '../helpers/bands.js';
 import {NativeShapeSession} from '../../src/runtime/nativeShapeSession.js';
 
 const native=it.runIf(process.platform==='linux');
+native('can retain measured relationships with native editable text and no word boxes',async()=>{
+ const d=document(12,false,false,undefined,'ไทย English native flow'),before=JSON.stringify(d),engine=await api.createDocxEngine(resources());if(!engine.ok)throw Error(JSON.stringify(engine));
+ const sink=staged(),r=await engine.value.generateDocxTo(d,noImages,sink.output,{textLayout:'native'});expect(r.ok,JSON.stringify(r)).toBe(true);if(!r.ok)return;
+ const z=await JSZip.loadAsync(Buffer.concat(sink.chunks)),xml=await z.file('word/document.xml')!.async('string');
+ expect(xml).not.toContain('v:shape');expect(z.file('customXml/flowdoc-paragraphs.xml')).toBeNull();
+ expect(r.value.adaptations).toContainEqual(expect.objectContaining({kind:'docx-text-layout',requested:'native',policy:'native-paragraphs',wordVerified:false}));
+ expect(r.value.adaptations).toContainEqual(expect.objectContaining({kind:'source-reading-measurement'}));expect(JSON.stringify(d)).toBe(before);
+});
 native.each([false,true])('measures a cover with a fractional rule and a table, retaining its one-page bound: %s',async overflow=>{
  const fixture=(kind:string)=>JSON.parse(readFileSync(`tests/fixtures/docx-pagination-rules/R-${kind}.json`,'utf8'));
  const t=fixture('template');t.nodeModelVersion=18;t.sections=[t.sections[1]];delete t.sections[0].nameBase;Object.assign(t.sections[0],{role:'cover',key:'cover',formats:{}});

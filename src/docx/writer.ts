@@ -60,15 +60,19 @@ function cancelled(options: WriteOptions) { if (options.signal?.aborted)
 function embeddedFonts(intent: ExportIntent): NonNullable<IPropertiesOptions['fonts']> {
     const all = intent.resourceIdentities.filter((r: any) => r.family) as any[], families = new Map<string, Set<string | undefined>>();
     for (const [id, s] of Object.entries(intent.styles)) {
-        if (![400, 700].includes(s.font.weight))
+        if (![400, 700].includes(s.font.weight) && !s.font.nativeFamily)
             fail('DOCX_CAPABILITY_UNSUPPORTED', 'styles.' + id + '.font', 'Native embedding slots require verified regular/bold faces');
-        const releases = families.get(s.font.family) ?? new Set<string | undefined>();
+        const name = s.font.nativeFamily ?? s.font.family, releases = families.get(name) ?? new Set<string | undefined>();
         releases.add(s.font.releaseId);
-        families.set(s.font.family, releases);
+        families.set(name, releases);
     }
     return [...families].map(([name, releases]) => { if (releases.size !== 1)
-        fail('DOCX_CAPABILITY_UNSUPPORTED', 'resources.fonts', 'One family cannot select multiple releases in native face slots'); const release = [...releases][0], get = (weight: number, style: string, required = false) => { const matches = all.filter(f => f.family === name && f.releaseId === release && f.weight === weight && f.style === style); if (matches.length > 1 || required && matches.length !== 1)
-        fail('FONT_FACE_UNAVAILABLE', 'resources.fonts', 'Embedding needs one unambiguous concrete regular face'); return matches[0] ? Buffer.from(intentResourceBytes(intent, 'font', matches[0].id)) : undefined; }; const bold = get(700, 'normal'), italic = get(400, 'italic'), boldItalic = get(700, 'italic'); return { name, data: required(get(400, 'normal', true), 'fonts.regular'), ...(bold ? { bold } : {}), ...(italic ? { italic } : {}), ...(boldItalic ? { boldItalic } : {}) }; });
+        fail('DOCX_CAPABILITY_UNSUPPORTED', 'resources.fonts', 'One family cannot select multiple releases in native face slots'); const release = [...releases][0], faces = all.filter(f => (f.nativeFamily ?? f.family) === name && f.releaseId === release), standalone = faces.filter(f => f.nativeFamily);
+        const weights = new Set(standalone.map(f => f.weight));
+        if (standalone.length && (weights.size !== 1 || standalone.length !== faces.length)) fail('DOCX_CAPABILITY_UNSUPPORTED','resources.fonts','Ambiguous separately named weight family');
+        const regularWeight = standalone.length ? standalone[0].weight : 400;
+        const get = (weight: number, style: string, required = false) => { const matches = faces.filter(f => f.weight === weight && f.style === style); if (matches.length > 1 || required && matches.length !== 1)
+        fail('FONT_FACE_UNAVAILABLE', 'resources.fonts', 'Embedding needs one unambiguous concrete regular face'); return matches[0] ? Buffer.from(intentResourceBytes(intent, 'font', matches[0].id)) : undefined; }; const bold = standalone.length ? undefined : get(700, 'normal'), italic = get(regularWeight, 'italic'), boldItalic = standalone.length ? undefined : get(700, 'italic'); return { name, data: required(get(regularWeight, 'normal', true), 'fonts.regular'), ...(bold ? { bold } : {}), ...(italic ? { italic } : {}), ...(boldItalic ? { boldItalic } : {}) }; });
 }
 async function cleanup(sink: DocxSink, error: unknown): Promise<Result<DocxReceipt>> { const issue = error instanceof MappingError ? error.issue : { code: 'DOCX_SERIALIZATION_FAILED', path: 'writer', message: error instanceof Error ? error.message : 'Export failed' }; const issues = [issue]; try {
     await sink?.abort(error);
@@ -180,10 +184,16 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
         const adaptations: any[] = [...baselineReceipts(intent),...sourceLayoutReceipts(intent), ...built.omittedSections.map(s => ({kind: 'empty-section-omission', ...s})), ...built.receipts.flatMap(s => s.tableSpaces.map((t: any) => ({ kind: 'table-space-policy', ...t })))], columnPaths = new Set<string | undefined>();
         for (const table of intent.tables) {
             const source: any = (intent.document.nodes as any)[table.nodeId];
+            for (const group of source.rowGroups ?? []) if (group.groupLabel) {
+                // Native vertical merges keep one logical label, even if Word
+                // paginates its rows. No invented continuation text or keep-all.
+                adaptations.push({ kind: 'group-label-native-merge', nodeId: table.nodeId, groupId: group.groupId, groupIndex: group.groupIndex, cellId: group.groupLabel.cellId, memberCount: group.groupLabel.memberCount, policy: 'native-rowspan', continuationLabel: 'not-repeated', wordVerified: false });
+            }
             table.columnTwips.forEach((twips, i) => { const path = 'document.nodes.' + table.nodeId + '.columns.' + i + '.width', length = source.columns[i].width, pt = length.unit === 'pt' ? length.value : length.value * 72 / 25.4; columnPaths.add(path); if (twips / 20 !== pt)
                 adaptations.push({ kind: 'column-grid-quantization', path, source: length, twips, errorPt: twips / 20 - pt }); });
         }
         for (const [id, style] of Object.entries(intent.styles)) {
+            if (style.font.nativeFamily) adaptations.push({kind:'native-weight-family',styleId:id,sourceFamily:style.font.family,nativeFamily:style.font.nativeFamily,weight:style.font.weight,fontSha256:style.font.sha256,bytesChanged:false,wordVerified:false});
             const sourcePt = (intent.document.styles as any)[id].lineHeightPt;
             if (style.line.twips / 20 !== sourcePt)
                 adaptations.push({ kind: 'minimum-line-quantization', path: 'document.styles.' + id + '.lineHeightPt', sourcePt, twips: style.line.twips, errorPt: style.line.twips / 20 - sourcePt });

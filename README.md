@@ -37,6 +37,13 @@ for the two layout paths, API/receipts, budgets and verification limits. This
 version is a development integration; release, installation and Service pinning
 are separate steps.
 
+The unmerged UAT candidate additionally maps group-label cells to native vertical
+merges, adapts fractional font sizes in a DOCX-only snapshot and preserves
+separately named static faces such as Sarabun Light. Bounded fixed page bands
+reserve native structural overhead explicitly. These are DOCX adaptations;
+the original input/PDF and release/Service pins are unchanged. See the template
+guide for receipts, native flow behavior and remaining fit limits.
+
 ## Internal task input reader
 
 `normalizeTaskInput(template, valueHandle, options)` validates model18/19
@@ -357,7 +364,7 @@ rejects this optional declaration; it is not silently discarded.
 
 The empty template row must set allowBreak:false. Core derives span from member count (empty uses one fallback row). An empty
 group collection emits no group; equal names remain distinct instances.
-keepStart is always true for groupLabel and cannot be set false. In auto,
+keepStart is always true for groupLabel and cannot be set false. In PDF auto flow,
 each actual continuation fragment repeats the complete name plus ` (ต่อ)`;
 members keep their logical identity and flow once. A complete label that cannot
 fit fails LAYOUT_FAILED with reason group-label-does-not-fit and group context.

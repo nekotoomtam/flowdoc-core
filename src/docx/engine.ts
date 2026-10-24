@@ -21,6 +21,8 @@ export interface DocxOptions {
     maxBytes?: number;
     /** Expanded XML elements, independently bounded from source nodes. Default 50000; maximum 300000. */
     maxXmlNodes?: number;
+    /** Native paragraph flow can retain shared fit measurements without VML word boxes. */
+    textLayout?: 'native' | 'source';
 }
 export interface DocxOutput {
     write(bytes: Uint8Array): Promise<void>;
@@ -117,9 +119,11 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                         fail('DOCX_INPUT_INVALID', 'output', 'A staged write/abort output is required');
                     const write = output.write.bind(output);
                     abort = output.abort.bind(output);
-                    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => !['signal', 'maxBytes','maxXmlNodes'].includes(k)))
+                    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => !['signal', 'maxBytes','maxXmlNodes','textLayout'].includes(k)))
                         fail('DOCX_INPUT_INVALID', 'options', 'Invalid DOCX options');
-                    const { signal, maxBytes,maxXmlNodes } = options;
+                    const { signal, maxBytes,maxXmlNodes,textLayout } = options;
+                    if(textLayout!==undefined&&!['native','source'].includes(textLayout))fail('DOCX_INPUT_INVALID','options.textLayout','Invalid text layout policy');
+                    if(textLayout==='source'&&(!resources.shaperPath||!resources.segmenterPath))fail('DOCX_CAPABILITY_UNSUPPORTED','options.textLayout','Explicit source text layout requires both native capabilities');
                     if(maxXmlNodes!==undefined&&(!Number.isSafeInteger(maxXmlNodes)||maxXmlNodes<0||maxXmlNodes>300000))fail('DOCX_INPUT_INVALID','options.maxXmlNodes','Invalid expanded XML budget');
                     if (maxBytes !== undefined && (!Number.isSafeInteger(maxBytes) || maxBytes < 0 || maxBytes > 32 * 1024 * 1024))
                         fail('DOCX_INPUT_INVALID', 'options.maxBytes', 'Invalid output budget');
@@ -138,6 +142,19 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                         }
                         return { ok: false, issues, warnings: [] };
                     }
+                    // Quantize only the renderer-owned snapshot. Measurement and
+                    // emitted glyphs must use the same native half-point size.
+                    const sizeAdaptations = [];
+                    for (const [styleId, style] of Object.entries(pinned.styles)) {
+                        const sourcePt = style.fontSize.value;
+                        if (sourcePt < 0.5 || sourcePt > 819)
+                            fail('DOCX_GEOMETRY_UNREPRESENTABLE', 'styles.' + styleId + '.fontSize', 'Font size is outside the native half-point range');
+                        const nativePt = Math.round(sourcePt * 2) / 2;
+                        if (nativePt !== sourcePt) {
+                            sizeAdaptations.push({ kind: 'font-size-quantization', styleId, sourcePt, nativePt, errorPt: nativePt - sourcePt, policy: 'nearest-half-point' });
+                            style.fontSize.value = nativePt;
+                        }
+                    }
                     const graphs = [pinned.nodes, ...(pinned.sections ?? []).flatMap(s => [s.header, s.footer]).filter(b => b !== undefined).map(b => b.nodes)];
                     if (graphs.reduce((n, g) => n + Object.keys(g).length, 0) > defaultProfile.limits.maxNodes)
                         fail('DOCX_OUTPUT_BUDGET_EXCEEDED', 'document.nodes', 'Source node budget exceeded');
@@ -153,7 +170,7 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                     const intent=deriveExportIntent(preflight.value);
                     if(!intent.ok)throw new MappingError(intent.issues[0]!);
                     if(resources.shaperPath&&resources.segmenterPath){
-                        await prepareSourceLayout(intent.value,{fonts:resources.fonts,shaperPath:resources.shaperPath,segmenterPath:resources.segmenterPath},signal);
+                        await prepareSourceLayout(intent.value,{fonts:resources.fonts,shaperPath:resources.shaperPath,segmenterPath:resources.segmenterPath},signal,textLayout==='native');
                         await prepareMetricBaselines(intent.value,resources.shaperPath,signal,(scope,id)=>scope==='nodes'&&sourceGuide(intent.value,id)!==undefined);
                     }else if(resources.shaperPath)await prepareMetricBaselines(intent.value,resources.shaperPath,signal);
                     const result = await writeDocx(intent.value, {
@@ -168,7 +185,7 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                     if (!result.ok)
                         return result;
                     const receipt = result.value;
-                    return { ok: true, value: { mediaType: receipt.mediaType, byteLength: receipt.bytes, sha256: receipt.sha256, pageCount: null, fieldRefresh: 'required', wordVerified: false, buffered: true, adaptations: receipt.adaptations }, warnings: result.warnings };
+                    return { ok: true, value: { mediaType: receipt.mediaType, byteLength: receipt.bytes, sha256: receipt.sha256, pageCount: null, fieldRefresh: 'required', wordVerified: false, buffered: true, adaptations: [...sizeAdaptations, ...(textLayout?[{kind:'docx-text-layout',requested:textLayout,policy:textLayout==='native'?'native-paragraphs':'source-word-layout',wordVerified:false}]:[]), ...receipt.adaptations] }, warnings: result.warnings };
                 }
                 catch (error) {
                     const found = issue(error, 'DOCX_SERIALIZATION_FAILED'), issues = [found];

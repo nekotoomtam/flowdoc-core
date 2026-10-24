@@ -39,6 +39,8 @@ export interface DocxProfile {
 export interface FontIdentity {
     id: string;
     family: string;
+    /** Verified legacy style-linked family for a separately named static weight. */
+    nativeFamily?: string;
     releaseId?: string;
     weight: number;
     style: 'normal' | 'italic';
