@@ -29,6 +29,7 @@ export function buildTextParagraph(intent: ExportIntent, nodeId: string, options
     end?: number;
     keepNext?: boolean;
     keepLines?: boolean;
+    spaceBeforeTwips?: number;
     spaceAfterTwips?: number;
     ordinaryBodyOrCell?: boolean;
     scope?: string;
@@ -124,7 +125,7 @@ export function buildTextParagraph(intent: ExportIntent, nodeId: string, options
         if (twips < 1)
             fail('DOCX_GEOMETRY_UNREPRESENTABLE', path, 'Native paragraph line budget quantizes to zero', nodeId);
         const ordinary = options.ordinaryBodyOrCell === true && scope === 'nodes' && !fixed && !fields && !source.props.toc && start === 0 && end === block.text.length && !options.keepNext && !options.keepLines;
-        const paragraph = sourceParagraph(intent,nodeId,ordinary,{ children, run, ...(ordinary ? { widowControl: false } : {}), ...(options.keepNext !== undefined ? { keepNext: options.keepNext } : {}), ...(options.keepLines !== undefined ? { keepLines: options.keepLines } : {}), ...(source.props.toc ? { outlineLevel: source.props.toc.level - 1 } : {}), alignment: source.props.textAlign ?? 'left', spacing: { before: 0, after: options.spaceAfterTwips ?? 0, line: twips, lineRule: fixed||exact ? LineRuleType.EXACT : LineRuleType.AT_LEAST } });
+        const paragraph = sourceParagraph(intent,nodeId,ordinary,{ children, run, ...(ordinary ? { widowControl: false } : {}), ...(options.keepNext !== undefined ? { keepNext: options.keepNext } : {}), ...(options.keepLines !== undefined ? { keepLines: options.keepLines } : {}), ...(source.props.toc ? { outlineLevel: source.props.toc.level - 1 } : {}), alignment: source.props.textAlign ?? 'left', spacing: { before: options.spaceBeforeTwips ?? 0, after: options.spaceAfterTwips ?? 0, line: twips, lineRule: fixed||exact ? LineRuleType.EXACT : LineRuleType.AT_LEAST } });
         return { paragraph, receipt: { nodeId, logicalText: block.text.slice(start, end), font: style.font, line: { rule: fixed||exact ? 'exact' : 'atLeast', twips }, visualVerified: false } };
     });
 }

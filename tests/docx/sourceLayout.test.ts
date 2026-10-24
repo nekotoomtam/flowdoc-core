@@ -54,7 +54,7 @@ native.each(['bounded','custom-padding','whitespace-cell'])('bounds terminal nat
  if(mode==='whitespace-cell')(d.nodes[cell.childIds[0]]as any).children[0].text=' ';
  const r=await exported(d),receipt=r.result.adaptations.find((a:any)=>a.nodeId===table.id&&a.scope==='nodes'&&a.cells)as any;
  expect(receipt.terminalStrokeCompensationPt).toBe(mode==='bounded'?.5:0);
- expect(receipt.cells.filter((c:any)=>row.cellIds.includes(c.nodeId)).every((c:any)=>c.nativeBottomTwips===(mode==='bounded'?65:mode==='whitespace-cell'?75:c.sourceBottomTwips))).toBe(true);
+  expect(receipt.cells.filter((c:any)=>row.cellIds.includes(c.nodeId)).every((c:any)=>c.nativeBottomTwips+(c.paragraphAfterTwips??0)===(mode==='bounded'?65:mode==='whitespace-cell'?75:c.sourceBottomTwips))).toBe(true);
 });
 function composeForMetric(t:any,q:any){
  const v=api.validateTemplate(t);if(!v.ok)throw Error(JSON.stringify(v));const p=api.prepareGeneration(v.value,q);if(!p.ok)throw Error(JSON.stringify(p));const d=api.composeDocument(v.value,p.value);if(!d.ok)throw Error(JSON.stringify(d));return d.value;

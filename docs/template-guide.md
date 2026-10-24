@@ -79,6 +79,16 @@ pagination rules remain in place; native Word can still lay out borderless
 tables differently. Explicit `borderColor:"FFFFFF"` remains a painted white
 border and is never converted automatically. Existing templates are unchanged.
 
+The DOCX cell-margin trial maps unequal vertical margins in an eligible text row
+to shared row-minimum margins plus first/last paragraph before/after offsets.
+Each cell's total inset is preserved in native twips; line heights/rules, fonts,
+horizontal padding, borders and row controls stay unchanged. Uniform rows,
+source-guided/fixed/image/empty cells, complex merges and final Area tables keep
+the existing path. `table-space-policy.verticalOffsetPolicy` and each cell's
+`paragraphBeforeTwips`/`paragraphAfterTwips` disclose the mapping. PDF and the
+semantic source are unchanged. This is a development trial pending native Word
+conversion, separate from the known final-Area table-note preview limitation.
+
 Static TrueType font bytes and licenses are verified and embedded. Family
 signatures come from the actual regular face OS/2 table, including Thai coverage;
 no fixed Latin signature is reused for every font. Missing coverage/unsupported

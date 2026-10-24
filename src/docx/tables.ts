@@ -10,6 +10,7 @@ import { baselineDecision,tableWidthProven } from './metric-baseline.js';
 import {sourceGuide} from './source-layout.js';
 import { buildImageParagraph } from './images.js';
 import type { NavigationContext } from './fields.js';
+import {distributeVerticalOffsets} from './cell-vertical-offsets.js';
 export type TableSpaceReceipt = {
     nodeId: string;
     scope: 'nodes';
@@ -17,6 +18,7 @@ export type TableSpaceReceipt = {
     policy: TableSpaceDecision['policy'];
     reason: string;
     horizontalPolicy: 'border-centre-inset' | 'border-centre-inset-preserve-width' | 'retain-native';
+    verticalOffsetPolicy:'row-minimum-margins-and-paragraph-offsets'|'retain-native';
     cells: {
         nodeId: string;
         sourceTopPt: number;
@@ -25,6 +27,8 @@ export type TableSpaceReceipt = {
         sourceBottomTwips: number;
         nativeTopTwips: number;
         nativeBottomTwips: number;
+        paragraphBeforeTwips:number;
+        paragraphAfterTwips:number;
         sourceLeftTwips: number;
         sourceRightTwips: number;
         nativeLeftTwips: number;
@@ -39,7 +43,10 @@ const take = <T>(r: Result<T>): T => { if (!r.ok) {
     fail(e.code, e.path ?? 'nodes', e.message);
 } return r.value; };
 export function structuralParagraph(afterTwips = 0) { return new Paragraph({ run: { size: 2, sizeComplexScript: 2, bold: false, italics: false }, spacing: { before: 0, after: afterTwips, line: 20, lineRule: LineRuleType.EXACT } }); }
-function textParts(intent: ExportIntent, id: string, plan: ReadingPlan, forceKeep = false, navigation?: NavigationContext, protectedFlow = false) { return plan.fragments.filter(f => f.nodeId === id).sort((a, b) => a.start - b.start).map(f => take(buildTextParagraph(intent, id, { ...f, keepNext: forceKeep || f.keepNext, ordinaryBodyOrCell: !protectedFlow && !plan.edges.some(e => e.from === id || e.to === id), ...(navigation ? { navigation } : {}) })).paragraph); }
+function textParts(intent: ExportIntent, id: string, plan: ReadingPlan, forceKeep = false, navigation?: NavigationContext, protectedFlow = false,offsets?:{before:number;after:number}) {
+ const fragments=plan.fragments.filter(f=>f.nodeId===id).sort((a,b)=>a.start-b.start);
+ return fragments.map((f,i)=>take(buildTextParagraph(intent,id,{...f,keepNext:forceKeep||f.keepNext,ordinaryBodyOrCell:!protectedFlow&&!plan.edges.some(e=>e.from===id||e.to===id),...(navigation?{navigation}:{}),...(offsets?{spaceBeforeTwips:i===0?offsets.before:0,spaceAfterTwips:i===fragments.length-1?offsets.after:0}:{})})).paragraph);
+}
 export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext): Result<{
     table: Table;
     receipt: {
@@ -91,10 +98,19 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
         });
         const preserveWidth=horizontal&&!tableWidthProven(intent,nodeId);
         const metricParagraphs=mapped.cells.some(cell=>nodes[cell.nodeId].childIds.some((id:string)=>baselineDecision(intent,'nodes',id)!==undefined));
-        const spacePolicy: TableSpaceReceipt = { nodeId, scope: 'nodes', cellBorderPolicy: 'explicit-merged-cell-perimeter', terminalStrokeCompensationPt, policy: adapted ? 'border-centre-inset' : 'retain-native', horizontalPolicy: horizontal?(preserveWidth?'border-centre-inset-preserve-width':'border-centre-inset'):'retain-native', reason: !plainTextGrid ? 'unverified-grid-or-content' : !allPadding ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset', cells: mapped.cells.map((cell, i) => ({ nodeId: cell.nodeId, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom, nativeTopTwips: adapted ? required(decisions[i], 'table.decision').nativeTopTwips : cell.paddingTwips.top, nativeBottomTwips: (adapted ? required(decisions[i], 'table.decision').nativeBottomTwips : cell.paddingTwips.bottom)-(terminalCells.has(cell.nodeId)?Math.round(terminalStrokeCompensationPt*20):0),
+        const spacePolicy: TableSpaceReceipt = { nodeId, scope: 'nodes', cellBorderPolicy: 'explicit-merged-cell-perimeter', terminalStrokeCompensationPt, policy: adapted ? 'border-centre-inset' : 'retain-native', horizontalPolicy: horizontal?(preserveWidth?'border-centre-inset-preserve-width':'border-centre-inset'):'retain-native',verticalOffsetPolicy:'retain-native', reason: !plainTextGrid ? 'unverified-grid-or-content' : !allPadding ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset', cells: mapped.cells.map((cell, i) => ({ nodeId: cell.nodeId, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom, nativeTopTwips: adapted ? required(decisions[i], 'table.decision').nativeTopTwips : cell.paddingTwips.top, nativeBottomTwips: (adapted ? required(decisions[i], 'table.decision').nativeBottomTwips : cell.paddingTwips.bottom)-(terminalCells.has(cell.nodeId)?Math.round(terminalStrokeCompensationPt*20):0),paragraphBeforeTwips:0,paragraphAfterTwips:0,
             sourceLeftTwips:cell.paddingTwips.left,sourceRightTwips:cell.paddingTwips.right,
             nativeLeftTwips:cell.paddingTwips.left-(horizontal?5:0),nativeRightTwips:cell.paddingTwips.right+(horizontal?(preserveWidth?5:-5):0) })), baselinePolicy: metricParagraphs?'per-paragraph-metric-or-native':'native-at-least-unmatched', baselineMatchVerified: false };
         const plan = take(deriveReadingPlan(intent));
+        const hasVerticalMerge=mapped.cells.some(cell=>(nodes[cell.nodeId].props.rowSpan??1)>1);
+        const isEndingArea=intent.document.sections?.some(s=>s.endingArea?.rootIds.includes(nodeId));
+        for(const rid of n.rowIds){
+            const ids:string[]=nodes[rid].cellIds;
+            const eligible=!isEndingArea&&!hasVerticalMerge&&ids.every(id=>{
+                const c=nodes[id];return (c.props.colSpan??1)===1&&c.childIds.length>0&&c.childIds.every((id:string)=>nodes[id].type==='text-block'&&nodes[id].props.heightMode!=='fixed'&&!sourceGuide(intent,id));
+            });
+            if(distributeVerticalOffsets(ids.map(id=>required(spacePolicy.cells.find(c=>c.nodeId===id),'table.cell.space')),eligible))spacePolicy.verticalOffsetPolicy='row-minimum-margins-and-paragraph-offsets';
+        }
         const grid = mapped.columnTwips, rows: TableRow[] = [], logicalCellIds: string[] = [], occupancy = new Map<string, {
             id: string;
             row: number;
@@ -116,7 +132,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                 if (!continuation)
                     for (const child of c.childIds) {
                         if (nodes[child].type === 'text-block')
-                            children.push(...textParts(intent, child, plan, plan.keptRows[nodeId]?.includes(rid), navigation, row < n.props.headerRowCount || !nodes[rid].props.allowBreak || (n.rowGroups ?? []).some((g: any) => g.keepStart && g.prefixRowIds.length > 0 && g.rowIds.includes(rid)) || (c.props.rowSpan ?? 1) > 1 || (c.props.colSpan ?? 1) > 1 || plan.edges.some(e => e.from === nodeId || e.to === nodeId)));
+                            children.push(...textParts(intent, child, plan, plan.keptRows[nodeId]?.includes(rid), navigation, row < n.props.headerRowCount || !nodes[rid].props.allowBreak || (n.rowGroups ?? []).some((g: any) => g.keepStart && g.prefixRowIds.length > 0 && g.rowIds.includes(rid)) || (c.props.rowSpan ?? 1) > 1 || (c.props.colSpan ?? 1) > 1 || plan.edges.some(e => e.from === nodeId || e.to === nodeId),{before:child===c.childIds[0]?spacePolicy.cells.find(v=>v.nodeId===pos.id)!.paragraphBeforeTwips:0,after:child===c.childIds.at(-1)?spacePolicy.cells.find(v=>v.nodeId===pos.id)!.paragraphAfterTwips:0}));
                         else if (nodes[child].type === 'image')
                             children.push(take(buildImageParagraph(intent, child)).paragraph);
                         else
