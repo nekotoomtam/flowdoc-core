@@ -2,7 +2,8 @@ import {resolveTableGrid} from '../composition/tableGrid.js';
 import type {GridCell} from '../composition/tableGrid.js';
 import {toPt} from '../composition/resolvedDocument.js';
 import type {ResolvedDocument,Table} from '../composition/resolvedDocument.js';
-import {measureCellContent,resolveCellPadding} from './measureCellContent.js';
+import {measureCellContent} from './measureCellContent.js';
+import {nativeTableProbe} from './nativeTableProbe.js';
 import type {MeasuredCellItem,PaddingPt} from './measureCellContent.js';
 
 import type {Issue} from '../result.js';
@@ -19,11 +20,11 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
  const labelIds=new Set((t.rowGroups??[]).flatMap(g=>g.groupLabel?[g.groupLabel.cellId]:[]));
  const cells:Cell[]=[];
  for(const c of grid.cells){const n=d.nodes[c.id];if(n?.type!=='table-cell')throw new LayoutError(c.id,'Expected cell');
-  const padding=resolveCellPadding(n.props.padding),contentWidth=xs[c.column+c.colSpan]!-xs[c.column]!-padding.left-padding.right;
+  const probe=nativeTableProbe(t.id,n,runtime),padding=probe.padding,contentWidth=xs[c.column+c.colSpan]!-xs[c.column]!-padding.left-padding.right;
   if(Object.values(padding).some(v=>!Number.isFinite(v)||v<0))throw new LayoutError(c.id,'Invalid converted cell padding');
   if(!Number.isFinite(contentWidth)||contentWidth<=0)throw new LayoutError(c.id,'Cell padding leaves no content width');
   let offset=padding.top;const lines:Cell['lines']=[];
-  for(const line of await measureCellContent(d,n.childIds,contentWidth,runtime)){lines.push({line,offset,drawn:false});offset+=line.heightPt;}
+  for(const measured of await measureCellContent(d,n.childIds,contentWidth,runtime)){const line=probe.item(measured);lines.push({line,offset,drawn:false});offset+=line.heightPt;}
   const cell:Cell={...c,padding,contentWidth,lines,fillColor:n.props.fillColor??(c.row<t.props.headerRowCount?t.props.headerFillColor:undefined)};
   if(labelIds.has(c.id)){
    const text=d.nodes[n.childIds[0]!];if(text?.type!=='text-block')throw new LayoutError(c.id,'Expected group label text');
@@ -48,7 +49,10 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
  omitOversizedImages(headerCells,Math.max(s.bottom-s.top,s.nextCapacity??0));
  const headerHeight=headerCount?Math.max(0,...headerCells.map(c=>(c.lines.at(-1)?.offset??c.padding.top)+(c.lines.at(-1)?.line.heightPt??0)+c.padding.bottom)):0;
  if(headerHeight>Math.max(s.bottom-s.top,s.nextCapacity??0)+eps){if(s.bounded)throw new FormatStop('height-limit',[formatCursor(d,t.id,'node',{nodeType:'table'})]);throw new LayoutError(t.id,'Header exceeds page content height');}
- const rowSpace=rowIds.map(()=>0);
+ const stroke=runtime.spacingProbe?.rowStrokePt?.(t.id)??0;
+ if(!Number.isFinite(stroke)||stroke<0||stroke>1)throw new LayoutError(t.id,'Invalid spacing probe row stroke');
+ if(stroke&&(headerCount||body.some(c=>c.rowSpan!==1||c.label)))throw new LayoutError(t.id,'Spacing probe requires ordinary unmerged rows without headers');
+ const rowSpace=rowIds.map(()=>stroke);
  const geometry=()=>{const heights=rowIds.map(()=>0),ordered=[...body].sort((a,b)=>a.row+a.rowSpan-b.row-b.rowSpan||a.row-b.row||a.column-b.column);
   for(const c of ordered.filter(c=>!c.label&&c.rowSpan===1))heights[c.row]=Math.max(heights[c.row]!, (c.lines.at(-1)?.offset??c.padding.top)+(c.lines.at(-1)?.line.heightPt??0)+c.padding.bottom);
   for(const c of ordered.filter(c=>!c.label&&c.rowSpan>1)){const need=(c.lines.at(-1)?.offset??c.padding.top)+(c.lines.at(-1)?.line.heightPt??0)+c.padding.bottom,have=heights.slice(c.row,c.row+c.rowSpan).reduce((a,b)=>a+b,0);if(need>have)heights[c.row+c.rowSpan-1]!+=need-have;}
@@ -143,6 +147,38 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
    const remaining=body.filter(v=>!v.label&&v.row>=c.row&&v.row<c.row+c.rowSpan).flatMap(v=>v.lines.filter(l=>!l.drawn).map(l=>g.ys[v.row]!+l.offset+l.line.heightPt+v.padding.bottom));
    const required=Math.max(lo+height,remaining.length?Math.min(...remaining):lo);
    if(Math.min(cut,end)<required-eps){cut=lo;pendingLabel=c;break;}
+  }
+  // Opt-in native paragraph minimum. Move a cut, never remeasure text or keep
+  // a long row whole. Text-block IDs delimit paragraphs; images stay atomic.
+  // Relax only when no legal two-line split fits even a fresh usable page.
+  let paragraphCut=true;
+  while(paragraphCut){paragraphCut=false;
+   for(const c of body){const row=d.nodes[rowIds[c.row]!];
+    if(c.rowSpan!==1||c.label||row?.type!=='table-row'||!row.props.allowBreak)continue;
+    const base=g.ys[c.row]!;
+    for(let i=0;i<c.lines.length;){
+     const firstLine=c.lines[i]!,id=firstLine.line.nodeId;let end=i+1;
+     while(end<c.lines.length&&c.lines[end]!.line.kind==='text-line'&&c.lines[end]!.line.nodeId===id)end++;
+     const paragraph=c.lines.slice(i,end);i=end;
+     if(firstLine.line.kind!=='text-line'||!runtime.spacingProbe?.paragraphWidowOrphan?.(id))continue;
+     const remaining=paragraph.filter(l=>!l.drawn);
+     const fitting=remaining.filter(l=>base+l.offset>=from-eps&&base+l.offset+l.line.heightPt+c.padding.bottom<=cut+eps);
+     if(!fitting.length||fitting.length===remaining.length)continue;
+     let carry=-1;
+     if(!paragraph.some(l=>l.drawn)&&fitting.length===1)carry=0;
+     else if(remaining.length-fitting.length===1)carry=fitting.length-1;
+     if(carry<0)continue;
+     // A three-line paragraph cannot split 2+2: move it intact if possible.
+     if(!paragraph.some(l=>l.drawn)&&carry===1)carry=0;
+     const minimum=remaining.slice(carry,carry+(carry===0&&remaining.length===3?3:2));
+     const need=minimum.reduce((h,l)=>h+l.line.heightPt,0)+c.padding.top+c.padding.bottom;
+     if(need>full+eps)continue;
+     // The preceding retained line needs its bottom padding before the cut.
+     // Subtracting top padding makes whole-line carry move that line as well.
+     const earlier=base+remaining[carry]!.offset+c.padding.bottom;
+     if(earlier>=from-eps&&earlier<cut-eps){cut=Math.max(from,earlier);paragraphCut=true;}
+    }
+   }
   }
   const hasLine=pending.some(l=>l.start>=from-eps&&l.end<=cut+eps);
   const startsHere=pending.some(l=>l.start<cut+eps);

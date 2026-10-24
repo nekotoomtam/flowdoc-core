@@ -1,7 +1,7 @@
 import { required } from './types.js';
 /** Native representation decisions only; never mutate source geometry. */
 export type TableSpaceInput = {
-    unmergedPlainGrid: boolean;
+    plainTextGrid: boolean;
     uniformSingleHalfPointBorder: boolean;
     sourceTopPt: number;
     sourceBottomPt: number;
@@ -15,7 +15,7 @@ export type TableSpaceDecision = {
     reason: string;
 };
 export function deriveTableSpace(input: TableSpaceInput): TableSpaceDecision {
-    const reason = !input.unmergedPlainGrid ? 'unverified-grid-or-content' : !input.uniformSingleHalfPointBorder ? 'unverified-border' : input.sourceTopPt !== 4 || input.sourceBottomPt !== 4 || input.sourceTopTwips !== 80 || input.sourceBottomTwips !== 80 ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset';
+    const reason = !input.plainTextGrid ? 'unverified-grid-or-content' : !input.uniformSingleHalfPointBorder ? 'unverified-border' : input.sourceTopPt !== 4 || input.sourceBottomPt !== 4 || input.sourceTopTwips !== 80 || input.sourceBottomTwips !== 80 ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset';
     const eligible = reason === 'bounded-half-stroke-inset';
     return { policy: eligible ? 'border-centre-inset' : 'retain-native', nativeTopTwips: input.sourceTopTwips - (eligible ? 5 : 0), nativeBottomTwips: input.sourceBottomTwips - (eligible ? 5 : 0), reason };
 }
@@ -32,4 +32,9 @@ export type HeaderSpaceDecision = {
 export function deriveHeaderSpace(input: HeaderSpaceInput): HeaderSpaceDecision {
     const empty = input.effectiveFirstEmpty && input.effectiveDefaultEmpty;
     return { policy: empty ? 'empty-header-zero' : 'retain-h3', nativeDistanceTwips: empty ? 0 : input.previousDistanceTwips, reason: empty ? 'both-effective-headers-empty' : input.effectiveFirstEmpty || input.effectiveDefaultEmpty ? 'mixed-header-visibility' : 'visible-header-h3' };
+}
+
+export function deriveFooterSpace(input: HeaderSpaceInput) {
+    const empty = input.effectiveFirstEmpty && input.effectiveDefaultEmpty;
+    return { policy: empty ? 'empty-footer-zero' : 'retain-footer-distance', nativeDistanceTwips: empty ? 0 : input.previousDistanceTwips, reason: empty ? 'both-effective-footers-empty' : input.effectiveFirstEmpty || input.effectiveDefaultEmpty ? 'mixed-footer-visibility' : 'visible-footer' };
 }

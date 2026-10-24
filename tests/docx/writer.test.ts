@@ -8,6 +8,18 @@ import {writeDocx} from '../../src/docx/writer.js';
 function privateFonts(){return {images:[],fonts:fonts().fonts.map((f,i)=>({id:f.id,legacyAlias:['regular','bold','italic','boldItalic'][i] as any,weight:i===1||i===3?700:400,style:i>=2?'italic' as const:'normal' as const,bytes:readFileSync(f.path),sha256:f.sha256,license:{bytes:readFileSync(f.licenses[0]!.path),sha256:f.licenses[0]!.sha256}}))};}
 import {createDocxEngine} from '../../src/index.js';
 import {fonts,staged,composedFixture,noImages} from './helpers.js';
+it.each([NaN,Infinity,-1,.1,300001,null])('rejects invalid explicit XML budget %s before opening images',async maxXmlNodes=>{
+ const e=await createDocxEngine(fonts());if(!e.ok)throw Error(JSON.stringify(e));const p=imageProvider(),s=staged();
+ expect(await e.value.generateDocxTo(imageDocument(),p.provider,s.output,{maxXmlNodes:maxXmlNodes as number})).toMatchObject({ok:false,issues:[{code:'DOCX_INPUT_INVALID'}]});expect(p.opened).toEqual([]);expect(s.chunks).toEqual([]);
+});
+it('keeps the default XML cap and requires an explicit bounded larger budget',async()=>{
+ const original=Packer.toBuffer.bind(Packer),hook=vi.spyOn(Packer,'toBuffer').mockImplementation(async(...args)=>{
+  const z=await JSZip.loadAsync(await original(...args)),p=z.file('word/document.xml')!;z.file('word/document.xml',(await p.async('string')).replace('</w:body>','<w:p/>'.repeat(50000)+'</w:body>'));return z.generateAsync({type:'nodebuffer'});
+ });
+ try{const e=await createDocxEngine(fonts());if(!e.ok)throw Error(JSON.stringify(e));
+  for(const maxXmlNodes of [undefined,100000,50000]){const s=staged(),r=await e.value.generateDocxTo(composedFixture(),noImages,s.output,maxXmlNodes===undefined?{}:{maxXmlNodes});expect(r.ok).toBe(maxXmlNodes===100000);if(r.ok)expect(r.value.adaptations).toContainEqual(expect.objectContaining({kind:'expanded-xml-budget',limit:100000,sourceNodeLimit:50000}));else{expect(r.issues[0]?.code).toBe('DOCX_OUTPUT_BUDGET_EXCEEDED');expect(s.chunks).toEqual([]);}}
+ }finally{hook.mockRestore();}
+});
 it('reports the same sink failure code to the caller and staging cleanup',async()=>{
  const engine=await createDocxEngine(fonts());if(!engine.ok)throw Error(JSON.stringify(engine));const reasons:string[]=[];
  const result=await engine.value.generateDocxTo(composedFixture(),noImages,{async write(){throw Error('sink failed');},async abort(code){reasons.push(code);}});

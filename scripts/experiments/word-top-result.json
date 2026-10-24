@@ -1,0 +1,879 @@
+{
+  "authorityBoundary": "Bounded E12 frozen SRS experiment, not product/default/package/general-font parity acceptance. Project Control owns shared status.",
+  "selectedFactor": "K2-padding-half-top",
+  "factors": {
+    "T0-E11-control": {
+      "pages": 100,
+      "sha256": "945626f1792b2ea798a1b7f40514d8f0cd4baebc3dae135961cc42ffc8a4fe61",
+      "requirements": {
+        "sameWordPage": 357,
+        "remaining": [
+          {
+            "id": "REQ0280",
+            "pdfPage": 81,
+            "wordPage": 82,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -630.7888406043838
+          },
+          {
+            "id": "REQ0298",
+            "pdfPage": 83,
+            "wordPage": 84,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -613.5888406043841
+          },
+          {
+            "id": "REQ0314",
+            "pdfPage": 85,
+            "wordPage": 86,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -575.088840604384
+          },
+          {
+            "id": "REQ0324",
+            "pdfPage": 87,
+            "wordPage": 88,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -571.2388406043841
+          }
+        ],
+        "regressionsAgainstE11": []
+      },
+      "disposition": "control"
+    },
+    "T1-native-top": {
+      "pages": 100,
+      "sha256": "ed6fca58b260393ac429ca04735eec3742bd2d2b3b68b5a7907f0b43336083b8",
+      "requirements": {
+        "sameWordPage": 357,
+        "remaining": [
+          {
+            "id": "REQ0280",
+            "pdfPage": 81,
+            "wordPage": 82,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -630.8379999999996
+          },
+          {
+            "id": "REQ0298",
+            "pdfPage": 83,
+            "wordPage": 84,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -613.638
+          },
+          {
+            "id": "REQ0314",
+            "pdfPage": 85,
+            "wordPage": 86,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -575.1380000000001
+          },
+          {
+            "id": "REQ0324",
+            "pdfPage": 87,
+            "wordPage": 88,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -571.2880000000001
+          }
+        ],
+        "regressionsAgainstE11": []
+      },
+      "disposition": "not selected"
+    },
+    "T2-top-stroke": {
+      "pages": 100,
+      "sha256": "625a32c8bdf9bedf588e3f867442e497086d134f5d1bf6b6bd80647e1828539c",
+      "requirements": {
+        "sameWordPage": 343,
+        "remaining": [
+          {
+            "id": "REQ0313",
+            "pdfPage": 86,
+            "wordPage": 85,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 492.24199999999985
+          },
+          {
+            "id": "REQ0316",
+            "pdfPage": 87,
+            "wordPage": 86,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 485.7919999999998
+          },
+          {
+            "id": "REQ0322",
+            "pdfPage": 88,
+            "wordPage": 87,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 455.13200000000006
+          },
+          {
+            "id": "REQ0323",
+            "pdfPage": 88,
+            "wordPage": 87,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 455.26199999999994
+          },
+          {
+            "id": "REQ0328",
+            "pdfPage": 89,
+            "wordPage": 88,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 469.77200000000005
+          },
+          {
+            "id": "REQ0329",
+            "pdfPage": 89,
+            "wordPage": 88,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 469.76199999999994
+          },
+          {
+            "id": "REQ0334",
+            "pdfPage": 90,
+            "wordPage": 89,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 489.66200000000003
+          },
+          {
+            "id": "REQ0335",
+            "pdfPage": 90,
+            "wordPage": 89,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 489.5719999999999
+          },
+          {
+            "id": "REQ0340",
+            "pdfPage": 91,
+            "wordPage": 90,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 449.9119999999998
+          },
+          {
+            "id": "REQ0350",
+            "pdfPage": 93,
+            "wordPage": 92,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 441.20199999999994
+          },
+          {
+            "id": "REQ0351",
+            "pdfPage": 93,
+            "wordPage": 92,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 441.2319999999999
+          },
+          {
+            "id": "REQ0352",
+            "pdfPage": 93,
+            "wordPage": 92,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 441.23799999999983
+          },
+          {
+            "id": "REQ0345",
+            "pdfPage": 95,
+            "wordPage": 94,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 441.922
+          },
+          {
+            "id": "REQ0354",
+            "pdfPage": 96,
+            "wordPage": 95,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 471.4819999999999
+          },
+          {
+            "id": "REQ0355",
+            "pdfPage": 96,
+            "wordPage": 95,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 471.49199999999996
+          },
+          {
+            "id": "REQ0362",
+            "pdfPage": 97,
+            "wordPage": 96,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 412.832
+          },
+          {
+            "id": "REQ0365",
+            "pdfPage": 99,
+            "wordPage": 98,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 404.8520000000001
+          },
+          {
+            "id": "REQ0366",
+            "pdfPage": 100,
+            "wordPage": 99,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 399.65200000000004
+          }
+        ],
+        "regressionsAgainstE11": [
+          "REQ0313",
+          "REQ0316",
+          "REQ0322",
+          "REQ0323",
+          "REQ0328",
+          "REQ0329",
+          "REQ0334",
+          "REQ0335",
+          "REQ0340",
+          "REQ0350",
+          "REQ0351",
+          "REQ0352",
+          "REQ0345",
+          "REQ0354",
+          "REQ0355",
+          "REQ0362",
+          "REQ0365",
+          "REQ0366"
+        ]
+      },
+      "disposition": "not selected"
+    },
+    "T3-top-half-stroke": {
+      "pages": 100,
+      "sha256": "0401c66c9103b62e7f1d9938b8ae5db4b8e9900461bccd9d5dc120331f26b0f5",
+      "requirements": {
+        "sameWordPage": 343,
+        "remaining": [
+          {
+            "id": "REQ0313",
+            "pdfPage": 86,
+            "wordPage": 85,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 492.49199999999985
+          },
+          {
+            "id": "REQ0316",
+            "pdfPage": 87,
+            "wordPage": 86,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 486.0419999999998
+          },
+          {
+            "id": "REQ0322",
+            "pdfPage": 88,
+            "wordPage": 87,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 455.38200000000006
+          },
+          {
+            "id": "REQ0323",
+            "pdfPage": 88,
+            "wordPage": 87,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 455.51199999999994
+          },
+          {
+            "id": "REQ0328",
+            "pdfPage": 89,
+            "wordPage": 88,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 470.02200000000005
+          },
+          {
+            "id": "REQ0329",
+            "pdfPage": 89,
+            "wordPage": 88,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 470.01199999999994
+          },
+          {
+            "id": "REQ0334",
+            "pdfPage": 90,
+            "wordPage": 89,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 489.91200000000003
+          },
+          {
+            "id": "REQ0335",
+            "pdfPage": 90,
+            "wordPage": 89,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 489.8219999999999
+          },
+          {
+            "id": "REQ0340",
+            "pdfPage": 91,
+            "wordPage": 90,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 450.1619999999998
+          },
+          {
+            "id": "REQ0350",
+            "pdfPage": 93,
+            "wordPage": 92,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 441.45199999999994
+          },
+          {
+            "id": "REQ0351",
+            "pdfPage": 93,
+            "wordPage": 92,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 441.4819999999999
+          },
+          {
+            "id": "REQ0352",
+            "pdfPage": 93,
+            "wordPage": 92,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 441.48799999999983
+          },
+          {
+            "id": "REQ0345",
+            "pdfPage": 95,
+            "wordPage": 94,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 442.172
+          },
+          {
+            "id": "REQ0354",
+            "pdfPage": 96,
+            "wordPage": 95,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 471.7319999999999
+          },
+          {
+            "id": "REQ0355",
+            "pdfPage": 96,
+            "wordPage": 95,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 471.74199999999996
+          },
+          {
+            "id": "REQ0362",
+            "pdfPage": 97,
+            "wordPage": 96,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 413.082
+          },
+          {
+            "id": "REQ0365",
+            "pdfPage": 99,
+            "wordPage": 98,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 405.1020000000001
+          },
+          {
+            "id": "REQ0366",
+            "pdfPage": 100,
+            "wordPage": 99,
+            "delta": -1,
+            "baselineWordMinusPdfPt": 399.90200000000004
+          }
+        ],
+        "regressionsAgainstE11": [
+          "REQ0313",
+          "REQ0316",
+          "REQ0322",
+          "REQ0323",
+          "REQ0328",
+          "REQ0329",
+          "REQ0334",
+          "REQ0335",
+          "REQ0340",
+          "REQ0350",
+          "REQ0351",
+          "REQ0352",
+          "REQ0345",
+          "REQ0354",
+          "REQ0355",
+          "REQ0362",
+          "REQ0365",
+          "REQ0366"
+        ]
+      },
+      "disposition": "not selected"
+    },
+    "K1-padding-cut": {
+      "pages": 100,
+      "sha256": "991cc8eb39ff5b6eae15b30e9f36e592309deea55d228cdacbe8c033090c28fd",
+      "requirements": {
+        "sameWordPage": 357,
+        "remaining": [
+          {
+            "id": "REQ0280",
+            "pdfPage": 81,
+            "wordPage": 82,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -630.7888406043838
+          },
+          {
+            "id": "REQ0298",
+            "pdfPage": 83,
+            "wordPage": 84,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -613.5888406043841
+          },
+          {
+            "id": "REQ0314",
+            "pdfPage": 85,
+            "wordPage": 86,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -575.088840604384
+          },
+          {
+            "id": "REQ0324",
+            "pdfPage": 87,
+            "wordPage": 88,
+            "delta": 1,
+            "baselineWordMinusPdfPt": -571.2388406043841
+          }
+        ],
+        "regressionsAgainstE11": []
+      },
+      "disposition": "not selected"
+    },
+    "K2-padding-half-top": {
+      "pages": 100,
+      "sha256": "2218b60f89ca7ba68eb80d40e2cd5939e3e34f5fdfccb4f7a1d89052249c2028",
+      "requirements": {
+        "sameWordPage": 361,
+        "remaining": [],
+        "regressionsAgainstE11": []
+      },
+      "disposition": "selected"
+    }
+  },
+  "controlByteExactE11": true,
+  "inheritedE11CalibrationExact": true,
+  "pages": {
+    "after": 100,
+    "Word": 100
+  },
+  "sourceTextCoverage": {
+    "checked": 1814,
+    "failed": [],
+    "scope": "Plain text modulo whitespace and repeated copies, not complete glyph identity."
+  },
+  "images": {
+    "count": 371,
+    "sourceDimensionsOrderExact": true
+  },
+  "internalTargetPagesExist": 396,
+  "headingTableSeparations": [],
+  "unchangedCommonRowIntervals": 282,
+  "nativeRowIntervalErrorsPt": {
+    "meanAbsolute": 0.03241843971631597,
+    "maxAbsolute": 0.12999999999988177
+  },
+  "changedDistinctDrawLineSignatureNodes": [
+    "section-contents~toc"
+  ],
+  "paragraphs": {
+    "selectedNodes": 724,
+    "split": 26,
+    "singletonEnds": [],
+    "REQ0041": [
+      [
+        50,
+        12
+      ],
+      [
+        51,
+        32
+      ],
+      [
+        52,
+        32
+      ],
+      [
+        53,
+        2
+      ]
+    ]
+  },
+  "maxBodyTextBoxBottomPt": 763.39,
+  "raster": {
+    "pagesRendered": 100,
+    "contentChangedAbove775": [
+      9,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100
+    ],
+    "protected11to26ContentExact": true,
+    "footerChangedPages": [],
+    "headerBandChangedPages": []
+  },
+  "emptyPages": [],
+  "tests": {
+    "passed": 307,
+    "failed": 0,
+    "redFailures": 1
+  },
+  "diagnosis": {
+    "fourOriginalResiduals": [
+      {
+        "id": "REQ0280",
+        "before": {
+          "id": "REQ0280",
+          "oldPdfPage": 81,
+          "pdfPage": 81,
+          "wordPage": 82,
+          "delta": 1,
+          "baselineWordMinusPdfPt": -630.788841
+        },
+        "after": {
+          "id": "REQ0280",
+          "page": 82,
+          "baseline": 125.36799999999991
+        },
+        "Word": {
+          "id": "REQ0280",
+          "text": "REQ0280 ระบบต้องสำมำรถดูข้อมูลของ Risk ท่เี กิดขนึ้ ได ้",
+          "page": 82,
+          "top": 119.70128,
+          "bottom": 130.74127999999996,
+          "baseline": 128.17999999999995
+        }
+      },
+      {
+        "id": "REQ0298",
+        "before": {
+          "id": "REQ0298",
+          "oldPdfPage": 83,
+          "pdfPage": 83,
+          "wordPage": 84,
+          "delta": 1,
+          "baselineWordMinusPdfPt": -613.5888410000001
+        },
+        "after": {
+          "id": "REQ0298",
+          "page": 84,
+          "baseline": 125.36800000000002
+        },
+        "Word": {
+          "id": "REQ0298",
+          "text": "REQ0298 ระบบสำมำรถ Source Content เน้อื หำได้",
+          "page": 84,
+          "top": 119.70128,
+          "bottom": 130.74127999999996,
+          "baseline": 128.17999999999995
+        }
+      },
+      {
+        "id": "REQ0314",
+        "before": {
+          "id": "REQ0314",
+          "oldPdfPage": 85,
+          "pdfPage": 85,
+          "wordPage": 86,
+          "delta": 1,
+          "baselineWordMinusPdfPt": -575.0888410000001
+        },
+        "after": {
+          "id": "REQ0314",
+          "page": 86,
+          "baseline": 149.368
+        },
+        "Word": {
+          "id": "REQ0314",
+          "text": "REQ0314 เป็นหนำ้ Monitor & Management Project ISO29110",
+          "page": 86,
+          "top": 143.70128,
+          "bottom": 154.74127999999996,
+          "baseline": 152.17999999999995
+        }
+      },
+      {
+        "id": "REQ0324",
+        "before": {
+          "id": "REQ0324",
+          "oldPdfPage": 87,
+          "pdfPage": 87,
+          "wordPage": 88,
+          "delta": 1,
+          "baselineWordMinusPdfPt": -571.2388410000001
+        },
+        "after": {
+          "id": "REQ0324",
+          "page": 88,
+          "baseline": 125.36799999999991
+        },
+        "Word": {
+          "id": "REQ0324",
+          "text": "REQ0324 6. Correction Register",
+          "page": 88,
+          "top": 119.70128,
+          "bottom": 130.74127999999996,
+          "baseline": 128.17999999999995
+        }
+      }
+    ],
+    "causalFactors": "Top81 alone does not resolve starts. Full/half-stroke top with E11 old cut introduces18 previously aligned starts moving late. Fixing padding cut alone keeps357 starts. Correct cut plus source-derived81+.5/2 top gives361. No arbitrary REQ-specific keep rules.",
+    "paddingBug": "Old cut nextLineStart-topPadding excludes previous retained line plus bottom padding; subsequent whole-line carry moves one extra line. Correct cut nextLineStart+bottomPadding preserves the retained line and moves only intended suffix.",
+    "nativeTopSource": {
+      "sectionId": "body",
+      "nativeTopMarginTwips": 1620,
+      "bodyTopPt": 81.0,
+      "tableStrokePt": 0.5,
+      "hypothesis": "Frozen native body margin; isolate its table-start stroke envelope rather than change row metrics or force individual REQ breaks."
+    },
+    "nativeFirstHeaderTextBoxTopPt": 84.5,
+    "candidateFirstHeaderTextBoxTopPt": 84.5,
+    "note": "Native first header text box84.5pt comes from retained native geometry edges; native baseline differs by font metric and is not claimed exact."
+  },
+  "frozenInputsPreserved": true,
+  "frozenInputs": [
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\SRS-M2-boundary.pdf",
+      "sha256": "6899f2518264b018dd5fa7f66d3c2f06eefbb18c67dfbf5eeb02e2af9e0f5553",
+      "bytes": 2550363
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.pdf",
+      "sha256": "0cec02a089f19fea49721f86fe1635b8b1fa67987902dc16798fba7c1c651faa",
+      "bytes": 1313838
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.docx",
+      "sha256": "b6133d488ca6c182d8375467b82b1bc5b12b8e8b75600a9b6288852348edb6b8",
+      "bytes": 904660
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\inputs\\original-reference.pdf",
+      "sha256": "cd2fde00ea5273c889498eb490ff2e1fa945f7e4fbdc74cd65f25bbb9643ebf1",
+      "bytes": 2559955
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\resolved-document.json",
+      "sha256": "86df6e37ddbafc58ecf554070efe6affc091c9820238f6d7af230feeddff5047",
+      "bytes": 5254791
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\M2-boundary-draw.json",
+      "sha256": "edba941c796ced93defadcd221d77aaf47b46c0729ca846ec459e486c6d1f2e7",
+      "bytes": 889306
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\SRS-G1-table-start.pdf",
+      "sha256": "a1cce985ef4cbcaeebc308424a343ac396e6b31f3288a76a0f965a63a9afbab1"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\G1-table-start-draw.json",
+      "sha256": "004e22b47fb16a5797222efe75037b6363dad7fc412482ed888ac175f13d16a2"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\calibration.json",
+      "sha256": "6034edeefbaf5c6e9312e4b116c46adfaace0a61732797058d7d9bb10c9f9b5a"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\SRS-R2-twips.pdf",
+      "sha256": "9d6974bc8c126fefd7d9b8160a7cfcd4f5ae6d788941c12e366579b8ffc6cad0"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\R2-twips-draw.json",
+      "sha256": "41928b662e9b8e73fda0e7a46d6f2269f599ee68ca6c3fde5d51b276218d1d0d"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\calibration.json",
+      "sha256": "d96dbe0c7bd50eafa728d62d5a6383ac12910b3af7c471b6a7fe812547224a12"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e9\\SRS-F1-native-bottom.pdf",
+      "sha256": "d77b1b169553587d9e3e7bd571c7e76411b0ccb2168cd5b3a907590f56b198e8"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e9\\F1-native-bottom-draw.json",
+      "sha256": "e55ce8ff944e3e9f6e8ebe34c8b3125eaf1fbc91ab1c859547234dae5bf680cb"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e9\\calibration.json",
+      "sha256": "3447d089e0c0337ae97961195b9075d9a1ed3346d0820ce0baba7edc23615aa0"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e10\\diagnosis.json",
+      "sha256": "601d403a27c79592672b5dda08c87f0ad731d1e6583517606c1a4e875c57e317"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e10\\PDF-geometry.json",
+      "sha256": "09d8feb1996d003831623eeacdebe2e460725694966f248d95a45176daf10c04"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e10\\Word-geometry.json",
+      "sha256": "df5f39c0c0c86e94ce19073ce0806116516d49aa91cb33ffc451da667f769d50"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e10\\feature-lines.json",
+      "sha256": "a6b44a5daf1542911595a51c172663f80453d3ffef1432f9d09fdf062b5463a3"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e11\\SRS-V1-paragraph-minimum.pdf",
+      "sha256": "945626f1792b2ea798a1b7f40514d8f0cd4baebc3dae135961cc42ffc8a4fe61"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e11\\V1-paragraph-minimum-draw.json",
+      "sha256": "dc45cccec4b1ed5a3ae616e1d511bbe41b1021b564b98afc51cd774ed1d32667"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e11\\calibration.json",
+      "sha256": "36f72b924e810277dbf143efa90e6957cf84361ede031e1934d62f48815060c8"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e11\\requirement-pairs.json",
+      "sha256": "31b710c257a8f8c7182ce9a43457e0d141216c5d2838c790db26599d3d5e745f"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e11\\comparison-result.json",
+      "sha256": "cd3e1de8e88342b72c33118f1e2447ff965c014222f27e6db0d3bb1e8ae7d835"
+    }
+  ],
+  "limitations": [
+    "361 matching start pages does not establish all paragraph split points, glyph/baseline/image geometry or complete page similarity.",
+    "REQ0178 wrapping difference and body font-baseline offset remain separate.",
+    "Existing heading+minimum oversize preflight/rowGroups/merged cells/general fonts remain outside bounded scope."
+  ],
+  "selectedBodyTopPt": 81.25,
+  "sourceFiles": [
+    {
+      "path": "scripts/experiments/word-spacing-r1.mjs",
+      "sha256": "2900774a123bbbc180c345e1d6c3b1d4f3d579b1e52dab67d8bd762ee363b738"
+    },
+    {
+      "path": "scripts/experiments/word-top-audit.py",
+      "sha256": "8ae8d68e89e8b3acc8a753e7312add41b7cc179c42c782385c1ff7d9f9fbf756"
+    },
+    {
+      "path": "scripts/experiments/word-top-finalize.py",
+      "sha256": "c823d8f7160a5595ac9455a2b750ec737f720d1fd414a6d90fbf8801f70caa14"
+    },
+    {
+      "path": "scripts/experiments/word-top-prepare.py",
+      "sha256": "25d4e278b69d04e6f358e5c26c67047837aa4f01fc318c8559f1f33c2f5a5a5a"
+    },
+    {
+      "path": "src/layout/cellTableFlow.ts",
+      "sha256": "5714e477734a6feb193dac7126857150c84c57018dcc2a0c02b7df53b0c6f1b6"
+    },
+    {
+      "path": "tests/layout/paragraphWidowProbe.test.ts",
+      "sha256": "86efb1e9a4ac07c5cf03a0831a9ca16145b8a317aff243bab1f22236dba2b522"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e12\\SRS-K2-padding-half-top.pdf",
+      "sha256": "2218b60f89ca7ba68eb80d40e2cd5939e3e34f5fdfccb4f7a1d89052249c2028"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e12\\K2-padding-half-top-draw.json",
+      "sha256": "934ed4d7fa30cb82f8cfdde091e71b602abb68cc936d52d82901a2d8004adaa7"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e12\\calibration.json",
+      "sha256": "8b5208cfa88274572cafeaf2d8d723ae4c8afd76c0667aff9b251b68ef528253"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e12\\green-padding.json",
+      "sha256": "b381903ccb1cd498dbd4d04ae67b499f208f6843c16ab55cd2f7dca86ac2fe72"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e12\\red-padding.json",
+      "sha256": "2f34671ea483e7be5d680cb48fd50c722144e9865943bb76bcd31710de3102da"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e12\\plan.json",
+      "sha256": "88798e167c75f452a90fd2ba8c6d36809a8417021f6e82cfe2060d2419d542a8"
+    }
+  ],
+  "visualReview": {
+    "overviewSheets": 9,
+    "pagesCovered": 100,
+    "detailedSamePagePairs": [
+      53,
+      82,
+      84,
+      86,
+      88,
+      100
+    ],
+    "newClippingObserved": false,
+    "scope": "Full page overviews and selected detailed native comparisons; not every glyph at high resolution. Introduction11-26 retained through pixel equality."
+  },
+  "codeReview": {
+    "critical": 0,
+    "important": 0,
+    "scope": "Current opt-in paragraph cut, ordinary unmerged native SRS tables; frozen source/evidence audit. No default/general font acceptance.",
+    "existingOutOfScopeLimitation": "Heading plus requested paragraph minimum can exceed fresh-page capacity and fail existing preflight; rowGroups and merged-cell extensions are not accepted."
+  },
+  "proofBudgetDisposition": "Six complete PDF factors retained: four source-derived top probes, then two corrective factors after a padded regression proved an E11 cut correctness defect. All offline1GiB. No discarded/overwritten baseline or hidden forced REQ break."
+}

@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-Package `0.4.7` supports model19 Section instances: UUID `id`,
+Package `0.4.8` supports model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -22,6 +22,18 @@ reflow; an oversized number fails rather than guessing or retrying. Model18 keep
 its existing unscoped contract. Release identity is the matching annotated tag on
 the release snapshot; installation is separate. Shared contract: Project Control Section–Area Stage0–3.
 
+## DOCX development output in 0.4.8
+
+`createDocxEngine` exports the shared resolved document as DOCX with embedded
+fonts, tables, page bands, links and refreshable Word fields. Font signatures
+come from each embedded family's actual regular font, including Thai coverage.
+When both native shaping and segmentation capabilities are supplied, the writer
+uses measured line paragraphs and individually editable VML word boxes. Changes
+to text or fonts in Word may require regeneration to restore source layout.
+Native Word pagination and full PDF fidelity are not guaranteed. The private
+SRS PDF calibration probes remain opt-in experiments, separate from ordinary PDF
+output. See [template guide](docs/template-guide.md) for budgets and limitations.
+
 ## Internal task input reader
 
 `normalizeTaskInput(template, valueHandle, options)` validates model18/19
@@ -38,7 +50,7 @@ legacy prepared snapshot, renderer capability, public endpoint or PDF readiness 
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.7, prepared after release 0.4.3.
+Package version: 0.4.8, prepared after release 0.4.3.
 This package includes Section19, scoped contents, Format sizing v2, group-label
 spans, streamed task images/PDF and the opt-in height calculation below.
 Release identity requires the matching tagged snapshot and acceptance gates.

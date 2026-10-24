@@ -1,0 +1,193 @@
+{
+  "authorityBoundary": "Core bounded artifact experiment, not product/default acceptance. Project Control owns shared status.",
+  "controlByteExactE7": true,
+  "inheritedCalibrationExact": true,
+  "frozenInputsPreserved": true,
+  "selectedNativeRequirementTables": 26,
+  "factors": {
+    "R0-G1-control": {
+      "pages": 99,
+      "sha256": "a1cce985ef4cbcaeebc308424a343ac396e6b31f3288a76a0f965a63a9afbab1",
+      "requirements": {
+        "count": 361,
+        "orderExact": true,
+        "wordPageMinusPdfPage": {
+          "0": 240,
+          "1": 121
+        }
+      },
+      "commonConsecutiveRows": {
+        "count": 229,
+        "meanAbsolutePt": 0.5273013100436696,
+        "meanSignedPt": 0.5273013100436696,
+        "maxAbsolutePt": 0.7300000000000182,
+        "minSignedPt": 0.3999999999999204,
+        "maxSignedPt": 0.7300000000000182
+      },
+      "headingTableSeparations": [],
+      "sourceTextCoverage": {
+        "checked": 1814,
+        "failed": [],
+        "scope": "Per-node plain source text modulo whitespace and exact repeated copies, not all glyph identity."
+      },
+      "changedDistinctLineMetricNodes": [],
+      "imageCount": 371,
+      "imageSourceDimensionsOrderExact": true,
+      "emptyPages": [],
+      "internalDestinationsInBounds": 396
+    },
+    "R1-border": {
+      "pages": 99,
+      "sha256": "269cd7b79737183cae14bfe06106fac502add9160db08b5a16f3db71388195bc",
+      "requirements": {
+        "count": 361,
+        "orderExact": true,
+        "wordPageMinusPdfPage": {
+          "0": 266,
+          "1": 95
+        }
+      },
+      "commonConsecutiveRows": {
+        "count": 229,
+        "meanAbsolutePt": 0.03874235807860864,
+        "meanSignedPt": 0.027301310043669653,
+        "maxAbsolutePt": 0.2300000000000182,
+        "minSignedPt": -0.10000000000007958,
+        "maxSignedPt": 0.2300000000000182
+      },
+      "headingTableSeparations": [],
+      "sourceTextCoverage": {
+        "checked": 1814,
+        "failed": [],
+        "scope": "Per-node plain source text modulo whitespace and exact repeated copies, not all glyph identity."
+      },
+      "changedDistinctLineMetricNodes": [
+        "section-contents~toc"
+      ],
+      "imageCount": 371,
+      "imageSourceDimensionsOrderExact": true,
+      "emptyPages": [],
+      "internalDestinationsInBounds": 396
+    },
+    "R2-twips": {
+      "pages": 99,
+      "sha256": "9d6974bc8c126fefd7d9b8160a7cfcd4f5ae6d788941c12e366579b8ffc6cad0",
+      "requirements": {
+        "count": 361,
+        "orderExact": true,
+        "wordPageMinusPdfPage": {
+          "0": 266,
+          "1": 95
+        }
+      },
+      "commonConsecutiveRows": {
+        "count": 229,
+        "meanAbsolutePt": 0.030838427947598303,
+        "meanSignedPt": 0.00830567685589787,
+        "maxAbsolutePt": 0.1300000000000523,
+        "minSignedPt": -0.11000000000007049,
+        "maxSignedPt": 0.1300000000000523
+      },
+      "headingTableSeparations": [],
+      "sourceTextCoverage": {
+        "checked": 1814,
+        "failed": [],
+        "scope": "Per-node plain source text modulo whitespace and exact repeated copies, not all glyph identity."
+      },
+      "changedDistinctLineMetricNodes": [
+        "section-contents~toc"
+      ],
+      "imageCount": 371,
+      "imageSourceDimensionsOrderExact": true,
+      "emptyPages": [],
+      "internalDestinationsInBounds": 396
+    }
+  },
+  "rowMetricScope": "Same adjacent requirement rows, consecutive in same source table, remaining on one page in all four artifacts; matched common cohort. Relative REQ-baseline interval, not complete cell/glyph equality.",
+  "tests": {
+    "passed": 286,
+    "failed": 0,
+    "initialGreenAttempt": "Fixture files omitted by test launcher; ENOENT setup failures. Complete fixture copy rerun passes."
+  },
+  "footerPolicyChanged": false,
+  "limitations": [
+    "Native Word remains100pages; outputs99. No forced page-count match.",
+    "Row stroke and text twip rounding are tested separately; inline image native paragraph footprint may retain a residual.",
+    "Whole-page native fidelity, generic fonts and merged tables are not established."
+  ],
+  "R2CommonRowsImproved": 229,
+  "visualReview": {
+    "bodyPages": "27-99 in nine overview sheets",
+    "detailedPairs": [
+      "45/45",
+      "46/46",
+      "80/81",
+      "99/100"
+    ],
+    "newVisibleClippingObserved": false,
+    "scope": "Overview and selected detailed pairs, not all glyphs at high resolution.",
+    "tocPage9PairReviewed": true
+  },
+  "R2FooterRasterChanged": [],
+  "frozenInputs": [
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\SRS-M2-boundary.pdf",
+      "sha256": "6899f2518264b018dd5fa7f66d3c2f06eefbb18c67dfbf5eeb02e2af9e0f5553",
+      "bytes": 2550363
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.pdf",
+      "sha256": "0cec02a089f19fea49721f86fe1635b8b1fa67987902dc16798fba7c1c651faa",
+      "bytes": 1313838
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.docx",
+      "sha256": "b6133d488ca6c182d8375467b82b1bc5b12b8e8b75600a9b6288852348edb6b8",
+      "bytes": 904660
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\inputs\\original-reference.pdf",
+      "sha256": "cd2fde00ea5273c889498eb490ff2e1fa945f7e4fbdc74cd65f25bbb9643ebf1",
+      "bytes": 2559955
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\resolved-document.json",
+      "sha256": "86df6e37ddbafc58ecf554070efe6affc091c9820238f6d7af230feeddff5047",
+      "bytes": 5254791
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\M2-boundary-draw.json",
+      "sha256": "edba941c796ced93defadcd221d77aaf47b46c0729ca846ec459e486c6d1f2e7",
+      "bytes": 889306
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\SRS-G1-table-start.pdf",
+      "sha256": "a1cce985ef4cbcaeebc308424a343ac396e6b31f3288a76a0f965a63a9afbab1"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\G1-table-start-draw.json",
+      "sha256": "004e22b47fb16a5797222efe75037b6363dad7fc412482ed888ac175f13d16a2"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\calibration.json",
+      "sha256": "6034edeefbaf5c6e9312e4b116c46adfaace0a61732797058d7d9bb10c9f9b5a"
+    }
+  ],
+  "selectedFactor": "R2-twips",
+  "codeReview": {
+    "critical": 0,
+    "important": 0,
+    "minorFixed": "Finalizer now prefers scope-rows.json, matching current harness; legacy fallback retained.",
+    "disposition": "Retain bounded experiment only; generic fonts, merges, all-glyph fidelity, semantic links, footer capacity, packaging and integration not accepted."
+  },
+  "raster": {
+    "R1-border": {
+      "wholePageChangedRanges": "9 and45-99",
+      "protected11to26WholePageExact": true
+    },
+    "R2-twips": {
+      "wholePageChangedRanges": "9 and45-99",
+      "protected11to26WholePageExact": true
+    }
+  }
+}

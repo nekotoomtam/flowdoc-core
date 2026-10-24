@@ -1,5 +1,6 @@
+import { collectContents } from '../composition/contents.js';
 import { required } from './types.js';
-import { deriveHeaderSpace } from './geometry-policy.js';
+import { deriveHeaderSpace, deriveFooterSpace } from './geometry-policy.js';
 import { headerSpaceEligibility } from './header-space.js';
 import { Header, Footer, Paragraph, PageBreak, TableOfContents, Bookmark, SectionType, PageOrientation, type ISectionOptions, type FileChild } from 'docx';
 import { fail, type ExportIntent } from './types.js';
@@ -8,12 +9,18 @@ import { buildBodyFlow, structuralParagraph } from './tables.js';
 import { anchorBookmarks, bookmarkName, type NavigationContext } from './fields.js';
 import { buildBand, nativeRule } from './bands.js';
 import { textEnvelope, concreteFontBounds } from './font-envelope.js';
+import {hasReadingMeasurements,measuredReadingExtent} from './reading-measurements.js';
 const take = (r: any) => { if (!r.ok)
     fail(r.issues[0].code, r.issues[0].path, r.issues[0].message); return r.value; };
 export function buildSections(intent: ExportIntent) {
     const sections: ISectionOptions[] = [], receipts: any[] = [], anchors = anchorBookmarks(intent), nodes: any = intent.document.nodes, sourceSections = intent.document.sections as any[];
+    const emptyContents = new Set<string>((Object.values(nodes) as any[]).filter(n => intent.document.nodeModelVersion === 19 && n.type === 'table-of-contents' && collectContents(intent.document, n.props.scope?.kind === 'section' ? (intent.document.sourceMap as any)[n.id].sectionId : undefined).length === 0).map(n => n.id));
+    const visibleSections = new Set(sourceSections.filter(s => s.role === 'cover' || s.sourceKind === 'blank' || s.rootIds.some((id: string) => nodes[id].type !== 'page-break' && !emptyContents.has(id)) || intent.document.formatInstances?.some(f => f.sectionId === s.sectionId && f.sizing.mode === 'fixed')));
+    const omittedSections = sourceSections.filter(s => !visibleSections.has(s)).map(s => ({sectionId: s.sectionId, reason: 'no-layout-content'}));
+    if (!visibleSections.size) fail('DOCX_CAPABILITY_UNSUPPORTED', 'sections', 'Document has no layout content');
     let included = false, leadingExcluded = 0;
     for (const [i, s] of sourceSections.entries()) {
+        if (!visibleSections.has(s)) continue;
         const mode = s.numbering?.mode ?? (s.role === 'cover' ? 'exclude' : 'continue');
         if (mode === 'exclude') {
             if (included || s.role !== 'cover' && s.sourceKind !== 'blank')
@@ -24,21 +31,38 @@ export function buildSections(intent: ExportIntent) {
             included = true;
     }
     let firstIncluded = true, imageReferences = 0;
-    const hasScopedToc = sourceSections.some(s => s.rootIds.some((id: string) => nodes[id].type === 'table-of-contents' && nodes[id].props.scope?.kind === 'section'));
+    const hasScopedToc = sourceSections.some(s => s.rootIds.some((id: string) => nodes[id].type === 'table-of-contents' && !emptyContents.has(id) && nodes[id].props.scope?.kind === 'section'));
     for (const [index, s] of sourceSections.entries()) {
+        if (!visibleSections.has(s)) continue;
         const numbering = s.numbering ?? { mode: s.role === 'cover' ? 'exclude' : 'continue' }, mode = numbering.mode, hideNumbers = s.role === 'cover' || s.sourceKind === 'blank' || numbering.visibility === 'hide' || mode === 'exclude', page = s.page, pw = (page.orientation === 'portrait' ? 210 : 297) * 72 / 25.4, ph = (page.orientation === 'portrait' ? 297 : 210) * 72 / 25.4, sourceMargin = { top: toTwips(page.margin.top), right: toTwips(page.margin.right), bottom: toTwips(page.margin.bottom), left: toTwips(page.margin.left) }, margin: any = { ...sourceMargin, header: sourceMargin.top, footer: sourceMargin.bottom }, ctx: NavigationContext = { anchors, sectionName: bookmarkName('s', s.sectionId), leadingExcluded, hideNumbers, inBand: false };
         if (s.role === 'cover') {
             let used = 0;
+            const coverText=(id:string,width:number)=>{const n=nodes[id];if(n.props.heightMode==='fixed')return toPoints(n.props.height);const m=measuredReadingExtent(intent,'nodes',id,width);return m?Math.ceil(m.height*20)/20+m.lines:textEnvelope(intent,id,'nodes',width);};
             for (const id of s.rootIds) {
                 const n = nodes[id];
                 if (n.type === 'text-block')
-                    used += n.props.heightMode === 'fixed' ? toPoints(n.props.height) : textEnvelope(intent, id, 'nodes', pw - toPoints(page.margin.left) - toPoints(page.margin.right));
+                    used += coverText(id,pw - toPoints(page.margin.left) - toPoints(page.margin.right));
                 else if (n.type === 'image')
                     used += toPoints(n.props.height) + 1;
+                else if(n.type==='line')used+=nativeRule(n,pw-toPoints(page.margin.left)-toPoints(page.margin.right)).heightPt;
+                else if(n.type==='table'){
+                    const mapped=required(intent.tables.find(t=>t.nodeId===id),'cover.table');
+                    for(const rid of n.rowIds){let rowHeight=1;for(const [index,cid]of nodes[rid].cellIds.entries()){
+                        const cell=nodes[cid],padding=required(mapped.cells.find(c=>c.nodeId===cid),'cover.cell').paddingTwips,col=cell.props.columnIndex??index,span=cell.props.colSpan??1;
+                        if((cell.props.rowSpan??1)>1)fail('DOCX_CAPABILITY_UNSUPPORTED','nodes.'+cid,'Cover vertical merge height is not bounded');
+                        const width=(mapped.columnTwips.slice(col,col+span).reduce((a,b)=>a+b,0)-padding.left-padding.right)/20;
+                        let extent=(padding.top+padding.bottom)/20;
+                        for(const child of cell.childIds){const c=nodes[child];extent+=c.type==='image'?toPoints(c.props.height)+1:coverText(child,width);}
+                        rowHeight=Math.max(rowHeight,extent+(!cell.childIds.length||nodes[cell.childIds.at(-1)].type==='image'?1:0));
+                    }used+=rowHeight;}
+                    used+=1; // Native table closure/separator footprint.
+                }
                 else
-                    fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + id, 'Cover one-page envelope supports text/images only');
+                    fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + id, 'Cover content has no bounded one-page envelope');
             }
-            if (used > (ph - toPoints(page.margin.top) - toPoints(page.margin.bottom)) * .8)
+            // Measured content includes a point per native text line plus closing
+            // paragraph headroom; legacy unmeasured admission retains its 80% cap.
+            if (used+1 > (ph - toPoints(page.margin.top) - toPoints(page.margin.bottom)) * (hasReadingMeasurements(intent)?1:.8))
                 fail('DOCX_CAPABILITY_UNSUPPORTED', 'sections.' + index, 'Cover exceeds provisional one-page envelope');
         }
         const bandReceipt: any = {}, groups: any = {}, estimated: any = { ...sourceMargin };
@@ -75,6 +99,12 @@ export function buildSections(intent: ExportIntent) {
         margin.header = emptySpace.nativeDistanceTwips;
         bandReceipt.header.nativeDistanceTwips = margin.header;
         bandReceipt.header.emptySpace = emptySpace;
+        const footerBand = s.footer ?? (intent.document as any).footer, footerMode = bandReceipt.footer.mode;
+        const emptyFooterSpace = deriveFooterSpace({ effectiveFirstEmpty: !footerBand || !['all', 'first'].includes(footerMode), effectiveDefaultEmpty: !footerBand || !['all', 'continuation'].includes(footerMode), previousDistanceTwips: margin.footer });
+        // Even an empty native footer has a paragraph. Keep it below the body edge.
+        margin.footer = emptyFooterSpace.nativeDistanceTwips;
+        bandReceipt.footer.nativeDistanceTwips = margin.footer;
+        bandReceipt.footer.emptySpace = emptyFooterSpace;
         const capacity = (first: boolean) => { const visible = s.headerMode === 'all' || s.headerMode === (first ? 'first' : 'continuation'), top = dynamicHeader && visible ? estimated.top : margin.top; return { topTwips: top, bottomTwips: margin.bottom, headerVisible: bandReceipt.header.spacePolicy !== 'none' && bandReceipt.header.mode !== 'none' && visible, bodyHeightPt: (ph * 20 - top - margin.bottom) / 20, estimated: true, wordFootprintVerified: false }; };
         const capacityByPageType = { first: capacity(true), continuation: capacity(false) }, bodyHeight = Math.min(capacityByPageType.first.bodyHeightPt, capacityByPageType.continuation.bodyHeightPt), originalBody = (ph * 20 - sourceMargin.top - sourceMargin.bottom) / 20;
         if (bodyHeight <= 0 || (estimated.top - sourceMargin.top + estimated.bottom - sourceMargin.bottom) / 20 > originalBody * .4 + 1e-6)
@@ -99,7 +129,7 @@ export function buildSections(intent: ExportIntent) {
             return [new Paragraph({ children: [new PageBreak()], run: { size: 2, sizeComplexScript: 2 }, spacing: { before: 0, after: 0, line: 20 } })]; if (n.type === 'line')
             return [nativeRule(n, pw - toPoints(page.margin.left) - toPoints(page.margin.right)).paragraph]; if (n.type === 'table-of-contents')
             return [new TableOfContents('Contents', { headingStyleRange: '1-3', useAppliedParagraphOutlineLevel: true, hyperlink: true, beginDirty: true, ...(n.props.scope?.kind === 'section' ? { entriesFromBookmark: ctx.sectionName } : {}) })]; fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + id, 'Unknown body capability'); };
-        const flow = take(buildBodyFlow(intent, { sectionId: s.sectionId, navigation: ctx, special }));
+        const flow = take(buildBodyFlow(intent, { sectionId: s.sectionId, navigation: ctx, special, omittedRootIds: emptyContents }));
         let children: FileChild[] = flow.children;
         if (!children.length)
             children = [structuralParagraph()];
@@ -115,5 +145,5 @@ export function buildSections(intent: ExportIntent) {
         sections.push({ properties: { type: SectionType.NEXT_PAGE, titlePage: true, page: { size: { width: Math.round(210 * 72 / 25.4 * 20), height: Math.round(297 * 72 / 25.4 * 20), orientation: page.orientation === 'portrait' ? PageOrientation.PORTRAIT : PageOrientation.LANDSCAPE }, margin, pageNumbers: startAt === undefined ? {} : { start: startAt } } }, headers: groups.header, footers: groups.footer, children });
         receipts.push({ sectionId: s.sectionId, role: s.role, sourceKind: s.sourceKind, numbering: { ...numbering, visibility: hideNumbers ? 'hide' : 'show', nativeStart: startAt }, header: bandReceipt.header, footer: bandReceipt.footer, sourceMarginTwips: sourceMargin, reservedMarginTwips: margin, nativeMarginTwips: { ...margin }, estimatedMaximumMarginTwips: { ...estimated }, capacityByPageType, maximumBandReservation: !dynamicHeader, bodyHeightBasis: 'minimum-estimated-page-type', bodyHeightPt: bodyHeight, structuralScopeParagraphs: hasScopedToc ? 2 : 0, tableSpaces: flow.receipt.tableSpaces, tableSeparators: flow.receipt.tableSeparators, wordPaginationVerified: false });
     }
-    return { sections, receipts, anchors: [...anchors].map(([source]) => ({ source, name: bookmarkName('a', source) })), leadingExcluded, imageReferences };
+    return { sections, receipts, omittedSections, anchors: [...anchors].map(([source]) => ({ source, name: bookmarkName('a', source) })), leadingExcluded, imageReferences };
 }

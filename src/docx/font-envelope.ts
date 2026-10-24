@@ -3,6 +3,7 @@ import type { ExportIntent } from './types.js';
 import { fail } from './types.js';
 import { intentResourceBytes } from './profile.js';
 import { fieldDigitBudget } from './fields.js';
+import {measuredReadingExtent} from './reading-measurements.js';
 export function concreteFontBounds(intent: ExportIntent, fontId: string, sizeHalfPoints: number) {
     const b = Buffer.from(intentResourceBytes(intent, 'font', fontId)), tables = new Map<string, {
         o: number;
@@ -22,7 +23,10 @@ export function textEnvelope(intent: ExportIntent, nodeId: string, scope: string
     const block = intent.textBlocks.find(t => t.nodeId === nodeId && t.scope === scope)!, style = required(intent.styles[block.styleId], 'styles'), { maxWidth, maxHeight } = concreteFontBounds(intent, style.font.id, style.sizeHalfPoints);
     const lines = block.text.split('\n'), fields = block.spans.filter(s => s.type === 'system-page-field').length;
     const digits = fieldDigitBudget(intent);
-    if (lines.some(line => (line.length + fields * digits) * maxWidth > width))
+    if (lines.some(line => (line.length + fields * digits) * maxWidth > width)) {
+        const measured=measuredReadingExtent(intent,scope,nodeId,width);
+        if(measured)return measured.height;
         fail('DOCX_CAPABILITY_UNSUPPORTED', scope + '.' + nodeId, 'Wrapping is outside the provisional band/cover envelope');
+    }
     return lines.length * Math.max(style.line.twips / 20, maxHeight);
 }

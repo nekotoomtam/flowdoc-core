@@ -15,12 +15,15 @@ export function anchorBookmarks(intent: ExportIntent) { const out = new Map<stri
     if (node.type === 'text-block' && node.props.anchorId)
         out.set(node.props.anchorId, new Bookmark({ id: bookmarkName('a', node.props.anchorId), children: [] })); return out; }
 const mark = (kind: string) => new BuilderElement({ name: 'w:fldChar', attributes: { type: { key: 'w:fldCharType', value: kind }, ...(kind === 'begin' ? { dirty: { key: 'w:dirty', value: true } } : {}) } });
-export function pageField(field: string, run: IRunStylePropertiesOptions, ctx: NavigationContext): Run {
+export function pageField(field: string, run: IRunStylePropertiesOptions, ctx: NavigationContext,positionHalfPoints?:number): Run {
+    // The packer expands PAGE/NUMPAGES into following runs by cloning options;
+    // constructor options must carry the position to every instruction/result.
+    const positioned:IRunStylePropertiesOptions=positionHalfPoints===undefined?run:{...run,position:`${positionHalfPoints/2}pt`};
     if (field === 'current')
-        return new Run({ ...run, children: [PageNumber.CURRENT] });
+        return new Run({ ...positioned, children: [PageNumber.CURRENT] });
     if (!ctx.leadingExcluded)
-        return new Run({ ...run, children: [PageNumber.TOTAL_PAGES] });
-    return new Run({ ...run, children: [mark('begin'), new StringContainer('w:instrText', '= '), PageNumber.TOTAL_PAGES, new StringContainer('w:instrText', ' - ' + ctx.leadingExcluded + ' '), mark('separate'), mark('end')] });
+        return new Run({ ...positioned, children: [PageNumber.TOTAL_PAGES] });
+    return new Run({ ...positioned, children: [mark('begin'), new StringContainer('w:instrText', '= '), PageNumber.TOTAL_PAGES, new StringContainer('w:instrText', ' - ' + ctx.leadingExcluded + ' '), mark('separate'), mark('end')] });
 }
 export function sourceGraph(intent: ExportIntent, scope = 'nodes'): any { if (scope === 'nodes')
     return intent.document.nodes; if (!/^(?:sections\.\d+\.(?:header|footer)|header|footer)\.nodes$/.test(scope))

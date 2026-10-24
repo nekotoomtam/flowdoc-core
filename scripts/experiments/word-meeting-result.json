@@ -1,0 +1,2865 @@
+{
+  "authorityBoundary": "Core experimental result; Project Control owns shared status. No general Word rule or integration.",
+  "inputs": {
+    "Word": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.pdf",
+      "sha256": "0cec02a089f19fea49721f86fe1635b8b1fa67987902dc16798fba7c1c651faa",
+      "pages": 100,
+      "bytes": 1313838
+    },
+    "C2": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e4\\SRS-C2-combined.pdf",
+      "sha256": "deb759b01315760c0a3b71c5eba3390fce7bc7ea2f3a81a9b0b399e5f1db6e73",
+      "pages": 98,
+      "bytes": 2550363
+    },
+    "M1-paragraph": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\SRS-M1-paragraph.pdf",
+      "sha256": "a2db32c11c5731e8326ae836ab88fc649256542489803f6a718b1f368d3f78cb",
+      "pages": 98,
+      "bytes": 2550363
+    },
+    "M2-boundary": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\SRS-M2-boundary.pdf",
+      "sha256": "6899f2518264b018dd5fa7f66d3c2f06eefbb18c67dfbf5eeb02e2af9e0f5553",
+      "pages": 98,
+      "bytes": 2550363
+    }
+  },
+  "metrics": {
+    "introduction": {
+      "C2": {
+        "matched": 111,
+        "samePage": 111,
+        "meanAbsolutePt": 0.5615587387387472,
+        "maxAbsolutePt": 2.849999999999909,
+        "pairs": [
+          {
+            "key": "1011ProjectPlan",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.5100000000000477
+          },
+          {
+            "key": "1013TaskAssignment",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.49000000000006594
+          },
+          {
+            "key": "101ProjectManagementPM",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.4800000000000182
+          },
+          {
+            "key": "1024UnitTestIntegrationTestAcceptanceTest",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.45000000000015916
+          },
+          {
+            "key": "102SoftwareImplementationSI",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.5200000000000955
+          },
+          {
+            "key": "1031LevelXP",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.4800000000000182
+          },
+          {
+            "key": "1032BadgesAchievements",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.41000000000008185
+          },
+          {
+            "key": "1033Leaderboard",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.46000000000015007
+          },
+          {
+            "key": "1034Interface",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.39000000000010004
+          },
+          {
+            "key": "103GamificationSystem",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.43000000000006366
+          },
+          {
+            "key": "1043ISOIEC29110",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4600000000000364
+          },
+          {
+            "key": "104Dashboard",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.44399999999996
+          },
+          {
+            "key": "1051Authentication",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.5600000000000591
+          },
+          {
+            "key": "1052RoleProjectManagerDeveloperQA",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4900000000001228
+          },
+          {
+            "key": "10REQUIREMENTSSCOPE",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.46800500000006195
+          },
+          {
+            "key": "11PRODUCTFUNCTIONS",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.45800500000007105
+          },
+          {
+            "key": "1BusinessAnalyst",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.20000000000004547
+          },
+          {
+            "key": "1INTRODUCTION",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.46800500000006195
+          },
+          {
+            "key": "1QualityAssurance",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "1SoftwareTester",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": -1.3659999999999854
+          },
+          {
+            "key": "22Gamification",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.49000000000006594
+          },
+          {
+            "key": "2ExecutiveSecretary",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "2PURPOSE",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.41800500000010743
+          },
+          {
+            "key": "2ProjectCoordinator",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "311ProjectPlan",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5299999999999727
+          },
+          {
+            "key": "313TaskAssignment",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5099999999999909
+          },
+          {
+            "key": "31ProjectManagementPM",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4800000000001319
+          },
+          {
+            "key": "324UnitTestIntegrationTestAcceptanceTest",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.47000000000014097
+          },
+          {
+            "key": "32SoftwareImplementationSI",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5399999999999636
+          },
+          {
+            "key": "331LevelXP",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5000000000000568
+          },
+          {
+            "key": "332BadgesAchievements",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.43000000000006366
+          },
+          {
+            "key": "333Leaderboard",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4800000000000182
+          },
+          {
+            "key": "334Interface",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5100000000000477
+          },
+          {
+            "key": "33GamificationSystem",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4500000000001023
+          },
+          {
+            "key": "343ISOIEC29110",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4700000000000273
+          },
+          {
+            "key": "34Dashboard",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.44000000000005457
+          },
+          {
+            "key": "351Authentication",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4500000000000455
+          },
+          {
+            "key": "352RoleProjectManagerDeveloperQA",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5000000000001137
+          },
+          {
+            "key": "3ProjectManager",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "3UXUIDesign",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.22000000000008413
+          },
+          {
+            "key": "4BusinessAnalyst",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.20000000000015916
+          },
+          {
+            "key": "4KEYDEFINITIONS",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.43800500000008924
+          },
+          {
+            "key": "5DatabaseAdministrator",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.24000000000006594
+          },
+          {
+            "key": "5KEYACRONYMSANDABBREVIATIONS",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.10199499999987438
+          },
+          {
+            "key": "61httpstttbrotherboxcoms05yta7orieg9rxvtdeqphaesn17d8g4h",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.3089999999999691
+          },
+          {
+            "key": "62httpstttbrotherboxcomsu80hs0b93kt9a8rmnhgtcqum58trxb60",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.2689999999999486
+          },
+          {
+            "key": "63httpstttbrotherboxcoms5a2bym1xpousvuokfufsws9oljyb92o8",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.3489999999999327
+          },
+          {
+            "key": "64httpstttbrotherboxcoms398x9ve5odoi1aw27xq9zjbwamncufp0",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.30899999999991223
+          },
+          {
+            "key": "65httpstttbrotherboxcomsszwuwr58jdy27g5rf44wpc9pr36o4f6o",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.40899999999993497
+          },
+          {
+            "key": "6REFERENCES",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.011994999999956235
+          },
+          {
+            "key": "6UXUIDesign",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.22000000000002728
+          },
+          {
+            "key": "71Introduction",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.09999999999990905
+          },
+          {
+            "key": "72ProjectOverview",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.11999999999989086
+          },
+          {
+            "key": "73SystemObjectives",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.16999999999984539
+          },
+          {
+            "key": "74SystemScope",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.06999999999993634
+          },
+          {
+            "key": "75SystemArchitectureFeatures",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.08999999999991815
+          },
+          {
+            "key": "76ISOIEC29110",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5299999999999727
+          },
+          {
+            "key": "77TargetUsers",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5099999999999909
+          },
+          {
+            "key": "78LimitationsRisks",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.4900000000001228
+          },
+          {
+            "key": "79DevelopmentPlan",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.4700000000000273
+          },
+          {
+            "key": "7DOCUMENTOVERVIEW",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.07199499999995851
+          },
+          {
+            "key": "8PROJECTOVERVIEW",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5280050000000074
+          },
+          {
+            "key": "92Gamification",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.5299999999999727
+          },
+          {
+            "key": "9PURPOSE",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.39800500000001193
+          },
+          {
+            "key": "CMProcess",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": -1.2399999999998954
+          },
+          {
+            "key": "CorrectionRegister",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.06999999999993634
+          },
+          {
+            "key": "DCTDataCollectionTemplate",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.049999999999954525
+          },
+          {
+            "key": "DarftTOR",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.009999999999877218
+          },
+          {
+            "key": "Federation",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": -0.009999999999990905
+          },
+          {
+            "key": "ISO29110",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.06999999999999318
+          },
+          {
+            "key": "ISOIEC29110PMSI",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.4600000000000364
+          },
+          {
+            "key": "ISOIEC29110ProjectManagementSoftware",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.4500000000001023
+          },
+          {
+            "key": "Implementation",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.5000000000000568
+          },
+          {
+            "key": "LevelupXPLeaderboard",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.42000000000007276
+          },
+          {
+            "key": "MOMMinutesofMeeting",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": 1.1368683772161603e-13
+          },
+          {
+            "key": "Online2806256817001800",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": -2.8299999999999272
+          },
+          {
+            "key": "PMProcess",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.08999999999991815
+          },
+          {
+            "key": "ProjectManagementPM",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5000000000000568
+          },
+          {
+            "key": "ProjectManagerDeveloperQA",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5600000000000591
+          },
+          {
+            "key": "Requirement1",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.25
+          },
+          {
+            "key": "Requirement2",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": -1.3099999999999454
+          },
+          {
+            "key": "Requirement3",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -2.8299999999999272
+          },
+          {
+            "key": "Requirement4",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": -2.8059999999999263
+          },
+          {
+            "key": "Requirement5",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -1.25
+          },
+          {
+            "key": "Requirement6",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": -1.3299999999999272
+          },
+          {
+            "key": "SDDSoftwareDesignDocument",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.5899999999999181
+          },
+          {
+            "key": "SIProcess",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.08999999999991815
+          },
+          {
+            "key": "SOWStatementofwork",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.01999999999998181
+          },
+          {
+            "key": "SRSSoftwareRequirementSpecification",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.5699999999999363
+          },
+          {
+            "key": "SapphireTTTSpaceship",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.029999999999972715
+          },
+          {
+            "key": "SoftwareImplementationSI",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.43000000000006366
+          },
+          {
+            "key": "Spaceship",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": -0.07999999999992724
+          },
+          {
+            "key": "Spaceship1706256809301540",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -1.240000000000009
+          },
+          {
+            "key": "StageMonitoring",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": 0.04000000000007731
+          },
+          {
+            "key": "TORTermsofReference",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.01999999999998181
+          },
+          {
+            "key": "TTTSpaceship0207256809301400",
+            "candidatePage": 25,
+            "wordPage": 25,
+            "deltaPt": -1.3199999999999363
+          },
+          {
+            "key": "TTTSpaceship0306256810001500",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -2.849999999999909
+          },
+          {
+            "key": "TTTSpaceship0407256813301430",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": -1.2299999999999045
+          },
+          {
+            "key": "TTTSpaceship0506256811001400",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": -1.2099999999999795
+          },
+          {
+            "key": "TTTSpaceship1006256809301620",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.2899999999999636
+          },
+          {
+            "key": "TTTSpaceship1306256811001605",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": -1.2899999999999636
+          },
+          {
+            "key": "TTTSpaceship1906256816301810",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -2.8199999999999363
+          },
+          {
+            "key": "TTTSpaceship2005256813301630",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.26000000000004775
+          },
+          {
+            "key": "TTTSpaceship2105256813301540",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.3000000000000682
+          },
+          {
+            "key": "TTTSpaceship2406256809301600",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": -1.3199999999999363
+          },
+          {
+            "key": "TTTSpaceship2705256809301510",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": -1.2999999999999545
+          },
+          {
+            "key": "TTTSpaceship2706256809301440",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": -1.2299999999999045
+          },
+          {
+            "key": "TTTSpaceship2905256813301515",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -1.25
+          },
+          {
+            "key": "Timeline",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": 1.1368683772161603e-13
+          },
+          {
+            "key": "Timesheet",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": 0.07000000000005002
+          },
+          {
+            "key": "WorkFlowMappingISO29110",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.2899999999999636
+          }
+        ]
+      },
+      "M1-paragraph": {
+        "matched": 111,
+        "samePage": 111,
+        "meanAbsolutePt": 0.345342522522531,
+        "maxAbsolutePt": 0.849999999999909,
+        "pairs": [
+          {
+            "key": "1011ProjectPlan",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.5100000000000477
+          },
+          {
+            "key": "1013TaskAssignment",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.49000000000006594
+          },
+          {
+            "key": "101ProjectManagementPM",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.4800000000000182
+          },
+          {
+            "key": "1024UnitTestIntegrationTestAcceptanceTest",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.45000000000015916
+          },
+          {
+            "key": "102SoftwareImplementationSI",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.5200000000000955
+          },
+          {
+            "key": "1031LevelXP",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.4800000000000182
+          },
+          {
+            "key": "1032BadgesAchievements",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.41000000000008185
+          },
+          {
+            "key": "1033Leaderboard",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.46000000000015007
+          },
+          {
+            "key": "1034Interface",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.39000000000010004
+          },
+          {
+            "key": "103GamificationSystem",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.43000000000006366
+          },
+          {
+            "key": "1043ISOIEC29110",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4600000000000364
+          },
+          {
+            "key": "104Dashboard",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.44399999999996
+          },
+          {
+            "key": "1051Authentication",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.5600000000000591
+          },
+          {
+            "key": "1052RoleProjectManagerDeveloperQA",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4900000000001228
+          },
+          {
+            "key": "10REQUIREMENTSSCOPE",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.46800500000006195
+          },
+          {
+            "key": "11PRODUCTFUNCTIONS",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.45800500000007105
+          },
+          {
+            "key": "1BusinessAnalyst",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.20000000000004547
+          },
+          {
+            "key": "1INTRODUCTION",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.46800500000006195
+          },
+          {
+            "key": "1QualityAssurance",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "1SoftwareTester",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": -0.36599999999998545
+          },
+          {
+            "key": "22Gamification",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.49000000000006594
+          },
+          {
+            "key": "2ExecutiveSecretary",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "2PURPOSE",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.41800500000010743
+          },
+          {
+            "key": "2ProjectCoordinator",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "311ProjectPlan",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5299999999999727
+          },
+          {
+            "key": "313TaskAssignment",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5099999999999909
+          },
+          {
+            "key": "31ProjectManagementPM",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4800000000001319
+          },
+          {
+            "key": "324UnitTestIntegrationTestAcceptanceTest",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.47000000000014097
+          },
+          {
+            "key": "32SoftwareImplementationSI",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5399999999999636
+          },
+          {
+            "key": "331LevelXP",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5000000000000568
+          },
+          {
+            "key": "332BadgesAchievements",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.43000000000006366
+          },
+          {
+            "key": "333Leaderboard",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4800000000000182
+          },
+          {
+            "key": "334Interface",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5100000000000477
+          },
+          {
+            "key": "33GamificationSystem",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4500000000001023
+          },
+          {
+            "key": "343ISOIEC29110",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4700000000000273
+          },
+          {
+            "key": "34Dashboard",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.44000000000005457
+          },
+          {
+            "key": "351Authentication",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4500000000000455
+          },
+          {
+            "key": "352RoleProjectManagerDeveloperQA",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5000000000001137
+          },
+          {
+            "key": "3ProjectManager",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "3UXUIDesign",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.22000000000008413
+          },
+          {
+            "key": "4BusinessAnalyst",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.20000000000015916
+          },
+          {
+            "key": "4KEYDEFINITIONS",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.43800500000008924
+          },
+          {
+            "key": "5DatabaseAdministrator",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.24000000000006594
+          },
+          {
+            "key": "5KEYACRONYMSANDABBREVIATIONS",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.10199499999987438
+          },
+          {
+            "key": "61httpstttbrotherboxcoms05yta7orieg9rxvtdeqphaesn17d8g4h",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.3089999999999691
+          },
+          {
+            "key": "62httpstttbrotherboxcomsu80hs0b93kt9a8rmnhgtcqum58trxb60",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.2689999999999486
+          },
+          {
+            "key": "63httpstttbrotherboxcoms5a2bym1xpousvuokfufsws9oljyb92o8",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.3489999999999327
+          },
+          {
+            "key": "64httpstttbrotherboxcoms398x9ve5odoi1aw27xq9zjbwamncufp0",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.30899999999991223
+          },
+          {
+            "key": "65httpstttbrotherboxcomsszwuwr58jdy27g5rf44wpc9pr36o4f6o",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.40899999999993497
+          },
+          {
+            "key": "6REFERENCES",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.011994999999956235
+          },
+          {
+            "key": "6UXUIDesign",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.22000000000002728
+          },
+          {
+            "key": "71Introduction",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.09999999999990905
+          },
+          {
+            "key": "72ProjectOverview",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.11999999999989086
+          },
+          {
+            "key": "73SystemObjectives",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.16999999999984539
+          },
+          {
+            "key": "74SystemScope",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.06999999999993634
+          },
+          {
+            "key": "75SystemArchitectureFeatures",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.08999999999991815
+          },
+          {
+            "key": "76ISOIEC29110",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5299999999999727
+          },
+          {
+            "key": "77TargetUsers",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5099999999999909
+          },
+          {
+            "key": "78LimitationsRisks",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.4900000000001228
+          },
+          {
+            "key": "79DevelopmentPlan",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.4700000000000273
+          },
+          {
+            "key": "7DOCUMENTOVERVIEW",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.07199499999995851
+          },
+          {
+            "key": "8PROJECTOVERVIEW",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5280050000000074
+          },
+          {
+            "key": "92Gamification",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.5299999999999727
+          },
+          {
+            "key": "9PURPOSE",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.39800500000001193
+          },
+          {
+            "key": "CMProcess",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": -0.2399999999998954
+          },
+          {
+            "key": "CorrectionRegister",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.06999999999993634
+          },
+          {
+            "key": "DCTDataCollectionTemplate",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.049999999999954525
+          },
+          {
+            "key": "DarftTOR",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.009999999999877218
+          },
+          {
+            "key": "Federation",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": -0.009999999999990905
+          },
+          {
+            "key": "ISO29110",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.06999999999999318
+          },
+          {
+            "key": "ISOIEC29110PMSI",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.4600000000000364
+          },
+          {
+            "key": "ISOIEC29110ProjectManagementSoftware",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.4500000000001023
+          },
+          {
+            "key": "Implementation",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.5000000000000568
+          },
+          {
+            "key": "LevelupXPLeaderboard",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.42000000000007276
+          },
+          {
+            "key": "MOMMinutesofMeeting",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": 1.1368683772161603e-13
+          },
+          {
+            "key": "Online2806256817001800",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": -0.8299999999999272
+          },
+          {
+            "key": "PMProcess",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.08999999999991815
+          },
+          {
+            "key": "ProjectManagementPM",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5000000000000568
+          },
+          {
+            "key": "ProjectManagerDeveloperQA",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5600000000000591
+          },
+          {
+            "key": "Requirement1",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.25
+          },
+          {
+            "key": "Requirement2",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": -0.30999999999994543
+          },
+          {
+            "key": "Requirement3",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -0.8299999999999272
+          },
+          {
+            "key": "Requirement4",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": -0.8059999999999263
+          },
+          {
+            "key": "Requirement5",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -0.25
+          },
+          {
+            "key": "Requirement6",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": -0.32999999999992724
+          },
+          {
+            "key": "SDDSoftwareDesignDocument",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.5899999999999181
+          },
+          {
+            "key": "SIProcess",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.08999999999991815
+          },
+          {
+            "key": "SOWStatementofwork",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.01999999999998181
+          },
+          {
+            "key": "SRSSoftwareRequirementSpecification",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.5699999999999363
+          },
+          {
+            "key": "SapphireTTTSpaceship",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.029999999999972715
+          },
+          {
+            "key": "SoftwareImplementationSI",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.43000000000006366
+          },
+          {
+            "key": "Spaceship",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": -0.07999999999992724
+          },
+          {
+            "key": "Spaceship1706256809301540",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -0.2400000000000091
+          },
+          {
+            "key": "StageMonitoring",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": 0.04000000000007731
+          },
+          {
+            "key": "TORTermsofReference",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.01999999999998181
+          },
+          {
+            "key": "TTTSpaceship0207256809301400",
+            "candidatePage": 25,
+            "wordPage": 25,
+            "deltaPt": -0.31999999999993634
+          },
+          {
+            "key": "TTTSpaceship0306256810001500",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -0.849999999999909
+          },
+          {
+            "key": "TTTSpaceship0407256813301430",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": -0.2299999999999045
+          },
+          {
+            "key": "TTTSpaceship0506256811001400",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": -0.20999999999997954
+          },
+          {
+            "key": "TTTSpaceship1006256809301620",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.2899999999999636
+          },
+          {
+            "key": "TTTSpaceship1306256811001605",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": -0.2899999999999636
+          },
+          {
+            "key": "TTTSpaceship1906256816301810",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -0.8199999999999363
+          },
+          {
+            "key": "TTTSpaceship2005256813301630",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.26000000000004775
+          },
+          {
+            "key": "TTTSpaceship2105256813301540",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.3000000000000682
+          },
+          {
+            "key": "TTTSpaceship2406256809301600",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": -0.31999999999993634
+          },
+          {
+            "key": "TTTSpaceship2705256809301510",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": -0.2999999999999545
+          },
+          {
+            "key": "TTTSpaceship2706256809301440",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": -0.2299999999999045
+          },
+          {
+            "key": "TTTSpaceship2905256813301515",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -0.25
+          },
+          {
+            "key": "Timeline",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": 1.1368683772161603e-13
+          },
+          {
+            "key": "Timesheet",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": 0.07000000000005002
+          },
+          {
+            "key": "WorkFlowMappingISO29110",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.2899999999999636
+          }
+        ]
+      },
+      "M2-boundary": {
+        "matched": 111,
+        "samePage": 111,
+        "meanAbsolutePt": 0.30891009009011716,
+        "maxAbsolutePt": 0.5899999999999181,
+        "pairs": [
+          {
+            "key": "1011ProjectPlan",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.5100000000000477
+          },
+          {
+            "key": "1013TaskAssignment",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.49000000000006594
+          },
+          {
+            "key": "101ProjectManagementPM",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.4800000000000182
+          },
+          {
+            "key": "1024UnitTestIntegrationTestAcceptanceTest",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.45000000000015916
+          },
+          {
+            "key": "102SoftwareImplementationSI",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.5200000000000955
+          },
+          {
+            "key": "1031LevelXP",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.4800000000000182
+          },
+          {
+            "key": "1032BadgesAchievements",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.41000000000008185
+          },
+          {
+            "key": "1033Leaderboard",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.46000000000015007
+          },
+          {
+            "key": "1034Interface",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.39000000000010004
+          },
+          {
+            "key": "103GamificationSystem",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.43000000000006366
+          },
+          {
+            "key": "1043ISOIEC29110",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4600000000000364
+          },
+          {
+            "key": "104Dashboard",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.44399999999996
+          },
+          {
+            "key": "1051Authentication",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.5600000000000591
+          },
+          {
+            "key": "1052RoleProjectManagerDeveloperQA",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4900000000001228
+          },
+          {
+            "key": "10REQUIREMENTSSCOPE",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.46800500000006195
+          },
+          {
+            "key": "11PRODUCTFUNCTIONS",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.45800500000007105
+          },
+          {
+            "key": "1BusinessAnalyst",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.20000000000004547
+          },
+          {
+            "key": "1INTRODUCTION",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.46800500000006195
+          },
+          {
+            "key": "1QualityAssurance",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "1SoftwareTester",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.13400000000001455
+          },
+          {
+            "key": "22Gamification",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.49000000000006594
+          },
+          {
+            "key": "2ExecutiveSecretary",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "2PURPOSE",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.41800500000010743
+          },
+          {
+            "key": "2ProjectCoordinator",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "311ProjectPlan",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5299999999999727
+          },
+          {
+            "key": "313TaskAssignment",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5099999999999909
+          },
+          {
+            "key": "31ProjectManagementPM",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4800000000001319
+          },
+          {
+            "key": "324UnitTestIntegrationTestAcceptanceTest",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.47000000000014097
+          },
+          {
+            "key": "32SoftwareImplementationSI",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5399999999999636
+          },
+          {
+            "key": "331LevelXP",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5000000000000568
+          },
+          {
+            "key": "332BadgesAchievements",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.43000000000006366
+          },
+          {
+            "key": "333Leaderboard",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4800000000000182
+          },
+          {
+            "key": "334Interface",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5100000000000477
+          },
+          {
+            "key": "33GamificationSystem",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4500000000001023
+          },
+          {
+            "key": "343ISOIEC29110",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4700000000000273
+          },
+          {
+            "key": "34Dashboard",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.44000000000005457
+          },
+          {
+            "key": "351Authentication",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.4500000000000455
+          },
+          {
+            "key": "352RoleProjectManagerDeveloperQA",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.5000000000001137
+          },
+          {
+            "key": "3ProjectManager",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "3UXUIDesign",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.22000000000008413
+          },
+          {
+            "key": "4BusinessAnalyst",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.20000000000015916
+          },
+          {
+            "key": "4KEYDEFINITIONS",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": 0.43800500000008924
+          },
+          {
+            "key": "5DatabaseAdministrator",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.24000000000006594
+          },
+          {
+            "key": "5KEYACRONYMSANDABBREVIATIONS",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.10199499999987438
+          },
+          {
+            "key": "61httpstttbrotherboxcoms05yta7orieg9rxvtdeqphaesn17d8g4h",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.3089999999999691
+          },
+          {
+            "key": "62httpstttbrotherboxcomsu80hs0b93kt9a8rmnhgtcqum58trxb60",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.2689999999999486
+          },
+          {
+            "key": "63httpstttbrotherboxcoms5a2bym1xpousvuokfufsws9oljyb92o8",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.3489999999999327
+          },
+          {
+            "key": "64httpstttbrotherboxcoms398x9ve5odoi1aw27xq9zjbwamncufp0",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.30899999999991223
+          },
+          {
+            "key": "65httpstttbrotherboxcomsszwuwr58jdy27g5rf44wpc9pr36o4f6o",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.40899999999993497
+          },
+          {
+            "key": "6REFERENCES",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.011994999999956235
+          },
+          {
+            "key": "6UXUIDesign",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.22000000000002728
+          },
+          {
+            "key": "71Introduction",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.09999999999990905
+          },
+          {
+            "key": "72ProjectOverview",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.11999999999989086
+          },
+          {
+            "key": "73SystemObjectives",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.16999999999984539
+          },
+          {
+            "key": "74SystemScope",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.06999999999993634
+          },
+          {
+            "key": "75SystemArchitectureFeatures",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.08999999999991815
+          },
+          {
+            "key": "76ISOIEC29110",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5299999999999727
+          },
+          {
+            "key": "77TargetUsers",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5099999999999909
+          },
+          {
+            "key": "78LimitationsRisks",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.4900000000001228
+          },
+          {
+            "key": "79DevelopmentPlan",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.4700000000000273
+          },
+          {
+            "key": "7DOCUMENTOVERVIEW",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.07199499999995851
+          },
+          {
+            "key": "8PROJECTOVERVIEW",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5280050000000074
+          },
+          {
+            "key": "92Gamification",
+            "candidatePage": 16,
+            "wordPage": 16,
+            "deltaPt": 0.5299999999999727
+          },
+          {
+            "key": "9PURPOSE",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.39800500000001193
+          },
+          {
+            "key": "CMProcess",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": 0.2600000000001046
+          },
+          {
+            "key": "CorrectionRegister",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.06999999999993634
+          },
+          {
+            "key": "DCTDataCollectionTemplate",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.049999999999954525
+          },
+          {
+            "key": "DarftTOR",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.009999999999877218
+          },
+          {
+            "key": "Federation",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": -0.009999999999990905
+          },
+          {
+            "key": "ISO29110",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.06999999999999318
+          },
+          {
+            "key": "ISOIEC29110PMSI",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.4600000000000364
+          },
+          {
+            "key": "ISOIEC29110ProjectManagementSoftware",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.4500000000001023
+          },
+          {
+            "key": "Implementation",
+            "candidatePage": 11,
+            "wordPage": 11,
+            "deltaPt": 0.5000000000000568
+          },
+          {
+            "key": "LevelupXPLeaderboard",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.42000000000007276
+          },
+          {
+            "key": "MOMMinutesofMeeting",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": 1.1368683772161603e-13
+          },
+          {
+            "key": "Online2806256817001800",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": 0.17000000000007276
+          },
+          {
+            "key": "PMProcess",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.08999999999991815
+          },
+          {
+            "key": "ProjectManagementPM",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5000000000000568
+          },
+          {
+            "key": "ProjectManagerDeveloperQA",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.5600000000000591
+          },
+          {
+            "key": "Requirement1",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.25
+          },
+          {
+            "key": "Requirement2",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "Requirement3",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": 0.17000000000007276
+          },
+          {
+            "key": "Requirement4",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": 0.19400000000007367
+          },
+          {
+            "key": "Requirement5",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": 0.25
+          },
+          {
+            "key": "Requirement6",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.17000000000007276
+          },
+          {
+            "key": "SDDSoftwareDesignDocument",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.5899999999999181
+          },
+          {
+            "key": "SIProcess",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.08999999999991815
+          },
+          {
+            "key": "SOWStatementofwork",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.01999999999998181
+          },
+          {
+            "key": "SRSSoftwareRequirementSpecification",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.5699999999999363
+          },
+          {
+            "key": "SapphireTTTSpaceship",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": -0.029999999999972715
+          },
+          {
+            "key": "SoftwareImplementationSI",
+            "candidatePage": 15,
+            "wordPage": 15,
+            "deltaPt": 0.43000000000006366
+          },
+          {
+            "key": "Spaceship",
+            "candidatePage": 12,
+            "wordPage": 12,
+            "deltaPt": -0.07999999999992724
+          },
+          {
+            "key": "Spaceship1706256809301540",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": 0.2599999999999909
+          },
+          {
+            "key": "StageMonitoring",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": 0.04000000000007731
+          },
+          {
+            "key": "TORTermsofReference",
+            "candidatePage": 14,
+            "wordPage": 14,
+            "deltaPt": -0.01999999999998181
+          },
+          {
+            "key": "TTTSpaceship0207256809301400",
+            "candidatePage": 25,
+            "wordPage": 25,
+            "deltaPt": 0.18000000000006366
+          },
+          {
+            "key": "TTTSpaceship0306256810001500",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": 0.15000000000009095
+          },
+          {
+            "key": "TTTSpaceship0407256813301430",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": 0.2700000000000955
+          },
+          {
+            "key": "TTTSpaceship0506256811001400",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": 0.29000000000002046
+          },
+          {
+            "key": "TTTSpaceship1006256809301620",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.2899999999999636
+          },
+          {
+            "key": "TTTSpaceship1306256811001605",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "TTTSpaceship1906256816301810",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": 0.18000000000006366
+          },
+          {
+            "key": "TTTSpaceship2005256813301630",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.26000000000004775
+          },
+          {
+            "key": "TTTSpaceship2105256813301540",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.3000000000000682
+          },
+          {
+            "key": "TTTSpaceship2406256809301600",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.18000000000006366
+          },
+          {
+            "key": "TTTSpaceship2705256809301510",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.20000000000004547
+          },
+          {
+            "key": "TTTSpaceship2706256809301440",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": 0.2700000000000955
+          },
+          {
+            "key": "TTTSpaceship2905256813301515",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": 0.25
+          },
+          {
+            "key": "Timeline",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": 1.1368683772161603e-13
+          },
+          {
+            "key": "Timesheet",
+            "candidatePage": 13,
+            "wordPage": 13,
+            "deltaPt": 0.07000000000005002
+          },
+          {
+            "key": "WorkFlowMappingISO29110",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.2899999999999636
+          }
+        ]
+      }
+    },
+    "meetings": {
+      "C2": {
+        "matched": 37,
+        "samePage": 37,
+        "meanAbsolutePt": 1.0070271621621585,
+        "maxAbsolutePt": 2.849999999999909,
+        "pairs": [
+          {
+            "key": "1043ISOIEC29110",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4600000000000364
+          },
+          {
+            "key": "1051Authentication",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.5600000000000591
+          },
+          {
+            "key": "1052RoleProjectManagerDeveloperQA",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4900000000001228
+          },
+          {
+            "key": "11PRODUCTFUNCTIONS",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.45800500000007105
+          },
+          {
+            "key": "1BusinessAnalyst",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.20000000000004547
+          },
+          {
+            "key": "1QualityAssurance",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "1SoftwareTester",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": -1.3659999999999854
+          },
+          {
+            "key": "2ExecutiveSecretary",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "2ProjectCoordinator",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "3ProjectManager",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "3UXUIDesign",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.22000000000008413
+          },
+          {
+            "key": "4BusinessAnalyst",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.20000000000015916
+          },
+          {
+            "key": "5DatabaseAdministrator",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.24000000000006594
+          },
+          {
+            "key": "6UXUIDesign",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.22000000000002728
+          },
+          {
+            "key": "CMProcess",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": -1.2399999999998954
+          },
+          {
+            "key": "Online2806256817001800",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": -2.8299999999999272
+          },
+          {
+            "key": "Requirement1",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.25
+          },
+          {
+            "key": "Requirement2",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": -1.3099999999999454
+          },
+          {
+            "key": "Requirement3",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -2.8299999999999272
+          },
+          {
+            "key": "Requirement4",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": -2.8059999999999263
+          },
+          {
+            "key": "Requirement5",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -1.25
+          },
+          {
+            "key": "Requirement6",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": -1.3299999999999272
+          },
+          {
+            "key": "Spaceship1706256809301540",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -1.240000000000009
+          },
+          {
+            "key": "TTTSpaceship0207256809301400",
+            "candidatePage": 25,
+            "wordPage": 25,
+            "deltaPt": -1.3199999999999363
+          },
+          {
+            "key": "TTTSpaceship0306256810001500",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -2.849999999999909
+          },
+          {
+            "key": "TTTSpaceship0407256813301430",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": -1.2299999999999045
+          },
+          {
+            "key": "TTTSpaceship0506256811001400",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": -1.2099999999999795
+          },
+          {
+            "key": "TTTSpaceship1006256809301620",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.2899999999999636
+          },
+          {
+            "key": "TTTSpaceship1306256811001605",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": -1.2899999999999636
+          },
+          {
+            "key": "TTTSpaceship1906256816301810",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -2.8199999999999363
+          },
+          {
+            "key": "TTTSpaceship2005256813301630",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.26000000000004775
+          },
+          {
+            "key": "TTTSpaceship2105256813301540",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.3000000000000682
+          },
+          {
+            "key": "TTTSpaceship2406256809301600",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": -1.3199999999999363
+          },
+          {
+            "key": "TTTSpaceship2705256809301510",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": -1.2999999999999545
+          },
+          {
+            "key": "TTTSpaceship2706256809301440",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": -1.2299999999999045
+          },
+          {
+            "key": "TTTSpaceship2905256813301515",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -1.25
+          },
+          {
+            "key": "WorkFlowMappingISO29110",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.2899999999999636
+          }
+        ]
+      },
+      "M1-paragraph": {
+        "matched": 37,
+        "samePage": 37,
+        "meanAbsolutePt": 0.35837851351350986,
+        "maxAbsolutePt": 0.849999999999909,
+        "pairs": [
+          {
+            "key": "1043ISOIEC29110",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4600000000000364
+          },
+          {
+            "key": "1051Authentication",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.5600000000000591
+          },
+          {
+            "key": "1052RoleProjectManagerDeveloperQA",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4900000000001228
+          },
+          {
+            "key": "11PRODUCTFUNCTIONS",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.45800500000007105
+          },
+          {
+            "key": "1BusinessAnalyst",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.20000000000004547
+          },
+          {
+            "key": "1QualityAssurance",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "1SoftwareTester",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": -0.36599999999998545
+          },
+          {
+            "key": "2ExecutiveSecretary",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "2ProjectCoordinator",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "3ProjectManager",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "3UXUIDesign",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.22000000000008413
+          },
+          {
+            "key": "4BusinessAnalyst",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.20000000000015916
+          },
+          {
+            "key": "5DatabaseAdministrator",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.24000000000006594
+          },
+          {
+            "key": "6UXUIDesign",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.22000000000002728
+          },
+          {
+            "key": "CMProcess",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": -0.2399999999998954
+          },
+          {
+            "key": "Online2806256817001800",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": -0.8299999999999272
+          },
+          {
+            "key": "Requirement1",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.25
+          },
+          {
+            "key": "Requirement2",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": -0.30999999999994543
+          },
+          {
+            "key": "Requirement3",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -0.8299999999999272
+          },
+          {
+            "key": "Requirement4",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": -0.8059999999999263
+          },
+          {
+            "key": "Requirement5",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -0.25
+          },
+          {
+            "key": "Requirement6",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": -0.32999999999992724
+          },
+          {
+            "key": "Spaceship1706256809301540",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -0.2400000000000091
+          },
+          {
+            "key": "TTTSpaceship0207256809301400",
+            "candidatePage": 25,
+            "wordPage": 25,
+            "deltaPt": -0.31999999999993634
+          },
+          {
+            "key": "TTTSpaceship0306256810001500",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -0.849999999999909
+          },
+          {
+            "key": "TTTSpaceship0407256813301430",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": -0.2299999999999045
+          },
+          {
+            "key": "TTTSpaceship0506256811001400",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": -0.20999999999997954
+          },
+          {
+            "key": "TTTSpaceship1006256809301620",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.2899999999999636
+          },
+          {
+            "key": "TTTSpaceship1306256811001605",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": -0.2899999999999636
+          },
+          {
+            "key": "TTTSpaceship1906256816301810",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": -0.8199999999999363
+          },
+          {
+            "key": "TTTSpaceship2005256813301630",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.26000000000004775
+          },
+          {
+            "key": "TTTSpaceship2105256813301540",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.3000000000000682
+          },
+          {
+            "key": "TTTSpaceship2406256809301600",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": -0.31999999999993634
+          },
+          {
+            "key": "TTTSpaceship2705256809301510",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": -0.2999999999999545
+          },
+          {
+            "key": "TTTSpaceship2706256809301440",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": -0.2299999999999045
+          },
+          {
+            "key": "TTTSpaceship2905256813301515",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": -0.25
+          },
+          {
+            "key": "WorkFlowMappingISO29110",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.2899999999999636
+          }
+        ]
+      },
+      "M2-boundary": {
+        "matched": 37,
+        "samePage": 37,
+        "meanAbsolutePt": 0.24908121621626833,
+        "maxAbsolutePt": 0.5600000000000591,
+        "pairs": [
+          {
+            "key": "1043ISOIEC29110",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4600000000000364
+          },
+          {
+            "key": "1051Authentication",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.5600000000000591
+          },
+          {
+            "key": "1052RoleProjectManagerDeveloperQA",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.4900000000001228
+          },
+          {
+            "key": "11PRODUCTFUNCTIONS",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.45800500000007105
+          },
+          {
+            "key": "1BusinessAnalyst",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.20000000000004547
+          },
+          {
+            "key": "1QualityAssurance",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "1SoftwareTester",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.13400000000001455
+          },
+          {
+            "key": "2ExecutiveSecretary",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "2ProjectCoordinator",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "3ProjectManager",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "3UXUIDesign",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.22000000000008413
+          },
+          {
+            "key": "4BusinessAnalyst",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.20000000000015916
+          },
+          {
+            "key": "5DatabaseAdministrator",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.24000000000006594
+          },
+          {
+            "key": "6UXUIDesign",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.22000000000002728
+          },
+          {
+            "key": "CMProcess",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": 0.2600000000001046
+          },
+          {
+            "key": "Online2806256817001800",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": 0.17000000000007276
+          },
+          {
+            "key": "Requirement1",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.25
+          },
+          {
+            "key": "Requirement2",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.19000000000005457
+          },
+          {
+            "key": "Requirement3",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": 0.17000000000007276
+          },
+          {
+            "key": "Requirement4",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": 0.19400000000007367
+          },
+          {
+            "key": "Requirement5",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": 0.25
+          },
+          {
+            "key": "Requirement6",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.17000000000007276
+          },
+          {
+            "key": "Spaceship1706256809301540",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": 0.2599999999999909
+          },
+          {
+            "key": "TTTSpaceship0207256809301400",
+            "candidatePage": 25,
+            "wordPage": 25,
+            "deltaPt": 0.18000000000006366
+          },
+          {
+            "key": "TTTSpaceship0306256810001500",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": 0.15000000000009095
+          },
+          {
+            "key": "TTTSpaceship0407256813301430",
+            "candidatePage": 26,
+            "wordPage": 26,
+            "deltaPt": 0.2700000000000955
+          },
+          {
+            "key": "TTTSpaceship0506256811001400",
+            "candidatePage": 20,
+            "wordPage": 20,
+            "deltaPt": 0.29000000000002046
+          },
+          {
+            "key": "TTTSpaceship1006256809301620",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.2899999999999636
+          },
+          {
+            "key": "TTTSpaceship1306256811001605",
+            "candidatePage": 21,
+            "wordPage": 21,
+            "deltaPt": 0.21000000000003638
+          },
+          {
+            "key": "TTTSpaceship1906256816301810",
+            "candidatePage": 22,
+            "wordPage": 22,
+            "deltaPt": 0.18000000000006366
+          },
+          {
+            "key": "TTTSpaceship2005256813301630",
+            "candidatePage": 17,
+            "wordPage": 17,
+            "deltaPt": 0.26000000000004775
+          },
+          {
+            "key": "TTTSpaceship2105256813301540",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.3000000000000682
+          },
+          {
+            "key": "TTTSpaceship2406256809301600",
+            "candidatePage": 23,
+            "wordPage": 23,
+            "deltaPt": 0.18000000000006366
+          },
+          {
+            "key": "TTTSpaceship2705256809301510",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.20000000000004547
+          },
+          {
+            "key": "TTTSpaceship2706256809301440",
+            "candidatePage": 24,
+            "wordPage": 24,
+            "deltaPt": 0.2700000000000955
+          },
+          {
+            "key": "TTTSpaceship2905256813301515",
+            "candidatePage": 19,
+            "wordPage": 19,
+            "deltaPt": 0.25
+          },
+          {
+            "key": "WorkFlowMappingISO29110",
+            "candidatePage": 18,
+            "wordPage": 18,
+            "deltaPt": 0.2899999999999636
+          }
+        ]
+      }
+    }
+  },
+  "changedRasterPages": [
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+  ],
+  "page14PixelExact": true,
+  "outsideMeetingPagesPixelExact": true,
+  "requirementOrderPageBaselineExact": true,
+  "imagesByPageExact": true,
+  "footersExact": true,
+  "extractedBodyCharacterMultisetExact": true,
+  "sourcePlainTextCoverage": {
+    "checked": 435,
+    "failed": [],
+    "scope": "Source introduction plain text nodes; per-node text exact modulo repeated copies. Not complete glyph identity."
+  },
+  "nativeBoundaryEvidence": [
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    },
+    {
+      "separatorLinePt": 1.0,
+      "lineRule": "exact",
+      "bottomStrokePt": 0.5
+    }
+  ],
+  "frozenInputsPreserved": true,
+  "tests": {
+    "passed": 275,
+    "failed": 0
+  },
+  "defaultBehaviorChanged": false,
+  "generalRuleAccepted": false,
+  "visualReview": {
+    "pages": [
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26
+    ],
+    "pairedOverviewSheets": 3,
+    "selectedThaiDetailScale": 3,
+    "note": "No new visible clipping in reviewed pages/detail; not complete glyph pixel identity."
+  }
+}

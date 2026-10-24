@@ -7,16 +7,20 @@ import { validateResolvedDocument } from '../composition/validateResolvedDocumen
 import { validateFontIdentities } from '../fonts/resources.js';
 import { selectFont } from '../fonts/selection.js';
 import { FontError } from '../fonts/types.js';
-import { generateDocxTo } from './writer.js';
+import { writeDocx } from './writer.js';
 import { prepareDocxImages } from './images.js';
-import { defaultProfile, snapshotDocxDocument } from './profile.js';
+import { defaultProfile, snapshotDocxDocument,preflightDocx,deriveExportIntent } from './profile.js';
+import {prepareMetricBaselines} from './metric-baseline.js';
+import {prepareSourceLayout,sourceGuide} from './source-layout.js';
 import { hash, snapshotResources } from './resources.js';
 import { MappingError, fail, type ResourceFont, type ResourceSnapshot, type Result, type Issue } from './types.js';
 export type PreparedImageProvider = PdfImageProvider;
-export type DocxResources = Pick<ExportResources, 'fonts'>;
+export type DocxResources = Pick<ExportResources, 'fonts'> & Partial<Pick<ExportResources,'shaperPath'|'segmenterPath'>>;
 export interface DocxOptions {
     signal?: AbortSignal;
     maxBytes?: number;
+    /** Expanded XML elements, independently bounded from source nodes. Default 50000; maximum 300000. */
+    maxXmlNodes?: number;
 }
 export interface DocxOutput {
     write(bytes: Uint8Array): Promise<void>;
@@ -113,9 +117,10 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                         fail('DOCX_INPUT_INVALID', 'output', 'A staged write/abort output is required');
                     const write = output.write.bind(output);
                     abort = output.abort.bind(output);
-                    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => !['signal', 'maxBytes'].includes(k)))
+                    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => !['signal', 'maxBytes','maxXmlNodes'].includes(k)))
                         fail('DOCX_INPUT_INVALID', 'options', 'Invalid DOCX options');
-                    const { signal, maxBytes } = options;
+                    const { signal, maxBytes,maxXmlNodes } = options;
+                    if(maxXmlNodes!==undefined&&(!Number.isSafeInteger(maxXmlNodes)||maxXmlNodes<0||maxXmlNodes>300000))fail('DOCX_INPUT_INVALID','options.maxXmlNodes','Invalid expanded XML budget');
                     if (maxBytes !== undefined && (!Number.isSafeInteger(maxBytes) || maxBytes < 0 || maxBytes > 32 * 1024 * 1024))
                         fail('DOCX_INPUT_INVALID', 'options.maxBytes', 'Invalid output budget');
                     if (signal !== undefined && !(signal instanceof AbortSignal))
@@ -141,7 +146,17 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                     for (const style of Object.values(pinned.styles))
                         selectFont(style, resources.fonts);
                     const prepared = await prepareDocxImages(pinned, images, total, signal);
-                    const result = await generateDocxTo(pinned, { ...snapshot, images: prepared }, {
+                    const [major=0,minor=0]=process.versions.node.split('.').map(Number);
+                    if(major!==24||minor<15)fail('DOCX_CAPABILITY_UNSUPPORTED','runtime.node','Pinned writer requires Node >=24.15.0 <25');
+                    const preflight=preflightDocx(pinned,{...snapshot,images:prepared});
+                    if(!preflight.ok)throw new MappingError(preflight.issues[0]!);
+                    const intent=deriveExportIntent(preflight.value);
+                    if(!intent.ok)throw new MappingError(intent.issues[0]!);
+                    if(resources.shaperPath&&resources.segmenterPath){
+                        await prepareSourceLayout(intent.value,{fonts:resources.fonts,shaperPath:resources.shaperPath,segmenterPath:resources.segmenterPath},signal);
+                        await prepareMetricBaselines(intent.value,resources.shaperPath,signal,(scope,id)=>scope==='nodes'&&sourceGuide(intent.value,id)!==undefined);
+                    }else if(resources.shaperPath)await prepareMetricBaselines(intent.value,resources.shaperPath,signal);
+                    const result = await writeDocx(intent.value, {
                         async write(bytes) { for (let at = 0; at < bytes.length; at += 65536) {
                             if (signal?.aborted)
                                 fail('DOCX_CANCELLED', 'options.signal', 'Export cancelled');
@@ -149,7 +164,7 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                         } },
                         async commit() { },
                         async abort(reason) { await abort!(issue(reason, 'DOCX_SERIALIZATION_FAILED').code); }
-                    }, { ...(signal ? { signal } : {}), ...(maxBytes !== undefined ? { maxOutputBytes: maxBytes } : {}) });
+                    }, { ...(signal ? { signal } : {}), ...(maxBytes !== undefined ? { maxOutputBytes: maxBytes } : {}),...(maxXmlNodes!==undefined?{maxXmlNodes}:{}) });
                     if (!result.ok)
                         return result;
                     const receipt = result.value;

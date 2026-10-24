@@ -1,10 +1,10 @@
-# FlowDoc Core 0.4.7 template entrypoint
+# FlowDoc Core 0.4.8 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes package 0.4.7 after release 0.4.3, including opt-in font-height
+This describes package 0.4.8 after release 0.4.3, including opt-in font-height
 calculation, Section19, group-label continuation and streamed task input/PDF.
 Ordinary pt rendering is unchanged. See the root README for the exact native
 helper/session contract and font-height API inputs/errors. Service owns task
@@ -17,6 +17,32 @@ Models 18 and 19 are accepted. Model19 uses UUID Section instances and array inp
 Read [Developer Documentation](../../flowdoc-project-control/docs/developer/authoring/README.md) for definitions, node properties, defaults, binding scopes, tables, contents, page numbering, image sizing and review rules. The [authoring workflow](../../flowdoc-project-control/docs/domains/flowdoc-ai-template-authoring-guide.md) covers draft creation through a complete reviewed PDF. Publish requires explicit user confirmation.
 
 Code contracts: [template types](../src/template/types.ts), [prepared data](../src/data/types.ts), [resolved document](../src/composition/resolvedDocument.ts), and [public exports](../src/index.ts).
+
+## DOCX development output in 0.4.8
+
+The DOCX writer consumes the same `ResolvedDocument` and prepared
+image provider as PDF. `createDocxEngine(resources).generateDocxTo(document,
+images, output, {signal?, maxBytes?, maxXmlNodes?})` writes a buffered, editable
+Word package. Word must refresh fields/contents; generation alone does not
+certify native pagination or PDF fidelity. Existing PDFs are not rewritten.
+
+Supplying both native shaping and segmentation capabilities selects measured
+line paragraphs and individually editable VML word boxes. Word edits to text or
+fonts may require regeneration to restore source layout; ordinary Word reflow
+is not promised in this mode. Embedded font-table signatures are read from each
+family's actual regular face OS/2 table rather than a fixed Latin signature.
+The private SRS PDF spacing/calibration probes remain explicit experiments and
+do not change ordinary PDF generation defaults.
+
+`maxXmlNodes` explicitly selects the expanded XML-element budget, default50000,
+maximum300000. A larger selection does not raise the source-node50000,
+image-reference10000, resource16MiB or output32MiB limits. Its receipt records
+the selected limit and actual XML count. Whole-document experiments with a
+larger budget are not passes of the default profile or total-memory guarantees.
+Reading relationships, bands and cover admission use private measurements from
+the actual text/font resources; native Word fit still requires visual review.
+Rule thickness is rounded to the nearest representable eighth-point, within
+the supported0.25–12pt range, with an explicit source/native difference receipt.
 
 ## Font styles and resources in 0.4.0
 

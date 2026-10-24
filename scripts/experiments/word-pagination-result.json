@@ -1,0 +1,128 @@
+{
+  "authorityBoundary": "Read-only cause investigation, not a renderer repair or compatibility acceptance. Project Control owns shared status.",
+  "inputs": {
+    "PDF": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\SRS-M2-boundary.pdf",
+      "sha256": "6899f2518264b018dd5fa7f66d3c2f06eefbb18c67dfbf5eeb02e2af9e0f5553",
+      "pages": 98,
+      "bytes": 2550363
+    },
+    "Word": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.pdf",
+      "sha256": "0cec02a089f19fea49721f86fe1635b8b1fa67987902dc16798fba7c1c651faa",
+      "pages": 100,
+      "bytes": 1313838
+    }
+  },
+  "bodyGeometry": {
+    "PDF": {
+      "heightPt": 841.8897637795276,
+      "topPt": 80.95084060438391,
+      "bottomPt": 770.7125984251969,
+      "footerHeightPt": 38.5,
+      "bodyHeightPt": 689.761757820813
+    },
+    "Word": {
+      "heightPt": 841.9,
+      "topPt": 81.0,
+      "bottomMarginPt": 74.2,
+      "bottomPt": 767.7,
+      "bodyHeightPt": 686.7
+    },
+    "wordUsableBottomEarlierPt": 3.0125984251968703,
+    "note": "PDF footer height follows this frozen compact/rule/columns source; native margins from actual D XML. Not a generic footer formula."
+  },
+  "images": {
+    "count": 371,
+    "sourcePixelDimensionsAndOrderExact": true,
+    "minHeightDeltaPt": -0.00017600000001039007,
+    "maxHeightDeltaPt": 2.842170943040401e-14
+  },
+  "nativeRequirementCellExample": {
+    "topPaddingPt": 3.0,
+    "bottomPaddingPt": 3.0,
+    "borderPt": 0.5
+  },
+  "runtimeChanged": false,
+  "pdfRebuilt": false,
+  "limitations": [
+    "No counterfactual layout run, so exact contribution of each mechanism to the final two-page count is not isolated.",
+    "Baseline, page14 and meeting improvements retained by unchanged artifact hashes.",
+    "Paired row height includes paragraph, image, padding and border footprints; residual is not attributed to image alone."
+  ],
+  "visualReview": {
+    "pairs": [
+      [
+        27,
+        27
+      ],
+      [
+        28,
+        28
+      ],
+      [
+        45,
+        45
+      ],
+      [
+        75,
+        76
+      ],
+      [
+        80,
+        82
+      ],
+      [
+        98,
+        100
+      ]
+    ],
+    "lastWordPageContainsRequirement0366Continuation": true,
+    "scope": "Selected transition and terminal pages only; no new PDF generated."
+  },
+  "headingsSeparatedFromTable": 17,
+  "rowFootprint": {
+    "count": 257,
+    "meanWordExtraPt": 0.5328093385214029,
+    "medianWordExtraPt": 0.5200000000000387,
+    "minWordExtraPt": 0.3999999999999204,
+    "maxWordExtraPt": 0.7599999999999909
+  },
+  "reqPageDeltaCounts": {
+    "0": 88,
+    "1": 262,
+    "2": 11
+  },
+  "frozenInputs": [
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\SRS-M2-boundary.pdf",
+      "sha256": "6899f2518264b018dd5fa7f66d3c2f06eefbb18c67dfbf5eeb02e2af9e0f5553",
+      "bytes": 2550363
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.pdf",
+      "sha256": "0cec02a089f19fea49721f86fe1635b8b1fa67987902dc16798fba7c1c651faa",
+      "bytes": 1313838
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.docx",
+      "sha256": "b6133d488ca6c182d8375467b82b1bc5b12b8e8b75600a9b6288852348edb6b8",
+      "bytes": 904660
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\inputs\\original-reference.pdf",
+      "sha256": "cd2fde00ea5273c889498eb490ff2e1fa945f7e4fbdc74cd65f25bbb9643ebf1",
+      "bytes": 2559955
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\resolved-document.json",
+      "sha256": "86df6e37ddbafc58ecf554070efe6affc091c9820238f6d7af230feeddff5047",
+      "bytes": 5254791
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\M2-boundary-draw.json",
+      "sha256": "edba941c796ced93defadcd221d77aaf47b46c0729ca846ec459e486c6d1f2e7",
+      "bytes": 889306
+    }
+  ]
+}

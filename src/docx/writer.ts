@@ -1,4 +1,6 @@
 import { required } from './types.js';
+import {readingMeasurementReceipt} from './reading-measurements.js';
+import {toPoints} from './units.js';
 import { Document, Packer, type IPropertiesOptions } from 'docx';
 import { createRequire } from 'node:module';
 import { posix } from 'node:path';
@@ -9,11 +11,16 @@ import { hash } from './resources.js';
 import { buildSections } from './sections.js';
 import { nativeRunStyle } from './text.js';
 import { fieldDigitBudget } from './fields.js';
+import {correctFontSignatures} from './font-signature.js';
+import {baselineReceipts} from './metric-baseline.js';
+import {sourceLayoutReceipts,appliedSourceGuides} from './source-layout.js';
+import {serializeSourceLayout,compactSourceWordContainers,compactSourceWordStyles} from './source-layout-xml.js';
 export interface WriteOptions {
     profile?: DocxProfile;
     signal?: AbortSignal;
     maxOutputBytes?: number;
     maxPackageNodes?: number;
+    maxXmlNodes?: number;
     maxImageReferences?: number;
 }
 /** write is private staging. commit publishes atomically and must honor signal; abort discards staged bytes. */
@@ -74,7 +81,7 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
         options = { ...options };
         cancelled(options);
         for (const key of Object.keys(options))
-            if (!['profile', 'signal', 'maxOutputBytes', 'maxPackageNodes', 'maxImageReferences'].includes(key))
+            if (!['profile', 'signal', 'maxOutputBytes', 'maxPackageNodes','maxXmlNodes', 'maxImageReferences'].includes(key))
                 fail('DOCX_INPUT_INVALID', 'options.' + key, 'Unknown output option');
         requireGenuineIntent(intent);
         if (!sink || typeof sink.write !== 'function' || typeof sink.commit !== 'function' || typeof sink.abort !== 'function')
@@ -85,6 +92,8 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
                 fail('DOCX_INPUT_INVALID', 'options.' + key, 'Invalid or excessive output budget');
         }
         const allNodes = [...Object.values(intent.document.nodes), ...[(intent.document as any).header, (intent.document as any).footer, ...(intent.document.sections as any[]).flatMap(s => [s.header, s.footer])].filter(Boolean).flatMap(b => Object.values(b.nodes))] as any[];
+        if(options.maxXmlNodes!==undefined&&(!Number.isSafeInteger(options.maxXmlNodes)||options.maxXmlNodes<0||options.maxXmlNodes>300000))fail('DOCX_INPUT_INVALID','options.maxXmlNodes','Invalid expanded XML budget');
+        const xmlBudget=Math.min(options.maxXmlNodes??options.maxPackageNodes??50000,options.maxPackageNodes??300000);
         if (allNodes.length > (options.maxPackageNodes ?? 50000))
             fail('DOCX_OUTPUT_BUDGET_EXCEEDED', 'document.nodes', 'Package node budget exceeded');
         for (const block of intent.textBlocks)
@@ -108,11 +117,40 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
         cancelled(options);
         await Promise.resolve();
         cancelled(options);
-        const bytes = await Packer.toBuffer(new Document({ sections: built.sections, fonts, features: { updateFields: true }, ...(styles ? { styles } : {}) }));
+        let bytes = await Packer.toBuffer(new Document({ sections: built.sections, fonts, features: { updateFields: true }, ...(styles ? { styles } : {}) }));
         cancelled(options);
         if (bytes.length > (options.maxOutputBytes ?? 32 * 1024 * 1024))
             fail('DOCX_OUTPUT_BUDGET_EXCEEDED', 'output', 'Buffered DOCX exceeds output byte budget');
         const zip = await JSZip.loadAsync(bytes);
+        const fontTable=zip.file('word/fontTable.xml');
+        if(!fontTable)fail('DOCX_SERIALIZATION_FAILED','word/fontTable.xml','Missing embedded font table');
+        const originalFontTable=await fontTable.async('string'),correctedFontTable=correctFontSignatures(originalFontTable,fonts),fontSignatureChanged=correctedFontTable!==originalFontTable;
+        if(fontSignatureChanged)zip.file('word/fontTable.xml',correctedFontTable);
+        const sourceSerialized=await serializeSourceLayout(intent,zip,options.signal);
+        // Keep normal packages byte-for-byte on their native-tested path. Only
+        // over-budget generated word layouts attempt lossless container sharing;
+        // the unchanged final guard still checks every expanded package part.
+        if(sourceSerialized){
+            let expanded=0;
+            for(const name of Object.keys(zip.files)){
+                if(!/\.(xml|rels)$/.test(name))continue;
+                cancelled(options);
+                const xml=await zip.file(name).async('string');
+                expanded+=(xml.match(/<(?![!?/])[A-Za-z_][\w:.-]*(?=[\s/>])/g)||[]).length;
+            }
+            if(expanded>xmlBudget){
+                const part=zip.file('word/document.xml');
+                const original=await part.async('string');
+                const compact=compactSourceWordContainers(original,new Set(appliedSourceGuides(intent).map(g=>g.tag)));
+                if(compact!==original)zip.file('word/document.xml',compact);
+                const count=(value:string)=>(value.match(/<(?![!?/])[A-Za-z_][\w:.-]*(?=[\s/>])/g)||[]).length;
+                if(expanded-count(original)+count(compact)>xmlBudget){
+                    const styles=await zip.file('word/styles.xml').async('string');
+                    const shared=compactSourceWordStyles(compact,styles,new Set(appliedSourceGuides(intent).map(g=>g.tag)));
+                    if(shared.compactedRuns){zip.file('word/document.xml',shared.xml);zip.file('word/styles.xml',shared.styles);}
+                }
+            }
+        }
         let xmlNodes = 0, drawings = 0;
         for (const name of Object.keys(zip.files)) {
             if (!/\.(xml|rels)$/.test(name))
@@ -121,7 +159,7 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
             const xml = await zip.file(name).async('string');
             xmlNodes += (xml.match(/<(?![!?/])[A-Za-z_][\w:.-]*(?=[\s/>])/g) || []).length;
             drawings += (xml.match(/<wp:docPr\b/g) || []).length;
-            if (xmlNodes > (options.maxPackageNodes ?? 50000) || drawings > (options.maxImageReferences ?? 10000))
+            if (xmlNodes > xmlBudget || drawings > (options.maxImageReferences ?? 10000))
                 fail('DOCX_OUTPUT_BUDGET_EXCEEDED', name, 'Expanded XML node/drawing budget exceeded');
             if (name.endsWith('.rels')) {
                 const prefix = name === '_rels/.rels' ? '' : posix.dirname(posix.dirname(name));
@@ -134,7 +172,12 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
                 }
             }
         }
-        const adaptations: any[] = built.receipts.flatMap(s => s.tableSpaces.map((t: any) => ({ kind: 'table-space-policy', ...t }))), columnPaths = new Set<string | undefined>();
+        if(sourceSerialized||fontSignatureChanged){
+            bytes=await zip.generateAsync({type:'nodebuffer',compression:'DEFLATE'});
+            cancelled(options);
+            if(bytes.length>(options.maxOutputBytes??32*1024*1024))fail('DOCX_OUTPUT_BUDGET_EXCEEDED','output','Final DOCX exceeds output byte budget');
+        }
+        const adaptations: any[] = [...baselineReceipts(intent),...sourceLayoutReceipts(intent), ...built.omittedSections.map(s => ({kind: 'empty-section-omission', ...s})), ...built.receipts.flatMap(s => s.tableSpaces.map((t: any) => ({ kind: 'table-space-policy', ...t })))], columnPaths = new Set<string | undefined>();
         for (const table of intent.tables) {
             const source: any = (intent.document.nodes as any)[table.nodeId];
             table.columnTwips.forEach((twips, i) => { const path = 'document.nodes.' + table.nodeId + '.columns.' + i + '.width', length = source.columns[i].width, pt = length.unit === 'pt' ? length.value : length.value * 72 / 25.4; columnPaths.add(path); if (twips / 20 !== pt)
@@ -162,7 +205,14 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
         for (const s of built.receipts)
             if (JSON.stringify(s.sourceMarginTwips) !== JSON.stringify({ top: s.reservedMarginTwips.top, right: s.reservedMarginTwips.right, bottom: s.reservedMarginTwips.bottom, left: s.reservedMarginTwips.left }))
                 adaptations.push({ kind: 'maximum-band-reservation', sectionId: s.sectionId, source: s.sourceMarginTwips, reserved: s.reservedMarginTwips });
+        adaptations.push(...readingMeasurementReceipt(intent));
+        if(options.maxXmlNodes!==undefined)adaptations.push({kind:'expanded-xml-budget',limit:xmlBudget,actualNodes:xmlNodes,sourceNodeLimit:options.maxPackageNodes??50000,defaultLimit:50000});
+        for(const n of Object.values(intent.document.nodes)as any[])if(n.type==='line'){
+            const sourceThicknessPt=n.props.thickness?toPoints(n.props.thickness):.5,nativeThicknessPt=Math.round(sourceThicknessPt*8)/8;
+            adaptations.push({kind:'rule-thickness-quantization',scope:'nodes',nodeId:n.id,sourceThicknessPt,nativeThicknessPt,deltaPt:nativeThicknessPt-sourceThicknessPt});
+        }
         for (const s of built.receipts) {
+            adaptations.push({ kind: 'empty-footer-space-policy', sectionId: s.sectionId, ...s.footer.emptySpace, sourceOffsetTwips: s.footer.offsetTwips, wordVerified: false });
             adaptations.push({ kind: 'empty-header-space-policy', sectionId: s.sectionId, ...s.header.emptySpace, sourceOffsetTwips: s.header.offsetTwips, wordVerified: false });
             if (s.header.spacePolicy === 'native-visible-header')
                 adaptations.push({ kind: 'native-visible-header-space', sectionId: s.sectionId, shape: s.header.shape, nativeTopTwips: s.nativeMarginTwips.top, gapTwips: s.header.gapTwips, capacityByPageType: s.capacityByPageType, estimated: true, wordVerified: false });

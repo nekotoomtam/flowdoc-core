@@ -76,9 +76,19 @@ it.each(['Sarabun','BaiJamjuree'])('accepts actual Core library selection for %s
  const t=sectionTemplate();t.sections=[t.sections[0]];t.areaFormats={};t.schemaVersion=2;
  for(const key of Object.keys(t.styles))t.styles[key]={font:{kind:'library',releaseId,weight:400,style:'normal'},fontSize:{value:12,unit:'pt'},lineHeightPt:20};
  const v=validateTemplate(t);if(!v.ok)throw Error(JSON.stringify(v));const p=prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:'English ไทย'},sections:{}});if(!p.ok)throw Error(JSON.stringify(p));const d=composeDocument(v.value,p.value);if(!d.ok)throw Error(JSON.stringify(d));
- const engine=await createDocxEngine(resources.value);if(!engine.ok)throw Error(JSON.stringify(engine));const sink=staged(),before=JSON.stringify(d.value);
+ // This test covers library identity/embedding; its placeholder executables are
+ // deliberately not runtime capabilities. Real source shaping is tested separately.
+ const engine=await createDocxEngine({fonts:resources.value.fonts});if(!engine.ok)throw Error(JSON.stringify(engine));const sink=staged(),before=JSON.stringify(d.value);
  const result=await engine.value.generateDocxTo(d.value,{contract:'flowdoc-pdf-stream/1',images:{},async *open(){throw Error('unexpected');}},sink.output);
- expect(result.ok,JSON.stringify(result)).toBe(true);const zip=await JSZip.loadAsync(Buffer.concat(sink.chunks));expect(await zip.file('word/fontTable.xml')!.async('string')).toContain(family==='BaiJamjuree'?'Bai Jamjuree':family);expect(JSON.stringify(d.value)).toBe(before);
+ expect(result.ok,JSON.stringify(result)).toBe(true);const zip=await JSZip.loadAsync(Buffer.concat(sink.chunks));const fontTable=await zip.file('word/fontTable.xml')!.async('string');expect(fontTable).toContain(family==='BaiJamjuree'?'Bai Jamjuree':family);expect(JSON.stringify(d.value)).toBe(before);
+ // The embedded face is not enough: Word also reads the family's advertised
+ // Unicode/code-page support when resolving complex-script text.
+ const bytes=await readFile(path);let os2=0;
+ for(let i=0;i<bytes.readUInt16BE(4);i++){const at=12+i*16;if(bytes.toString('ascii',at,at+4)==='OS/2')os2=bytes.readUInt32BE(at+8);}
+ expect(os2).toBeGreaterThan(0);
+ for(const [name,offset]of [['usb0',42],['usb1',46],['usb2',50],['usb3',54],['csb0',78],['csb1',82]]as const){
+  expect(fontTable).toContain(`w:${name}="${bytes.readUInt32BE(os2+offset).toString(16).toUpperCase().padStart(8,'0')}"`);
+ }
 });
 it.each([10001,50001])('rejects %s source image nodes by reference/node cap before opening streams',async count=>{
  const e=await createDocxEngine(fonts());if(!e.ok)throw Error(JSON.stringify(e));const d=imageDocument(),first=Object.values(d.nodes)[0]!,source=d.sourceMap[first.id]!,p=imageProvider(),s=staged();

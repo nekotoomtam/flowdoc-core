@@ -13,19 +13,23 @@ export async function measureText(node:TextBlock,style:TextStyle,available:numbe
  const normalizedOffset=(offset:number)=>raw.slice(0,offset).replace(/\r\n?/g,'\n').length;
  const spans=rawSpans.map(s=>({...s,start:normalizedOffset(s.start),end:normalizedOffset(s.end)}));
  const id=node.id,epsilon=1e-6,size=style.fontSize.value,lineHeight=style.lineHeightPt;
+ const probe=runtime.spacingProbe?.lineBox?.(id,style);
+ if(probe&&(!Number.isFinite(probe.heightPt)||probe.heightPt<=0||!Number.isFinite(probe.baselineOffsetPt)||probe.baselineOffsetPt<0||probe.baselineOffsetPt>probe.heightPt))throw new LayoutError(id,'Invalid spacing probe line box');
  const fontId=fontIdForStyle(style,runtime);
  if(available<=0)throw new LayoutError(id,'No content width');
   const cache=new Map<string,ShapedText>();
-  const shape=async(text:string)=>{if(!cache.has(text))cache.set(text,await runtime.shape(text,fontId,size));return cache.get(text)!;};
+  const shape=async(text:string)=>{if(!cache.has(text)){const native=await runtime.shape(text,fontId,size);cache.set(text,runtime.spacingProbe?.shapedText?.(id,text,fontId,size,native)??native);}return cache.get(text)!;};
   const extent=(s:ShapedText)=>Math.max(s.glyphs.reduce((a,g)=>a+g.advancePt,0),s.inkRightPt??0)-Math.min(0,s.inkLeftPt??0);
   const lines:MeasuredLine[]=[];
   const emit=async(text:string,sourceStart=0)=>{
-   if(!text){lines.push({heightPt:lineHeight});lineWidth=available;return;}
+   if(!text){lines.push({heightPt:Math.max(lineHeight,probe?.heightPt??0)});lineWidth=available;return;}
    const shaped=await shape(text),advance=shaped.glyphs.reduce((a,g)=>a+g.advancePt,0);
    if(extent(shaped)>lineWidth+epsilon)throw new LayoutError(id,'Text ink does not fit the configured line');
    // Keep authored text intact; stacked marks may need more than the requested leading.
-   const actualHeight=Math.max(lineHeight,shaped.ascentPt+shaped.descentPt);
-   lines.push({heightPt:actualHeight,occupiedWidthPt:extent(shaped),run:{nodeId:id,kind:'glyph-run',text,fontId,fontSizePt:size,lineHeightPt:actualHeight,baselineOffsetPt:shaped.ascentPt+(actualHeight-shaped.ascentPt-shaped.descentPt)/2,color:'000000',bounds:{xPt:-Math.min(0,shaped.inkLeftPt??0),yPt:0,widthPt:advance,heightPt:actualHeight},glyphs:shaped.glyphs,...(spans.length?{sourceStart,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{}),links:spans.filter(s=>s.start<sourceStart+text.length&&s.end>sourceStart)}:{})}});
+   const actualHeight=Math.max(lineHeight,shaped.ascentPt+shaped.descentPt,probe?.heightPt??0);
+   const baseline=runtime.spacingProbe?.baselineOffsetPt?.(id,style,actualHeight,shaped);
+   if(baseline!==undefined&&(!Number.isFinite(baseline)||baseline<0||baseline>actualHeight))throw new LayoutError(id,'Invalid spacing probe baseline');
+   lines.push({heightPt:actualHeight,occupiedWidthPt:extent(shaped),run:{nodeId:id,kind:'glyph-run',text,fontId,fontSizePt:size,lineHeightPt:actualHeight,baselineOffsetPt:baseline??probe?.baselineOffsetPt??shaped.ascentPt+(actualHeight-shaped.ascentPt-shaped.descentPt)/2,color:'000000',bounds:{xPt:-Math.min(0,shaped.inkLeftPt??0),yPt:0,widthPt:advance,heightPt:actualHeight},glyphs:shaped.glyphs,...(spans.length?{sourceStart,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{}),links:spans.filter(s=>s.start<sourceStart+text.length&&s.end>sourceStart)}:{})}});
    lineWidth=available;
   };
   // Tabs are display spaces, not tab stops. One UTF-16 unit remains one unit,

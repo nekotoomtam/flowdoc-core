@@ -6,6 +6,8 @@ import { capture, fail, type ExportIntent, type Result } from './types.js';
 import { requireGenuineIntent } from './profile.js';
 import { deriveReadingPlan, type ReadingPlan } from './groups.js';
 import { buildTextParagraph } from './text.js';
+import { baselineDecision,tableWidthProven } from './metric-baseline.js';
+import {sourceGuide} from './source-layout.js';
 import { buildImageParagraph } from './images.js';
 import type { NavigationContext } from './fields.js';
 export type TableSpaceReceipt = {
@@ -13,6 +15,7 @@ export type TableSpaceReceipt = {
     scope: 'nodes';
     policy: TableSpaceDecision['policy'];
     reason: string;
+    horizontalPolicy: 'border-centre-inset' | 'border-centre-inset-preserve-width' | 'retain-native';
     cells: {
         nodeId: string;
         sourceTopPt: number;
@@ -21,16 +24,21 @@ export type TableSpaceReceipt = {
         sourceBottomTwips: number;
         nativeTopTwips: number;
         nativeBottomTwips: number;
+        sourceLeftTwips: number;
+        sourceRightTwips: number;
+        nativeLeftTwips: number;
+        nativeRightTwips: number;
     }[];
-    baselinePolicy: 'native-at-least-unmatched';
+    baselinePolicy: 'native-at-least-unmatched' | 'per-paragraph-metric-or-native';
     baselineMatchVerified: false;
+    terminalStrokeCompensationPt: number;
 };
 const take = <T>(r: Result<T>): T => { if (!r.ok) {
     const e = required(r.issues[0], 'issues');
     fail(e.code, e.path ?? 'nodes', e.message);
 } return r.value; };
 export function structuralParagraph(afterTwips = 0) { return new Paragraph({ run: { size: 2, sizeComplexScript: 2, bold: false, italics: false }, spacing: { before: 0, after: afterTwips, line: 20, lineRule: LineRuleType.EXACT } }); }
-function textParts(intent: ExportIntent, id: string, plan: ReadingPlan, forceKeep = false, navigation?: NavigationContext) { return plan.fragments.filter(f => f.nodeId === id).sort((a, b) => a.start - b.start).map(f => take(buildTextParagraph(intent, id, { ...f, keepNext: forceKeep || f.keepNext, ...(navigation ? { navigation } : {}) })).paragraph); }
+function textParts(intent: ExportIntent, id: string, plan: ReadingPlan, forceKeep = false, navigation?: NavigationContext, protectedFlow = false) { return plan.fragments.filter(f => f.nodeId === id).sort((a, b) => a.start - b.start).map(f => take(buildTextParagraph(intent, id, { ...f, keepNext: forceKeep || f.keepNext, ordinaryBodyOrCell: !protectedFlow && !plan.edges.some(e => e.from === id || e.to === id), ...(navigation ? { navigation } : {}) })).paragraph); }
 export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext): Result<{
     table: Table;
     receipt: {
@@ -51,12 +59,38 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
             fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + nodeId, 'Expected source body table');
         if (!n.rowIds.length)
             fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + nodeId, 'Native empty table without rows is unsupported');
-        const unmergedPlainGrid = mapped.cells.every(cell => { const c = nodes[cell.nodeId]; return (c.props.colSpan ?? 1) === 1 && (c.props.rowSpan ?? 1) === 1 && c.childIds.every((id: string) => nodes[id].type === 'text-block' && nodes[id].props.heightMode !== 'fixed'); });
+        const plainTextGrid = mapped.cells.every(cell => { const c = nodes[cell.nodeId]; return c.childIds.every((id: string) => nodes[id].type === 'text-block' && nodes[id].props.heightMode !== 'fixed'); });
         const sourcePoints = mapped.cells.map(cell => { const padding = nodes[cell.nodeId].props.padding; return { sourceTopPt: padding?.top ? toPoints(padding.top) : 4, sourceBottomPt: padding?.bottom ? toPoints(padding.bottom) : 4 }; });
-        const decisions = mapped.cells.map((cell, i) => deriveTableSpace({ unmergedPlainGrid, uniformSingleHalfPointBorder: true, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom }));
+        const decisions = mapped.cells.map((cell, i) => deriveTableSpace({ plainTextGrid, uniformSingleHalfPointBorder: true, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom }));
         const allPadding = decisions.every(d => d.policy === 'border-centre-inset');
-        const adapted = unmergedPlainGrid && allPadding;
-        const spacePolicy: TableSpaceReceipt = { nodeId, scope: 'nodes', policy: adapted ? 'border-centre-inset' : 'retain-native', reason: !unmergedPlainGrid ? 'unverified-grid-or-content' : !allPadding ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset', cells: mapped.cells.map((cell, i) => ({ nodeId: cell.nodeId, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom, nativeTopTwips: adapted ? required(decisions[i], 'table.decision').nativeTopTwips : cell.paddingTwips.top, nativeBottomTwips: adapted ? required(decisions[i], 'table.decision').nativeBottomTwips : cell.paddingTwips.bottom })), baselinePolicy: 'native-at-least-unmatched', baselineMatchVerified: false };
+        const adapted = plainTextGrid && allPadding;
+        const border = { style: BorderStyle.SINGLE, size: 4, color: n.props.borderColor ?? '000000' };
+        // Source row flow excludes its painted stroke envelope. In the bounded
+        // native Exact/one-line profile Word also reserves the terminal outer
+        // stroke. Charge that emitted thickness once, at the physical last row,
+        // rather than shifting following paragraphs or changing source geometry.
+        // Guided rows own a separate frame budget; vertical merges can share
+        // margins across physical rows and remain outside this accommodation.
+        const terminalStrokeCompensationPt=adapted&&tableWidthProven(intent,nodeId)&&mapped.cells.every(cell=>{
+            const c=nodes[cell.nodeId];return (c.props.rowSpan??1)===1&&c.childIds.length>0&&c.childIds.every((id:string)=>{
+                const b=intent.textBlocks.find(t=>t.scope==='nodes'&&t.nodeId===id);
+                return b?.text.trim()&& !sourceGuide(intent,id)&&baselineDecision(intent,'nodes',id)?.policy==='font-metric-exact';
+            });
+        })?border.size/8:0;
+        const terminalCells=new Set<string>(nodes[n.rowIds.at(-1)!].cellIds);
+        // Same measured half-stroke origin as the vertical mapper. Keep the
+        // horizontal accommodation within proven text grids and exact4pt sides.
+        const horizontal=adapted&&mapped.cells.every(cell=>{
+            const c=nodes[cell.nodeId],padding=c.props.padding;
+            return cell.paddingTwips.left===80&&cell.paddingTwips.right===80&&
+                (!padding?.left||toPoints(padding.left)===4)&&(!padding?.right||toPoints(padding.right)===4)&&
+                c.childIds.every((id:string)=>baselineDecision(intent,'nodes',id)?.policy==='font-metric-exact');
+        });
+        const preserveWidth=horizontal&&!tableWidthProven(intent,nodeId);
+        const metricParagraphs=mapped.cells.some(cell=>nodes[cell.nodeId].childIds.some((id:string)=>baselineDecision(intent,'nodes',id)!==undefined));
+        const spacePolicy: TableSpaceReceipt = { nodeId, scope: 'nodes', terminalStrokeCompensationPt, policy: adapted ? 'border-centre-inset' : 'retain-native', horizontalPolicy: horizontal?(preserveWidth?'border-centre-inset-preserve-width':'border-centre-inset'):'retain-native', reason: !plainTextGrid ? 'unverified-grid-or-content' : !allPadding ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset', cells: mapped.cells.map((cell, i) => ({ nodeId: cell.nodeId, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom, nativeTopTwips: adapted ? required(decisions[i], 'table.decision').nativeTopTwips : cell.paddingTwips.top, nativeBottomTwips: (adapted ? required(decisions[i], 'table.decision').nativeBottomTwips : cell.paddingTwips.bottom)-(terminalCells.has(cell.nodeId)?Math.round(terminalStrokeCompensationPt*20):0),
+            sourceLeftTwips:cell.paddingTwips.left,sourceRightTwips:cell.paddingTwips.right,
+            nativeLeftTwips:cell.paddingTwips.left-(horizontal?5:0),nativeRightTwips:cell.paddingTwips.right+(horizontal?(preserveWidth?5:-5):0) })), baselinePolicy: metricParagraphs?'per-paragraph-metric-or-native':'native-at-least-unmatched', baselineMatchVerified: false };
         const plan = take(deriveReadingPlan(intent));
         const grid = mapped.columnTwips, rows: TableRow[] = [], logicalCellIds: string[] = [], occupancy = new Map<string, {
             id: string;
@@ -79,7 +113,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                 if (!continuation)
                     for (const child of c.childIds) {
                         if (nodes[child].type === 'text-block')
-                            children.push(...textParts(intent, child, plan, plan.keptRows[nodeId]?.includes(rid), navigation));
+                            children.push(...textParts(intent, child, plan, plan.keptRows[nodeId]?.includes(rid), navigation, row < n.props.headerRowCount || !nodes[rid].props.allowBreak || (n.rowGroups ?? []).some((g: any) => g.keepStart && g.prefixRowIds.length > 0 && g.rowIds.includes(rid)) || (c.props.rowSpan ?? 1) > 1 || (c.props.colSpan ?? 1) > 1 || plan.edges.some(e => e.from === nodeId || e.to === nodeId)));
                         else if (nodes[child].type === 'image')
                             children.push(take(buildImageParagraph(intent, child)).paragraph);
                         else
@@ -92,18 +126,19 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                     structuralEmptyParagraphs++;
                 }
                 const fill = c.props.fillColor ?? (pos.row < n.props.headerRowCount ? n.props.headerFillColor : undefined);
-                cells.push(new TableCell({ children, width: { type: WidthType.DXA, size: grid.slice(col, col + pos.span).reduce((a, b) => a + b, 0) }, ...(pos.span > 1 ? { columnSpan: pos.span } : {}), ...(pos.rowSpan > 1 ? { verticalMerge: continuation ? VerticalMergeType.CONTINUE : VerticalMergeType.RESTART } : {}), margins: { top: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeTopTwips, right: pad.right, bottom: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeBottomTwips, left: pad.left }, ...(fill ? { shading: { fill } } : {}) }));
+                cells.push(new TableCell({ children, width: { type: WidthType.DXA, size: grid.slice(col, col + pos.span).reduce((a, b) => a + b, 0) }, ...(pos.span > 1 ? { columnSpan: pos.span } : {}), ...(pos.rowSpan > 1 ? { verticalMerge: continuation ? VerticalMergeType.CONTINUE : VerticalMergeType.RESTART } : {}), margins: { top: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeTopTwips, right: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeRightTwips, bottom: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeBottomTwips, left: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeLeftTwips }, ...(fill ? { shading: { fill } } : {}) }));
                 col += pos.span;
             }
             rows.push(new TableRow({ children: cells, tableHeader: n.props.repeatHeaderRows && row < n.props.headerRowCount, cantSplit: !nodes[rid].props.allowBreak, keepNext: plan.keptRows[nodeId]?.includes(rid) ?? false }));
         }
-        const border = { style: BorderStyle.SINGLE, size: 4, color: n.props.borderColor ?? '000000' }, table = new Table({ rows, columnWidths: [...grid], width: { type: WidthType.DXA, size: grid.reduce((a, b) => a + b, 0) }, layout: TableLayoutType.FIXED, indent: { type: WidthType.DXA, size: 0 }, borders: { top: border, right: border, bottom: border, left: border, insideHorizontal: border, insideVertical: border } });
+        const table = new Table({ rows, columnWidths: [...grid], width: { type: WidthType.DXA, size: grid.reduce((a, b) => a + b, 0) }, layout: TableLayoutType.FIXED, indent: { type: WidthType.DXA, size: 0 }, borders: { top: border, right: border, bottom: border, left: border, insideHorizontal: border, insideVertical: border } });
         return { table, receipt: { spacePolicy, nodeId, logicalCellIds, continuationCells, structuralEmptyParagraphs, keptRowIds: plan.keptRows[nodeId] ?? [], groupEdges: plan.edges.length, wordLayoutVerified: false } };
     });
 }
 export function buildBodyFlow(intent: ExportIntent, options: {
     sectionId?: string;
     navigation?: NavigationContext;
+    omittedRootIds?: ReadonlySet<string>;
     special?: (id: string) => FileChild[];
 } = {}): Result<{
     children: FileChild[];
@@ -122,8 +157,25 @@ export function buildBodyFlow(intent: ExportIntent, options: {
         let previous = '', tableSeparators = 0;
         for (const section of (intent.document.sections as any[]).filter(s => !options.sectionId || s.sectionId === options.sectionId)) {
             previous = '';
+            let hasRoot = false, pendingBreak: string | undefined;
             for (const id of section.rootIds) {
+                if (options.omittedRootIds?.has(id)) continue;
                 const n = nodes[id];
+                if (n.type === 'page-break') {
+                    if (!options.special)
+                        fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + id, 'Body-flow harness supports U2/U3 nodes only; U4 pending');
+                    if (hasRoot)
+                        pendingBreak ??= id;
+                    continue;
+                }
+                // Coalesce source requests only: all non-break roots retain their
+                // footprint, including empty text, fixed spacers and native TOC.
+                // A pending request at the Section end has no following root.
+                if (pendingBreak !== undefined) {
+                    children.push(...options.special!(pendingBreak));
+                    previous = 'page-break';
+                    pendingBreak = undefined;
+                }
                 if (n.type === 'table') {
                     if (previous === 'table') {
                         children.push(structuralParagraph());
@@ -142,6 +194,7 @@ export function buildBodyFlow(intent: ExportIntent, options: {
                 else
                     fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + id, 'Body-flow harness supports U2/U3 nodes only; U4 pending');
                 previous = n.type;
+                hasRoot = true;
             }
         }
         return { children, receipt: { tableSpaces, tableSeparators, wordLayoutVerified: false, readingPlan: plan } };

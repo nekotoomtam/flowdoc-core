@@ -8,6 +8,7 @@ import { measurePageBand, selectPageBands, type MeasuredBand } from './pageBands
 import type { BandMode } from '../template/types.js';
 import { measureFixedTextBlock } from './fixedTextBlock.js';
 import { cellTableFlow } from './cellTableFlow.js';
+import {tableStartHeight}from'./tableStart.js';
 import { collectContents } from '../composition/contents.js';
 import { measureContents } from './measureContents.js';
 import { toPt } from '../composition/resolvedDocument.js';
@@ -75,7 +76,12 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
             if (m && (at < 0 || at + m.heightPt > heightPt + epsilon))
                 throw new LayoutError(activeBands[kind]?.rootIds[0] ?? activeNode, 'Page band exceeds physical page', sectionId, kind + '.placement');
         const hg = activeBands.header?.gap ? toPt(activeBands.header.gap) : 0, fg = activeBands.footer?.gap ? toPt(activeBands.footer.gap) : 0;
-        const nt = h ? Math.max(innerTop, hy + h.heightPt + hg) : innerTop, nb = f ? Math.min(innerBottom, fy - fg) : innerBottom;
+        const probeTop=runtime.spacingProbe?.bodyTopPt?.(sectionId);
+        if(probeTop!==undefined&&(!Number.isFinite(probeTop)||probeTop<0||probeTop>=heightPt))throw new LayoutError(activeNode,'Invalid spacing probe body top');
+        const nt = Math.max(h ? Math.max(innerTop, hy + h.heightPt + hg) : innerTop,probeTop??0);
+        const probeBottom=runtime.spacingProbe?.bodyBottomPt?.(sectionId);
+        if(probeBottom!==undefined&&(!Number.isFinite(probeBottom)||probeBottom<=nt||probeBottom>heightPt))throw new LayoutError(activeNode,'Invalid spacing probe body bottom');
+        const nb = Math.min(f ? Math.min(innerBottom, fy - fg) : innerBottom,probeBottom??heightPt);
         if (Math.max((h ? h.heightPt + hg : 0) + (f ? f.heightPt + fg : 0), nt - innerTop + innerBottom - nb) > (innerBottom - innerTop) * .4 + epsilon)
             throw new LayoutError((h ? activeBands.header : activeBands.footer)?.rootIds[0] ?? activeNode, 'Page bands exceed 40 percent of inner page height', sectionId, (h ? 'header' : 'footer') + '.sizing');
         return { top: nt, bottom: nb, h, f, hy, fy };
@@ -184,7 +190,9 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
             }
         nextPage();
         let pendingBreak = false;
+        let previousRoot:string|undefined;
         const renderRoot=async(id:string)=> {
+            const previous=previousRoot;previousRoot=id;
             activeNode = id;
             const n = d.nodes[id];
             if (n?.type === 'page-break') {
@@ -202,8 +210,30 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                     nextPage();
                 pendingBreak = false;
             }
-            if (n?.type === 'table')
+            if(!fixed&&n?.type==='text-block'&&n.props.toc&&runtime.spacingProbe?.keepTableStart?.(id)){
+                const index=section.rootIds.indexOf(id),next=section.rootIds.slice(index+1,index+3),prefix=[id];
+                let t=d.nodes[next[0]!];
+                if(t?.type==='text-block'&&!t.props.toc&&d.nodes[next[1]!]?.type==='table'){
+                    prefix.push(t.id);t=d.nodes[next[1]!];
+                }
+                if(t?.type==='table'&&t.rowIds.length){
+                    let required=await tableStartHeight(d,t,runtime);
+                    for(const p of prefix)required+=(await measureBlock(p,available)).reduce((sum,line)=>sum+line.heightPt,0);
+                    const full=geometry(sectionPageIndex).bottom-geometry(sectionPageIndex).top;
+                    if(required>full+epsilon)throw new LayoutError(id,'Table-start group exceeds page content height');
+                    if(y+required>bottom+epsilon&&y>top+epsilon)nextPage();
+                }
+            }
+            if (n?.type === 'table') {
+                if(previous&&d.nodes[previous]?.type==='table'){
+                    const gap=runtime.spacingProbe?.tableBoundaryPt?.(previous,id)??0;
+                    if(!Number.isFinite(gap)||gap<0||gap>100)throw new LayoutError(id,'Invalid spacing probe table boundary');
+                    // The separator belongs to the ending page. Table flow resets
+                    // y if it must continue on a fresh page, so no leading gap leaks.
+                    if(y>top+epsilon)y+=gap;
+                }
                 await table(n);
+            }
             else if (n?.type === 'text-block') {
                 if (n.props.heightMode === 'fixed') {
                     const measured = await measureFixedTextBlock(n, d.styles[n.props.textStyleId]!, available, runtime);
