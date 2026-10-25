@@ -89,7 +89,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    }
    if(ctx.resolved&&own(n.props,'toc')&&!issues.length&&!contentsTitle(n as import('../composition/resolvedDocument.js').TextBlock))fail(p+'.props.toc');
   }else if(n.type==='area'&&ctx.areas&&!ctx.resolved){
-   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['areaId'])||!validId(n.props.areaId))fail(p);
+   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['areaId','verticalAlign'])||!validId(n.props.areaId)||own(n.props,'verticalAlign')&&!['top','bottom'].includes(n.props.verticalAlign))fail(p);
   }else if(n.type==='table-of-contents'&&ctx.contents){
    if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['textStyleId',...(ctx.scopedContents?['scope']:[])])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId))fail(p);
    if(ctx.scopedContents&&(!object(n.props?.scope)||!keys(n.props.scope,['kind'])||!['section','document'].includes(n.props.scope.kind)))fail(p+'.props.scope');
@@ -100,7 +100,8 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    else {const s=n.props.source;if(!object(s)||!keys(s,['scope','key'])||![...Object.keys(scopes),...(ctx.itemImages?['item']:[]),...(ctx.rowGroups?['group']:[])].includes(s.scope)||!name(s.key)||s.key.includes('.'))fail(p+'.props.source');}
    for(const key of ['width','height']){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<=0)fail(p+'.props.'+key);}
   }else if(n.type==='table'){
-   if(!keys(n,['id','type','props','columns','rowIds',...(ctx.resolved&&ctx.rowGroups?['rowGroups']:[])])||!object(n.props)||!keys(n.props,['headerRowCount','repeatHeaderRows',...(ctx.cellContent?['headerFillColor','borderColor']:[])])||!Number.isInteger(n.props.headerRowCount)||n.props.headerRowCount<0||n.props.headerRowCount>1||typeof n.props.repeatHeaderRows!=='boolean'||!Array.isArray(n.columns)||!n.columns.length){fail(p);continue;}
+   if(!keys(n,['id','type','props','columns','rowIds',...(ctx.resolved&&ctx.rowGroups?['rowGroups']:[])])||!object(n.props)||!keys(n.props,['headerRowCount','repeatHeaderRows',...(ctx.cellContent?['headerFillColor','borderColor','borderStyle']:[])])||!Number.isInteger(n.props.headerRowCount)||n.props.headerRowCount<0||n.props.headerRowCount>1||typeof n.props.repeatHeaderRows!=='boolean'||!Array.isArray(n.columns)||!n.columns.length){fail(p);continue;}
+   if(own(n.props,'borderStyle')&&!['single','none'].includes(n.props.borderStyle))fail(p+'.props.borderStyle');
    for(const k of ['headerFillColor','borderColor'])if(own(n.props,k)&&(typeof n.props[k]!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props[k])))fail(p+'.props.'+k);
    for(const c of n.columns)if(!object(c)||!keys(c,['width'])||!object(c.width)||!keys(c.width,['unit','value'])||!['mm','pt'].includes(c.width.unit)||typeof c.width.value!=='number'||!Number.isFinite(c.width.value)||c.width.value<=0)fail(p+'.columns');
    children=refs(n.rowIds,p+'.rowIds');if(n.props.headerRowCount>children.length)fail(p+'.props.headerRowCount');

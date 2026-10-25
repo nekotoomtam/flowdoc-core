@@ -5,6 +5,8 @@ export {calculateFontHeightAdjustment,FONT_HEIGHT_METHOD} from './fonts/heightAd
 export type {FontHeightAdjustmentMetric,FontHeightAdjustmentInput,FontHeightAdjustmentResult,FontHeightAdjustmentErrorCode} from './fonts/heightAdjustment.js';
 export type {FontSelection,LibraryTextStyle,LibraryFontInput,FontLicense} from './fonts/types.js';
 export {createPdfEngine} from './pdf/createPdfEngine.js';
+export {createDocxEngine} from './docx/engine.js';
+export type {DocxEngine,DocxResources,DocxOptions,DocxOutput,DocxArtifact,PreparedImageProvider} from './docx/engine.js';
 export type {PdfEngine,PdfArtifact,PdfStreamArtifact,PdfOutput} from './pdf/createPdfEngine.js';
 export {PDF_STREAM_CONTRACT} from './pdf/streamResources.js';
 export type {PdfImageProvider,PdfStreamRef,StreamPdfImage} from './pdf/streamResources.js';

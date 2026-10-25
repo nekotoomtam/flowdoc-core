@@ -8,7 +8,9 @@ WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY . .
-RUN npm run build && npm test && npm run build:native && npm run build:resources && node scripts/checkNativeSession.mjs
+COPY --chmod=0555 --from=legacy-proof /legacy-segmenter /legacy-segmenter
+ENV FLOWDOC_LEGACY_SEGMENTER=/legacy-segmenter
+RUN npm run build && npm run build:native && npm run build:resources && npm test && node scripts/checkNativeSession.mjs
 RUN mkdir /artifact && npm pack --ignore-scripts --pack-destination /artifact
 FROM scratch AS artifact
 COPY --from=build /artifact/ /

@@ -1,0 +1,852 @@
+{
+  "authorityBoundary": "Read-only E10 cause evidence, not an implemented fix or proof of exact contribution. Project Control owns shared status.",
+  "counts": {
+    "requirements": 361,
+    "samePage": 304,
+    "onePageEarly": 57,
+    "mismatchRunsInSourceOrder": 33,
+    "runStartsWithExactlyOnePdfTextLine": 13,
+    "nativeDefaultStylesWidowDeclarations": 0,
+    "featureLineCountDeltaDistribution": {
+      "0": 360,
+      "-1": 1
+    },
+    "featureAsciiSequenceExactRows": 287
+  },
+  "fragmentInventory": {
+    "PDF": {
+      "splitTextParagraphs": 22,
+      "singletonEndParagraphs": [
+        {
+          "id": "REQ0027",
+          "fragments": [
+            [
+              48,
+              1
+            ],
+            [
+              49,
+              1
+            ]
+          ]
+        },
+        {
+          "id": "REQ0035",
+          "fragments": [
+            [
+              49,
+              1
+            ],
+            [
+              50,
+              2
+            ]
+          ]
+        },
+        {
+          "id": "REQ0041",
+          "fragments": [
+            [
+              50,
+              13
+            ],
+            [
+              51,
+              32
+            ],
+            [
+              52,
+              32
+            ],
+            [
+              53,
+              1
+            ]
+          ]
+        },
+        {
+          "id": "REQ0087",
+          "fragments": [
+            [
+              57,
+              4
+            ],
+            [
+              58,
+              1
+            ]
+          ]
+        },
+        {
+          "id": "REQ0108",
+          "fragments": [
+            [
+              59,
+              1
+            ],
+            [
+              60,
+              18
+            ]
+          ]
+        },
+        {
+          "id": "REQ0163",
+          "fragments": [
+            [
+              66,
+              1
+            ],
+            [
+              67,
+              1
+            ]
+          ]
+        },
+        {
+          "id": "REQ0199",
+          "fragments": [
+            [
+              70,
+              1
+            ],
+            [
+              71,
+              1
+            ]
+          ]
+        },
+        {
+          "id": "REQ0248",
+          "fragments": [
+            [
+              76,
+              1
+            ],
+            [
+              77,
+              3
+            ]
+          ]
+        },
+        {
+          "id": "REQ0337",
+          "fragments": [
+            [
+              89,
+              1
+            ],
+            [
+              90,
+              4
+            ]
+          ]
+        }
+      ]
+    },
+    "Word": {
+      "splitTextParagraphs": 26,
+      "singletonEndParagraphs": []
+    }
+  },
+  "groupDetails": [
+    {
+      "startId": "REQ0027",
+      "ids": [
+        "REQ0027"
+      ],
+      "pdfPage": 48,
+      "wordPage": 49,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 2,
+      "wordTotalTextLines": 2,
+      "priorId": "REQ0026",
+      "priorBaselineWordMinusPdfPt": 3.161158999999884,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0035",
+      "ids": [
+        "REQ0035"
+      ],
+      "pdfPage": 49,
+      "wordPage": 50,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 3,
+      "wordTotalTextLines": 3,
+      "priorId": "REQ0034",
+      "priorBaselineWordMinusPdfPt": 23.461158999999952,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0074",
+      "ids": [
+        "REQ0074"
+      ],
+      "pdfPage": 55,
+      "wordPage": 56,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 1,
+      "wordTotalTextLines": 1,
+      "priorId": "REQ0073",
+      "priorBaselineWordMinusPdfPt": 26.641158999999902,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0108",
+      "ids": [
+        "REQ0108"
+      ],
+      "pdfPage": 59,
+      "wordPage": 60,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 19,
+      "wordTotalTextLines": 19,
+      "priorId": "REQ0107",
+      "priorBaselineWordMinusPdfPt": 26.211158999999952,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0113",
+      "ids": [
+        "REQ0113"
+      ],
+      "pdfPage": 60,
+      "wordPage": 61,
+      "pdfFirstFragmentTextLines": 2,
+      "pdfTotalTextLines": 2,
+      "wordTotalTextLines": 2,
+      "priorId": "REQ0112",
+      "priorBaselineWordMinusPdfPt": 23.041158999999993,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0122",
+      "ids": [
+        "REQ0122"
+      ],
+      "pdfPage": 61,
+      "wordPage": 62,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 1,
+      "wordTotalTextLines": 1,
+      "priorId": "REQ0121",
+      "priorBaselineWordMinusPdfPt": 42.85115900000005,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0143",
+      "ids": [
+        "REQ0143"
+      ],
+      "pdfPage": 64,
+      "wordPage": 65,
+      "pdfFirstFragmentTextLines": 2,
+      "pdfTotalTextLines": 2,
+      "wordTotalTextLines": 2,
+      "priorId": "REQ0142",
+      "priorBaselineWordMinusPdfPt": 43.84115899999995,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0162",
+      "ids": [
+        "REQ0162",
+        "REQ0163"
+      ],
+      "pdfPage": 66,
+      "wordPage": 67,
+      "pdfFirstFragmentTextLines": 3,
+      "pdfTotalTextLines": 3,
+      "wordTotalTextLines": 3,
+      "priorId": "REQ0161",
+      "priorBaselineWordMinusPdfPt": 82.55115899999998,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0169",
+      "ids": [
+        "REQ0169",
+        "REQ0170"
+      ],
+      "pdfPage": 67,
+      "wordPage": 68,
+      "pdfFirstFragmentTextLines": 2,
+      "pdfTotalTextLines": 2,
+      "wordTotalTextLines": 2,
+      "priorId": "REQ0168",
+      "priorBaselineWordMinusPdfPt": 105.541159,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0179",
+      "ids": [
+        "REQ0179"
+      ],
+      "pdfPage": 68,
+      "wordPage": 69,
+      "pdfFirstFragmentTextLines": 4,
+      "pdfTotalTextLines": 4,
+      "wordTotalTextLines": 4,
+      "priorId": "REQ0178",
+      "priorBaselineWordMinusPdfPt": 108.2711589999999,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0188",
+      "ids": [
+        "REQ0188"
+      ],
+      "pdfPage": 69,
+      "wordPage": 70,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 1,
+      "wordTotalTextLines": 1,
+      "priorId": "REQ0187",
+      "priorBaselineWordMinusPdfPt": 82.58115899999996,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0198",
+      "ids": [
+        "REQ0198",
+        "REQ0199"
+      ],
+      "pdfPage": 70,
+      "wordPage": 71,
+      "pdfFirstFragmentTextLines": 2,
+      "pdfTotalTextLines": 2,
+      "wordTotalTextLines": 2,
+      "priorId": "REQ0197",
+      "priorBaselineWordMinusPdfPt": 108.20715899999993,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0205",
+      "ids": [
+        "REQ0205",
+        "REQ0206"
+      ],
+      "pdfPage": 71,
+      "wordPage": 72,
+      "pdfFirstFragmentTextLines": 3,
+      "pdfTotalTextLines": 3,
+      "wordTotalTextLines": 3,
+      "priorId": "REQ0204",
+      "priorBaselineWordMinusPdfPt": 107.71115899999995,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0215",
+      "ids": [
+        "REQ0215"
+      ],
+      "pdfPage": 72,
+      "wordPage": 73,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 1,
+      "wordTotalTextLines": 1,
+      "priorId": "REQ0214",
+      "priorBaselineWordMinusPdfPt": 128.10115900000005,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0226",
+      "ids": [
+        "REQ0226",
+        "REQ0227",
+        "REQ0228"
+      ],
+      "pdfPage": 74,
+      "wordPage": 75,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 1,
+      "wordTotalTextLines": 1,
+      "priorId": "REQ0225",
+      "priorBaselineWordMinusPdfPt": 124.8911589999999,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0238",
+      "ids": [
+        "REQ0238",
+        "REQ0239",
+        "REQ0240"
+      ],
+      "pdfPage": 75,
+      "wordPage": 76,
+      "pdfFirstFragmentTextLines": 2,
+      "pdfTotalTextLines": 2,
+      "wordTotalTextLines": 2,
+      "priorId": "REQ0237",
+      "priorBaselineWordMinusPdfPt": 128.0311589999999,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0247",
+      "ids": [
+        "REQ0247",
+        "REQ0248"
+      ],
+      "pdfPage": 76,
+      "wordPage": 77,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 1,
+      "wordTotalTextLines": 1,
+      "priorId": "REQ0246",
+      "priorBaselineWordMinusPdfPt": 128.02115899999995,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0258",
+      "ids": [
+        "REQ0258",
+        "REQ0259",
+        "REQ0260"
+      ],
+      "pdfPage": 77,
+      "wordPage": 78,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 1,
+      "wordTotalTextLines": 1,
+      "priorId": "REQ0257",
+      "priorBaselineWordMinusPdfPt": 127.5111589999999,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0268",
+      "ids": [
+        "REQ0268"
+      ],
+      "pdfPage": 78,
+      "wordPage": 79,
+      "pdfFirstFragmentTextLines": 2,
+      "pdfTotalTextLines": 11,
+      "wordTotalTextLines": 11,
+      "priorId": "REQ0267",
+      "priorBaselineWordMinusPdfPt": 131.20115899999996,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0274",
+      "ids": [
+        "REQ0274"
+      ],
+      "pdfPage": 80,
+      "wordPage": 81,
+      "pdfFirstFragmentTextLines": 2,
+      "pdfTotalTextLines": 6,
+      "wordTotalTextLines": 6,
+      "priorId": "REQ0273",
+      "priorBaselineWordMinusPdfPt": 122.20115900000002,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0280",
+      "ids": [
+        "REQ0280",
+        "REQ0281",
+        "REQ0282"
+      ],
+      "pdfPage": 81,
+      "wordPage": 82,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 1,
+      "wordTotalTextLines": 1,
+      "priorId": "REQ0279",
+      "priorBaselineWordMinusPdfPt": 124.92115899999988,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0291",
+      "ids": [
+        "REQ0291",
+        "REQ0292"
+      ],
+      "pdfPage": 82,
+      "wordPage": 83,
+      "pdfFirstFragmentTextLines": 3,
+      "pdfTotalTextLines": 3,
+      "wordTotalTextLines": 3,
+      "priorId": "REQ0290",
+      "priorBaselineWordMinusPdfPt": 150.59115899999983,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0298",
+      "ids": [
+        "REQ0298",
+        "REQ0299",
+        "REQ0300",
+        "REQ0301"
+      ],
+      "pdfPage": 83,
+      "wordPage": 84,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 1,
+      "wordTotalTextLines": 1,
+      "priorId": "REQ0297",
+      "priorBaselineWordMinusPdfPt": 167.221159,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0309",
+      "ids": [
+        "REQ0309"
+      ],
+      "pdfPage": 84,
+      "wordPage": 85,
+      "pdfFirstFragmentTextLines": 2,
+      "pdfTotalTextLines": 2,
+      "wordTotalTextLines": 2,
+      "priorId": "REQ0308",
+      "priorBaselineWordMinusPdfPt": 150.5711589999999,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0314",
+      "ids": [
+        "REQ0314",
+        "REQ0315"
+      ],
+      "pdfPage": 85,
+      "wordPage": 86,
+      "pdfFirstFragmentTextLines": 1,
+      "pdfTotalTextLines": 1,
+      "wordTotalTextLines": 1,
+      "priorId": "REQ0313",
+      "priorBaselineWordMinusPdfPt": 144.74115899999987,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0317",
+      "ids": [
+        "REQ0317",
+        "REQ0318"
+      ],
+      "pdfPage": 86,
+      "wordPage": 87,
+      "pdfFirstFragmentTextLines": 2,
+      "pdfTotalTextLines": 2,
+      "wordTotalTextLines": 2,
+      "priorId": "REQ0316",
+      "priorBaselineWordMinusPdfPt": 168.74115899999993,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0324",
+      "ids": [
+        "REQ0324",
+        "REQ0325"
+      ],
+      "pdfPage": 87,
+      "wordPage": 88,
+      "pdfFirstFragmentTextLines": 5,
+      "pdfTotalTextLines": 5,
+      "wordTotalTextLines": 5,
+      "priorId": "REQ0323",
+      "priorBaselineWordMinusPdfPt": 167.31115899999998,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0330",
+      "ids": [
+        "REQ0330"
+      ],
+      "pdfPage": 88,
+      "wordPage": 89,
+      "pdfFirstFragmentTextLines": 6,
+      "pdfTotalTextLines": 6,
+      "wordTotalTextLines": 6,
+      "priorId": "REQ0329",
+      "priorBaselineWordMinusPdfPt": 184.4611589999999,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0336",
+      "ids": [
+        "REQ0336",
+        "REQ0337"
+      ],
+      "pdfPage": 89,
+      "wordPage": 90,
+      "pdfFirstFragmentTextLines": 3,
+      "pdfTotalTextLines": 3,
+      "wordTotalTextLines": 3,
+      "priorId": "REQ0335",
+      "priorBaselineWordMinusPdfPt": 206.921159,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0342",
+      "ids": [
+        "REQ0342"
+      ],
+      "pdfPage": 91,
+      "wordPage": 92,
+      "pdfFirstFragmentTextLines": 2,
+      "pdfTotalTextLines": 2,
+      "wordTotalTextLines": 2,
+      "priorId": "REQ0341",
+      "priorBaselineWordMinusPdfPt": 201.61115899999993,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0353",
+      "ids": [
+        "REQ0353",
+        "REQ0343",
+        "REQ0344"
+      ],
+      "pdfPage": 92,
+      "wordPage": 93,
+      "pdfFirstFragmentTextLines": 2,
+      "pdfTotalTextLines": 2,
+      "wordTotalTextLines": 2,
+      "priorId": "REQ0352",
+      "priorBaselineWordMinusPdfPt": 213.9871589999999,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0356",
+      "ids": [
+        "REQ0356",
+        "REQ0357"
+      ],
+      "pdfPage": 95,
+      "wordPage": 96,
+      "pdfFirstFragmentTextLines": 4,
+      "pdfTotalTextLines": 4,
+      "wordTotalTextLines": 4,
+      "priorId": "REQ0355",
+      "priorBaselineWordMinusPdfPt": 204.8411589999999,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    },
+    {
+      "startId": "REQ0364",
+      "ids": [
+        "REQ0364"
+      ],
+      "pdfPage": 97,
+      "wordPage": 98,
+      "pdfFirstFragmentTextLines": 8,
+      "pdfTotalTextLines": 18,
+      "wordTotalTextLines": 18,
+      "priorId": "REQ0363",
+      "priorBaselineWordMinusPdfPt": 184.46115899999995,
+      "nativeWidowControlUnspecified": true,
+      "nativeKeepLinesAllFalse": true,
+      "nativeRowSplittable": true
+    }
+  ],
+  "nativeReference": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.widowcontrol?view=openxml-3.0.1",
+  "interpretation": [
+    "Native requirement paragraphs omit widowControl; default styles also omit it, so the standard default prevents isolated first/last lines.",
+    "PDF cell flow fits each whole measured line with padding, but has no paragraph widow/orphan check.",
+    "First REQ0027 is a two-line paragraph split1+1 by PDF but kept2 on native49. This is direct evidence of the mechanism.",
+    "Later mismatches may be propagated displacement, independent first/last-line constraints, wrapping or continuation metrics; they are not all attributed to one flag without a counterfactual."
+  ],
+  "candidateChanged": false,
+  "newPdfCreated": false,
+  "frozenInputs": [
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\SRS-M2-boundary.pdf",
+      "sha256": "6899f2518264b018dd5fa7f66d3c2f06eefbb18c67dfbf5eeb02e2af9e0f5553",
+      "bytes": 2550363
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.pdf",
+      "sha256": "0cec02a089f19fea49721f86fe1635b8b1fa67987902dc16798fba7c1c651faa",
+      "bytes": 1313838
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.docx",
+      "sha256": "b6133d488ca6c182d8375467b82b1bc5b12b8e8b75600a9b6288852348edb6b8",
+      "bytes": 904660
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\inputs\\original-reference.pdf",
+      "sha256": "cd2fde00ea5273c889498eb490ff2e1fa945f7e4fbdc74cd65f25bbb9643ebf1",
+      "bytes": 2559955
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\resolved-document.json",
+      "sha256": "86df6e37ddbafc58ecf554070efe6affc091c9820238f6d7af230feeddff5047",
+      "bytes": 5254791
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\M2-boundary-draw.json",
+      "sha256": "edba941c796ced93defadcd221d77aaf47b46c0729ca846ec459e486c6d1f2e7",
+      "bytes": 889306
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\SRS-G1-table-start.pdf",
+      "sha256": "a1cce985ef4cbcaeebc308424a343ac396e6b31f3288a76a0f965a63a9afbab1"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\G1-table-start-draw.json",
+      "sha256": "004e22b47fb16a5797222efe75037b6363dad7fc412482ed888ac175f13d16a2"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\calibration.json",
+      "sha256": "6034edeefbaf5c6e9312e4b116c46adfaace0a61732797058d7d9bb10c9f9b5a"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\SRS-R2-twips.pdf",
+      "sha256": "9d6974bc8c126fefd7d9b8160a7cfcd4f5ae6d788941c12e366579b8ffc6cad0"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\R2-twips-draw.json",
+      "sha256": "41928b662e9b8e73fda0e7a46d6f2269f599ee68ca6c3fde5d51b276218d1d0d"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\calibration.json",
+      "sha256": "d96dbe0c7bd50eafa728d62d5a6383ac12910b3af7c471b6a7fe812547224a12"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e9\\SRS-F1-native-bottom.pdf",
+      "sha256": "d77b1b169553587d9e3e7bd571c7e76411b0ccb2168cd5b3a907590f56b198e8"
+    }
+  ],
+  "separateDiacriticExtractionFragments": [
+    {
+      "artifact": "Word",
+      "id": "REQ0346",
+      "fragment": {
+        "page": 95,
+        "baseline": 524.47,
+        "text": "้ั",
+        "ascii": ""
+      },
+      "attachedBaseline": 527.8299999999999
+    },
+    {
+      "artifact": "Word",
+      "id": "REQ0365",
+      "fragment": {
+        "page": 99,
+        "baseline": 560.71,
+        "text": "ั",
+        "ascii": ""
+      },
+      "attachedBaseline": 564.91
+    }
+  ],
+  "extractionLimitations": "Feature line counts exclude two separately extracted native Thai mark fragments and two authored anonymous note rows. ASCII equality is only a locator check and fails on some ligature/encoding extraction; it is not a text fidelity acceptance gate.",
+  "validation": {
+    "frozenHashesUnchanged": true,
+    "trackedCandidateAndNonIgnoredFilesUnchangedOutsideDiagnosticTools": true,
+    "requirementGroupsCoverAll57ExactlyOnce": true,
+    "nativeSelectedRowsSplittableAndNoKeepLines": true,
+    "priorCandidate": "0c13e0c",
+    "runtimeTestsRerun": false,
+    "reason": "Complete Git status contains diagnostic tools only; frozen hashes match. No runtime execution in this checkpoint; no claim to inspect every ignored runtime artifact."
+  },
+  "visualReview": {
+    "sheets": [
+      "first-divergence.png",
+      "long-row-end.png",
+      "singleton-last.png",
+      "wrap-0178.png",
+      "wrap-0346.png",
+      "wrap-0365.png"
+    ],
+    "scope": "Frozen representative cause comparisons; full-document text geometry scanned, not new full-page visual acceptance."
+  },
+  "nextExperiment": {
+    "primary": "Opt-in PDF paragraph widow/orphan policy using actual native paragraph boundaries; at least two text lines at a paragraph beginning/end when feasible. Long rows still split; oversize fallback must ensure progress.",
+    "containment": "Keep E9 bottom, E8 row metrics, E7 grouping and introduction profile unchanged; compare byte-exact control and one factor against all361REQ, source coverage and protected pages.",
+    "secondary": "Keep REQ0178 native/PDF wrap difference separate; it reduces native line count and does not explain earlier PDF starts.",
+    "notYetProven": "The exact number of the57 page starts or final page count recovered by the widow/orphan factor needs a real reflow counterfactual."
+  },
+  "reviewCorrections": [
+    "REQ0365 mark check now renders physical99 where its native fragment actually occurs.",
+    "Candidate containment checks complete Git status against explicit diagnostic-file allowlist, not four directory prefixes."
+  ],
+  "firstDivergence": {
+    "id": "REQ0027",
+    "pdfFragments": [
+      [
+        48,
+        1
+      ],
+      [
+        49,
+        1
+      ]
+    ],
+    "nativeFragments": [
+      [
+        49,
+        2
+      ]
+    ],
+    "paragraphKeepNext": false,
+    "paragraphKeepLines": false,
+    "widowControl": "unspecified at paragraph and default style levels; standard default enabled"
+  }
+}

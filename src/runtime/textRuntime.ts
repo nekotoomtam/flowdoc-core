@@ -4,6 +4,7 @@ import {selectFont} from '../fonts/selection.js';
 import {FontError} from '../fonts/types.js';
 import type {ExportResources} from './exportResources.js';
 import type {ShapedText,TextRuntime} from '../layout/textFlow.js';
+import {scriptSpans} from './scriptSpans.js';
 export const subprocessOptions={timeout:30_000,maxBuffer:16*1024*1024,windowsHide:true};
 export function byteOffsets(text:string):Map<number,number>{
  if(!text.isWellFormed())throw Error('Malformed Unicode');
@@ -29,7 +30,7 @@ export function decodeShape(raw:any,text:string,sizePt:number):ShapedText{
  });
  return {glyphs,ascentPt:top,descentPt:bottom,inkLeftPt:left,inkRightPt:right,glyphInkBoundsPt:raw.glyphs.map((g:any)=>g.ink?{left:(g.xOffset+g.ink.xMin)*scale,right:(g.xOffset+g.ink.xMax)*scale}:null)};
 }
-export function createTextRuntime(resources:ExportResources,signal?:AbortSignal):TextRuntime&{close():Promise<void>}{
+export function createTextRuntime(resources:Pick<ExportResources,'fonts'|'shaperPath'|'segmenterPath'>,signal?:AbortSignal):TextRuntime&{close():Promise<void>}{
  const sessions=new Map<string,NativeShapeSession>();
  let segmenter:NativeSegmenterSession|undefined,closed=false,closing:Promise<void>|undefined;
  const close=()=>{
@@ -55,10 +56,28 @@ export function createTextRuntime(resources:ExportResources,signal?:AbortSignal)
    const font=resources.fonts.find(f=>f.id===fontId);if(!font)throw Error('Missing font');
    let session=sessions.get(fontId);
    if(!session){session=new NativeShapeSession(resources.shaperPath,['--serve',font.path,fontId]);sessions.set(fontId,session);}
-   const raw=await session.request(text);
-   if(raw.text!==text||raw.fontId!==fontId)throw Error('Mismatched shape result');
-   if(raw.glyphs?.some((g:any)=>g.glyphId===0))throw new FontError('FONT_GLYPH_MISSING');
-   try{return decodeShape(raw,text,sizePt);}catch{throw new FontError('FONT_SHAPING_FAILED');}
+   const spans=scriptSpans(text),shapes:ShapedText[]=[];
+   for(const span of spans){
+    if(closed)throw Error('Text runtime closed');signal?.throwIfAborted();
+    const raw=await session.request(span.text);
+    if(raw.text!==span.text||raw.fontId!==fontId)throw Error('Mismatched shape result');
+    if(raw.glyphs?.some((g:any)=>g.glyphId===0))throw new FontError('FONT_GLYPH_MISSING');
+    try{shapes.push(decodeShape(raw,span.text,sizePt));}catch{throw new FontError('FONT_SHAPING_FAILED');}
+   }
+   if(shapes.length===1)return shapes[0]!;
+   const combined:ShapedText={glyphs:[],ascentPt:0,descentPt:0,inkLeftPt:0,inkRightPt:0,glyphInkBoundsPt:[]};
+   let cursor=0;
+   for(let i=0;i<shapes.length;i++){
+    const shape=shapes[i]!,span=spans[i]!;
+    combined.ascentPt=Math.max(combined.ascentPt,shape.ascentPt);
+    combined.descentPt=Math.max(combined.descentPt,shape.descentPt);
+    combined.inkLeftPt=Math.min(combined.inkLeftPt!,cursor+shape.inkLeftPt!);
+    combined.inkRightPt=Math.max(combined.inkRightPt!,cursor+shape.inkRightPt!);
+    combined.glyphs.push(...shape.glyphs.map(g=>({...g,clusterStartOffset:g.clusterStartOffset+span.start,clusterEndOffset:g.clusterEndOffset+span.start})));
+    combined.glyphInkBoundsPt!.push(...shape.glyphInkBoundsPt!);
+    cursor+=shape.glyphs.reduce((sum,g)=>sum+g.advancePt,0);
+   }
+   return combined;
   }
  };
 }

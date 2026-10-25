@@ -17,5 +17,5 @@ export function cacheTextRuntime(base:TextRuntime,limits={maxBytes:8*1024*1024,m
   }
   return result;
  }
- return {...(base.fontId?{fontId:(style:Parameters<NonNullable<TextRuntime['fontId']>>[0])=>base.fontId!(style)}:{}),dispose(){disposed=true;entries.clear();bytes=0;},breaks:text=>get(JSON.stringify(['breaks',text]),()=>base.breaks(text)),shape:(text,font,size)=>get(JSON.stringify(['shape',font,size,text]),()=>base.shape(text,font,size))};
+ return {...(base.spacingProbe?{spacingProbe:base.spacingProbe}:{}),...(base.fontId?{fontId:(style:Parameters<NonNullable<TextRuntime['fontId']>>[0])=>base.fontId!(style)}:{}),dispose(){disposed=true;entries.clear();bytes=0;},breaks:text=>get(JSON.stringify(['breaks',text]),()=>base.breaks(text)),shape:(text,font,size)=>get(JSON.stringify(['shape',font,size,text]),()=>base.shape(text,font,size))};
 }

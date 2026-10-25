@@ -15,6 +15,11 @@ export function* composeSectionsSteps(t: TemplateDefinition, p: PreparedInput, d
         const sectionId = s.id, prefix = `section-${sectionId}~`, pageLayoutId = s.pageLayoutId ?? t.book.defaultPageLayoutId;
         const rootIds = s.source.kind === 'blank' ? [] : yield*expandRowsSteps({ ...s.source, inputSchema: { type: 'object', fields: {} } }, p.data, {}, undefined, undefined, d.nodes, d.sourceMap, { access, budget, areaIndex, scopes, prefix, rootOffset:0, formatInstances, origin: { origin: 'authored', sectionId } });
         d.sections.push({ ...({ numbering: normalizeNumbering(s as import("../template/types.js").AreaSection) }), ...({ headerMode: s.headerMode ?? 'all', footerMode: s.footerMode ?? 'all' }), ...({ role: s.role ?? 'body', sourceKind: s.source.kind }), sectionId, pageLayoutId, page: structuredClone(t.pageLayouts[pageLayoutId]!.page), rootIds });
+        const last=s.source.kind==='authored'?s.source.fragment.nodes[s.source.fragment.rootIds.at(-1)!]:undefined;
+        if(last?.type==='area'&&last.props.verticalAlign==='bottom'){
+            const ids=rootIds.filter(id=>d.sourceMap[id]?.areaId===last.props.areaId);
+            d.sections.at(-1)!.endingArea={areaId:last.props.areaId,verticalAlign:'bottom',rootIds:ids,rootStartIndex:rootIds.length-ids.length};
+        }
         {
             const def = s as import('../template/types.js').AreaSection;
             for (const k of ['header', 'footer'] as const)

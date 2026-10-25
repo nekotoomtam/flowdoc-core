@@ -1,0 +1,700 @@
+{
+  "schemaVersion": 1,
+  "nodeModelVersion": 19,
+  "templateId": "e0-W",
+  "docKey": "e0-W",
+  "version": 1,
+  "name": "Pagination baseline W",
+  "book": {
+    "contentSlot": "body",
+    "defaultPageLayoutId": "normal"
+  },
+  "pageLayouts": {
+    "normal": {
+      "page": {
+        "size": "A4",
+        "orientation": "portrait",
+        "margin": {
+          "top": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "right": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "bottom": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "left": {
+            "value": 36,
+            "unit": "pt"
+          }
+        }
+      }
+    },
+    "wide": {
+      "page": {
+        "size": "A4",
+        "orientation": "landscape",
+        "margin": {
+          "top": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "right": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "bottom": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "left": {
+            "value": 36,
+            "unit": "pt"
+          }
+        }
+      }
+    }
+  },
+  "styles": {
+    "body": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "normal",
+      "fontSize": {
+        "value": 12,
+        "unit": "pt"
+      },
+      "lineHeightPt": 18
+    },
+    "face0": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "normal",
+      "fontSize": {
+        "value": 12,
+        "unit": "pt"
+      },
+      "lineHeightPt": 18,
+      "fontStyle": "normal"
+    },
+    "face1": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "bold",
+      "fontSize": {
+        "value": 12,
+        "unit": "pt"
+      },
+      "lineHeightPt": 18,
+      "fontStyle": "normal"
+    },
+    "face2": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "normal",
+      "fontSize": {
+        "value": 12,
+        "unit": "pt"
+      },
+      "lineHeightPt": 18,
+      "fontStyle": "italic"
+    },
+    "face3": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "bold",
+      "fontSize": {
+        "value": 12,
+        "unit": "pt"
+      },
+      "lineHeightPt": 18,
+      "fontStyle": "italic"
+    }
+  },
+  "globalSchema": {
+    "type": "object",
+    "fields": {
+      "photo": {
+        "type": "image",
+        "required": true
+      }
+    }
+  },
+  "areaFormats": {},
+  "examples": [],
+  "sections": [
+    {
+      "id": "10000000-0000-4000-8000-000000000010",
+      "label": "W authored first",
+      "nameBase": "W authored first",
+      "inputSchema": {
+        "type": "object",
+        "fields": {}
+      },
+      "source": {
+        "kind": "authored",
+        "repeats": [],
+        "fragment": {
+          "rootIds": [
+            "w-space",
+            "w-lines"
+          ],
+          "nodes": {
+            "w-space": {
+              "id": "w-space",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body",
+                "heightMode": "fixed",
+                "height": {
+                  "value": 749.8897637795277,
+                  "unit": "pt"
+                },
+                "verticalAlign": "top"
+              },
+              "children": []
+            },
+            "w-lines": {
+              "id": "w-lines",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "w-lines-leaf",
+                  "type": "text",
+                  "text": "W first L1 ไทย Latin\nW first L2 ไทย Latin\nW first L3 ไทย Latin\nW first L4 ไทย Latin\nW first L5 ไทย Latin"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000011",
+      "label": "W authored last",
+      "nameBase": "W authored last",
+      "inputSchema": {
+        "type": "object",
+        "fields": {}
+      },
+      "source": {
+        "kind": "authored",
+        "repeats": [],
+        "fragment": {
+          "rootIds": [
+            "w-space",
+            "w-lines"
+          ],
+          "nodes": {
+            "w-space": {
+              "id": "w-space",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body",
+                "heightMode": "fixed",
+                "height": {
+                  "value": 695.8897637795277,
+                  "unit": "pt"
+                },
+                "verticalAlign": "top"
+              },
+              "children": []
+            },
+            "w-lines": {
+              "id": "w-lines",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "w-lines-leaf",
+                  "type": "text",
+                  "text": "W last L1 ไทย Latin\nW last L2 ไทย Latin\nW last L3 ไทย Latin\nW last L4 ไทย Latin\nW last L5 ไทย Latin"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000012",
+      "label": "W natural wrap",
+      "nameBase": "W natural wrap",
+      "inputSchema": {
+        "type": "object",
+        "fields": {}
+      },
+      "source": {
+        "kind": "authored",
+        "repeats": [],
+        "fragment": {
+          "rootIds": [
+            "w-space",
+            "w-natural"
+          ],
+          "nodes": {
+            "w-space": {
+              "id": "w-space",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body",
+                "heightMode": "fixed",
+                "height": {
+                  "value": 731.8897637795277,
+                  "unit": "pt"
+                },
+                "verticalAlign": "top"
+              },
+              "children": []
+            },
+            "w-natural": {
+              "id": "w-natural",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "w-natural-leaf",
+                  "type": "text",
+                  "text": "W NATURAL การแบ่งบรรทัดภาษาไทย Thai text layout boundary test การแบ่งบรรทัดภาษาไทย Thai text layout boundary test การแบ่งบรรทัดภาษาไทย Thai text layout boundary test การแบ่งบรรทัดภาษาไทย Thai text layout boundary test การแบ่งบรรทัดภาษาไทย Thai text layout boundary test การแบ่งบรรทัดภาษาไทย Thai text layout boundary test การแบ่งบรรทัดภาษาไทย Thai text layout boundary test การแบ่งบรรทัดภาษาไทย Thai text layout boundary test "
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000013",
+      "label": "W cell authored",
+      "nameBase": "W cell authored",
+      "inputSchema": {
+        "type": "object",
+        "fields": {}
+      },
+      "source": {
+        "kind": "authored",
+        "repeats": [],
+        "fragment": {
+          "rootIds": [
+            "w-space",
+            "w-table"
+          ],
+          "nodes": {
+            "w-space": {
+              "id": "w-space",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body",
+                "heightMode": "fixed",
+                "height": {
+                  "value": 727.8897637795277,
+                  "unit": "pt"
+                },
+                "verticalAlign": "top"
+              },
+              "children": []
+            },
+            "w-table": {
+              "id": "w-table",
+              "type": "table",
+              "props": {
+                "headerRowCount": 0,
+                "repeatHeaderRows": false
+              },
+              "columns": [
+                {
+                  "width": {
+                    "value": 240,
+                    "unit": "pt"
+                  }
+                },
+                {
+                  "width": {
+                    "value": 240,
+                    "unit": "pt"
+                  }
+                }
+              ],
+              "rowIds": [
+                "w-tabler"
+              ]
+            },
+            "w-tabler": {
+              "id": "w-tabler",
+              "type": "table-row",
+              "props": {
+                "allowBreak": true
+              },
+              "cellIds": [
+                "w-tablea",
+                "w-tableb"
+              ]
+            },
+            "w-tablea": {
+              "id": "w-tablea",
+              "type": "table-cell",
+              "props": {
+                "columnIndex": 0
+              },
+              "childIds": [
+                "w-tableat"
+              ]
+            },
+            "w-tableat": {
+              "id": "w-tableat",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "w-tableat-leaf",
+                  "type": "text",
+                  "text": "W CELL L1 ไทย\nW CELL L2 ไทย\nW CELL L3 ไทย\nW CELL L4 ไทย\nW CELL L5 ไทย"
+                }
+              ]
+            },
+            "w-tableb": {
+              "id": "w-tableb",
+              "type": "table-cell",
+              "props": {
+                "columnIndex": 1
+              },
+              "childIds": [
+                "w-tablebt"
+              ]
+            },
+            "w-tablebt": {
+              "id": "w-tablebt",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "w-tablebt-leaf",
+                  "type": "text",
+                  "text": "w-table CELL"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000014",
+      "label": "W protected controls",
+      "nameBase": "W protected controls",
+      "inputSchema": {
+        "type": "object",
+        "fields": {}
+      },
+      "source": {
+        "kind": "authored",
+        "repeats": [],
+        "fragment": {
+          "rootIds": [
+            "w-heading",
+            "w-protected",
+            "w-tail",
+            "w-image",
+            "w-face0",
+            "w-face1",
+            "w-face2",
+            "w-face3"
+          ],
+          "nodes": {
+            "w-heading": {
+              "id": "w-heading",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body",
+                "anchorId": "w-head",
+                "toc": {
+                  "level": 1
+                }
+              },
+              "children": [
+                {
+                  "id": "w-heading-leaf",
+                  "type": "text",
+                  "text": "HEAD"
+                }
+              ]
+            },
+            "w-protected": {
+              "id": "w-protected",
+              "type": "table",
+              "props": {
+                "headerRowCount": 1,
+                "repeatHeaderRows": true
+              },
+              "columns": [
+                {
+                  "width": {
+                    "value": 240,
+                    "unit": "pt"
+                  }
+                },
+                {
+                  "width": {
+                    "value": 240,
+                    "unit": "pt"
+                  }
+                }
+              ],
+              "rowIds": [
+                "w-protectedh",
+                "w-protectedr"
+              ]
+            },
+            "w-protectedh": {
+              "id": "w-protectedh",
+              "type": "table-row",
+              "props": {
+                "allowBreak": false
+              },
+              "cellIds": [
+                "w-protectedhc"
+              ]
+            },
+            "w-protectedhc": {
+              "id": "w-protectedhc",
+              "type": "table-cell",
+              "props": {
+                "columnIndex": 0,
+                "colSpan": 2
+              },
+              "childIds": [
+                "w-protectedht"
+              ]
+            },
+            "w-protectedht": {
+              "id": "w-protectedht",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "w-protectedht-leaf",
+                  "type": "text",
+                  "text": "w-protected HEADER"
+                }
+              ]
+            },
+            "w-protectedr": {
+              "id": "w-protectedr",
+              "type": "table-row",
+              "props": {
+                "allowBreak": true
+              },
+              "cellIds": [
+                "w-protecteda",
+                "w-protectedb"
+              ]
+            },
+            "w-protecteda": {
+              "id": "w-protecteda",
+              "type": "table-cell",
+              "props": {
+                "columnIndex": 0
+              },
+              "childIds": [
+                "w-protectedat"
+              ]
+            },
+            "w-protectedat": {
+              "id": "w-protectedat",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "w-protectedat-leaf",
+                  "type": "text",
+                  "text": "W PROTECTED"
+                }
+              ]
+            },
+            "w-protectedb": {
+              "id": "w-protectedb",
+              "type": "table-cell",
+              "props": {
+                "columnIndex": 1
+              },
+              "childIds": [
+                "w-protectedbt"
+              ]
+            },
+            "w-protectedbt": {
+              "id": "w-protectedbt",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "w-protectedbt-leaf",
+                  "type": "text",
+                  "text": "w-protected CELL"
+                }
+              ]
+            },
+            "w-tail": {
+              "id": "w-tail",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "w-tail-leaf",
+                  "type": "text",
+                  "text": "TAIL"
+                }
+              ]
+            },
+            "w-image": {
+              "id": "w-image",
+              "type": "image",
+              "props": {
+                "source": {
+                  "scope": "global",
+                  "key": "photo"
+                },
+                "width": {
+                  "value": 10,
+                  "unit": "pt"
+                },
+                "height": {
+                  "value": 10,
+                  "unit": "pt"
+                },
+                "align": "left"
+              }
+            },
+            "w-face0": {
+              "id": "w-face0",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "face0"
+              },
+              "children": [
+                {
+                  "id": "w-face0-leaf",
+                  "type": "text",
+                  "text": "W FACE 0 ไทย Latin"
+                }
+              ]
+            },
+            "w-face1": {
+              "id": "w-face1",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "face1"
+              },
+              "children": [
+                {
+                  "id": "w-face1-leaf",
+                  "type": "text",
+                  "text": "W FACE 1 ไทย Latin"
+                }
+              ]
+            },
+            "w-face2": {
+              "id": "w-face2",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "face2"
+              },
+              "children": [
+                {
+                  "id": "w-face2-leaf",
+                  "type": "text",
+                  "text": "W FACE 2 ไทย Latin"
+                }
+              ]
+            },
+            "w-face3": {
+              "id": "w-face3",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "face3"
+              },
+              "children": [
+                {
+                  "id": "w-face3-leaf",
+                  "type": "text",
+                  "text": "W FACE 3 ไทย Latin"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

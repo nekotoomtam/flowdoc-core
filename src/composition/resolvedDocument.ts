@@ -17,7 +17,7 @@ export interface PageBreak {id:string;type:'page-break'}
 export interface LineBlock {id:string;type:'line';props:{align?:'left'|'center'|'right';width?:Length;thickness?:Length;color?:string;spaceBefore?:Length;spaceAfter?:Length}}
 export interface ResolvedGroupLabel {cellId:string;sourceCellId:string;memberCount:number}
 export interface ResolvedRowGroup {groupId:string;groupIndex:number;rowIds:string[];prefixRowIds:string[];firstMemberRowId:string;empty:boolean;keepStart:boolean;groupLabel?:ResolvedGroupLabel}
-export interface Table {rowGroups?:ResolvedRowGroup[];id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean;headerFillColor?:string;borderColor?:string};columns:{width:Length}[];rowIds:string[]}
+export interface Table {rowGroups?:ResolvedRowGroup[];id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean;headerFillColor?:string;borderColor?:string;borderStyle?:'single'|'none'};columns:{width:Length}[];rowIds:string[]}
 export interface TableRow {id:string;type:'table-row';props:{allowBreak:boolean};cellIds:string[]}
 export type CellPadding=Partial<Record<'top'|'right'|'bottom'|'left',Length>>;
 export interface TableCell {id:string;type:'table-cell';props:{fillColor?:string;columnIndex?:number;rowSpan?:number;colSpan?:number;padding?:CellPadding};childIds:string[]}
@@ -26,12 +26,13 @@ export type ContentsScope={kind:'section'}|{kind:'document'};
 export interface ContentsBlock {id:string;type:'table-of-contents';props:{textStyleId:string;scope?:ContentsScope}}
 export type DocumentNode=PageBreak|LineBlock|TextBlock|Table|TableRow|TableCell|ImageBlock|ContentsBlock;
 export interface FormatInstance {sectionId:string;areaId:string;areaEntryIndex:number;areaFormatId:string;format:string;sizing:import('../template/formatSizing.js').FormatSizing;rootIds:string[];rootStartIndex?:number}
+export interface EndingArea {areaId:string;verticalAlign:'bottom';rootStartIndex:number;rootIds:string[]}
 export interface ResolvedDocument {
   formatInstances?:FormatInstance[];
   schemaVersion:1|2;nodeModelVersion:18|19;template:{templateId:string;docKey:string;version:number};
   book:{contentSlot:'body';page:{size:'A4';orientation:'portrait'|'landscape';margin:{top:Length;right:Length;bottom:Length;left:Length}}};
   header?:ResolvedBand;footer?:ResolvedBand;
-  sections?:{numbering?:import("../template/types.js").PageNumbering;header?:ResolvedBand;footer?:ResolvedBand;headerMode?:import('../template/types.js').BandMode;footerMode?:import('../template/types.js').BandMode;role?:'body'|'cover';sourceKind?:'content'|'authored'|'blank';sectionId:string;pageLayoutId:string;page:ResolvedDocument['book']['page'];rootIds:string[]}[];
+  sections?:{endingArea?:EndingArea;numbering?:import("../template/types.js").PageNumbering;header?:ResolvedBand;footer?:ResolvedBand;headerMode?:import('../template/types.js').BandMode;footerMode?:import('../template/types.js').BandMode;role?:'body'|'cover';sourceKind?:'content'|'authored'|'blank';sectionId:string;pageLayoutId:string;page:ResolvedDocument['book']['page'];rootIds:string[]}[];
   styles:Record<string,TextStyle>;rootIds:string[];nodes:Record<string,DocumentNode>;sourceMap:Record<string,SourceEntry>;
 }
 export function toPt(length:Length):number {return length.unit==='mm'?length.value*72/25.4:length.value;}

@@ -1,0 +1,288 @@
+{
+  "authorityBoundary": "Core bounded artifact experiment, not product/default acceptance. Project Control owns shared status.",
+  "controlByteExactE8": true,
+  "inheritedCalibrationExact": true,
+  "frozenInputsPreserved": true,
+  "selectedNativeRequirementTables": 26,
+  "factors": {
+    "F0-R2-control": {
+      "pages": 99,
+      "sha256": "9d6974bc8c126fefd7d9b8160a7cfcd4f5ae6d788941c12e366579b8ffc6cad0",
+      "requirements": {
+        "count": 361,
+        "orderExact": true,
+        "wordPageMinusPdfPage": {
+          "0": 266,
+          "1": 95
+        }
+      },
+      "commonConsecutiveRows": {
+        "count": 231,
+        "meanAbsolutePt": 0.031307359307360415,
+        "meanSignedPt": 0.00948917748918072,
+        "maxAbsolutePt": 0.1300000000000523,
+        "minSignedPt": -0.11000000000007049,
+        "maxSignedPt": 0.1300000000000523
+      },
+      "headingTableSeparations": [],
+      "sourceTextCoverage": {
+        "checked": 1814,
+        "failed": [],
+        "scope": "Per-node plain source text modulo whitespace and exact repeated copies, not all glyph identity."
+      },
+      "changedDistinctLineMetricNodes": [],
+      "imageCount": 371,
+      "imageSourceDimensionsOrderExact": true,
+      "emptyPages": [],
+      "internalDestinationsInBounds": 396
+    },
+    "F1-native-bottom": {
+      "pages": 99,
+      "sha256": "d77b1b169553587d9e3e7bd571c7e76411b0ccb2168cd5b3a907590f56b198e8",
+      "requirements": {
+        "count": 361,
+        "orderExact": true,
+        "wordPageMinusPdfPage": {
+          "0": 304,
+          "1": 57
+        }
+      },
+      "commonConsecutiveRows": {
+        "count": 231,
+        "meanAbsolutePt": 0.031307359307363364,
+        "meanSignedPt": 0.009489177489181213,
+        "maxAbsolutePt": 0.12999999999999545,
+        "minSignedPt": -0.11000000000007049,
+        "maxSignedPt": 0.12999999999999545
+      },
+      "headingTableSeparations": [],
+      "sourceTextCoverage": {
+        "checked": 1814,
+        "failed": [],
+        "scope": "Per-node plain source text modulo whitespace and exact repeated copies, not all glyph identity."
+      },
+      "changedDistinctLineMetricNodes": [
+        "section-contents~toc"
+      ],
+      "imageCount": 371,
+      "imageSourceDimensionsOrderExact": true,
+      "emptyPages": [],
+      "internalDestinationsInBounds": 396
+    }
+  },
+  "rowMetricScope": "Same adjacent requirement rows, consecutive in same source table, remaining on one page in all three artifacts; matched common cohort. Relative REQ-baseline interval, not complete cell/glyph equality.",
+  "tests": {
+    "passed": 295,
+    "failed": 0,
+    "redFailures": 7,
+    "redPreexistingPasses": 2
+  },
+  "footerPolicyChanged": true,
+  "nativeBodyBottomPt": 767.7,
+  "footerPaintPolicyChanged": false,
+  "limitations": [
+    "Native Word remains100pages; outputs99. No forced page-count match.",
+    "E8 row stroke/twip policy is frozen; only body-section capacity differs. Native inline-image/paragraph residuals remain.",
+    "Whole-page native fidelity, generic fonts and merged tables are not established."
+  ],
+  "unchangedCommonRowIntervals": 231,
+  "maxBodyTextBoxBottomPt": 764.2908406043841,
+  "footerRasterChanged": [],
+  "frozenInputs": [
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\SRS-M2-boundary.pdf",
+      "sha256": "6899f2518264b018dd5fa7f66d3c2f06eefbb18c67dfbf5eeb02e2af9e0f5553",
+      "bytes": 2550363
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.pdf",
+      "sha256": "0cec02a089f19fea49721f86fe1635b8b1fa67987902dc16798fba7c1c651faa",
+      "bytes": 1313838
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.docx",
+      "sha256": "b6133d488ca6c182d8375467b82b1bc5b12b8e8b75600a9b6288852348edb6b8",
+      "bytes": 904660
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\inputs\\original-reference.pdf",
+      "sha256": "cd2fde00ea5273c889498eb490ff2e1fa945f7e4fbdc74cd65f25bbb9643ebf1",
+      "bytes": 2559955
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\resolved-document.json",
+      "sha256": "86df6e37ddbafc58ecf554070efe6affc091c9820238f6d7af230feeddff5047",
+      "bytes": 5254791
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\M2-boundary-draw.json",
+      "sha256": "edba941c796ced93defadcd221d77aaf47b46c0729ca846ec459e486c6d1f2e7",
+      "bytes": 889306
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\SRS-G1-table-start.pdf",
+      "sha256": "a1cce985ef4cbcaeebc308424a343ac396e6b31f3288a76a0f965a63a9afbab1"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\G1-table-start-draw.json",
+      "sha256": "004e22b47fb16a5797222efe75037b6363dad7fc412482ed888ac175f13d16a2"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\calibration.json",
+      "sha256": "6034edeefbaf5c6e9312e4b116c46adfaace0a61732797058d7d9bb10c9f9b5a"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\SRS-R2-twips.pdf",
+      "sha256": "9d6974bc8c126fefd7d9b8160a7cfcd4f5ae6d788941c12e366579b8ffc6cad0"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\R2-twips-draw.json",
+      "sha256": "41928b662e9b8e73fda0e7a46d6f2269f599ee68ca6c3fde5d51b276218d1d0d"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\calibration.json",
+      "sha256": "d96dbe0c7bd50eafa728d62d5a6383ac12910b3af7c471b6a7fe812547224a12"
+    }
+  ],
+  "selectedFactor": "F1-native-bottom",
+  "visualReview": {
+    "changedBodyPages": "45 and47-99 reviewed in seven overview sheets including unchanged46",
+    "detailedPairs": [
+      "45/45",
+      "99/100",
+      "TOC9 E8/F1"
+    ],
+    "unchangedPages": "Reuse E8 review for pages1-8,10-44,46 supported by whole-page raster equality.",
+    "newVisibleClippingObserved": false,
+    "scope": "Overview and selected detailed pairs, not every glyph at high resolution."
+  },
+  "auditSetupNote": "First audit used an incorrect E8 control filename and stopped before measurement; corrected path then audit/finalizer pass. Candidate PDFs unchanged.",
+  "codeReview": {
+    "critical": 0,
+    "important": 0,
+    "minorFixed": [
+      "Fixed99page raster loops now assert both actual PDF counts before reviewing.",
+      "Red counts read from retained test report."
+    ],
+    "disposition": "Bounded experiment retention only, no default/merge/packaging/general-font acceptance."
+  },
+  "raster": {
+    "F1-native-bottom": {
+      "wholePageChanged": [
+        9,
+        45,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99
+      ],
+      "aboveFooterChanged": [
+        9,
+        45,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99
+      ],
+      "protected11to26WholePageExact": true
+    }
+  }
+}

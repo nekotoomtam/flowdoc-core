@@ -1,0 +1,166 @@
+import { collectContents } from '../composition/contents.js';
+import { required } from './types.js';
+import { deriveHeaderSpace, deriveFooterSpace } from './geometry-policy.js';
+import { headerSpaceEligibility } from './header-space.js';
+import { Header, Footer, Paragraph, PageBreak, TableOfContents, Bookmark, SectionType, PageOrientation, type ISectionOptions, type FileChild } from 'docx';
+import { fail, type ExportIntent } from './types.js';
+import { toPoints, toTwips } from './units.js';
+import { buildBodyFlow, structuralParagraph } from './tables.js';
+import { anchorBookmarks, bookmarkName, type NavigationContext } from './fields.js';
+import { buildBand, nativeRule } from './bands.js';
+import { textEnvelope, concreteFontBounds } from './font-envelope.js';
+import {hasReadingMeasurements,measuredReadingExtent} from './reading-measurements.js';
+import {endingAreaAnchor,endingAreaEnvelope} from './ending-area.js';
+const take = (r: any) => { if (!r.ok)
+    fail(r.issues[0].code, r.issues[0].path, r.issues[0].message); return r.value; };
+export function buildSections(intent: ExportIntent) {
+    const sections: ISectionOptions[] = [], receipts: any[] = [], endingAreas:any[]=[], footnotes:Record<string,{children:Paragraph[]}>={}, anchors = anchorBookmarks(intent), nodes: any = intent.document.nodes, sourceSections = intent.document.sections as any[];
+    const emptyContents = new Set<string>((Object.values(nodes) as any[]).filter(n => intent.document.nodeModelVersion === 19 && n.type === 'table-of-contents' && collectContents(intent.document, n.props.scope?.kind === 'section' ? (intent.document.sourceMap as any)[n.id].sectionId : undefined).length === 0).map(n => n.id));
+    const visibleSections = new Set(sourceSections.filter(s => s.role === 'cover' || s.sourceKind === 'blank' || s.rootIds.some((id: string) => nodes[id].type !== 'page-break' && !emptyContents.has(id)) || intent.document.formatInstances?.some(f => f.sectionId === s.sectionId && f.sizing.mode === 'fixed')));
+    const omittedSections = sourceSections.filter(s => !visibleSections.has(s)).map(s => ({sectionId: s.sectionId, reason: 'no-layout-content'}));
+    if (!visibleSections.size) fail('DOCX_CAPABILITY_UNSUPPORTED', 'sections', 'Document has no layout content');
+    let included = false, leadingExcluded = 0;
+    for (const [i, s] of sourceSections.entries()) {
+        if (!visibleSections.has(s)) continue;
+        const mode = s.numbering?.mode ?? (s.role === 'cover' ? 'exclude' : 'continue');
+        if (mode === 'exclude') {
+            if (included || s.role !== 'cover' && s.sourceKind !== 'blank')
+                fail('DOCX_CAPABILITY_UNSUPPORTED', 'sections.' + i + '.numbering', 'Only leading one-page cover/blank exclusions are mapped');
+            leadingExcluded++;
+        }
+        else
+            included = true;
+    }
+    let firstIncluded = true, imageReferences = 0;
+    const hasScopedToc = sourceSections.some(s => s.rootIds.some((id: string) => nodes[id].type === 'table-of-contents' && !emptyContents.has(id) && nodes[id].props.scope?.kind === 'section'));
+    for (const [index, s] of sourceSections.entries()) {
+        if (!visibleSections.has(s)) continue;
+        const numbering = s.numbering ?? { mode: s.role === 'cover' ? 'exclude' : 'continue' }, mode = numbering.mode, hideNumbers = s.role === 'cover' || s.sourceKind === 'blank' || numbering.visibility === 'hide' || mode === 'exclude', page = s.page, pw = (page.orientation === 'portrait' ? 210 : 297) * 72 / 25.4, ph = (page.orientation === 'portrait' ? 297 : 210) * 72 / 25.4, sourceMargin = { top: toTwips(page.margin.top), right: toTwips(page.margin.right), bottom: toTwips(page.margin.bottom), left: toTwips(page.margin.left) }, margin: any = { ...sourceMargin, header: sourceMargin.top, footer: sourceMargin.bottom }, ctx: NavigationContext = { anchors, sectionName: bookmarkName('s', s.sectionId), leadingExcluded, hideNumbers, inBand: false };
+        if (s.role === 'cover') {
+            let used = 0;
+            const coverText=(id:string,width:number)=>{const n=nodes[id];if(n.props.heightMode==='fixed')return toPoints(n.props.height);const m=measuredReadingExtent(intent,'nodes',id,width);return m?Math.ceil(m.height*20)/20+m.lines:textEnvelope(intent,id,'nodes',width);};
+            for (const id of s.rootIds) {
+                const n = nodes[id];
+                if (n.type === 'text-block')
+                    used += coverText(id,pw - toPoints(page.margin.left) - toPoints(page.margin.right));
+                else if (n.type === 'image')
+                    used += toPoints(n.props.height) + 1;
+                else if(n.type==='line')used+=nativeRule(n,pw-toPoints(page.margin.left)-toPoints(page.margin.right)).heightPt;
+                else if(n.type==='table'){
+                    const mapped=required(intent.tables.find(t=>t.nodeId===id),'cover.table');
+                    for(const rid of n.rowIds){let rowHeight=1;for(const [index,cid]of nodes[rid].cellIds.entries()){
+                        const cell=nodes[cid],padding=required(mapped.cells.find(c=>c.nodeId===cid),'cover.cell').paddingTwips,col=cell.props.columnIndex??index,span=cell.props.colSpan??1;
+                        if((cell.props.rowSpan??1)>1)fail('DOCX_CAPABILITY_UNSUPPORTED','nodes.'+cid,'Cover vertical merge height is not bounded');
+                        const width=(mapped.columnTwips.slice(col,col+span).reduce((a,b)=>a+b,0)-padding.left-padding.right)/20;
+                        let extent=(padding.top+padding.bottom)/20;
+                        for(const child of cell.childIds){const c=nodes[child];extent+=c.type==='image'?toPoints(c.props.height)+1:coverText(child,width);}
+                        rowHeight=Math.max(rowHeight,extent+(!cell.childIds.length||nodes[cell.childIds.at(-1)].type==='image'?1:0));
+                    }used+=rowHeight;}
+                    used+=1; // Native table closure/separator footprint.
+                }
+                else
+                    fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + id, 'Cover content has no bounded one-page envelope');
+            }
+            // Measured content includes a point per native text line plus closing
+            // paragraph headroom; legacy unmeasured admission retains its 80% cap.
+            if (used+1 > (ph - toPoints(page.margin.top) - toPoints(page.margin.bottom)) * (hasReadingMeasurements(intent)?1:.8))
+                fail('DOCX_CAPABILITY_UNSUPPORTED', 'sections.' + index, 'Cover exceeds provisional one-page envelope');
+        }
+        const bandReceipt: any = {}, groups: any = {}, estimated: any = { ...sourceMargin };
+        let dynamicHeader = false;
+        for (const kind of ['header', 'footer'] as const) {
+            const b = s[kind] ?? (intent.document as any)[kind], requested = s[kind + 'Mode'], effective = s.role === 'body' && s.sourceKind !== 'blank' ? requested : 'none';
+            const makeEmpty = () => kind === 'header' ? new Header({ children: [structuralParagraph()] }) : new Footer({ children: [structuralParagraph()] });
+            let real: any, prepared: any;
+            if (b && effective !== 'none') {
+                const scope = s[kind] ? 'sections.' + index + '.' + kind + '.nodes' : kind + '.nodes';
+                const eligibility = kind === 'header' ? headerSpaceEligibility(b) : { eligible: false };
+                const mapHeaderGap = kind === 'header' && eligibility.eligible;
+                if (kind === 'header')
+                    dynamicHeader = mapHeaderGap;
+                prepared = buildBand(intent, b, scope, page, ctx, { mapHeaderGap });
+                prepared.spacePolicy = mapHeaderGap ? 'native-visible-header' : 'maximum-reservation';
+                prepared.shape = eligibility.shape;
+                prepared.fallbackReason = kind === 'header' && !mapHeaderGap ? eligibility.reason : undefined;
+                const offset = prepared.offsetTwips ?? sourceMargin[kind === 'header' ? 'top' : 'bottom'];
+                margin[kind] = offset;
+                const edge = kind === 'header' ? 'top' : 'bottom';
+                estimated[edge] = Math.max(sourceMargin[edge], offset + prepared.reservedHeightTwips + prepared.gapTwips);
+                if (kind !== 'header' || !dynamicHeader)
+                    margin[edge] = estimated[edge];
+                let used = false;
+                real = () => { const content = used ? buildBand(intent, b, scope, page, ctx, { mapHeaderGap }) : prepared; used = true; return kind === 'header' ? new Header({ children: content.children }) : new Footer({ children: content.children }); };
+                imageReferences += prepared.imageReferences * (effective === 'all' ? 2 : 1);
+            }
+            groups[kind] = { default: b && ['all', 'continuation'].includes(effective) ? real() : makeEmpty(), first: b && ['all', 'first'].includes(effective) ? real() : makeEmpty() };
+            bandReceipt[kind] = { mode: effective, sourceMode: requested, reservedHeightTwips: prepared?.reservedHeightTwips ?? 0, offsetTwips: prepared?.offsetTwips ?? sourceMargin[kind === 'header' ? 'top' : 'bottom'], spacePolicy: prepared?.spacePolicy ?? 'none', shape: prepared?.shape, fallbackReason: prepared?.fallbackReason, gapTwips: prepared?.gapTwips ?? 0, wordFootprintVerified: false, quantization: prepared?.quantization ?? [] };
+        }
+        const headerBand = s.header ?? (intent.document as any).header, headerMode = bandReceipt.header.mode;
+        const emptySpace = deriveHeaderSpace({ effectiveFirstEmpty: !headerBand || !['all', 'first'].includes(headerMode), effectiveDefaultEmpty: !headerBand || !['all', 'continuation'].includes(headerMode), previousDistanceTwips: margin.header });
+        margin.header = emptySpace.nativeDistanceTwips;
+        bandReceipt.header.nativeDistanceTwips = margin.header;
+        bandReceipt.header.emptySpace = emptySpace;
+        const footerBand = s.footer ?? (intent.document as any).footer, footerMode = bandReceipt.footer.mode;
+        const emptyFooterSpace = deriveFooterSpace({ effectiveFirstEmpty: !footerBand || !['all', 'first'].includes(footerMode), effectiveDefaultEmpty: !footerBand || !['all', 'continuation'].includes(footerMode), previousDistanceTwips: margin.footer });
+        // Even an empty native footer has a paragraph. Keep it below the body edge.
+        margin.footer = emptyFooterSpace.nativeDistanceTwips;
+        bandReceipt.footer.nativeDistanceTwips = margin.footer;
+        bandReceipt.footer.emptySpace = emptyFooterSpace;
+        const capacity = (first: boolean) => { const visible = s.headerMode === 'all' || s.headerMode === (first ? 'first' : 'continuation'), top = dynamicHeader && visible ? estimated.top : margin.top; return { topTwips: top, bottomTwips: margin.bottom, headerVisible: bandReceipt.header.spacePolicy !== 'none' && bandReceipt.header.mode !== 'none' && visible, bodyHeightPt: (ph * 20 - top - margin.bottom) / 20, estimated: true, wordFootprintVerified: false }; };
+        const capacityByPageType = { first: capacity(true), continuation: capacity(false) }, bodyHeight = Math.min(capacityByPageType.first.bodyHeightPt, capacityByPageType.continuation.bodyHeightPt), originalBody = (ph * 20 - sourceMargin.top - sourceMargin.bottom) / 20;
+        if (bodyHeight <= 0 || (estimated.top - sourceMargin.top + estimated.bottom - sourceMargin.bottom) / 20 > originalBody * .4 + 1e-6)
+            fail('DOCX_CAPABILITY_UNSUPPORTED', 'sections.' + index + '.page', 'Band reservations exceed body fit envelope');
+        for (const block of intent.textBlocks.filter(t => t.scope === 'nodes' && (intent.document.sourceMap as any)[t.nodeId].sectionId === s.sectionId)) {
+            const n = nodes[block.nodeId], style = required(intent.styles[block.styleId], 'styles'), intrinsic = n.props.heightMode === 'fixed' ? toPoints(n.props.height) : Math.max(style.line.twips / 20, concreteFontBounds(intent, style.font.id, style.sizeHalfPoints).maxHeight);
+            if (intrinsic > bodyHeight)
+                fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + block.nodeId, 'A native line/fixed spacer exceeds section body capacity');
+        }
+        for (const n of Object.values(nodes) as any[])
+            if (n.type === 'image' && (intent.document.sourceMap as any)[n.id].sectionId === s.sectionId) {
+                let padding = 0;
+                for (const t of intent.tables)
+                    for (const c of t.cells)
+                        if (nodes[c.nodeId].childIds.includes(n.id))
+                            padding = (c.paddingTwips.top + c.paddingTwips.bottom) / 20 + 1;
+                if (toPoints(n.props.height) + 1 + padding > bodyHeight)
+                    fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + n.id, 'Image frame and paragraph footprint exceed section body capacity');
+            }
+        const scoped = new Bookmark({ id: ctx.sectionName, children: [] });
+        const special = (id: string): FileChild[] => { const n = nodes[id]; if (n.type === 'page-break')
+            return [new Paragraph({ children: [new PageBreak()], run: { size: 2, sizeComplexScript: 2 }, spacing: { before: 0, after: 0, line: 20 } })]; if (n.type === 'line')
+            return [nativeRule(n, pw - toPoints(page.margin.left) - toPoints(page.margin.right)).paragraph]; if (n.type === 'table-of-contents')
+            return [new TableOfContents('Contents', { headingStyleRange: '1-3', useAppliedParagraphOutlineLevel: true, hyperlink: true, beginDirty: true, ...(n.props.scope?.kind === 'section' ? { entriesFromBookmark: ctx.sectionName } : {}) })]; fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + id, 'Unknown body capability'); };
+        const ending=s.endingArea?.rootIds.length?s.endingArea:undefined;
+        const flow = take(buildBodyFlow(intent, { sectionId: s.sectionId, navigation: ctx, special, omittedRootIds: new Set([...emptyContents,...ending?.rootIds??[]]) }));
+        let children: FileChild[] = flow.children;
+        if(ending){
+            const note=take(buildBodyFlow(intent,{sectionId:s.sectionId,rootIds:ending.rootIds,navigation:ctx,special}));
+            const envelope=endingAreaEnvelope(intent,ending.rootIds,pw-toPoints(page.margin.left)-toPoints(page.margin.right));
+            const keepTogether=envelope+2<=bodyHeight;
+            // The library's first note child must be a Paragraph. A structural
+            // first paragraph also keeps tables/images in native block order.
+            const id=endingAreas.length+1;
+            footnotes[id]={children:[structuralParagraph(),...note.children,...(note.children.at(-1) instanceof Paragraph?[]:[structuralParagraph()])] as Paragraph[]};
+            const preceding=s.rootIds.slice(0,ending.rootStartIndex).filter((id:string)=>!emptyContents.has(id));
+            const last=preceding.at(-1);
+            if(last&&nodes[last].type==='page-break'&&preceding.some((id:string)=>nodes[id].type!=='page-break'))children.push(...special(last));
+            children.push(endingAreaAnchor(id));
+            flow.receipt.tableSpaces.push(...note.receipt.tableSpaces);
+            endingAreas.push({kind:'ending-area',sectionId:s.sectionId,areaId:ending.areaId,rootIds:ending.rootIds,storage:'native-page-bottom-note',keepTogether,envelopePt:Number.isFinite(envelope)?envelope:null,editBehavior:'editable-in-word-note-area',wordVerified:false});
+        }
+        if (!children.length)
+            children = [structuralParagraph()];
+        if (hasScopedToc) {
+            const start = structuralParagraph(), end = structuralParagraph();
+            start.addChildElement(scoped.start);
+            end.addChildElement(scoped.end);
+            children = [start, ...children, end];
+        }
+        const startAt = mode === 'restart' ? (numbering.startAt ?? 1) : mode !== 'exclude' && firstIncluded && leadingExcluded ? 1 : undefined;
+        if (mode !== 'exclude')
+            firstIncluded = false;
+        sections.push({ properties: { type: SectionType.NEXT_PAGE, titlePage: true, page: { size: { width: Math.round(210 * 72 / 25.4 * 20), height: Math.round(297 * 72 / 25.4 * 20), orientation: page.orientation === 'portrait' ? PageOrientation.PORTRAIT : PageOrientation.LANDSCAPE }, margin, pageNumbers: startAt === undefined ? {} : { start: startAt } } }, headers: groups.header, footers: groups.footer, children });
+        receipts.push({ sectionId: s.sectionId, role: s.role, sourceKind: s.sourceKind, numbering: { ...numbering, visibility: hideNumbers ? 'hide' : 'show', nativeStart: startAt }, header: bandReceipt.header, footer: bandReceipt.footer, sourceMarginTwips: sourceMargin, reservedMarginTwips: margin, nativeMarginTwips: { ...margin }, estimatedMaximumMarginTwips: { ...estimated }, capacityByPageType, maximumBandReservation: !dynamicHeader, bodyHeightBasis: 'minimum-estimated-page-type', bodyHeightPt: bodyHeight, structuralScopeParagraphs: hasScopedToc ? 2 : 0, tableSpaces: flow.receipt.tableSpaces, tableSeparators: flow.receipt.tableSeparators, wordPaginationVerified: false });
+    }
+    return { sections, receipts, omittedSections, footnotes,endingAreas,anchors: [...anchors].map(([source]) => ({ source, name: bookmarkName('a', source) })), leadingExcluded, imageReferences };
+}

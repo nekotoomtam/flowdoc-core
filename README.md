@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-Package `0.4.7` supports model19 Section instances: UUID `id`,
+Package `0.5.0` supports model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -22,6 +22,36 @@ reflow; an oversized number fails rather than guessing or retrying. Model18 keep
 its existing unscoped contract. Release identity is the matching annotated tag on
 the release snapshot; installation is separate. Shared contract: Project Control Section–Area Stage0–3.
 
+## DOCX development output in 0.5.0
+
+Final top-level Areas may opt into `props.verticalAlign: "bottom"`; the default
+remains ordinary flow. PDF keeps a fitting final Area together at the final body
+edge; oversized Areas flow and align their last fragment. The DOCX development
+adapter stores it once in editable native page-bottom note content, with no
+visible reference or separator. Native Word verification is pending; a retained
+LibreOffice preview drops table content in this note path. This remains an
+experimental candidate, not accepted Word parity. See the template guide.
+
+`createDocxEngine` exports the shared resolved document as DOCX with embedded
+fonts, tables, page bands, links and refreshable Word fields. Font signatures
+come from each embedded family's actual regular font, including Thai coverage.
+When both native shaping and segmentation capabilities are supplied, the writer
+uses measured line paragraphs and individually editable VML word boxes. Changes
+to text or fonts in Word may require regeneration to restore source layout.
+Native Word pagination and full PDF fidelity are not guaranteed. The private
+SRS PDF calibration probes remain opt-in experiments, separate from ordinary PDF
+output. See [template guide](docs/template-guide.md#docx-development-output-in-050)
+for the two layout paths, API/receipts, budgets and verification limits. This
+version is a development integration; release, installation and Service pinning
+are separate steps.
+
+The 0.5.0 candidate additionally maps group-label cells to native vertical
+merges, adapts fractional font sizes in a DOCX-only snapshot and preserves
+separately named static faces such as Sarabun Light. Bounded fixed page bands
+reserve native structural overhead explicitly. These are DOCX adaptations;
+the original input/PDF and release/Service pins are unchanged. See the template
+guide for receipts, native flow behavior and remaining fit limits.
+
 ## Internal task input reader
 
 `normalizeTaskInput(template, valueHandle, options)` validates model18/19
@@ -38,11 +68,11 @@ legacy prepared snapshot, renderer capability, public endpoint or PDF readiness 
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.4.7, prepared after release 0.4.3.
+Package version: 0.5.0 on development; the latest release snapshot remains0.4.7.
 This package includes Section19, scoped contents, Format sizing v2, group-label
 spans, streamed task images/PDF and the opt-in height calculation below.
 Release identity requires the matching tagged snapshot and acceptance gates.
-Version 0.4.0 accepts **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
+Historical0.4.0 accepted **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
 
 ## Internal bounded task composition
 
@@ -199,9 +229,14 @@ local installation does not establish a release. This local release is not a pub
 
 ## Local development
 
-Use Node 24 and `npm ci`, then `npm run build` and `npm test`. The resource runtime
+Use Node >=24.15.0 <25 and `npm ci`, then `npm run build` and `npm test`. The resource runtime
 supports Linux/amd64 with glibc. Windows can build/test the TypeScript boundary;
 native execution is checked through Docker Desktop's Linux engine.
+
+Linux tests and `check:package` also require `FLOWDOC_LEGACY_SEGMENTER`: an
+explicit absolute path to the retained prior one-shot Linux ELF helper used by
+compatibility tests. It is a test fixture, not the current serving helper. Keep
+its provenance/hash with proof; do not replace it with a mock or the new helper.
 
 Run `npm run check:package` to build native tools using the retained Cargo.lock,
 generate resource hashes, pack the package, and install the exact tarball in a
@@ -274,7 +309,10 @@ Current PDF font CIDs are limited to 65535 per font per document; exceeding that
 returns PDF_RENDER_FAILED. High-volume queueing is a later Service concern.
 
 Tables have one optional header row and default 4 pt cell padding with 0.5 pt black
-borders. Column widths must fit the page; text must fit the remaining cell width.
+borders. Optional table `props.borderStyle:"none"` suppresses outer and internal
+strokes in PDF and DOCX while retaining cell fills and the existing spacing
+rules. Omitted or `"single"` keeps the usual border; explicit `borderColor` values,
+including white, remain unchanged. Column widths must fit the page; text must fit the remaining cell width.
 The tallest cell determines row height. Multiple TextBlocks per cell flow in
 order. `allowBreak:true` continues at measured whole-line boundaries, retaining
 row identity; finished cells remain blank on later fragments. `allowBreak:false`
@@ -337,7 +375,7 @@ rejects this optional declaration; it is not silently discarded.
 
 The empty template row must set allowBreak:false. Core derives span from member count (empty uses one fallback row). An empty
 group collection emits no group; equal names remain distinct instances.
-keepStart is always true for groupLabel and cannot be set false. In auto,
+keepStart is always true for groupLabel and cannot be set false. In PDF auto flow,
 each actual continuation fragment repeats the complete name plus ` (ต่อ)`;
 members keep their logical identity and flow once. A complete label that cannot
 fit fails LAYOUT_FAILED with reason group-label-does-not-fit and group context.

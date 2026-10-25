@@ -1,0 +1,264 @@
+{
+  "schemaVersion": 1,
+  "nodeModelVersion": 19,
+  "templateId": "e0-R",
+  "docKey": "e0-R",
+  "version": 1,
+  "name": "Supplement baseline R",
+  "book": {
+    "contentSlot": "body",
+    "defaultPageLayoutId": "normal"
+  },
+  "pageLayouts": {
+    "normal": {
+      "page": {
+        "size": "A4",
+        "orientation": "portrait",
+        "margin": {
+          "top": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "right": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "bottom": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "left": {
+            "value": 36,
+            "unit": "pt"
+          }
+        }
+      }
+    },
+    "wide": {
+      "page": {
+        "size": "A4",
+        "orientation": "landscape",
+        "margin": {
+          "top": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "right": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "bottom": {
+            "value": 36,
+            "unit": "pt"
+          },
+          "left": {
+            "value": 36,
+            "unit": "pt"
+          }
+        }
+      }
+    }
+  },
+  "styles": {
+    "body": {
+      "fontFamilyKey": "sarabun",
+      "fontWeight": "normal",
+      "fontSize": {
+        "value": 12,
+        "unit": "pt"
+      },
+      "lineHeightPt": 18
+    }
+  },
+  "globalSchema": {
+    "type": "object",
+    "fields": {}
+  },
+  "areaFormats": {},
+  "examples": [],
+  "sections": [
+    {
+      "id": "30000000-0000-4000-8000-000000000107",
+      "label": "R Thai natural body",
+      "nameBase": "R Thai natural body",
+      "inputSchema": {
+        "type": "object",
+        "fields": {}
+      },
+      "source": {
+        "kind": "authored",
+        "repeats": [],
+        "fragment": {
+          "rootIds": [
+            "r-space",
+            "r-thai"
+          ],
+          "nodes": {
+            "r-space": {
+              "id": "r-space",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body",
+                "heightMode": "fixed",
+                "height": {
+                  "value": 749.8897637795277,
+                  "unit": "pt"
+                },
+                "verticalAlign": "top"
+              },
+              "children": []
+            },
+            "r-thai": {
+              "id": "r-thai",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "r-thai-leaf",
+                  "type": "text",
+                  "text": "การแบ่งบรรทัดภาษาไทยต้องรักษาข้อความและเครื่องหมายให้ครบถ้วนการแบ่งบรรทัดภาษาไทยต้องรักษาข้อความและเครื่องหมายให้ครบถ้วนการแบ่งบรรทัดภาษาไทยต้องรักษาข้อความและเครื่องหมายให้ครบถ้วนการแบ่งบรรทัดภาษาไทยต้องรักษาข้อความและเครื่องหมายให้ครบถ้วนการแบ่งบรรทัดภาษาไทยต้องรักษาข้อความและเครื่องหมายให้ครบถ้วนการแบ่งบรรทัดภาษาไทยต้องรักษาข้อความและเครื่องหมายให้ครบถ้วน"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000108",
+      "label": "R Latin natural cell",
+      "nameBase": "R Latin natural cell",
+      "inputSchema": {
+        "type": "object",
+        "fields": {}
+      },
+      "source": {
+        "kind": "authored",
+        "repeats": [],
+        "fragment": {
+          "rootIds": [
+            "r-space",
+            "r-table"
+          ],
+          "nodes": {
+            "r-space": {
+              "id": "r-space",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body",
+                "heightMode": "fixed",
+                "height": {
+                  "value": 687.8897637795277,
+                  "unit": "pt"
+                },
+                "verticalAlign": "top"
+              },
+              "children": []
+            },
+            "r-table": {
+              "id": "r-table",
+              "type": "table",
+              "props": {
+                "headerRowCount": 0,
+                "repeatHeaderRows": false
+              },
+              "columns": [
+                {
+                  "width": {
+                    "value": 240,
+                    "unit": "pt"
+                  }
+                },
+                {
+                  "width": {
+                    "value": 240,
+                    "unit": "pt"
+                  }
+                }
+              ],
+              "rowIds": [
+                "rr"
+              ]
+            },
+            "rr": {
+              "id": "rr",
+              "type": "table-row",
+              "props": {
+                "allowBreak": true
+              },
+              "cellIds": [
+                "rc",
+                "rd"
+              ]
+            },
+            "rc": {
+              "id": "rc",
+              "type": "table-cell",
+              "props": {
+                "columnIndex": 0
+              },
+              "childIds": [
+                "rctext"
+              ]
+            },
+            "rctext": {
+              "id": "rctext",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "rctext-leaf",
+                  "type": "text",
+                  "text": "First second third fourth fifth sixth seventh eighth ninth tenth. First second third fourth fifth sixth seventh eighth ninth tenth. First second third fourth fifth sixth seventh eighth ninth tenth. "
+                }
+              ]
+            },
+            "rd": {
+              "id": "rd",
+              "type": "table-cell",
+              "props": {
+                "columnIndex": 1
+              },
+              "childIds": [
+                "rdtext"
+              ]
+            },
+            "rdtext": {
+              "id": "rdtext",
+              "type": "text-block",
+              "role": {
+                "role": "paragraph"
+              },
+              "props": {
+                "textStyleId": "body"
+              },
+              "children": [
+                {
+                  "id": "rdtext-leaf",
+                  "type": "text",
+                  "text": "R CELL CONTROL"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

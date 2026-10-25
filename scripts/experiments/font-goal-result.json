@@ -1,0 +1,1247 @@
+{
+  "authorityBoundary": "Outcome experiment only. Project Control owns acceptance. Native font marker origins do not prove complete shaping/wrapping/glyph similarity.",
+  "selectedFactor": "S3-scoped-font-policy",
+  "factors": {
+    "S0-E12-control": {
+      "pages": 100,
+      "sameREQStartPage": 361,
+      "reqBaselineErrorPt": {
+        "meanAbsolute": 3.405024930747892,
+        "p95": 3.4220000000000255,
+        "maxAbsolute": 19.708000000000055
+      },
+      "sha256": "2218b60f89ca7ba68eb80d40e2cd5939e3e34f5fdfccb4f7a1d89052249c2028"
+    },
+    "S1-font-baseline": {
+      "pages": 100,
+      "sameREQStartPage": 361,
+      "reqBaselineErrorPt": {
+        "meanAbsolute": 0.7826260387811391,
+        "p95": 0.6520000000000437,
+        "maxAbsolute": 22.478000000000065
+      },
+      "sha256": "61fd7e21ac96985824c569c194fb166795dbbabbfd6e29e1f689c932cbfcfe76"
+    },
+    "S2-font-nominal": {
+      "pages": 100,
+      "sameREQStartPage": 361,
+      "reqBaselineErrorPt": {
+        "meanAbsolute": 0.22538504155121655,
+        "p95": 0.6179999999999382,
+        "maxAbsolute": 1.1119999999998527
+      },
+      "sha256": "678228c546992d38a549d88163efd3b423ddff8733681792116fd0d55a240030"
+    },
+    "S3-scoped-font-policy": {
+      "pages": 100,
+      "sameREQStartPage": 361,
+      "reqBaselineErrorPt": {
+        "meanAbsolute": 0.22538504155121655,
+        "p95": 0.6179999999999382,
+        "maxAbsolute": 1.1119999999998527
+      },
+      "sha256": "a84425e2c4a260f783c34b72fe79741ba57477a40a7bc3e1c79c3c76187edb87"
+    }
+  },
+  "sourceTextCoverage": {
+    "checked": 1814,
+    "failed": 0,
+    "scope": "Plain text modulo whitespace and repeats."
+  },
+  "images": {
+    "count": 371,
+    "nativeSourceDimensionsOrderExact": true
+  },
+  "internalTargetPagesExist": 396,
+  "preservation": {
+    "E12ControlByteExact": true,
+    "protected11to26WholePagesExact": true,
+    "footerRasterChanged": []
+  },
+  "fontControls": [
+    {
+      "packet": "sarabun-Regular",
+      "pdfPages": 16,
+      "nativePages": 16,
+      "markerOrigins": 12,
+      "meanAbsBaselinePt": 0.04799999999999235,
+      "maxAbsBaselinePt": 0.09600000000003917,
+      "cases": [
+        {
+          "id": "section-242e02c8-ba1b-5f17-b5d6-612606a18c96~case-marker",
+          "case": "CASED-sarabun-Regular-10-1",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-8d994d44-3ab8-5379-80a1-71ae0c6ebf8c~case-marker",
+          "case": "CASED-sarabun-Regular-10-2",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-1e332594-6ea7-59e3-ad97-6bfac9442578~case-marker",
+          "case": "CASED-sarabun-Regular-10-3",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-f3648677-5b08-52f9-a64d-1875a061bdd8~case-marker",
+          "case": "CASED-sarabun-Regular-10-4",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-1c7eb68c-c1d5-5746-9b1c-1c05ef9d6503~case-marker",
+          "case": "CASED-sarabun-Regular-12-1",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-59304a94-0e88-5daa-8ddf-8a23bc546fe9~case-marker",
+          "case": "CASED-sarabun-Regular-12-2",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-6272bd24-5947-51e5-8e11-4cd675b3830c~case-marker",
+          "case": "CASED-sarabun-Regular-12-3",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-1528700c-ca8d-57c6-a7b8-186d4c82979b~case-marker",
+          "case": "CASED-sarabun-Regular-12-4",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-607d40e3-b55c-5b9b-afcf-a1c6ca299e86~case-marker",
+          "case": "CASED-sarabun-Regular-16-1",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-9daad398-5570-503f-8b9d-544058f1b5e2~case-marker",
+          "case": "CASED-sarabun-Regular-16-2",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-e932d566-4360-5c35-91e5-5c5247c795e5~case-marker",
+          "case": "CASED-sarabun-Regular-16-3",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-23c52cf8-b2ab-550d-8a88-3dd69bd3b8bf~case-marker",
+          "case": "CASED-sarabun-Regular-16-4",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        }
+      ],
+      "identityBasis": "Existing native hash record"
+    },
+    {
+      "packet": "sarabun-Bold",
+      "pdfPages": 16,
+      "nativePages": 16,
+      "markerOrigins": 12,
+      "meanAbsBaselinePt": 0.04799999999999235,
+      "maxAbsBaselinePt": 0.09600000000003917,
+      "cases": [
+        {
+          "id": "section-e6c2014c-8499-5941-a179-2bbbc43573cf~case-marker",
+          "case": "CASED-sarabun-Bold-10-1",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-cb654cc3-85b8-5336-82b2-306070d95eaf~case-marker",
+          "case": "CASED-sarabun-Bold-10-2",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-b96cba8e-8735-5114-a217-f88fafacda76~case-marker",
+          "case": "CASED-sarabun-Bold-10-3",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-6f8e86f0-d86c-5952-8e6c-81346cf9f748~case-marker",
+          "case": "CASED-sarabun-Bold-10-4",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-4821f54f-d83f-5d17-a896-5a68ef53d72b~case-marker",
+          "case": "CASED-sarabun-Bold-12-1",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-15d07ae4-f989-54c4-a59c-16625e3bd441~case-marker",
+          "case": "CASED-sarabun-Bold-12-2",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-5ed7a2df-0a46-54f2-9afe-06fc1b833e64~case-marker",
+          "case": "CASED-sarabun-Bold-12-3",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-02a097b5-ed35-5a25-818d-9347327db212~case-marker",
+          "case": "CASED-sarabun-Bold-12-4",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-b42fe9a8-d708-50a1-a0b8-818d553b116c~case-marker",
+          "case": "CASED-sarabun-Bold-16-1",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-1e62bcbf-3a84-5b02-857c-7b7763ee95fe~case-marker",
+          "case": "CASED-sarabun-Bold-16-2",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-75e59493-9ffb-5134-9bb9-e4b2cfc47831~case-marker",
+          "case": "CASED-sarabun-Bold-16-3",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-10148f37-a2b8-514f-8a8b-73f7638b27e2~case-marker",
+          "case": "CASED-sarabun-Bold-16-4",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        }
+      ],
+      "identityBasis": "Historical glyph-provenance report and fresh hash pin; original native hash absent from this report"
+    },
+    {
+      "packet": "sarabun-Italic",
+      "pdfPages": 15,
+      "nativePages": 15,
+      "markerOrigins": 12,
+      "meanAbsBaselinePt": 0.04799999999999235,
+      "maxAbsBaselinePt": 0.09600000000003917,
+      "cases": [
+        {
+          "id": "section-76caaf10-58ae-5472-b913-1448713d229d~case-marker",
+          "case": "CASED-sarabun-Italic-10-1",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-5bad5540-2956-501a-868b-d1ad9d4a9b60~case-marker",
+          "case": "CASED-sarabun-Italic-10-2",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-5a644d6f-20e6-5270-ada1-b323eb4b8bdb~case-marker",
+          "case": "CASED-sarabun-Italic-10-3",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-51417229-74af-5649-a687-9f596df8efb8~case-marker",
+          "case": "CASED-sarabun-Italic-10-4",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-c675ce40-3140-551e-b76b-737454ac7270~case-marker",
+          "case": "CASED-sarabun-Italic-12-1",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-4695ec36-5ba8-5df2-872a-500dcdc25cad~case-marker",
+          "case": "CASED-sarabun-Italic-12-2",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-615339cd-be98-5c12-8b42-59d952e0ac21~case-marker",
+          "case": "CASED-sarabun-Italic-12-3",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-812cd4ed-dd0a-5cbf-a99f-a8e1131f7231~case-marker",
+          "case": "CASED-sarabun-Italic-12-4",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-aa90c8e9-fce9-5474-86c9-5ba4191e2bb3~case-marker",
+          "case": "CASED-sarabun-Italic-16-1",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-7e076045-9e3a-58b4-b57a-dbc81194633e~case-marker",
+          "case": "CASED-sarabun-Italic-16-2",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-ec3a1960-76bb-5d70-b770-faf501a11986~case-marker",
+          "case": "CASED-sarabun-Italic-16-3",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-b7e2c8c2-eb03-5fab-9493-2f1de2685864~case-marker",
+          "case": "CASED-sarabun-Italic-16-4",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        }
+      ],
+      "identityBasis": "Historical glyph-provenance report and fresh hash pin; original native hash absent from this report"
+    },
+    {
+      "packet": "sarabun-BoldItalic",
+      "pdfPages": 16,
+      "nativePages": 16,
+      "markerOrigins": 12,
+      "meanAbsBaselinePt": 0.04799999999999235,
+      "maxAbsBaselinePt": 0.09600000000003917,
+      "cases": [
+        {
+          "id": "section-3a58e012-4cee-5b41-9113-fe4083b9f514~case-marker",
+          "case": "CASED-sarabun-BoldItalic-10-1",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-61bb4432-3f58-5552-9b7a-a0fe51c069dd~case-marker",
+          "case": "CASED-sarabun-BoldItalic-10-2",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-20c48517-e585-5956-8980-f56fc1174012~case-marker",
+          "case": "CASED-sarabun-BoldItalic-10-3",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-cf72c718-b907-505c-92ff-4cd111f1570a~case-marker",
+          "case": "CASED-sarabun-BoldItalic-10-4",
+          "baselineDeltaPt": -0.03999999999991388,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-cb1a4458-cbf6-5983-bda8-77aec3f82c64~case-marker",
+          "case": "CASED-sarabun-BoldItalic-12-1",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-ce0418f7-c095-5f7c-81ae-b908dd7cb538~case-marker",
+          "case": "CASED-sarabun-BoldItalic-12-2",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-d851451e-be9d-5628-b690-e3945ea8585a~case-marker",
+          "case": "CASED-sarabun-BoldItalic-12-3",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-50b0528a-e848-545f-b344-630eb91ba1bf~case-marker",
+          "case": "CASED-sarabun-BoldItalic-12-4",
+          "baselineDeltaPt": 0.09600000000003917,
+          "nativeAtLeastSelected": false
+        },
+        {
+          "id": "section-5d8a1904-f78d-53aa-8010-799467f084e9~case-marker",
+          "case": "CASED-sarabun-BoldItalic-16-1",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-91fa564d-2cf0-5c07-8593-3aeb583ab6a5~case-marker",
+          "case": "CASED-sarabun-BoldItalic-16-2",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-7b0094cd-205b-56a8-9657-942e13922703~case-marker",
+          "case": "CASED-sarabun-BoldItalic-16-3",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-9c19d5d5-1806-54cf-92dc-9bb8bc66a42c~case-marker",
+          "case": "CASED-sarabun-BoldItalic-16-4",
+          "baselineDeltaPt": 0.008000000000023988,
+          "nativeAtLeastSelected": true
+        }
+      ],
+      "identityBasis": "Historical glyph-provenance report and fresh hash pin; original native hash absent from this report"
+    },
+    {
+      "packet": "baijamjuree-Regular",
+      "pdfPages": 16,
+      "nativePages": 15,
+      "markerOrigins": 12,
+      "meanAbsBaselinePt": 0.020000000000019707,
+      "maxAbsBaselinePt": 0.03999999999996362,
+      "cases": [
+        {
+          "id": "section-ec1c342d-25e7-593c-8642-7b1bc910f085~case-marker",
+          "case": "CASED-baijamjuree-Regular-10-1",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-0c74575c-a973-509f-a0eb-ddc69876a731~case-marker",
+          "case": "CASED-baijamjuree-Regular-10-2",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-87018be2-1379-562d-b9c2-1796d3cd78db~case-marker",
+          "case": "CASED-baijamjuree-Regular-10-3",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-04bf8249-ac51-5960-b8e5-ded70615c8a7~case-marker",
+          "case": "CASED-baijamjuree-Regular-10-4",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-1cbe6ee3-9cd4-5693-a824-c3f46dd7368d~case-marker",
+          "case": "CASED-baijamjuree-Regular-12-1",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-063c9990-cd49-5d79-985c-a91b2f8cbc21~case-marker",
+          "case": "CASED-baijamjuree-Regular-12-2",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-90cf583f-d4ec-51cf-b713-95d49ef167a4~case-marker",
+          "case": "CASED-baijamjuree-Regular-12-3",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-e734440c-1e28-54fa-9242-bcebdc73a647~case-marker",
+          "case": "CASED-baijamjuree-Regular-12-4",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-135cc132-3ccc-51a5-b18e-568a70cf4b39~case-marker",
+          "case": "CASED-baijamjuree-Regular-16-1",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-5d0e8396-cc52-52c9-8ca1-e432a8c6d13a~case-marker",
+          "case": "CASED-baijamjuree-Regular-16-2",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-560f85f2-47df-5448-bfb8-3b759024509d~case-marker",
+          "case": "CASED-baijamjuree-Regular-16-3",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-53728e44-7da8-531c-97b4-aa653e7cea3f~case-marker",
+          "case": "CASED-baijamjuree-Regular-16-4",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        }
+      ],
+      "identityBasis": "Existing native hash record"
+    },
+    {
+      "packet": "baijamjuree-Bold",
+      "pdfPages": 16,
+      "nativePages": 16,
+      "markerOrigins": 12,
+      "meanAbsBaselinePt": 0.020000000000019707,
+      "maxAbsBaselinePt": 0.03999999999996362,
+      "cases": [
+        {
+          "id": "section-05f4872a-5dc1-57fa-9379-9a4ad51dff5d~case-marker",
+          "case": "CASED-baijamjuree-Bold-10-1",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-839f4f83-0f1f-56c2-97fd-c0cdc01bd762~case-marker",
+          "case": "CASED-baijamjuree-Bold-10-2",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-6445ccc6-06a6-525a-b899-d9f35f01156a~case-marker",
+          "case": "CASED-baijamjuree-Bold-10-3",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-dff5786a-994e-57e7-995e-6eff915b631a~case-marker",
+          "case": "CASED-baijamjuree-Bold-10-4",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-4306ad15-8900-552b-8525-9c99089ced32~case-marker",
+          "case": "CASED-baijamjuree-Bold-12-1",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-982505c3-6348-5dec-b1e6-5ea5951966ee~case-marker",
+          "case": "CASED-baijamjuree-Bold-12-2",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-7a4af5a6-e2d0-523a-ac39-a208ba1d0312~case-marker",
+          "case": "CASED-baijamjuree-Bold-12-3",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-d6a6555b-1892-5156-aefc-7cddf425656a~case-marker",
+          "case": "CASED-baijamjuree-Bold-12-4",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-1f2f8cde-12d9-5a5f-9951-0a366f494686~case-marker",
+          "case": "CASED-baijamjuree-Bold-16-1",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-084acc7f-6a36-5c93-8646-f013c313d223~case-marker",
+          "case": "CASED-baijamjuree-Bold-16-2",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-2c52ba07-6d63-5d83-b225-b3247bb2a6f3~case-marker",
+          "case": "CASED-baijamjuree-Bold-16-3",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-592f0619-16e2-5adf-8c32-a8af4e762858~case-marker",
+          "case": "CASED-baijamjuree-Bold-16-4",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        }
+      ],
+      "identityBasis": "Historical glyph-provenance report and fresh hash pin; original native hash absent from this report"
+    },
+    {
+      "packet": "baijamjuree-Italic",
+      "pdfPages": 16,
+      "nativePages": 16,
+      "markerOrigins": 12,
+      "meanAbsBaselinePt": 0.020000000000019707,
+      "maxAbsBaselinePt": 0.03999999999996362,
+      "cases": [
+        {
+          "id": "section-f53dbe7f-aa2f-5716-9213-da9936298067~case-marker",
+          "case": "CASED-baijamjuree-Italic-10-1",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-67ff6843-2af4-5fbf-a919-2ddd4a7afc9d~case-marker",
+          "case": "CASED-baijamjuree-Italic-10-2",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-c6568cdd-04a0-5c0d-8d15-1a5bd630f38c~case-marker",
+          "case": "CASED-baijamjuree-Italic-10-3",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-1d55fb18-56c5-5029-b656-773b9cf62874~case-marker",
+          "case": "CASED-baijamjuree-Italic-10-4",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-80e9f538-68be-5f3e-b119-0da51d2be1d8~case-marker",
+          "case": "CASED-baijamjuree-Italic-12-1",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-34055ec7-e1d0-56ec-b986-519dfac80817~case-marker",
+          "case": "CASED-baijamjuree-Italic-12-2",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-4e37ffab-3d92-5ac2-877b-8a7d936e5975~case-marker",
+          "case": "CASED-baijamjuree-Italic-12-3",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-b0fc84af-ce62-5726-b392-e4a131a47608~case-marker",
+          "case": "CASED-baijamjuree-Italic-12-4",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-af888c4f-f4f9-50d6-85ee-7a7c2d5f51f9~case-marker",
+          "case": "CASED-baijamjuree-Italic-16-1",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-00339953-d897-5506-86bd-2ed12dad95e4~case-marker",
+          "case": "CASED-baijamjuree-Italic-16-2",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-483ccc4e-f6d9-5482-b680-d53d0080bcd6~case-marker",
+          "case": "CASED-baijamjuree-Italic-16-3",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-ea2ab622-73e7-5c04-9902-8eb1d3513977~case-marker",
+          "case": "CASED-baijamjuree-Italic-16-4",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        }
+      ],
+      "identityBasis": "Historical glyph-provenance report and fresh hash pin; original native hash absent from this report"
+    },
+    {
+      "packet": "baijamjuree-BoldItalic",
+      "pdfPages": 16,
+      "nativePages": 16,
+      "markerOrigins": 12,
+      "meanAbsBaselinePt": 0.020000000000019707,
+      "maxAbsBaselinePt": 0.03999999999996362,
+      "cases": [
+        {
+          "id": "section-ae306dab-d614-5b4e-9188-4ec8e476d149~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-10-1",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-4f1dcf3e-2fb6-53bc-8181-b5e2e312797b~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-10-2",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-e1900a49-4e2c-5110-af67-a26a185cca6d~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-10-3",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-b3581812-a88d-5ab8-9913-ebfb15e2402a~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-10-4",
+          "baselineDeltaPt": 0.020000000000095497,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-f88f53f9-e443-512e-8b8e-c28d3a863aa7~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-12-1",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-d2ed1a38-4a5a-5f4a-88f9-9917bc93bab6~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-12-2",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-46f256a3-3854-5b52-bc5d-0fcf44db38f6~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-12-3",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-e35bb3db-f61c-5879-bcab-cc9f52c3b61b~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-12-4",
+          "baselineDeltaPt": 0.0,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-1e5e66b0-f19f-5619-9610-c11936c0580e~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-16-1",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-65081717-4a91-5e1a-87a5-fa1f8e1c9af5~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-16-2",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-94a8fffe-8989-5a55-9936-57d454a11a25~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-16-3",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        },
+        {
+          "id": "section-81c7cafd-521b-5d8a-ba9a-8b5594bebec7~case-marker",
+          "case": "CASED-baijamjuree-BoldItalic-16-4",
+          "baselineDeltaPt": -0.03999999999996362,
+          "nativeAtLeastSelected": true
+        }
+      ],
+      "identityBasis": "Historical glyph-provenance report and fresh hash pin; original native hash absent from this report"
+    }
+  ],
+  "fontControlScope": "96 CASE marker baseline origins across2families,4faces,3sizes. AtLeast paragraphs selected by frozen native XML. Not complete body glyph/line membership acceptance. Some historical native files lack original native hash record in their provenance report; freshly pinned controls are not silently relabelled current Word conversions.",
+  "tests": {
+    "passed": 313,
+    "failed": 0
+  },
+  "frozenInputs": [
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\SRS-M2-boundary.pdf",
+      "sha256": "6899f2518264b018dd5fa7f66d3c2f06eefbb18c67dfbf5eeb02e2af9e0f5553",
+      "bytes": 2550363
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.pdf",
+      "sha256": "0cec02a089f19fea49721f86fe1635b8b1fa67987902dc16798fba7c1c651faa",
+      "bytes": 1313838
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.docx",
+      "sha256": "b6133d488ca6c182d8375467b82b1bc5b12b8e8b75600a9b6288852348edb6b8",
+      "bytes": 904660
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\inputs\\original-reference.pdf",
+      "sha256": "cd2fde00ea5273c889498eb490ff2e1fa945f7e4fbdc74cd65f25bbb9643ebf1",
+      "bytes": 2559955
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\resolved-document.json",
+      "sha256": "86df6e37ddbafc58ecf554070efe6affc091c9820238f6d7af230feeddff5047",
+      "bytes": 5254791
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e5\\M2-boundary-draw.json",
+      "sha256": "edba941c796ced93defadcd221d77aaf47b46c0729ca846ec459e486c6d1f2e7",
+      "bytes": 889306
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\SRS-G1-table-start.pdf",
+      "sha256": "a1cce985ef4cbcaeebc308424a343ac396e6b31f3288a76a0f965a63a9afbab1"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\G1-table-start-draw.json",
+      "sha256": "004e22b47fb16a5797222efe75037b6363dad7fc412482ed888ac175f13d16a2"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e7\\calibration.json",
+      "sha256": "6034edeefbaf5c6e9312e4b116c46adfaace0a61732797058d7d9bb10c9f9b5a"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\SRS-R2-twips.pdf",
+      "sha256": "9d6974bc8c126fefd7d9b8160a7cfcd4f5ae6d788941c12e366579b8ffc6cad0"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\R2-twips-draw.json",
+      "sha256": "41928b662e9b8e73fda0e7a46d6f2269f599ee68ca6c3fde5d51b276218d1d0d"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e8\\calibration.json",
+      "sha256": "d96dbe0c7bd50eafa728d62d5a6383ac12910b3af7c471b6a7fe812547224a12"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e9\\SRS-F1-native-bottom.pdf",
+      "sha256": "d77b1b169553587d9e3e7bd571c7e76411b0ccb2168cd5b3a907590f56b198e8"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e9\\F1-native-bottom-draw.json",
+      "sha256": "e55ce8ff944e3e9f6e8ebe34c8b3125eaf1fbc91ab1c859547234dae5bf680cb"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e9\\calibration.json",
+      "sha256": "3447d089e0c0337ae97961195b9075d9a1ed3346d0820ce0baba7edc23615aa0"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e10\\diagnosis.json",
+      "sha256": "601d403a27c79592672b5dda08c87f0ad731d1e6583517606c1a4e875c57e317"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e10\\PDF-geometry.json",
+      "sha256": "09d8feb1996d003831623eeacdebe2e460725694966f248d95a45176daf10c04"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e10\\Word-geometry.json",
+      "sha256": "df5f39c0c0c86e94ce19073ce0806116516d49aa91cb33ffc451da667f769d50"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e10\\feature-lines.json",
+      "sha256": "a6b44a5daf1542911595a51c172663f80453d3ffef1432f9d09fdf062b5463a3"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e11\\SRS-V1-paragraph-minimum.pdf",
+      "sha256": "945626f1792b2ea798a1b7f40514d8f0cd4baebc3dae135961cc42ffc8a4fe61"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e11\\V1-paragraph-minimum-draw.json",
+      "sha256": "dc45cccec4b1ed5a3ae616e1d511bbe41b1021b564b98afc51cd774ed1d32667"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e11\\calibration.json",
+      "sha256": "36f72b924e810277dbf143efa90e6957cf84361ede031e1934d62f48815060c8"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e11\\requirement-pairs.json",
+      "sha256": "31b710c257a8f8c7182ce9a43457e0d141216c5d2838c790db26599d3d5e745f"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e11\\comparison-result.json",
+      "sha256": "cd3e1de8e88342b72c33118f1e2447ff965c014222f27e6db0d3bb1e8ae7d835"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e12\\SRS-K2-padding-half-top.pdf",
+      "sha256": "2218b60f89ca7ba68eb80d40e2cd5939e3e34f5fdfccb4f7a1d89052249c2028"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e12\\K2-padding-half-top-draw.json",
+      "sha256": "934ed4d7fa30cb82f8cfdde091e71b602abb68cc936d52d82901a2d8004adaa7"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\pagination-e12\\calibration.json",
+      "sha256": "8b5208cfa88274572cafeaf2d8d723ae4c8afd76c0667aff9b251b68ef528253"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\fonts.json",
+      "sha256": "4341480ea89167db3b37bee4d9142dd9452122db6e49ee3d8e5c10b8e4bd78fb"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\matrix.json",
+      "sha256": "065e994e798381ffcfb6e2b0ea4a9b27a71e197c5466a4648aca06233b0099d9"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\reference-inventory.json",
+      "sha256": "0a97f6ff7cbe5dc9057288ad4c3230b2c8db723e034f9760351f5602ce30c4fc"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\generation-receipts.json",
+      "sha256": "62ba00db31171824121631ca4d9e9c2094f8ccb61a5bc8e84cda191c2e6b9dcc"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\sarabun-Regular-assessment.json",
+      "sha256": "a2ff5df30f86bf451d8da52c7cca90ea6ae9945d79d986d64014dc1f675b286b"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\inputs\\development\\sarabun-Regular.json",
+      "sha256": "82f22c74d21212a58205af122fb6c91e67b3e86cbf75e87d4b1450d5914aee2f"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\sarabun-Regular.docx",
+      "sha256": "ec31accda49447c978a2d91bdc98bfff0c57c0a66dd72a286ed9094320984afd"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\sarabun-Regular-word.pdf",
+      "sha256": "1e9f9e3050a19af8afbee7562d1f2f3999cde6b5bca9194572f4cdef487d2c25"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\sarabun-Bold-provenance-assessment.json",
+      "sha256": "48c23dfff28af2ecf1e31a0c8eefd661a4c2b77a7bc112e3363ca66b9c5edfd3"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\inputs\\development\\sarabun-Bold.json",
+      "sha256": "d8e8b4eea6c298b854010ccf9d9c50814a80506fb47da88f1cdc1225086c615a"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\sarabun-Bold.docx",
+      "sha256": "aff5acbd9d478290a3126be41b20bdef7a5be2fe1a02b23b78882f991aac795f"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\sarabun-Bold-word.pdf",
+      "sha256": "dfded527171a40197031f8ff56b23b8c008fd230a5f05f9f8a6f1289f3237eaa"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\sarabun-Italic-provenance-assessment.json",
+      "sha256": "03335119f20b0b183d42fad431b8170c1d515722419aaf7d28749d8422dbbec1"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\inputs\\development\\sarabun-Italic.json",
+      "sha256": "0da2532f612b1fdbd41bc5614407e404e478d789731ef23bfc2af2cdce992208"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\sarabun-Italic.docx",
+      "sha256": "3cd40a6c93fa653924fd22cf292d156744fa10a9bea0d7f98e50fca964c96429"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\sarabun-Italic-word.pdf",
+      "sha256": "9cb65fbc82e1143303bf32f861fccd0b8a637db86d259db8033eeedf8ee1ade9"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\sarabun-BoldItalic-provenance-assessment.json",
+      "sha256": "4f883eda9aaf3ca8e7e6f1ab9e8c02d3b780dc28070c77f87b63d11c44f666d8"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\inputs\\development\\sarabun-BoldItalic.json",
+      "sha256": "c607e82054e5dcf28e7157365ea6a5c777d8c04b622f0003e140a97a0d8d34bf"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\sarabun-BoldItalic.docx",
+      "sha256": "62dcdbe3df9e3fcac05a1f0266e5b1cfe16ecc6d0211c1539f511f845b53e140"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\sarabun-BoldItalic-word.pdf",
+      "sha256": "cb95c38449554433bdffe029f50c636109173a80730c687424f59c895d3fb5d7"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\baijamjuree-Regular-assessment.json",
+      "sha256": "416dcbfcc529745ec3a882a90711b396a164b80179ca80c8efded97d18f405fd"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\inputs\\development\\baijamjuree-Regular.json",
+      "sha256": "84acd354c9d707ba1e64c362263cc692adc0ebe7580df42ab2b19fb584579f74"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\baijamjuree-Regular.docx",
+      "sha256": "ee5725d03722162c16a9997a9624fccdac9981a078f6cfb32e757575e8ba7c61"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\baijamjuree-Regular-word.pdf",
+      "sha256": "7b6b214d26bd7ed875fb724b7d79ada80f6c232949edd27f3c7be581d3e4c099"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\baijamjuree-Bold-provenance-assessment.json",
+      "sha256": "eff918b8e2a0fe327c3021635a684ce2dba5b5be2a680263d5f4e40a8b6dca7a"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\inputs\\development\\baijamjuree-Bold.json",
+      "sha256": "2e66397f0fd43fa5b251b5f35e3212460895314d3651a46c1e40f1db8676c2b7"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\baijamjuree-Bold.docx",
+      "sha256": "4ff5122c8594996927301f96772a0a5998185873cd09d6e3be2660e8bc367784"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\baijamjuree-Bold-word.pdf",
+      "sha256": "b742f920d7ab9043624a536bdff6eacbc630a02e21a29e516989c305234a3271"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\baijamjuree-Italic-provenance-assessment.json",
+      "sha256": "c2951f1b929f7cb86074fecf72e490823573792a7c2d292844b019fb143a43c9"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\inputs\\development\\baijamjuree-Italic.json",
+      "sha256": "9e0c61a4aed175c9525caf1baf6b5d561ffd8a8db3a2ff61f3f68de23aa2a290"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\baijamjuree-Italic.docx",
+      "sha256": "eef9a712ab4c83b6d9836440780b9033fc8afb251c8bb41044c3e322d856b934"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\baijamjuree-Italic-word.pdf",
+      "sha256": "5578cb06c07b76aabd67a7cd7639ebe094122b9fe866a497a0822d0e850be562"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\baijamjuree-BoldItalic-provenance-assessment.json",
+      "sha256": "8e260742d2d663860c2007432fa41cbfc873e8ef303f52a121392dbb7cb41701"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\inputs\\development\\baijamjuree-BoldItalic.json",
+      "sha256": "b4cda466663861cb3cf05fa8c092e268480dca79d6a7721b90fd0e2cc8591f52"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\baijamjuree-BoldItalic.docx",
+      "sha256": "cc7bcf31dca6ade37e0311c6212d0ec2ec27d5c56d854f3ab732fcf90cdc0847"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\development\\r11-baseline\\baijamjuree-BoldItalic-word.pdf",
+      "sha256": "9821c984b1784ab6000db2e9a32dcbaf2d452d9a3d358059b2b2ef6a86200ba2"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\fonts\\sarabun\\Sarabun-Regular.ttf",
+      "sha256": "b8150084e25734e6f31696c57ff009f5564efa09d295848b717d9e2328c0311d"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\fonts\\sarabun\\Sarabun-Bold.ttf",
+      "sha256": "5d1fc1ee63ab861fb2022a212b5ff270848582bb9d9cba73b2d2aaabb16d0a18"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\fonts\\sarabun\\Sarabun-Italic.ttf",
+      "sha256": "fb86138e0cf99786db40715a84df51508766371e2f1f2822faf22cba6563acc7"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\fonts\\sarabun\\Sarabun-BoldItalic.ttf",
+      "sha256": "a497ef98fad371e04bc64076b213da00c05a84881494ee36a4c61922c65ff7ef"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\fonts\\baijamjuree\\BaiJamjuree-Regular.ttf",
+      "sha256": "72b5a30cb78966823eb326c09b9004b0d03b4bddcdfcfd1b8cdbffb6c414547d"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\fonts\\baijamjuree\\BaiJamjuree-Bold.ttf",
+      "sha256": "74784411504a295a5255e736e0a8389892af2c8a14e914d3e194329b59279223"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\fonts\\baijamjuree\\BaiJamjuree-Italic.ttf",
+      "sha256": "96e5f86f49442f60fd72cfc7728fde740870cccd3b8bc8a30e75dd8d9fc4b3b4"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\docx-pagination-2026-10-23\\fidelity-system-r13\\fonts\\baijamjuree\\BaiJamjuree-BoldItalic.ttf",
+      "sha256": "afeefa87666738ec8689bb018dfc971a532c8fd9e8cba649d1be0176759d93c1"
+    }
+  ],
+  "goalStatus": "IMPROVED, NOT COMPLETE GENERAL FIDELITY ACCEPTANCE",
+  "limitations": [
+    "Remaining SRS baseline errors and layout geometry need full text/glyph alignment accounting; REQ baseline origins alone are not all letters.",
+    "No new Word conversion; font-control paragraph/line differences and exact/source-guided paths are outside origin-only comparison.",
+    "Nominal ASCII retains ligature/complex-script shaping and is an experiment, not a general native kerning rule."
+  ],
+  "review": {
+    "blockingFindings": 0,
+    "independentHelperTests": 2,
+    "notes": [
+      "96 marker checks comprise 80 treated AtLeast cases and 16 unchanged controls.",
+      "Source-text coverage permits repeated whole-text copies and does not establish exact multiplicity."
+    ]
+  },
+  "visualReview": {
+    "overviewPages": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100
+    ],
+    "detailedNativeComparisons": [
+      68,
+      69
+    ],
+    "scope": "All pages reviewed in overview sheets; detailed68/69 corroborate repaired wrap and downstream placement. This is not full-resolution every-glyph acceptance."
+  },
+  "proofUse": {
+    "pdfs": 12,
+    "srsFactors": 4,
+    "fontPackets": 8,
+    "extensionReason": "Baseline-only exposed wrapping correctness; global nominal shaping changed protected introduction. Retain both rejected factors and select node-scoped policy.",
+    "dockerMemoryBytes": 1073741824,
+    "network": "none"
+  },
+  "sourceHashes": [
+    {
+      "path": "src/layout/measureText.ts",
+      "sha256": "513e4576bf8db0c486ceeeaf11d7d6e9180a7e21740b2e4b63d09ea0a2315685"
+    },
+    {
+      "path": "src/layout/textFlow.ts",
+      "sha256": "da138cc7a03b462d6ac19d3577ebd56ad6a4dd98b76d6ee79e5f71165bc950cd"
+    },
+    {
+      "path": "tests/layout/fontBaselineProbe.test.ts",
+      "sha256": "030d6884ae9a48ee81be54a1b609a1ede88653510e96d992437502c0ef53549f"
+    },
+    {
+      "path": "scripts/experiments/font-baseline-probe.mjs",
+      "sha256": "035eb67400fcaecb130820b030b45f70b5f856505796ee1e3707bc3a87ece7d3"
+    },
+    {
+      "path": "scripts/experiments/font-baseline-probe.test.mjs",
+      "sha256": "43425251d2d117b163082b462e1d3937af59d811f74fb8143c3feaa473b00c66"
+    },
+    {
+      "path": "scripts/experiments/font-goal-audit.py",
+      "sha256": "394602abed5f3deaad0d729c3c1b19f7f74666f0dc13f63f9555e0bdebc0b5e2"
+    },
+    {
+      "path": "scripts/experiments/font-goal-finalize.py",
+      "sha256": "78c7c79f6948d3404b2738d1b2622f50cf1b1909d8bec9160386492acb076898"
+    },
+    {
+      "path": "scripts/experiments/font-goal-matrix.mjs",
+      "sha256": "44e514a591fc83ddf3b35b2f507187e750771ea162324a5b933c058d13f887cd"
+    },
+    {
+      "path": "scripts/experiments/font-goal-prepare.py",
+      "sha256": "408fa697becef4ddd11538efb67103609ec8ef63b73dddf3e1bf63c59b55b28e"
+    },
+    {
+      "path": "scripts/experiments/word-spacing-r1.mjs",
+      "sha256": "ed3702e58d65c7847a283a628c858a9b40b125410035402fb4109ca258aefd6f"
+    }
+  ],
+  "outputHashes": [
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\matrix\\baijamjuree-Bold.pdf",
+      "sha256": "c7610943532040654224c88e61ff777ff5c276f55127dd1a553de027ad132c84"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\matrix\\baijamjuree-BoldItalic.pdf",
+      "sha256": "755b265ea1a449e5ee64e1cae878b6b6387b12ae94acc432a47cb2ae9548c4bc"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\matrix\\baijamjuree-Italic.pdf",
+      "sha256": "d96ad2cc449b9a7991e7e8aa0de6e959cd58122c0f41d7dbc926e25c3f076cd1"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\matrix\\baijamjuree-Regular.pdf",
+      "sha256": "b6afa90721feeb6b13730e123e6096b98f608715a5e5e07ae4f2d0f58b2779fc"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\matrix\\sarabun-Bold.pdf",
+      "sha256": "0f11bbc9ef65f630f457606b9b94b3436bfa82a35337aa7fde0e86d1a62155bf"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\matrix\\sarabun-BoldItalic.pdf",
+      "sha256": "827dcf25f2c069830cfd9dd0e20dd5a2bb610d77617f91fec01e0aa31f0368fa"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\matrix\\sarabun-Italic.pdf",
+      "sha256": "3948f092a27573e65b627c9cc906759c3a4ac1dbb100bda2d7fa9c31161ea973"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\matrix\\sarabun-Regular.pdf",
+      "sha256": "217d75169d0f30fc39e7cad2e039c56a546a7bf5ce29dd8df5960acfe6c0e781"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\SRS-S0-E12-control.pdf",
+      "sha256": "2218b60f89ca7ba68eb80d40e2cd5939e3e34f5fdfccb4f7a1d89052249c2028"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\SRS-S1-font-baseline.pdf",
+      "sha256": "61fd7e21ac96985824c569c194fb166795dbbabbfd6e29e1f689c932cbfcfe76"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\SRS-S2-font-nominal.pdf",
+      "sha256": "678228c546992d38a549d88163efd3b423ddff8733681792116fd0d55a240030"
+    },
+    {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\fidelity-goal-g1\\SRS-S3-scoped-font-policy.pdf",
+      "sha256": "a84425e2c4a260f783c34b72fe79741ba57477a40a7bc3e1c79c3c76187edb87"
+    }
+  ]
+}

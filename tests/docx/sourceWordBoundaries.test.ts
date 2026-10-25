@@ -1,0 +1,11 @@
+import {it,expect} from 'vitest';
+import {sourceWordBoundaries} from '../../src/docx/source-word-boundaries.js';
+import type {Glyph} from '../../src/pdf/drawContract.js';
+const glyphs=(text:string,advance:number,cluster=1):Glyph[]=>Array.from({length:text.length/cluster},(_,i)=>({glyphId:1,clusterStartOffset:i*cluster,clusterEndOffset:(i+1)*cluster,advancePt:advance,offsetXPt:0,offsetYPt:0}));
+it('subdivides long Thai spans before three twips of accumulated advance-rounding risk',()=>{const text='กิ'.repeat(30),gs=glyphs(text,3.612,2),ends=sourceWordBoundaries(text,gs,[text.length]);expect(ends).toEqual([24,48,60]);});
+it('keeps already-bounded Thai words and exact authored ends unchanged',()=>{const text='กิ'.repeat(5);expect(sourceWordBoundaries(text,glyphs(text,3.612,2),[4,10])).toEqual([4,10]);});
+it('never creates a boundary inside a source glyph cluster or grapheme',()=>{const text='กี้'.repeat(20),gs=glyphs(text,3.624,3),ends=sourceWordBoundaries(text,gs,[text.length]);expect(ends.length).toBeGreaterThan(1);expect(ends.every(e=>e%3===0)).toBe(true);});
+it('retains one-to-one Latin words whose source spacing is already corrected',()=>{const text='ABCDEFGHIJKLMNOPQRSTUVWXYZ';expect(sourceWordBoundaries(text,glyphs(text,3.612),[text.length])).toEqual([text.length]);});
+it('rejects original segmenter breaks that detach Thai marks from their grapheme',()=>{const text='พฺ่พฺ๊';expect(sourceWordBoundaries(text,glyphs(text,3.6),[4,6])).toEqual([6]);});
+it('keeps cancelling cluster errors and zero-advance marks together',()=>{const text='กิ'.repeat(20);const gs=glyphs(text,3.612,2).flatMap((g,i)=>[{...g,advancePt:i%2?3.588:3.612},{...g,glyphId:2,advancePt:0}]);expect(sourceWordBoundaries(text,gs,[text.length])).toEqual([text.length]);});
+it('never splits an oversized indivisible source cluster',()=>{const text='กิ'.repeat(10);const gs=glyphs(text,3.612,20).flatMap(g=>Array.from({length:20},()=>({...g})));expect(sourceWordBoundaries(text,gs,[text.length])).toEqual([text.length]);});

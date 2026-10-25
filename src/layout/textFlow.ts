@@ -5,6 +5,19 @@ import type { DrawDocument, DrawPage, Glyph } from '../pdf/drawContract.js';
 
 export interface ShapedText {glyphs:Glyph[];ascentPt:number;descentPt:number;inkLeftPt?:number;inkRightPt?:number;glyphInkBoundsPt?:({left:number;right:number}|null)[]}
 export interface TextRuntime {
+ /** Internal, opt-in measurement experiment. Not a document contract or a Word compatibility guarantee. */
+ spacingProbe?:{
+  lineBox?(nodeId:string,style:import('../composition/resolvedDocument.js').TextStyle):{heightPt:number;baselineOffsetPt:number}|undefined;
+  baselineOffsetPt?(nodeId:string,style:import('../composition/resolvedDocument.js').TextStyle,heightPt:number,shape:ShapedText):number|undefined;
+  shapedText?(nodeId:string,text:string,fontId:string,sizePt:number,shape:ShapedText):ShapedText;
+  rowStrokePt?(tableId:string):number|undefined;
+  bodyTopPt?(sectionId:string|undefined):number|undefined;
+  bodyBottomPt?(sectionId:string|undefined):number|undefined;
+  tableBoundaryPt?(previousTableId:string,nextTableId:string):number|undefined;
+  keepTableStart?(headingNodeId:string):boolean;
+  paragraphWidowOrphan?(nodeId:string):boolean;
+  nativeTableBox?(tableId:string):{borderPt:number;quantizeTextToTwips?:boolean}|undefined;
+ };
  fontId?(style:import('../composition/resolvedDocument.js').TextStyle):string;
  breaks(text:string):Promise<number[]>;
  shape(text:string,fontId:string,sizePt:number):Promise<ShapedText>;

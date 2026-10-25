@@ -1,0 +1,817 @@
+{
+  "inputs": {
+    "Word": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e3\\SRS-spacing-D-cell-baseline.pdf",
+      "sha256": "0cec02a089f19fea49721f86fe1635b8b1fa67987902dc16798fba7c1c651faa",
+      "pages": 100,
+      "bytes": 1313838
+    },
+    "control": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e4\\SRS-control.pdf",
+      "sha256": "7f60d0068eacf071c0c58067133461f1bc10b626a22d272bc813e7f6ef3fa644",
+      "pages": 98,
+      "bytes": 2551419
+    },
+    "H-header": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e4\\SRS-H-header.pdf",
+      "sha256": "bcae85b17fbf187408d835aa3ec24c50a611b913785e232c762d74aea8fa10e3",
+      "pages": 98,
+      "bytes": 2551405
+    },
+    "B-border": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e4\\SRS-B-border.pdf",
+      "sha256": "4282a3688d1ab9e09fd3b4a243de388802b73e20957a538741702a8275550d8c",
+      "pages": 98,
+      "bytes": 2550368
+    },
+    "L-linebox": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e4\\SRS-L-linebox.pdf",
+      "sha256": "46c7c3ee6a18203abdd07db820fe622eecc9ee262fbfdbd53431059b5e1cefe1",
+      "pages": 98,
+      "bytes": 2551400
+    },
+    "C-combined": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e4\\SRS-C-combined.pdf",
+      "sha256": "f37c3eaa616a9bca50016dff27edacac5caa3d539d7515c613202e6d34748372",
+      "pages": 98,
+      "bytes": 2550363
+    },
+    "C2-combined": {
+      "path": "C:\\Users\\nekot\\Documents\\FlowDoc-recovery\\srs-real-2026-10-24\\spacing-e4\\SRS-C2-combined.pdf",
+      "sha256": "deb759b01315760c0a3b71c5eba3390fce7bc7ea2f3a81a9b0b399e5f1db6e73",
+      "pages": 98,
+      "bytes": 2550363
+    }
+  },
+  "page14": {
+    "control": {
+      "anchors": [
+        {
+          "lineIndex": 0,
+          "label": "MOM Minutes of Meeting  ",
+          "deltaPt": -5.351158999999939
+        },
+        {
+          "lineIndex": 4,
+          "label": "TOR Terms of Reference         ",
+          "deltaPt": -5.911158999999998
+        },
+        {
+          "lineIndex": 6,
+          "label": "SOW Statement of work         ",
+          "deltaPt": -6.43115899999998
+        },
+        {
+          "lineIndex": 8,
+          "label": "DCT Data Collection Template     ",
+          "deltaPt": -6.981158999999934
+        },
+        {
+          "lineIndex": 11,
+          "label": "6.  REFERENCES",
+          "deltaPt": -8.265158999999983
+        },
+        {
+          "lineIndex": 12,
+          "label": "6.1 https tttbrother.box.com s05yta7orieg9rxvtdeqphaesn17d8g4h",
+          "deltaPt": -4.756158999999968
+        },
+        {
+          "lineIndex": 13,
+          "label": "6.2 https tttbrother.box.com s u80hs0b93kt9a8rmnhgtcqum58trxb60",
+          "deltaPt": -4.716158999999948
+        },
+        {
+          "lineIndex": 14,
+          "label": "6.3 https tttbrother.box.com s5a2bym1xpousvuokfufsws9oljyb92o8",
+          "deltaPt": -4.796158999999932
+        },
+        {
+          "lineIndex": 15,
+          "label": "6.4 https tttbrother.box.com s398x9ve5odoi1aw27xq9zjbwamncufp0",
+          "deltaPt": -4.756158999999911
+        },
+        {
+          "lineIndex": 16,
+          "label": "6.5 https tttbrother.box.com s szwuwr58jdy27g5rf44wpc9pr36o4f6o",
+          "deltaPt": -4.856158999999934
+        },
+        {
+          "lineIndex": 17,
+          "label": "7.  DOCUMENT OVERVIEW",
+          "deltaPt": -8.325158999999985
+        },
+        {
+          "lineIndex": 22,
+          "label": "7.1   Introduction",
+          "deltaPt": -7.601158999999825
+        },
+        {
+          "lineIndex": 24,
+          "label": "7.2  Project Overview",
+          "deltaPt": -7.641158999999902
+        },
+        {
+          "lineIndex": 26,
+          "label": "7.3  System Objectives",
+          "deltaPt": -8.25015899999994
+        },
+        {
+          "lineIndex": 28,
+          "label": "7.4  System Scope",
+          "deltaPt": -7.686158999999975
+        },
+        {
+          "lineIndex": 30,
+          "label": "7.5    System Architecture  Features",
+          "deltaPt": -7.671158999999989
+        }
+      ],
+      "holdoutMeanAbsolutePt": 6.455658999999945,
+      "holdoutMaxAbsolutePt": 8.325158999999985,
+      "lastDescriptionLineDeltaPt": -7.747159000000011,
+      "lastLineOnPage15": false
+    },
+    "H-header": {
+      "anchors": [
+        {
+          "lineIndex": 0,
+          "label": "MOM Minutes of Meeting  ",
+          "deltaPt": -3.0139999999998963
+        },
+        {
+          "lineIndex": 4,
+          "label": "TOR Terms of Reference         ",
+          "deltaPt": -3.5739999999999554
+        },
+        {
+          "lineIndex": 6,
+          "label": "SOW Statement of work         ",
+          "deltaPt": -4.093999999999937
+        },
+        {
+          "lineIndex": 8,
+          "label": "DCT Data Collection Template     ",
+          "deltaPt": -4.643999999999892
+        },
+        {
+          "lineIndex": 11,
+          "label": "6.  REFERENCES",
+          "deltaPt": -5.927999999999997
+        },
+        {
+          "lineIndex": 12,
+          "label": "6.1 https tttbrother.box.com s05yta7orieg9rxvtdeqphaesn17d8g4h",
+          "deltaPt": -2.4189999999999827
+        },
+        {
+          "lineIndex": 13,
+          "label": "6.2 https tttbrother.box.com s u80hs0b93kt9a8rmnhgtcqum58trxb60",
+          "deltaPt": -2.3789999999999623
+        },
+        {
+          "lineIndex": 14,
+          "label": "6.3 https tttbrother.box.com s5a2bym1xpousvuokfufsws9oljyb92o8",
+          "deltaPt": -2.4589999999999463
+        },
+        {
+          "lineIndex": 15,
+          "label": "6.4 https tttbrother.box.com s398x9ve5odoi1aw27xq9zjbwamncufp0",
+          "deltaPt": -2.418999999999926
+        },
+        {
+          "lineIndex": 16,
+          "label": "6.5 https tttbrother.box.com s szwuwr58jdy27g5rf44wpc9pr36o4f6o",
+          "deltaPt": -2.5189999999999486
+        },
+        {
+          "lineIndex": 17,
+          "label": "7.  DOCUMENT OVERVIEW",
+          "deltaPt": -5.987999999999943
+        },
+        {
+          "lineIndex": 22,
+          "label": "7.1   Introduction",
+          "deltaPt": -5.263999999999896
+        },
+        {
+          "lineIndex": 24,
+          "label": "7.2  Project Overview",
+          "deltaPt": -5.30399999999986
+        },
+        {
+          "lineIndex": 26,
+          "label": "7.3  System Objectives",
+          "deltaPt": -5.912999999999897
+        },
+        {
+          "lineIndex": 28,
+          "label": "7.4  System Scope",
+          "deltaPt": -5.348999999999933
+        },
+        {
+          "lineIndex": 30,
+          "label": "7.5    System Architecture  Features",
+          "deltaPt": -5.333999999999946
+        }
+      ],
+      "holdoutMeanAbsolutePt": 4.118499999999931,
+      "holdoutMaxAbsolutePt": 5.987999999999943,
+      "lastDescriptionLineDeltaPt": -5.409999999999968,
+      "lastLineOnPage15": false
+    },
+    "B-border": {
+      "anchors": [
+        {
+          "lineIndex": 0,
+          "label": "MOM Minutes of Meeting  ",
+          "deltaPt": -3.0139999999998963
+        },
+        {
+          "lineIndex": 4,
+          "label": "TOR Terms of Reference         ",
+          "deltaPt": -3.0739999999999554
+        },
+        {
+          "lineIndex": 6,
+          "label": "SOW Statement of work         ",
+          "deltaPt": -3.0939999999999372
+        },
+        {
+          "lineIndex": 8,
+          "label": "DCT Data Collection Template     ",
+          "deltaPt": -3.1439999999998918
+        },
+        {
+          "lineIndex": 11,
+          "label": "6.  REFERENCES",
+          "deltaPt": -3.9279999999999973
+        },
+        {
+          "lineIndex": 12,
+          "label": "6.1 https tttbrother.box.com s05yta7orieg9rxvtdeqphaesn17d8g4h",
+          "deltaPt": -0.4189999999999827
+        },
+        {
+          "lineIndex": 13,
+          "label": "6.2 https tttbrother.box.com s u80hs0b93kt9a8rmnhgtcqum58trxb60",
+          "deltaPt": -0.37899999999996226
+        },
+        {
+          "lineIndex": 14,
+          "label": "6.3 https tttbrother.box.com s5a2bym1xpousvuokfufsws9oljyb92o8",
+          "deltaPt": -0.45899999999994634
+        },
+        {
+          "lineIndex": 15,
+          "label": "6.4 https tttbrother.box.com s398x9ve5odoi1aw27xq9zjbwamncufp0",
+          "deltaPt": -0.4189999999999259
+        },
+        {
+          "lineIndex": 16,
+          "label": "6.5 https tttbrother.box.com s szwuwr58jdy27g5rf44wpc9pr36o4f6o",
+          "deltaPt": -0.5189999999999486
+        },
+        {
+          "lineIndex": 17,
+          "label": "7.  DOCUMENT OVERVIEW",
+          "deltaPt": -3.9879999999999427
+        },
+        {
+          "lineIndex": 22,
+          "label": "7.1   Introduction",
+          "deltaPt": -3.2639999999998963
+        },
+        {
+          "lineIndex": 24,
+          "label": "7.2  Project Overview",
+          "deltaPt": -3.30399999999986
+        },
+        {
+          "lineIndex": 26,
+          "label": "7.3  System Objectives",
+          "deltaPt": -3.9129999999998972
+        },
+        {
+          "lineIndex": 28,
+          "label": "7.4  System Scope",
+          "deltaPt": -3.3489999999999327
+        },
+        {
+          "lineIndex": 30,
+          "label": "7.5    System Architecture  Features",
+          "deltaPt": -3.3339999999999463
+        }
+      ],
+      "holdoutMeanAbsolutePt": 2.3327857142856447,
+      "holdoutMaxAbsolutePt": 3.9879999999999427,
+      "lastDescriptionLineDeltaPt": -3.409999999999968,
+      "lastLineOnPage15": true
+    },
+    "L-linebox": {
+      "anchors": [
+        {
+          "lineIndex": 0,
+          "label": "MOM Minutes of Meeting  ",
+          "deltaPt": 1.1368683772161603e-13
+        },
+        {
+          "lineIndex": 4,
+          "label": "TOR Terms of Reference         ",
+          "deltaPt": -0.5199999999999818
+        },
+        {
+          "lineIndex": 6,
+          "label": "SOW Statement of work         ",
+          "deltaPt": -1.0199999999999818
+        },
+        {
+          "lineIndex": 8,
+          "label": "DCT Data Collection Template     ",
+          "deltaPt": -1.5499999999999545
+        },
+        {
+          "lineIndex": 11,
+          "label": "6.  REFERENCES",
+          "deltaPt": -2.0119949999999562
+        },
+        {
+          "lineIndex": 12,
+          "label": "6.1 https tttbrother.box.com s05yta7orieg9rxvtdeqphaesn17d8g4h",
+          "deltaPt": 0.7600000000000477
+        },
+        {
+          "lineIndex": 13,
+          "label": "6.2 https tttbrother.box.com s u80hs0b93kt9a8rmnhgtcqum58trxb60",
+          "deltaPt": 0.8100000000000591
+        },
+        {
+          "lineIndex": 14,
+          "label": "6.3 https tttbrother.box.com s5a2bym1xpousvuokfufsws9oljyb92o8",
+          "deltaPt": 0.7400000000000659
+        },
+        {
+          "lineIndex": 15,
+          "label": "6.4 https tttbrother.box.com s398x9ve5odoi1aw27xq9zjbwamncufp0",
+          "deltaPt": 0.7900000000000773
+        },
+        {
+          "lineIndex": 16,
+          "label": "6.5 https tttbrother.box.com s szwuwr58jdy27g5rf44wpc9pr36o4f6o",
+          "deltaPt": 0.7000000000000455
+        },
+        {
+          "lineIndex": 17,
+          "label": "7.  DOCUMENT OVERVIEW",
+          "deltaPt": -2.021994999999947
+        },
+        {
+          "lineIndex": 22,
+          "label": "7.1   Introduction",
+          "deltaPt": -2.0499999999999545
+        },
+        {
+          "lineIndex": 24,
+          "label": "7.2  Project Overview",
+          "deltaPt": -2.0699999999999363
+        },
+        {
+          "lineIndex": 26,
+          "label": "7.3  System Objectives",
+          "deltaPt": -2.119999999999891
+        },
+        {
+          "lineIndex": 28,
+          "label": "7.4  System Scope",
+          "deltaPt": -2.019999999999868
+        },
+        {
+          "lineIndex": 30,
+          "label": "7.5    System Architecture  Features",
+          "deltaPt": -2.0399999999999636
+        }
+      ],
+      "holdoutMeanAbsolutePt": 1.372285357142841,
+      "holdoutMaxAbsolutePt": 2.119999999999891,
+      "lastDescriptionLineDeltaPt": -2.1059999999999945,
+      "lastLineOnPage15": false
+    },
+    "C-combined": {
+      "anchors": [
+        {
+          "lineIndex": 0,
+          "label": "MOM Minutes of Meeting  ",
+          "deltaPt": 1.1368683772161603e-13
+        },
+        {
+          "lineIndex": 4,
+          "label": "TOR Terms of Reference         ",
+          "deltaPt": -0.01999999999998181
+        },
+        {
+          "lineIndex": 6,
+          "label": "SOW Statement of work         ",
+          "deltaPt": -0.01999999999998181
+        },
+        {
+          "lineIndex": 8,
+          "label": "DCT Data Collection Template     ",
+          "deltaPt": -0.049999999999954525
+        },
+        {
+          "lineIndex": 11,
+          "label": "6.  REFERENCES",
+          "deltaPt": -0.011994999999956235
+        },
+        {
+          "lineIndex": 12,
+          "label": "6.1 https tttbrother.box.com s05yta7orieg9rxvtdeqphaesn17d8g4h",
+          "deltaPt": 2.7600000000000477
+        },
+        {
+          "lineIndex": 13,
+          "label": "6.2 https tttbrother.box.com s u80hs0b93kt9a8rmnhgtcqum58trxb60",
+          "deltaPt": 2.810000000000059
+        },
+        {
+          "lineIndex": 14,
+          "label": "6.3 https tttbrother.box.com s5a2bym1xpousvuokfufsws9oljyb92o8",
+          "deltaPt": 2.740000000000066
+        },
+        {
+          "lineIndex": 15,
+          "label": "6.4 https tttbrother.box.com s398x9ve5odoi1aw27xq9zjbwamncufp0",
+          "deltaPt": 2.7900000000000773
+        },
+        {
+          "lineIndex": 16,
+          "label": "6.5 https tttbrother.box.com s szwuwr58jdy27g5rf44wpc9pr36o4f6o",
+          "deltaPt": 2.7000000000000455
+        },
+        {
+          "lineIndex": 17,
+          "label": "7.  DOCUMENT OVERVIEW",
+          "deltaPt": -0.02199499999994714
+        },
+        {
+          "lineIndex": 22,
+          "label": "7.1   Introduction",
+          "deltaPt": -0.049999999999954525
+        },
+        {
+          "lineIndex": 24,
+          "label": "7.2  Project Overview",
+          "deltaPt": -0.06999999999993634
+        },
+        {
+          "lineIndex": 26,
+          "label": "7.3  System Objectives",
+          "deltaPt": -0.11999999999989086
+        },
+        {
+          "lineIndex": 28,
+          "label": "7.4  System Scope",
+          "deltaPt": -0.019999999999868123
+        },
+        {
+          "lineIndex": 30,
+          "label": "7.5    System Architecture  Features",
+          "deltaPt": -0.03999999999996362
+        }
+      ],
+      "holdoutMeanAbsolutePt": 1.0151424999999838,
+      "holdoutMaxAbsolutePt": 2.810000000000059,
+      "lastDescriptionLineDeltaPt": -0.10599999999999454,
+      "lastLineOnPage15": true
+    },
+    "C2-combined": {
+      "anchors": [
+        {
+          "lineIndex": 0,
+          "label": "MOM Minutes of Meeting  ",
+          "deltaPt": 1.1368683772161603e-13
+        },
+        {
+          "lineIndex": 4,
+          "label": "TOR Terms of Reference         ",
+          "deltaPt": -0.01999999999998181
+        },
+        {
+          "lineIndex": 6,
+          "label": "SOW Statement of work         ",
+          "deltaPt": -0.01999999999998181
+        },
+        {
+          "lineIndex": 8,
+          "label": "DCT Data Collection Template     ",
+          "deltaPt": -0.049999999999954525
+        },
+        {
+          "lineIndex": 11,
+          "label": "6.  REFERENCES",
+          "deltaPt": -0.011994999999956235
+        },
+        {
+          "lineIndex": 12,
+          "label": "6.1 https tttbrother.box.com s05yta7orieg9rxvtdeqphaesn17d8g4h",
+          "deltaPt": -0.3089999999999691
+        },
+        {
+          "lineIndex": 13,
+          "label": "6.2 https tttbrother.box.com s u80hs0b93kt9a8rmnhgtcqum58trxb60",
+          "deltaPt": -0.2689999999999486
+        },
+        {
+          "lineIndex": 14,
+          "label": "6.3 https tttbrother.box.com s5a2bym1xpousvuokfufsws9oljyb92o8",
+          "deltaPt": -0.3489999999999327
+        },
+        {
+          "lineIndex": 15,
+          "label": "6.4 https tttbrother.box.com s398x9ve5odoi1aw27xq9zjbwamncufp0",
+          "deltaPt": -0.30899999999991223
+        },
+        {
+          "lineIndex": 16,
+          "label": "6.5 https tttbrother.box.com s szwuwr58jdy27g5rf44wpc9pr36o4f6o",
+          "deltaPt": -0.40899999999993497
+        },
+        {
+          "lineIndex": 17,
+          "label": "7.  DOCUMENT OVERVIEW",
+          "deltaPt": -0.07199499999995851
+        },
+        {
+          "lineIndex": 22,
+          "label": "7.1   Introduction",
+          "deltaPt": -0.09999999999990905
+        },
+        {
+          "lineIndex": 24,
+          "label": "7.2  Project Overview",
+          "deltaPt": -0.11999999999989086
+        },
+        {
+          "lineIndex": 26,
+          "label": "7.3  System Objectives",
+          "deltaPt": -0.16999999999984539
+        },
+        {
+          "lineIndex": 28,
+          "label": "7.4  System Scope",
+          "deltaPt": -0.06999999999993634
+        },
+        {
+          "lineIndex": 30,
+          "label": "7.5    System Architecture  Features",
+          "deltaPt": -0.08999999999991815
+        }
+      ],
+      "holdoutMeanAbsolutePt": 0.16835678571421958,
+      "holdoutMaxAbsolutePt": 0.40899999999993497,
+      "lastDescriptionLineDeltaPt": -0.15599999999994907,
+      "lastLineOnPage15": true
+    }
+  },
+  "introductionAnchorMetrics": {
+    "control": {
+      "matchedUniqueLatinNumericAnchors": 111,
+      "samePhysicalPage": 109,
+      "differentPageAnchors": [
+        {
+          "key": "TTTSpaceship1006256809301620",
+          "candidatePage": 20,
+          "wordPage": 21
+        },
+        {
+          "key": "WorkFlowMappingISO29110",
+          "candidatePage": 17,
+          "wordPage": 18
+        }
+      ],
+      "samePageMeanAbsolutePt": 16.183218633027465,
+      "samePageMaxAbsolutePt": 36.04415899999992,
+      "byPage": {
+        "11": {
+          "count": 5,
+          "meanAbsolutePt": 5.394858999999928,
+          "maxAbsolutePt": 6.651658999999938
+        },
+        "12": {
+          "count": 17,
+          "meanAbsolutePt": 5.203953117647014,
+          "maxAbsolutePt": 6.631159000000025
+        },
+        "13": {
+          "count": 12,
+          "meanAbsolutePt": 9.474033999999927,
+          "maxAbsolutePt": 13.19115899999997
+        },
+        "14": {
+          "count": 16,
+          "meanAbsolutePt": 6.499721499999946,
+          "maxAbsolutePt": 8.325158999999985
+        },
+        "15": {
+          "count": 11,
+          "meanAbsolutePt": 24.871568090909058,
+          "maxAbsolutePt": 26.661658999999986
+        },
+        "16": {
+          "count": 13,
+          "meanAbsolutePt": 24.97515899999993,
+          "maxAbsolutePt": 25.665158999999903
+        },
+        "17": {
+          "count": 10,
+          "meanAbsolutePt": 25.202508999999935,
+          "maxAbsolutePt": 25.730158999999958
+        },
+        "18": {
+          "count": 4,
+          "meanAbsolutePt": 33.7861589999999,
+          "maxAbsolutePt": 34.45415899999989
+        },
+        "19": {
+          "count": 3,
+          "meanAbsolutePt": 35.42815899999994,
+          "maxAbsolutePt": 36.04415899999992
+        },
+        "20": {
+          "count": 2,
+          "meanAbsolutePt": 35.13315899999995,
+          "maxAbsolutePt": 35.95215899999994
+        },
+        "21": {
+          "count": 3,
+          "meanAbsolutePt": 33.97549233333331,
+          "maxAbsolutePt": 34.853159000000005
+        },
+        "22": {
+          "count": 3,
+          "meanAbsolutePt": 34.861492333333295,
+          "maxAbsolutePt": 36.04415899999992
+        },
+        "23": {
+          "count": 5,
+          "meanAbsolutePt": 5.747558999999933,
+          "maxAbsolutePt": 6.6141589999999155
+        },
+        "24": {
+          "count": 2,
+          "meanAbsolutePt": 7.324158999999952,
+          "maxAbsolutePt": 8.204159000000004
+        },
+        "25": {
+          "count": 1,
+          "meanAbsolutePt": 6.6141589999999155,
+          "maxAbsolutePt": 6.6141589999999155
+        },
+        "26": {
+          "count": 2,
+          "meanAbsolutePt": 6.174658999999906,
+          "maxAbsolutePt": 6.4441589999999
+        }
+      }
+    },
+    "C2-combined": {
+      "matchedUniqueLatinNumericAnchors": 111,
+      "samePhysicalPage": 111,
+      "differentPageAnchors": [],
+      "samePageMeanAbsolutePt": 0.5615587387387472,
+      "samePageMaxAbsolutePt": 2.849999999999909,
+      "byPage": {
+        "11": {
+          "count": 5,
+          "meanAbsolutePt": 0.4652020000000789,
+          "maxAbsolutePt": 0.5000000000000568
+        },
+        "12": {
+          "count": 17,
+          "meanAbsolutePt": 0.4287061764706316,
+          "maxAbsolutePt": 0.5399999999999636
+        },
+        "13": {
+          "count": 12,
+          "meanAbsolutePt": 0.14433291666663214,
+          "maxAbsolutePt": 0.5899999999999181
+        },
+        "14": {
+          "count": 16,
+          "meanAbsolutePt": 0.1480618749999465,
+          "maxAbsolutePt": 0.40899999999993497
+        },
+        "15": {
+          "count": 11,
+          "meanAbsolutePt": 0.4814554545454929,
+          "maxAbsolutePt": 0.5600000000000591
+        },
+        "16": {
+          "count": 13,
+          "meanAbsolutePt": 0.4663080769231381,
+          "maxAbsolutePt": 0.5299999999999727
+        },
+        "17": {
+          "count": 10,
+          "meanAbsolutePt": 0.32980050000006145,
+          "maxAbsolutePt": 0.5600000000000591
+        },
+        "18": {
+          "count": 5,
+          "meanAbsolutePt": 0.6779999999999973,
+          "maxAbsolutePt": 1.3099999999999454
+        },
+        "19": {
+          "count": 3,
+          "meanAbsolutePt": 2.3099999999999454,
+          "maxAbsolutePt": 2.849999999999909
+        },
+        "20": {
+          "count": 2,
+          "meanAbsolutePt": 2.007999999999953,
+          "maxAbsolutePt": 2.8059999999999263
+        },
+        "21": {
+          "count": 4,
+          "meanAbsolutePt": 0.7964999999999947,
+          "maxAbsolutePt": 1.3659999999999854
+        },
+        "22": {
+          "count": 3,
+          "meanAbsolutePt": 1.7699999999999818,
+          "maxAbsolutePt": 2.8199999999999363
+        },
+        "23": {
+          "count": 5,
+          "meanAbsolutePt": 0.6560000000000059,
+          "maxAbsolutePt": 1.3299999999999272
+        },
+        "24": {
+          "count": 2,
+          "meanAbsolutePt": 2.029999999999916,
+          "maxAbsolutePt": 2.8299999999999272
+        },
+        "25": {
+          "count": 1,
+          "meanAbsolutePt": 1.3199999999999363,
+          "maxAbsolutePt": 1.3199999999999363
+        },
+        "26": {
+          "count": 2,
+          "meanAbsolutePt": 1.2349999999999,
+          "maxAbsolutePt": 1.2399999999998954
+        }
+      }
+    }
+  },
+  "globalExtractedBodyTextExact": false,
+  "changedTextPages": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22
+  ],
+  "changedRasterPages": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+  ],
+  "requirementOrderPageAndBaselineExact": true,
+  "requirementCount": 361,
+  "imagePlacementsByPageExact": true,
+  "footersExact": true,
+  "frozenInputsPreserved": true,
+  "tests": {
+    "passed": 271,
+    "failed": 0
+  },
+  "scope": "Introduction-only measured profile, calibrated on page14 MOM and heading6. Not general Word metrics or complete document parity.",
+  "nativeWordPages": 100,
+  "candidatePages": 98,
+  "generalRuleAccepted": false,
+  "repeatedHeaderAccounting": {
+    "rawCharacterCountDelta": 39,
+    "onlyRemovedCharactersEqualOneMeeting2Header": true,
+    "headerExistsInSource": true,
+    "explanation": "Control paints meeting2 header on17 and repeats on18; candidate starts meeting2 on18 only. Other repeated header order changes with page cuts. Raw reading order is not identical; not complete source glyph identity."
+  },
+  "authorityBoundary": "Core-owned experimental evidence only. Project Control DOCX plan owns shared status. No general rule, full document acceptance or integration."
+}
