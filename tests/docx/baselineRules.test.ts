@@ -73,10 +73,15 @@ it('does not reread mutable original font paths when proving or embedding text',
  }finally{await rm(dir,{recursive:true,force:true});}
 });
 it('cleans owned native metric fonts after proof and retains fallback for empty authored lines',async()=>{
- const before=(await readdir(tmpdir())).filter(n=>n.startsWith('flowdoc-docx-metrics-')).sort();
+ const ownedRoot=await mkdtemp(join(tmpdir(),'baseline-cleanup-test-')),previous=process.env.TMPDIR;
+ // Other test workers own separate metric sessions in the shared OS temp root.
+ // Scope the leak assertion to this process's generated sessions only.
+ process.env.TMPDIR=ownedRoot;
+ try{
  const r=await exported('First\n\nSecond');
  expect(r.adaptations.some((a:any)=>a.reason==='empty-authored-line')).toBe(true);
  expect(r.xml).not.toContain('<w:position');
  await exported('Safe ไทย');
- expect((await readdir(tmpdir())).filter(n=>n.startsWith('flowdoc-docx-metrics-')).sort()).toEqual(before);
+ expect(await readdir(ownedRoot)).toEqual([]);
+ }finally{if(previous===undefined)delete process.env.TMPDIR;else process.env.TMPDIR=previous;await rm(ownedRoot,{recursive:true,force:true});}
 });

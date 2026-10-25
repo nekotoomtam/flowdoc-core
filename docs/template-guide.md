@@ -1,10 +1,10 @@
-# FlowDoc Core 0.4.8 template entrypoint
+# FlowDoc Core 0.5.0 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes development package0.4.8 after release0.4.7, including opt-in font-height
+This describes development package0.5.0 after release0.4.7, including opt-in font-height
 calculation, Section19, group-label continuation and streamed task input/PDF.
 Ordinary pt rendering is unchanged. See the root README for the exact native
 helper/session contract and font-height API inputs/errors. Service owns task
@@ -18,7 +18,7 @@ Read [Developer Documentation](../../flowdoc-project-control/docs/developer/auth
 
 Code contracts: [template types](../src/template/types.ts), [prepared data](../src/data/types.ts), [resolved document](../src/composition/resolvedDocument.ts), and [public exports](../src/index.ts).
 
-## DOCX development output in 0.4.8
+## DOCX development output in 0.5.0
 
 PDF and DOCX consume the same validated `ResolvedDocument` and prepared image
 provider. DOCX does not import a PDF or its captured positions. Initialization
@@ -79,15 +79,15 @@ pagination rules remain in place; native Word can still lay out borderless
 tables differently. Explicit `borderColor:"FFFFFF"` remains a painted white
 border and is never converted automatically. Existing templates are unchanged.
 
-The DOCX cell-margin trial maps unequal vertical margins in an eligible text row
+The DOCX cell-margin adapter maps unequal vertical margins in an eligible text row
 to shared row-minimum margins plus first/last paragraph before/after offsets.
 Each cell's total inset is preserved in native twips; line heights/rules, fonts,
 horizontal padding, borders and row controls stay unchanged. Uniform rows,
 source-guided/fixed/image/empty cells, complex merges and final Area tables keep
 the existing path. `table-space-policy.verticalOffsetPolicy` and each cell's
 `paragraphBeforeTwips`/`paragraphAfterTwips` disclose the mapping. PDF and the
-semantic source are unchanged. This is a development trial pending native Word
-conversion, separate from the known final-Area table-note preview limitation.
+semantic source are unchanged. The owner accepted the SB1 short/30-row usability trial. This is bounded
+evidence, separate from the known final-Area table-note preview limitation.
 
 Static TrueType font bytes and licenses are verified and embedded. Family
 signatures come from the actual regular face OS/2 table, including Thai coverage;
