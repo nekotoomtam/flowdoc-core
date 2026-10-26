@@ -9,10 +9,14 @@ import {sizingTemplate,composeSizing} from '../helpers/formatSizing.js';
 const pt=(value:number)=>({value,unit:'pt'});
 const take=(r:any)=>{if(!r.ok)throw Error(JSON.stringify(r));return r.value;};
 function composed(t:any){const v=take(validateTemplate(t));return take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:{main:{data:{details:[{format:'merged',data:{}}]}}}}))));}
-it.each(['single','none','dashed','dotted','double'])('accepts shared table and rule kind %s at authored/resolved boundaries',kind=>{
+it.each(['single','none','dashed','dotted','double','dashSmallGap'])('accepts shared table and rule kind %s at authored/resolved boundaries',kind=>{
  const t=mergedTemplate(),f=t.areaFormats.merged;f.fragment.nodes.table.props={...f.fragment.nodes.table.props,borderStyle:kind,borderWidth:pt(.75)};
  f.fragment.nodes.rule={id:'rule',type:'line',props:{lineStyle:kind,thickness:pt(.75),color:'123456'}};f.fragment.rootIds.push('rule');
  expect(validateTemplate(t).ok).toBe(true);expect(validateResolvedDocument(composed(t))).toEqual([]);
+});
+it.each([.25,.5,1])('scales the measured E vector paint at nominal width %s without changing its frame',width=>{
+ const page:any={widthPt:100,heightPt:100,backgroundColor:'FFFFFF',commands:[],borders:[{nodeId:'e',x1Pt:10,y1Pt:20,x2Pt:90,y2Pt:20,widthPt:width,color:'224466',style:'dashSmallGap'}]};
+ const s=buildPageContent(page,[],new Map()).toString();expect(s).toContain(`${.96*width} w`);expect(s).toContain(`[${3.2*width} ${1.6*width}] 0 d`);expect(s).toContain('0 J');expect(s).toContain('10 80 m');expect(s).toContain('90 80 l S');
 });
 it.each([{borderWidth:pt(0)},{borderWidth:pt(.3)},{borderWidth:pt(12.125)},{borders:{insideHorizontal:{width:pt(-1)}}},{borders:{headerBottom:{color:'red'}}},{borders:{diagonal:{style:'single'}}},{borders:{left:{style:'dashed',unknown:true}}}])('rejects invalid table stroke %j at both boundaries',props=>{
  const t=mergedTemplate(),d=composed(t);Object.assign(t.areaFormats.merged.fragment.nodes.table.props,props);expect(validateTemplate(t).ok).toBe(false);

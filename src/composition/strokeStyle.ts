@@ -1,5 +1,5 @@
 import type {Length,LineBlock,Table} from './resolvedDocument.js';
-export const STROKE_KINDS=['single','none','dashed','dotted','double'] as const;
+export const STROKE_KINDS=['single','none','dashed','dotted','double','dashSmallGap'] as const;
 export type StrokeKind=typeof STROKE_KINDS[number];
 export const TABLE_BORDER_SIDES=['top','right','bottom','left','insideHorizontal','insideVertical','headerBottom'] as const;
 export type TableBorderSide=typeof TABLE_BORDER_SIDES[number];

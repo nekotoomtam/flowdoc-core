@@ -69,7 +69,7 @@ headings and protected content retain their own keep rules. There is no blanket
 keep-whole-list promise. Table/cell insets and border quantization have explicit
 adaptation receipts; a structurally valid package does not prove native fit.
 
-Table `props.borderStyle` accepts `single`, `none`, `dashed`, `dotted` and
+Table `props.borderStyle` accepts `single`, `none`, `dashed`, `dotted`, `dashSmallGap` and
 `double` in models18/19. Omission retains single0.5pt black. `borderColor` sets
 RGB without `#`; `borderWidth:Length` sets the nominal component-line weight.
 New table weights must be0.25..12pt in exact eighth-point steps, with equivalent
@@ -96,7 +96,19 @@ profiles retain native cell geometry rather than borrowing the proven legacy
 half-point-only accommodation/source-word anchors. Old omitted/single/none
 profiles retain their existing path.
 
-Line nodes add `props.lineStyle` with the same five kinds; thickness/color and
+`dashSmallGap` is shared by table borders and `line.props.lineStyle`. DOCX
+uses Word's native `dashSmallGap` with the authored nominal width. PDF uses a
+scalable vector profile of measured Word sample E: at nominal0.25pt its paint
+width is0.24pt, dash0.8pt, gap0.4pt, butt caps and phase0. All three lengths scale
+linearly with the authored width; layout continues to reserve the nominal
+stroke envelope. This approximates Word's raster border tiles. Other weights,
+tile seams and intersection phase are not guaranteed to match Word; the measured
+0.5pt native sample has a different dash/gap ratio. Existing style patterns and
+default widths are unchanged. For the E profile while retaining a0.5pt header
+separator, use `borderStyle:"dashSmallGap"`, `borderWidth:{value:0.25,unit:"pt"}`
+and `borders.headerBottom:{style:"single",width:{value:0.5,unit:"pt"}}`.
+
+Line nodes add `props.lineStyle` with the same kinds; thickness/color and
 spaceBefore/spaceAfter remain. Non-single styles require a portable component
 weight; omitted/single retains the original line contract. A none line keeps
 its reserved spacing. PDF and DOCX use the same named kinds/colors/weights;
