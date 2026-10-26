@@ -53,7 +53,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     const contentsById = new Map<string, ReturnType<typeof collectContents>>();
     const contentsByScope = new Map<string, ReturnType<typeof collectContents>>();
     for(const id of d.rootIds){const node=d.nodes[id];if(node?.type!=='table-of-contents')continue;
-        const owner=d.nodeModelVersion===19&&node.props.scope?.kind==='section'?d.sourceMap[id]!.sectionId:undefined;
+        const owner=d.nodeModelVersion!==18&&node.props.scope?.kind==='section'?d.sourceMap[id]!.sectionId:undefined;
         const key=owner===undefined?'document':'section:'+owner;
         if(!contentsByScope.has(key))contentsByScope.set(key,collectContents(d,owner));
         contentsById.set(id,contentsByScope.get(key)!);
@@ -160,7 +160,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     };
     const sections = d.sections!;
     for (const section of sections) {
-        if (!section.rootIds.some(id => d.nodes[id]?.type !== 'page-break' && (d.nodeModelVersion!==19||d.nodes[id]?.type!=='table-of-contents'||contentsById.get(id)!.length>0)) && !d.formatInstances?.some(f=>f.sectionId===section.sectionId&&f.sizing.mode==='fixed') && !((section.role === 'cover' || section.sourceKind === 'blank')))
+        if (!section.rootIds.some(id => d.nodes[id]?.type !== 'page-break' && (d.nodeModelVersion===18||d.nodes[id]?.type!=='table-of-contents'||contentsById.get(id)!.length>0)) && !d.formatInstances?.some(f=>f.sectionId===section.sectionId&&f.sizing.mode==='fixed') && !((section.role === 'cover' || section.sourceKind === 'blank')))
             continue;
         hideNumbers = "numbering" in section && section.numbering?.visibility === 'hide';
         sectionId = section.sectionId;
@@ -366,7 +366,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         }
         bounds?.onSectionEnd?.({y,top,bottom});
     }
-    if(d.nodeModelVersion===19&&!pages.length)throw new LayoutError(d.rootIds[0]??'document','No layout content in document');
+    if(d.nodeModelVersion!==18&&!pages.length)throw new LayoutError(d.rootIds[0]??'document','No layout content in document');
     assignSystemPageNumbers(d, { pages });
     return { pages, ...(omittedNodeIds.size?{omittedNodeIds:[...omittedNodeIds]}:{}), ...(warnings.length ? { warnings } : {}), ...(pageTexts.length ? { pageTexts } : {}), ...(pageFieldSlots.length ? { pageFieldSlots } : {}), ...(contentsSlots.length ? { contentsSlots } : {}) };
     }catch(error){if(error instanceof LayoutError)error.warnings=warnings;throw error;}

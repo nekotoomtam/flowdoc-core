@@ -39,7 +39,7 @@ export type {SystemPageField} from "./composition/resolvedDocument.js";
 
 export type {ResolvedRowGroup,ResolvedGroupLabel} from './composition/resolvedDocument.js';
 
-export type {Template18,Template19,InstanceSection,AreaSection,BindingScope,PageNumbering,RowGroup,GroupLabel} from './template/types.js';
-export type {PreparedSection19} from './data/types.js';
+export type {Template18,Template19,Template20,SectionDefinition,InstanceSection,AreaSection,BindingScope,PageNumbering,RowGroup,GroupLabel} from './template/types.js';
+export type {PreparedSection19,PreparedSection20} from './data/types.js';
 export {normalizeTaskInput} from './data/taskInput.js';
 export type {TaskValue,TaskImageContext,TaskImageResource,TaskInputOptions,TaskInputLimits,TaskInputSummary} from './data/taskInput.js';

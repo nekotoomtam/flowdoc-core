@@ -8,6 +8,7 @@ import { validatePageBand } from './pageBands.js';
 import { validateGraph } from './validateGraph.js';
 import { buildAreaIndex } from './areas.js';
 import { validateValues } from '../data/validateValues.js';
+import {prepareAssembly} from '../data/prepareAssembly.js';
 import {prepareInstances} from '../data/prepareInstances.js';
 import { prepareSections } from '../data/prepareSections.js';
 import type { Template18, Format, AreaSection, ValidatedTemplate, ObjectSchema } from './types.js';
@@ -18,7 +19,7 @@ export function validateOwnedTemplate(input: unknown): Result<ValidatedTemplate>
     if (!isJson(input) || !object(input))
         return { ok: false, issues: [issue('INVALID_TEMPLATE', 'template')], warnings: [] };
     const t = structuredClone(input) as any;
-    if (!keys(t, ['schemaVersion', 'nodeModelVersion', 'templateId', 'docKey', 'version', 'name', 'book', 'styles', 'globalSchema', 'examples', 'pageLayouts', 'sections', 'areaFormats']) || ![1,2].includes(t.schemaVersion) || ![18,19].includes(t.nodeModelVersion))
+    if (!keys(t, ['schemaVersion', 'nodeModelVersion', 'templateId', 'docKey', 'version', 'name', 'book', 'styles', 'globalSchema', 'examples', 'pageLayouts', 'sections', 'areaFormats']) || ![1,2].includes(t.schemaVersion) || ![18,19,20].includes(t.nodeModelVersion))
         fail('template');
     for (const k of ['templateId', 'docKey', 'name'])
         if (!name(t[k]))
@@ -47,7 +48,7 @@ export function validateOwnedTemplate(input: unknown): Result<ValidatedTemplate>
         schemas.push(s.inputSchema);
         for (const k of ['header', 'footer'])
             if (own(s, k) && !issues.length)
-                issues.push(...validatePageBand(s[k], t.styles, p + '.' + k, false, { global: t.globalSchema, section: s.inputSchema, [k]: s[k]?.inputSchema }, p, true,t.nodeModelVersion===19?t.sections.map((s:any)=>s.id):undefined));
+                issues.push(...validatePageBand(s[k], t.styles, p + '.' + k, false, { global: t.globalSchema, section: s.inputSchema, [k]: s[k]?.inputSchema }, p, true,t.nodeModelVersion!==18?t.sections.map((s:any)=>s.id):undefined,t.nodeModelVersion===20));
     }
     if (issues.length)
         return { ok: false, issues, warnings: [] };
@@ -76,12 +77,12 @@ export function validateOwnedTemplate(input: unknown): Result<ValidatedTemplate>
         names.add(e.name);
         if (e.request?.version !== t.version)
             fail(`examples[${i}].request.version`);
-        const r = t.nodeModelVersion===19 ? prepareInstances(t,fingerprint,e.request) : prepareSections(t, fingerprint, e.request);
+        const r = t.nodeModelVersion===20 ? prepareAssembly(t,fingerprint,e.request) : t.nodeModelVersion===19 ? prepareInstances(t,fingerprint,e.request) : prepareSections(t, fingerprint, e.request);
         issues.push(...[...(!r.ok ? r.issues : []), ...r.warnings].map(x => ({ ...x, code: 'INVALID_TEMPLATE', path: `examples[${i}].request.` + x.path })));
     }
     return issues.length ? { ok: false, issues, warnings: [] } : { ok: true, value: freeze({ definition: t, fingerprint }), warnings: [] };
 }
-function validateOwnedGraph(t: import('./types.js').TemplateDefinition, s: import('./types.js').TemplateDefinition['sections'][number], f: Format, path: string, areas = true, fixedRootIds: string[] = []): Issue[] { return validateGraph(f.fragment, { sectionIds:t.nodeModelVersion===19?t.sections.map(s=>s.id):undefined, pageBreaks: true, fixedRootIds, styles: t.styles, globalSchema: t.globalSchema, localSchema: f.inputSchema, scopeSchemas: { global: t.globalSchema, section: s.inputSchema, local: f.inputSchema }, rowGroups: true, groupLabelSpans:t.nodeModelVersion===19, groupDeclarations: f.rowGroups, repeats: f.repeats, cellRepeats: f.cellRepeats ?? [], heightModes: true, images: true, merged: true, links: true, contents: true, scopedContents: t.nodeModelVersion===19, cellContent: true, itemImages: true, areas }, path + '.fragment'); }
+function validateOwnedGraph(t: import('./types.js').TemplateDefinition, s: import('./types.js').TemplateDefinition['sections'][number], f: Format, path: string, areas = true, fixedRootIds: string[] = []): Issue[] { return validateGraph(f.fragment, { assembly:t.nodeModelVersion===20, sectionIds:t.nodeModelVersion!==18?t.sections.map(s=>s.id):undefined, pageBreaks: true, fixedRootIds, styles: t.styles, globalSchema: t.globalSchema, localSchema: f.inputSchema, scopeSchemas: { global: t.globalSchema, section: s.inputSchema, local: f.inputSchema }, rowGroups: true, groupLabelSpans:t.nodeModelVersion!==18, groupDeclarations: f.rowGroups, repeats: f.repeats, cellRepeats: f.cellRepeats ?? [], heightModes: true, images: true, merged: true, links: true, contents: true, scopedContents: t.nodeModelVersion!==18, cellContent: true, itemImages: true, areas }, path + '.fragment'); }
 function validateOwnedAreas(t: import('./types.js').TemplateDefinition): Issue[] {
     const issues: Issue[] = [], fail = (p: string) => issues.push(issue('INVALID_TEMPLATE', p)), index = buildAreaIndex(t), placements = new Map<string, {
         section: import('./types.js').TemplateDefinition['sections'][number];
@@ -119,12 +120,12 @@ function validateOwnedAreas(t: import('./types.js').TemplateDefinition): Issue[]
             continue;
         }
         names.add(key);
-        if(own(f,'sizing')&&(t.nodeModelVersion!==19||!isFormatSizing(f.sizing)||(f.sizing.mode==='fixed'&&(!place.topLevel||Object.values(f.fragment?.nodes??{}).some((n:any)=>n?.type==='table-of-contents')))))fail(p+'.sizing');
+        if(own(f,'sizing')&&(t.nodeModelVersion===18||!isFormatSizing(f.sizing)||(f.sizing.mode==='fixed'&&(!place.topLevel||Object.values(f.fragment?.nodes??{}).some((n:any)=>n?.type==='table-of-contents')))))fail(p+'.sizing');
         const valid = validateSchemas(f.inputSchema, p + '.inputSchema', issues, false, true, true, true, false, 2);
         if (!Array.isArray(f.repeats) || (f.cellRepeats !== undefined && !Array.isArray(f.cellRepeats)))
             fail(p + '.repeats');
         else if (valid)
-            issues.push(...validateOwnedGraph(t, place.section, f, p, false, t.nodeModelVersion === 19 && place.topLevel ? f.fragment.rootIds : []));
+            issues.push(...validateOwnedGraph(t, place.section, f, p, false, t.nodeModelVersion !== 18 && place.topLevel ? f.fragment.rootIds : []));
     }
     for (const [id, a] of index.byId) {
         if (placements.get(id)?.count !== 1 || !a.formatsByKey.size)

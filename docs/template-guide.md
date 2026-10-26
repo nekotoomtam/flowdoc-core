@@ -344,3 +344,31 @@ and formatSizing.version2. The suffix uses the selected label font; missing
 glyphs block generation without fallback. This unpromoted candidate also retains
 the decimal PDF image-coordinate serialization fix; do not overwrite an older
 archive using the new bytes. Project Control owns cross-repository acceptance.
+
+
+## Experimental Model20 Section definitions and uses
+
+Authority Boundary: this appendix describes only Core's isolated assembly
+candidate, governed by the Project Control repeatable-Section plan dated2026-10-26.
+It does not replace18/19 guidance or certify native Word/Service acceptance.
+
+Model20 uses the19 authored Section/Area content model plus a unique sectionKey
+per saved Section definition. id remains UUID; label/nameBase remain authoring
+metadata. key/formats/role from older structures are not permitted. Calls are
+ordered sections arrays of {sectionKey,instanceKey,data,header?,footer?}; internal
+id is not a caller lookup. instanceKey is unique per request and stable under
+caller reorder. Data and bands validate against the selected definition. No
+geometry override is accepted. Definitions omitted from the call do not render.
+An empty assembly, unknown key, repeated instance or undeclared data is an error.
+
+Each use starts a new native Section/page and retains the definition's band and
+numbering rules. Local bookmarks and Section TOCs belong to that use. Static
+cross-use links require targetInstanceKey;19 targetSectionId is not accepted as
+an ambiguous target for20. Document-scoped TOC may occur only once in the expanded
+document. Repeating a definition containing that TOC is therefore rejected.
+
+Area sizing and ending-Area behavior remain per use, with their existing
+constraints. Bounds apply to the total expansion, not separately reset per use.
+The example77-row B-stroke pilot exceeded the unchanged default DOCX XML cap;
+its structural proof used the already-supported explicit100000-node option.
+This does not raise the product default or promise arbitrary-size exports.

@@ -5,7 +5,7 @@ import type {ResolvedDocument} from './resolvedDocument.js';
 export function validateFormatInstances(d:ResolvedDocument):Issue[]{
  const issues:Issue[]=[];const fail=(path:string)=>issues.push({code:'LAYOUT_FAILED',path,message:'Invalid Format instance boundary'});
  if(d.formatInstances===undefined)return issues;
- if(d.nodeModelVersion!==19||!Array.isArray(d.formatInstances)){fail('formatInstances');return issues;}
+ if(![19,20].includes(d.nodeModelVersion)||!Array.isArray(d.formatInstances)){fail('formatInstances');return issues;}
  const identities=new Set<string>(),claimedRoots=new Set<string>(),sectionEnds=new Map<string,number>();
  for(const [i,f] of d.formatInstances.entries()){
   const p=`formatInstances[${i}]`;

@@ -8,7 +8,7 @@ import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat,CellRepeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {groupLabelSpans?:boolean;scopedContents?:boolean;sectionIds?:string[]|undefined;pageBreaks?:boolean;rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
+export interface GraphContext {assembly?:boolean;groupLabelSpans?:boolean;scopedContents?:boolean;sectionIds?:string[]|undefined;pageBreaks?:boolean;rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -83,8 +83,9 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
     else if(c.type==='line-break'){if(!keys(c,['id','type']))fail(cp);}
     else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.'))fail(cp);}
     else if(ctx.links&&['url','link','reference'].includes(c.type)){
-     const {id:_,targetSectionId,...command}=c;
-     if(targetSectionId!==undefined&&(c.type!=='reference'||!ctx.sectionIds?.includes(targetSectionId)))fail(cp+'.targetSectionId');
+     const {id:_,targetSectionId,targetInstanceKey,...command}=c;
+     if(targetInstanceKey!==undefined&&(!ctx.assembly||c.type!=='reference'||typeof targetInstanceKey!=='string'||! /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(targetInstanceKey)))fail(cp+'.targetInstanceKey');
+     if(targetSectionId!==undefined&&(ctx.assembly||c.type!=='reference'||!ctx.sectionIds?.includes(targetSectionId)))fail(cp+'.targetSectionId');
      const candidate=Object.fromEntries(Object.entries(command).map(([key,value])=>[key,!ctx.resolved&&key!=='type'&&scalarRef(value)?(key==='url'||key==='value'?'https://example.com':'bound'):value]));
      if(!validateLink(candidate))fail(cp);
     }else fail(cp);

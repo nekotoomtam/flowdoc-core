@@ -100,7 +100,7 @@ function deriveStyles(d: any, r: PrivateResources) {
 }
 function inspect(d: any, r: PrivateResources, profile: DocxProfile): Omit<Capsule, 'document' | 'resources' | 'profile'> {
     keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', 'sections', 'header', 'footer', 'formatInstances'], 'document');
-    requireValue([1, 2].includes(d.schemaVersion) && [18, 19].includes(d.nodeModelVersion), 'document', 'Unsupported schema/model combination');
+    requireValue([1, 2].includes(d.schemaVersion) && [18, 19, 20].includes(d.nodeModelVersion), 'document', 'Unsupported schema/model combination');
     keys(d.template, ['templateId', 'docKey', 'version'], 'template');
     requireValue(name(d.template.templateId) && name(d.template.docKey) && Number.isSafeInteger(d.template.version) && d.template.version > 0, 'template', 'Invalid template identity');
     keys(d.book, ['contentSlot', 'page'], 'book');
@@ -243,7 +243,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile): Omit<Capsul
                 requireValue(own(styles, p.textStyleId), at + '.props.textStyleId', 'Missing TOC style');
                 if (p.scope !== undefined) {
                     keys(p.scope, ['kind'], at + '.props.scope');
-                    requireValue(d.nodeModelVersion === 19 && ['section', 'document'].includes(p.scope.kind), at + '.props.scope', 'Invalid scoped TOC');
+                    requireValue(d.nodeModelVersion !== 18 && ['section', 'document'].includes(p.scope.kind), at + '.props.scope', 'Invalid scoped TOC');
                 }
             }
             else if (n.type === 'table') {
@@ -358,7 +358,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile): Omit<Capsul
         const roots: string[] = [];
         for (const [i, s] of d.sections.entries()) {
             const p = 'sections.' + i;
-            keys(s, ['endingArea','numbering', 'header', 'footer', 'headerMode', 'footerMode', 'role', 'sourceKind', 'sectionId', 'pageLayoutId', 'page', 'rootIds'], p);
+            keys(s, [...(d.nodeModelVersion===20?['definitionId','instanceKey','sectionKey']:[]),'endingArea','numbering', 'header', 'footer', 'headerMode', 'footerMode', 'role', 'sourceKind', 'sectionId', 'pageLayoutId', 'page', 'rootIds'], p);
             requireValue(name(s.pageLayoutId) && !s.pageLayoutId.includes('~') && ['body', 'cover'].includes(s.role) && ['authored', 'blank'].includes(s.sourceKind) && (s.role !== 'cover' || i === 0 && s.sourceKind === 'authored') && (s.sourceKind !== 'blank' || s.rootIds?.length === 0), p, 'Invalid section');
             const bodyWidth = page(s.page, p + '.page');
             idList(s.rootIds, p + '.rootIds');

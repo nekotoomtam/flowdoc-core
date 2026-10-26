@@ -29,10 +29,10 @@ export interface FormatInstance {sectionId:string;areaId:string;areaEntryIndex:n
 export interface EndingArea {areaId:string;verticalAlign:'bottom';rootStartIndex:number;rootIds:string[]}
 export interface ResolvedDocument {
   formatInstances?:FormatInstance[];
-  schemaVersion:1|2;nodeModelVersion:18|19;template:{templateId:string;docKey:string;version:number};
+  schemaVersion:1|2;nodeModelVersion:18|19|20;template:{templateId:string;docKey:string;version:number};
   book:{contentSlot:'body';page:{size:'A4';orientation:'portrait'|'landscape';margin:{top:Length;right:Length;bottom:Length;left:Length}}};
   header?:ResolvedBand;footer?:ResolvedBand;
-  sections?:{endingArea?:EndingArea;numbering?:import("../template/types.js").PageNumbering;header?:ResolvedBand;footer?:ResolvedBand;headerMode?:import('../template/types.js').BandMode;footerMode?:import('../template/types.js').BandMode;role?:'body'|'cover';sourceKind?:'content'|'authored'|'blank';sectionId:string;pageLayoutId:string;page:ResolvedDocument['book']['page'];rootIds:string[]}[];
+  sections?:{definitionId?:string;instanceKey?:string;sectionKey?:string;endingArea?:EndingArea;numbering?:import("../template/types.js").PageNumbering;header?:ResolvedBand;footer?:ResolvedBand;headerMode?:import('../template/types.js').BandMode;footerMode?:import('../template/types.js').BandMode;role?:'body'|'cover';sourceKind?:'content'|'authored'|'blank';sectionId:string;pageLayoutId:string;page:ResolvedDocument['book']['page'];rootIds:string[]}[];
   styles:Record<string,TextStyle>;rootIds:string[];nodes:Record<string,DocumentNode>;sourceMap:Record<string,SourceEntry>;
 }
 export function toPt(length:Length):number {return length.unit==='mm'?length.value*72/25.4:length.value;}

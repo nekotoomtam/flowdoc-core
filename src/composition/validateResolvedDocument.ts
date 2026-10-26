@@ -22,11 +22,11 @@ export function validateResolvedDocument(input: unknown): Issue[] {
         return issues;
     }
     const d = input;
-    if (![18,19].includes(d.nodeModelVersion)) {
+    if (![18,19,20].includes(d.nodeModelVersion)) {
         fail("nodeModelVersion");
         return issues;
     }
-    if (!keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', 'formatInstances', ...([]), ...(['sections'])]) || ![1,2].includes(d.schemaVersion) || ![18,19].includes(d.nodeModelVersion))
+    if (!keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', 'formatInstances', ...([]), ...(['sections'])]) || ![1,2].includes(d.schemaVersion) || ![18,19,20].includes(d.nodeModelVersion))
         fail('document');
     if (!object(d.template) || !keys(d.template, ['templateId', 'docKey', 'version']) || !name(d.template.templateId) || !name(d.template.docKey) || !Number.isInteger(d.template.version) || d.template.version < 1)
         fail('template');
@@ -38,7 +38,7 @@ export function validateResolvedDocument(input: unknown): Issue[] {
         return issues;
     }
     const empty = { type: 'object' as const, fields: {} };
-    issues.push(...validateGraph({ rootIds: d.rootIds, nodes: d.nodes }, { pageBreaks: true, allowEmptyRoots: true, heightModes: true, fixedRootIds: Array.isArray(d.sections) ? d.sections.filter((s: any) => (d.nodeModelVersion === 19 || s?.role === 'cover') && s?.sourceKind === 'authored').flatMap((s: any) => Array.isArray(s.rootIds) ? s.rootIds.filter((id: string) => d.sourceMap[id]?.origin === 'authored' && (d.nodeModelVersion === 19 || (d.sourceMap[id]?.areaId === undefined && d.sourceMap[id]?.itemIndex === undefined))) : []) : [], styles: d.styles, globalSchema: empty, localSchema: empty, repeats: [], resolved: true, rowGroups: true, images: true, merged: true, links: true, contents: true, scopedContents: d.nodeModelVersion===19, cellContent: true }, 'document').map(i => ({ ...i, code: 'LAYOUT_FAILED' })));
+    issues.push(...validateGraph({ rootIds: d.rootIds, nodes: d.nodes }, { pageBreaks: true, allowEmptyRoots: true, heightModes: true, fixedRootIds: Array.isArray(d.sections) ? d.sections.filter((s: any) => (d.nodeModelVersion !== 18 || s?.role === 'cover') && s?.sourceKind === 'authored').flatMap((s: any) => Array.isArray(s.rootIds) ? s.rootIds.filter((id: string) => d.sourceMap[id]?.origin === 'authored' && (d.nodeModelVersion !== 18 || (d.sourceMap[id]?.areaId === undefined && d.sourceMap[id]?.itemIndex === undefined))) : []) : [], styles: d.styles, globalSchema: empty, localSchema: empty, repeats: [], resolved: true, rowGroups: true, images: true, merged: true, links: true, contents: true, scopedContents: d.nodeModelVersion!==18, cellContent: true }, 'document').map(i => ({ ...i, code: 'LAYOUT_FAILED' })));
     const ids = new Set<string>(Object.keys(d.nodes));
     for (const n of Object.values(d.nodes))
         if (object(n) && n.type === 'text-block' && Array.isArray(n.children))
@@ -53,7 +53,7 @@ export function validateResolvedDocument(input: unknown): Issue[] {
     }
     validateSections(d, issues);
     if(!issues.length)issues.push(...validateFormatInstances(d as ResolvedDocument));
-    if(!issues.length&&d.nodeModelVersion===19){
+    if(!issues.length&&d.nodeModelVersion!==18){
         const scopes=new Set<string>();
         for(const node of Object.values(d.nodes) as any[])if(node.type==='table-of-contents'){
             const key=node.props.scope.kind==='document'?'document':'section:'+d.sourceMap[node.id].sectionId;
@@ -117,7 +117,7 @@ function validateSections(d: Record<string, any>, issues: Issue[]): void {
     const seen = new Set<string>(), roots: string[] = [], members = new Map<string, string>();
     for (const [i, s] of d.sections.entries()) {
         const p = `sections[${i}]`;
-        if (!object(s) || !keys(s, ['endingArea','sectionId', 'pageLayoutId', 'page', 'rootIds', ...(['numbering']), ...(['headerMode', 'footerMode']), ...(['header', 'footer']), ...(['role', 'sourceKind'])]) || !name(s.sectionId) || s.sectionId.includes('~') || seen.has(s.sectionId) || !name(s.pageLayoutId) || s.pageLayoutId.includes('~') || !Array.isArray(s.rootIds) || !s.rootIds.every(name)) {
+        if (!object(s) || !keys(s, [...(d.nodeModelVersion===20?['definitionId','instanceKey','sectionKey']:[]),'endingArea','sectionId', 'pageLayoutId', 'page', 'rootIds', ...(['numbering']), ...(['headerMode', 'footerMode']), ...(['header', 'footer']), ...(['role', 'sourceKind'])]) || !name(s.sectionId) || s.sectionId.includes('~') || seen.has(s.sectionId) || !name(s.pageLayoutId) || s.pageLayoutId.includes('~') || !Array.isArray(s.rootIds) || !s.rootIds.every(name)) {
             fail(p);
             continue;
         }
@@ -131,6 +131,7 @@ function validateSections(d: Record<string, any>, issues: Issue[]): void {
         for (const k of ['header', 'footer'])
             if (Object.hasOwn(s, k))
                 issues.push(...validatePageBand(s[k], d.styles, p + '.' + k, true, undefined, s.sectionId, true).map(e => ({ ...e, code: 'LAYOUT_FAILED' })));
+        if(d.nodeModelVersion===20&&(!name(s.definitionId)||!name(s.instanceKey)||!name(s.sectionKey)||s.sectionId!=='instance-'+s.instanceKey))fail(p+'.instanceKey');
         seen.add(s.sectionId);
         roots.push(...s.rootIds);
         issues.push(...validateBookStyles({schemaVersion:d.schemaVersion, book: { contentSlot: 'body', page: s.page }, styles: d.styles }).map(e => ({ ...e, path: e.code==='INVALID_FONT_SELECTION'?e.path:p + '.' + e.path })));

@@ -402,3 +402,26 @@ and formatSizing.version2. The suffix uses the selected label font; missing
 glyphs block generation without fallback. This package also retains
 the decimal PDF image-coordinate serialization fix; do not overwrite an older
 archive using the new bytes. Project Control owns cross-repository acceptance.
+
+
+## Experimental repeatable Section assembly candidate
+
+Authority Boundary: Core owns this code-adjacent candidate contract. The shared
+plan/status is Project Control docs/domains/flowdoc-repeatable-section-assembly-plan-2026-10-26.md.
+This is not a released capability or a Service/FlowDocMake installation claim.
+
+Development package0.5.1-dev.section-assembly.1 adds opt-in Model20. Saved
+Sections have unique sectionKey and UUID id; label remains display-only. Calls
+use sections:[{sectionKey,instanceKey,data,header?,footer?}] in caller order.
+Definitions can repeat with distinct instanceKey; unused definitions are omitted.
+Each use has independent runtime Section identity and bands. Public/instance
+keys match [A-Za-z][A-Za-z0-9_-]{0,63}; at most2000 definitions/uses, with existing
+expansion budgets still active. No implicit18/19 migration or meaning change.
+Prepared schema3 and normalized flowdoc-task-input/2 pin20 and its fingerprint;
+18/19 prepared/task contracts remain unchanged. Local links are use-local;
+explicit cross-use references use targetInstanceKey and fail on missing targets.
+
+The candidate passes source and native-DOCX structure checks and produces an
+A/B/A PDF pilot. Native Word reflow is still unverified: the local Word windows
+disappeared twice before the pilot could be selected. Service integration and
+public discovery have not started. Do not deploy from these source-level results.

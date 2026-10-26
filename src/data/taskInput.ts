@@ -1,3 +1,4 @@
+import {assemblyKey,instanceSectionId} from './prepareAssembly.js';
 import type {ValidatedTemplate,ObjectSchema,AreaField,ArrayField,StringField,ImageField,LinkField} from '../template/types.js';
 import type {Result,Issue} from '../result.js';
 import {validateField} from './validateValues.js';
@@ -9,7 +10,7 @@ export interface TaskImageContext {sectionId:string|null;pointer:string;assetDef
 export type TaskImageResource={kind:'task-image';version:1;availability:'available';assetId:string}|{kind:'task-image';version:1;availability:'unavailable';reason:string;findingId:string};
 export interface TaskInputLimits {recordBytes:number;maxRecords:number;maxImagePlacements:number}
 export interface TaskInputOptions {templateAccess?:boolean;limits?:Partial<TaskInputLimits>;write:(chunk:string)=>Promise<void>;images:{collect:(value:TaskValue|undefined,context:TaskImageContext)=>Promise<void>;seal:()=>Promise<void>;resolve:(context:TaskImageContext)=>Promise<TaskImageResource>};onWarning?:(issue:Issue)=>Promise<void>;signal?:AbortSignal}
-export interface TaskInputSummary {contract:'flowdoc-task-input/1';imagePlacements:number;omittedPlacements:number;warningCount:number}
+export interface TaskInputSummary {contract:'flowdoc-task-input/1'|'flowdoc-task-input/2';imagePlacements:number;omittedPlacements:number;warningCount:number}
 class InputFailure extends Error {constructor(readonly code:string,readonly path:string){super('Invalid task input');}}
 const esc=(k:string)=>k.replaceAll('~','~0').replaceAll('/','~1');
 const memory=(v:any):TaskValue=>({async byteLength(){return Buffer.byteLength(JSON.stringify(v));},async kind(){return Array.isArray(v)?'array':v!==null&&typeof v==='object'?'object':'scalar';},async scalar(){return v;},async *properties(){for(const [k,x] of Object.entries(v))yield [k,memory(x)] as const;},async *elements(){for(const x of v)yield memory(x);}});
@@ -19,7 +20,7 @@ export function normalizeTaskInput(template:ValidatedTemplate,input:TaskValue,op
 // Internal canonical validation for the composition bridge; not a new raw API mode.
 export function validateNormalizedTaskInput(template:ValidatedTemplate,input:TaskValue,options:TaskInputOptions,access?:TemplateAccess):Promise<Result<TaskInputSummary>>{return walkTaskInput(template,input,options,true,access);}
 async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:TaskInputOptions,normalized:boolean,sharedAccess?:TemplateAccess):Promise<Result<TaskInputSummary>>{
- const access=sharedAccess??new TemplateAccess(template,options.templateAccess!==false);const t=template.definition,index=access.areaIndex,summary:TaskInputSummary={contract:'flowdoc-task-input/1',imagePlacements:0,omittedPlacements:0,warningCount:0};let collecting=true,records=0,collectedPlacements=0;const defaults:TaskInputLimits={recordBytes:256*1024,maxRecords:100000,maxImagePlacements:10000},limits={...defaults,...options.limits};
+ const access=sharedAccess??new TemplateAccess(template,options.templateAccess!==false);const t=template.definition,index=access.areaIndex,summary:TaskInputSummary={contract:t.nodeModelVersion===20?'flowdoc-task-input/2':'flowdoc-task-input/1',imagePlacements:0,omittedPlacements:0,warningCount:0};let collecting=true,records=0,collectedPlacements=0;const defaults:TaskInputLimits={recordBytes:256*1024,maxRecords:100000,maxImagePlacements:10000},limits={...defaults,...options.limits};
  for(const key of Object.keys(defaults) as (keyof TaskInputLimits)[])if(!Number.isSafeInteger(limits[key])||limits[key]<1||limits[key]>defaults[key])return {ok:false,issues:[{code:'LIMIT_EXCEEDED',path:'/limits',message:'Unsupported task bounds'}],warnings:[]};
  const fail=(code:string,path:string):never=>{throw new InputFailure(code,path);};
  const check=()=>options.signal?.throwIfAborted();
@@ -61,21 +62,30 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
   }
   const raw=f.type==='link'&&!(normalized&&await v.kind()==='scalar')?await link(v,path):await scalar(v,path),issues:Issue[]=[];const prepared=validateField(f,raw,path,issues,[],normalized?'prepared':'request');if(issues.length)fail(issues[0]!.code,path);await write(JSON.stringify(prepared));
  }
- async function section(s:typeof t.sections[number],entry:TaskValue,path:string){
-  await keys(entry,path,t.nodeModelVersion===19?['id','data','header','footer','assets']:['data','header','footer','assets']);
-  const assets=await get(entry,'assets');if(assets){if(await assets.kind()!=='array')fail('TYPE_MISMATCH',path+'/assets');if(collecting){let n=0;for await(const a of assets.elements()){check();await record(a,path+'/assets/'+n,false);await options.images.collect(a,{sectionId:s.id,pointer:path+'/assets/'+n++,assetDefinition:true});}}}
-  await write('{');if(t.nodeModelVersion===19)await write('"id":'+JSON.stringify(s.id)+',');await write('"data":');await data(s.inputSchema,await get(entry,'data'),path+'/data',s.id);
-  for(const band of ['header','footer'] as const){const v=await get(entry,band);if(s[band]){await write(','+JSON.stringify(band)+':');await data(s[band]!.inputSchema,v,path+'/'+band,s.id);}else if(v){if(t.nodeModelVersion===19)fail('INVALID_DATA',path+'/'+band);await keys(v,path+'/'+band,[],true);}}
+ async function section(s:typeof t.sections[number],entry:TaskValue,path:string,use?:{sectionKey:string;instanceKey:string}){
+  const owner=use?instanceSectionId(use.instanceKey):s.id;
+  await keys(entry,path,t.nodeModelVersion===20?['sectionKey','instanceKey','data','header','footer','assets']:t.nodeModelVersion===19?['id','data','header','footer','assets']:['data','header','footer','assets']);
+  const assets=await get(entry,'assets');if(assets){if(await assets.kind()!=='array')fail('TYPE_MISMATCH',path+'/assets');if(collecting){let n=0;for await(const a of assets.elements()){check();await record(a,path+'/assets/'+n,false);await options.images.collect(a,{sectionId:owner,pointer:path+'/assets/'+n++,assetDefinition:true});}}}
+  await write('{');if(use)await write('"sectionKey":'+JSON.stringify(use.sectionKey)+',"instanceKey":'+JSON.stringify(use.instanceKey)+',');if(t.nodeModelVersion===19)await write('"id":'+JSON.stringify(s.id)+',');await write('"data":');await data(s.inputSchema,await get(entry,'data'),path+'/data',owner);
+  for(const band of ['header','footer'] as const){const v=await get(entry,band);if(s[band]){await write(','+JSON.stringify(band)+':');await data(s[band]!.inputSchema,v,path+'/'+band,owner);}else if(v){if(t.nodeModelVersion!==18)fail('INVALID_DATA',path+'/'+band);await keys(v,path+'/'+band,[],true);}}
   await write('}');
  }
  async function walk(){
   await keys(input,'',['data','sections','meta']);const raw=await get(input,'sections');
   const entries=new Map<string,{value:TaskValue;path:string}>();
-  if(t.nodeModelVersion===19){if(!raw||await raw.kind()!=='array')fail('SECTION_INPUT_SHAPE','/sections');let i=0;for await(const e of raw!.elements()){const p='/sections/'+i++;if(await e.kind()!=='object')fail('SECTION_INPUT_SHAPE',p);const rawId=await scalar(await get(e,'id'),p+'/id');if(typeof rawId!=='string')fail('SECTION_ID_REQUIRED',p+'/id');const id=rawId as string;if(entries.has(id))fail('SECTION_INPUT_DUPLICATE',p+'/id');if(!t.sections.some(s=>s.id===id))fail('SECTION_INPUT_UNKNOWN',p+'/id');if(!await get(e,'data'))fail('MISSING_REQUIRED',p+'/data');entries.set(id,{value:e,path:p});}
+  if(t.nodeModelVersion===20){
+   if(!raw||await raw.kind()!=='array')fail('SECTION_INPUT_SHAPE','/sections');let i=0;
+   for await(const e of raw!.elements()){const p='/sections/'+i++;if(i>2000)fail('LIMIT_EXCEEDED','/sections');if(await e.kind()!=='object')fail('SECTION_INPUT_SHAPE',p);
+    const key=await scalar(await get(e,'sectionKey'),p+'/sectionKey'),instance=await scalar(await get(e,'instanceKey'),p+'/instanceKey');
+    if(!t.sections.some(s=>s.sectionKey===key))fail('SECTION_KEY_UNKNOWN',p+'/sectionKey');if(!assemblyKey(instance))fail('SECTION_INSTANCE_REQUIRED',p+'/instanceKey');
+    if(entries.has(instance as string))fail('SECTION_INSTANCE_DUPLICATE',p+'/instanceKey');if(!await get(e,'data'))fail('MISSING_REQUIRED',p+'/data');entries.set(instance as string,{value:e,path:p});
+   }if(!i)fail('SECTION_ASSEMBLY_EMPTY','/sections');
+  }else if(t.nodeModelVersion===19){if(!raw||await raw.kind()!=='array')fail('SECTION_INPUT_SHAPE','/sections');let i=0;for await(const e of raw!.elements()){const p='/sections/'+i++;if(await e.kind()!=='object')fail('SECTION_INPUT_SHAPE',p);const rawId=await scalar(await get(e,'id'),p+'/id');if(typeof rawId!=='string')fail('SECTION_ID_REQUIRED',p+'/id');const id=rawId as string;if(entries.has(id))fail('SECTION_INPUT_DUPLICATE',p+'/id');if(!t.sections.some(s=>s.id===id))fail('SECTION_INPUT_UNKNOWN',p+'/id');if(!await get(e,'data'))fail('MISSING_REQUIRED',p+'/data');entries.set(id,{value:e,path:p});}
    for(const s of t.sections)if(!entries.has(s.id))fail('SECTION_INPUT_MISSING','/sections/'+s.id);
-  }else{const v=raw??memory({});await keys(v,'/sections',t.sections.map(s=>s.key));for(const s of t.sections)entries.set(s.id,{value:await get(v,s.key)??memory({}),path:'/sections/'+esc(s.key)});}
-  await write('{"contract":"flowdoc-task-input/1","template":'+JSON.stringify({templateId:t.templateId,docKey:t.docKey,version:t.version,fingerprint:template.fingerprint,nodeModelVersion:t.nodeModelVersion})+',"data":');await data(t.globalSchema,await get(input,'data'),'/data',null);await write(',"sections":'+(t.nodeModelVersion===19?'[':'{'));let i=0;
-  for(const s of t.sections){if(i++)await write(',');if(t.nodeModelVersion===18)await write(JSON.stringify('key' in s?s.key:'')+':');const e=entries.get(s.id)!;await section(s,e.value,e.path);}await write(t.nodeModelVersion===19?']}': '}}');
+  }else{const v=raw??memory({});await keys(v,'/sections',t.sections.map(s=>('key' in s?s.key:'')));for(const s of t.sections)entries.set(s.id,{value:await get(v,'key' in s?s.key:'')??memory({}),path:'/sections/'+esc('key' in s?s.key:'')});}
+  await write('{"contract":'+JSON.stringify(summary.contract)+',"template":'+JSON.stringify({templateId:t.templateId,docKey:t.docKey,version:t.version,fingerprint:template.fingerprint,nodeModelVersion:t.nodeModelVersion})+',"data":');await data(t.globalSchema,await get(input,'data'),'/data',null);await write(',"sections":'+(t.nodeModelVersion!==18?'[':'{'));let i=0;
+  if(t.nodeModelVersion===20){for(const [instance,e]of entries){if(i++)await write(',');const key=await scalar(await get(e.value,'sectionKey'),e.path+'/sectionKey') as string;const s=t.sections.find(s=>s.sectionKey===key)!;await section(s,e.value,e.path,{sectionKey:key,instanceKey:instance});}}
+  else for(const s of t.sections){if(i++)await write(',');if(t.nodeModelVersion===18)await write(JSON.stringify('key' in s?s.key:'')+':');const e=entries.get(s.id)!;await section(s,e.value,e.path);}await write(t.nodeModelVersion!==18?']}': '}}');
  }
  try{await walk();await options.images.seal();collecting=false;await walk();return {ok:true,value:summary,warnings:[]};}
  catch(e){if(e instanceof InputFailure)return {ok:false,issues:[{code:e.code,path:e.path,message:'Invalid task input'}],warnings:[]};throw e;}finally{if(!sharedAccess)access.clear();}
