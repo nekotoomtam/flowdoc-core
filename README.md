@@ -14,7 +14,7 @@ line, header cells may contain authored breaks. Unsupported wrapping/merges
 fail explicitly. Word edits can require regeneration, and intermediate-page
 bottom closure is not promised. See the template guide for the exact contract.
 
-Package `0.5.1` supports model19 Section instances: UUID `id`,
+Package `0.5.2` retains model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the
@@ -82,7 +82,7 @@ legacy prepared snapshot, renderer capability, public endpoint or PDF readiness 
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version: 0.5.0 on development; the latest release snapshot remains0.4.7.
+Package version:0.5.2 on development; the latest release snapshot remains0.5.0.
 This package includes Section19, scoped contents, Format sizing v2, group-label
 spans, streamed task images/PDF and the opt-in height calculation below.
 Release identity requires the matching tagged snapshot and acceptance gates.
