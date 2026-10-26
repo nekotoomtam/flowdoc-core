@@ -1,5 +1,11 @@
 # FlowDoc Core
 
+0.5.2 development candidate adds optional `defaultFileName` metadata and the
+opt-in experimental Model20 Section assembly contract described below. Service
+0.5.2 still admits only18/19; Model20 is a direct-Core experimental API. No
+release, installation or native Word fidelity claim follows from this version.
+
+
 0.5.1 adds shared named table/line stroke styles, per-table-edge overrides and
 the opt-in B table style `thickThinWideGap`. B at0.35pt is painted directly in
 PDF and emitted as DrawingML over editable native DOCX tables. DOCX B has a
@@ -410,7 +416,7 @@ Authority Boundary: Core owns this code-adjacent candidate contract. The shared
 plan/status is Project Control docs/domains/flowdoc-repeatable-section-assembly-plan-2026-10-26.md.
 This is not a released capability or a Service/FlowDocMake installation claim.
 
-Development package0.5.1-dev.section-assembly.2 includes opt-in Model20. Saved
+Development package0.5.2 includes opt-in Model20. Saved
 Sections have unique sectionKey and UUID id; label remains display-only. Calls
 use sections:[{sectionKey,instanceKey,data,header?,footer?}] in caller order.
 Definitions can repeat with distinct instanceKey; unused definitions are omitted.
@@ -426,7 +432,9 @@ A/B/A PDF pilot. Native Word reflow is still unverified: the local Word windows
 disappeared twice before the pilot could be selected. Service integration and
 public discovery have not started. Do not deploy from these source-level results.
 
-Template metadata may include `defaultFileName` beside `docKey`, without a PDF
+## Output base-name metadata in0.5.2
+
+Models18/19 and experimental20 may include `defaultFileName` beside `docKey`, without a PDF
 or DOCX suffix. Blank clears the default; valid names are trimmed/NFC normalized.
 The exported `normalizeOutputName` validates the same portable base-name syntax.
 This metadata affects the template fingerprint but not composed page content.

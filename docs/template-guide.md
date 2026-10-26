@@ -1,10 +1,11 @@
-# FlowDoc Core 0.5.1 template entrypoint
+# FlowDoc Core 0.5.2 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes development package0.5.1 after release0.5.0, including opt-in font-height
+This describes development package0.5.2 after release0.5.0, including optional
+output base-name metadata, experimental direct-Core Model20 assembly, opt-in font-height
 calculation, Section19, group-label continuation and streamed task input/PDF.
 Ordinary pt rendering is unchanged. See the root README for the exact native
 helper/session contract and font-height API inputs/errors. Service owns task
@@ -12,7 +13,9 @@ storage, credentials, streaming delivery and process supervision.
 Height adjustment does not keep text width, wrapping, or line clearance constant.
 Release identity is established by the matching snapshot/tag after the release gates.
 
-Models 18 and 19 are accepted. Model19 uses UUID Section instances and array input; its Stage2 fixed-height text frames are allowed only at Section flow roots, including top-level Area Formats. Text-node props.heightMode:fixed / props.height frames fail on text/body overflow and cannot control Section pages or bands. They are separate from Area Format sizing.fixed below. Cell/repeat frames and nested Areas remain prohibited; Stage3 TOCs require props.scope `{kind:"section"}` or `{kind:"document"}`, with one per scope after expansion. Section scope uses the owning Section. Empty scopes create no page; number slots are reserved and filled from actual target page numbering in one layout pass. Model18 TOCs remain unscoped. Model18 keeps its original behavior. Models 4–17 and their legacy content envelopes have been retired. Historical explanations remain in Git history and must not be used as current authoring instructions.
+Models18/19 remain the Service-facing contracts. Core also accepts experimental
+Model20 for direct use as described in the appendix; this does not enable it in
+Service or the installed FlowDocMake. Models 18 and 19 are accepted. Model19 uses UUID Section instances and array input; its Stage2 fixed-height text frames are allowed only at Section flow roots, including top-level Area Formats. Text-node props.heightMode:fixed / props.height frames fail on text/body overflow and cannot control Section pages or bands. They are separate from Area Format sizing.fixed below. Cell/repeat frames and nested Areas remain prohibited; Stage3 TOCs require props.scope `{kind:"section"}` or `{kind:"document"}`, with one per scope after expansion. Section scope uses the owning Section. Empty scopes create no page; number slots are reserved and filled from actual target page numbering in one layout pass. Model18 TOCs remain unscoped. Model18 keeps its original behavior. Models 4–17 and their legacy content envelopes have been retired. Historical explanations remain in Git history and must not be used as current authoring instructions.
 
 Read [Developer Documentation](../../flowdoc-project-control/docs/developer/authoring/README.md) for definitions, node properties, defaults, binding scopes, tables, contents, page numbering, image sizing and review rules. The [authoring workflow](../../flowdoc-project-control/docs/domains/flowdoc-ai-template-authoring-guide.md) covers draft creation through a complete reviewed PDF. Publish requires explicit user confirmation.
 
@@ -348,8 +351,8 @@ archive using the new bytes. Project Control owns cross-repository acceptance.
 
 ## Experimental Model20 Section definitions and uses
 
-Authority Boundary: this appendix describes only Core's isolated assembly
-candidate, governed by the Project Control repeatable-Section plan dated2026-10-26.
+Authority Boundary: this appendix describes only Core's opt-in experimental
+assembly contract, governed by the Project Control repeatable-Section plan dated2026-10-26.
 It does not replace18/19 guidance or certify native Word/Service acceptance.
 
 Model20 uses the19 authored Section/Area content model plus a unique sectionKey
@@ -372,6 +375,8 @@ constraints. Bounds apply to the total expansion, not separately reset per use.
 The example77-row B-stroke pilot exceeded the unchanged default DOCX XML cap;
 its structural proof used the already-supported explicit100000-node option.
 This does not raise the product default or promise arbitrary-size exports.
+
+## Optional output base name (models18/19/20)
 
 Optional `defaultFileName` is document-level metadata beside `docKey`, shared by
 all selected Sections. It is a base name, without `.pdf`/`.docx`. Blank removes
