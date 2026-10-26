@@ -372,3 +372,13 @@ constraints. Bounds apply to the total expansion, not separately reset per use.
 The example77-row B-stroke pilot exceeded the unchanged default DOCX XML cap;
 its structural proof used the already-supported explicit100000-node option.
 This does not raise the product default or promise arbitrary-size exports.
+
+Optional `defaultFileName` is document-level metadata beside `docKey`, shared by
+all selected Sections. It is a base name, without `.pdf`/`.docx`. Blank removes
+the default. Validation trims/NFC normalizes names, limits them to200 code points
+and240 UTF-8 bytes, and rejects controls/format characters, path/Windows forbidden
+characters, device names, trailing dots and PDF/DOCX suffixes. Missing metadata
+retains legacy fingerprints. Core composition ignores the metadata; the matching
+Service resolves an optional request `fileName`, then the configured default,
+then `document`, and appends the selected format. See the Project Control output
+file names plan for the candidate's cross-repository acceptance boundary.

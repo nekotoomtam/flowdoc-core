@@ -1,4 +1,5 @@
 import { validateNumbering } from './pageNumbering.js';
+import {normalizeOutputName} from './outputName.js';
 import {isFormatSizing} from './formatSizing.js';
 import { createHash } from 'node:crypto';
 import { object, keys, name, own, isJson, issue, canonical, freeze } from './checks.js';
@@ -19,8 +20,9 @@ export function validateOwnedTemplate(input: unknown): Result<ValidatedTemplate>
     if (!isJson(input) || !object(input))
         return { ok: false, issues: [issue('INVALID_TEMPLATE', 'template')], warnings: [] };
     const t = structuredClone(input) as any;
-    if (!keys(t, ['schemaVersion', 'nodeModelVersion', 'templateId', 'docKey', 'version', 'name', 'book', 'styles', 'globalSchema', 'examples', 'pageLayouts', 'sections', 'areaFormats']) || ![1,2].includes(t.schemaVersion) || ![18,19,20].includes(t.nodeModelVersion))
+    if (!keys(t, ['schemaVersion', 'nodeModelVersion', 'templateId', 'docKey', 'version', 'name', 'defaultFileName', 'book', 'styles', 'globalSchema', 'examples', 'pageLayouts', 'sections', 'areaFormats']) || ![1,2].includes(t.schemaVersion) || ![18,19,20].includes(t.nodeModelVersion))
         fail('template');
+    if(own(t,'defaultFileName')){const value=normalizeOutputName(t.defaultFileName);if(value===undefined)fail('defaultFileName');else if(value==='')delete t.defaultFileName;else t.defaultFileName=value;}
     for (const k of ['templateId', 'docKey', 'name'])
         if (!name(t[k]))
             fail(k);

@@ -25,7 +25,7 @@ export interface Format {rowGroups?:RowGroup[];label?:string;description?:string
 export interface AreaFormat extends Format {key:string;ownerAreaId:string;sizing?:import('./formatSizing.js').FormatSizing}
 interface TemplateBase {
  areaFormats?:Record<string,AreaFormat>;
- schemaVersion:1|2;templateId:string;docKey:string;version:number;name:string;
+ schemaVersion:1|2;templateId:string;docKey:string;version:number;name:string;defaultFileName?:string;
  styles:ResolvedDocument['styles'];globalSchema:ObjectSchema;
  examples:{name:string;request:unknown}[];
 }

@@ -1,4 +1,5 @@
 export { loadBundledResources } from './runtime/loadBundledResources.js';
+export {normalizeOutputName} from './template/outputName.js';
 export type {StrokeKind,BorderStroke,TableBorderSide} from './composition/strokeStyle.js';
 export {loadLibraryFonts} from './fonts/resources.js';
 export {selectFont} from './fonts/selection.js';

@@ -410,7 +410,7 @@ Authority Boundary: Core owns this code-adjacent candidate contract. The shared
 plan/status is Project Control docs/domains/flowdoc-repeatable-section-assembly-plan-2026-10-26.md.
 This is not a released capability or a Service/FlowDocMake installation claim.
 
-Development package0.5.1-dev.section-assembly.1 adds opt-in Model20. Saved
+Development package0.5.1-dev.section-assembly.2 includes opt-in Model20. Saved
 Sections have unique sectionKey and UUID id; label remains display-only. Calls
 use sections:[{sectionKey,instanceKey,data,header?,footer?}] in caller order.
 Definitions can repeat with distinct instanceKey; unused definitions are omitted.
@@ -425,3 +425,12 @@ The candidate passes source and native-DOCX structure checks and produces an
 A/B/A PDF pilot. Native Word reflow is still unverified: the local Word windows
 disappeared twice before the pilot could be selected. Service integration and
 public discovery have not started. Do not deploy from these source-level results.
+
+Template metadata may include `defaultFileName` beside `docKey`, without a PDF
+or DOCX suffix. Blank clears the default; valid names are trimmed/NFC normalized.
+The exported `normalizeOutputName` validates the same portable base-name syntax.
+This metadata affects the template fingerprint but not composed page content.
+Download selection and request overrides belong to a matching Service candidate;
+Core does not rename files or expose storage paths. The bounded implementation
+and verification are governed by Project Control's
+`docs/domains/flowdoc-output-file-names-plan-2026-10-26.md`.
