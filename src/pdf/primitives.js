@@ -234,8 +234,17 @@ function buildPageContent(page, usages, resolvedRuns) {
     }
     for (const border of page.borders ?? []) {
         const style=border.style??'single';
-        if(!['single','dashed','dotted','double','dashSmallGap'].includes(style))throw Error('Invalid border style');
+        if(!['single','dashed','dotted','double','dashSmallGap','thickThinWideGap'].includes(style))throw Error('Invalid border style');
         if(!Number.isFinite(border.widthPt)||border.widthPt<=0)throw Error('Invalid border width');
+        if(style==='thickThinWideGap'){
+            const dx=border.x2Pt-border.x1Pt,dy=border.y2Pt-border.y1Pt,length=Math.hypot(dx,dy),w=border.widthPt;
+            if(length<=0)throw Error('Invalid styled border geometry');
+            for(const [weight,offset]of [[.6*w,-.2*w],[.2*w,.4*w]]){
+                const x=-dy/length*offset,y=dx/length*offset;
+                content.push('q',`${colorOperands(border.color)} RG`,`${formatNumber(weight)} w`,'0 J',`[${formatNumber(4*w)} ${formatNumber(12*w)}] 0 d`,`${formatNumber(border.x1Pt+x)} ${formatNumber(page.heightPt-border.y1Pt-y)} m`,`${formatNumber(border.x2Pt+x)} ${formatNumber(page.heightPt-border.y2Pt-y)} l S`,'Q');
+            }
+            continue;
+        }
         if(style!=='single'){
             // Scalable vector profile of the measured Word E sample at 0.25pt.
             // Native Word raster tiles at other weights/corners can differ.

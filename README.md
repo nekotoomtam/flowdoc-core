@@ -1,6 +1,14 @@
 # FlowDoc Core
 
-Package `0.5.0` supports model19 Section instances: UUID `id`,
+0.5.1 adds shared named table/line stroke styles, per-table-edge overrides and
+the opt-in B table style `thickThinWideGap`. B at0.35pt is painted directly in
+PDF and emitted as DrawingML over editable native DOCX tables. DOCX B has a
+bounded unmerged, unshaded, literal ASCII cell profile; body cells must fit one
+line, header cells may contain authored breaks. Unsupported wrapping/merges
+fail explicitly. Word edits can require regeneration, and intermediate-page
+bottom closure is not promised. See the template guide for the exact contract.
+
+Package `0.5.1` supports model19 Section instances: UUID `id`,
 required display `label`/`nameBase`, no `key`/`formats`, and generation
 `sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
 each saved ID is required exactly once. Prepared schema2 pins model19 and the

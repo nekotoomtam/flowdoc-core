@@ -13,6 +13,7 @@ import {sourceGuide} from './source-layout.js';
 import { buildImageParagraph } from './images.js';
 import type { NavigationContext } from './fields.js';
 import {distributeVerticalOffsets} from './cell-vertical-offsets.js';
+import {compoundTableRows} from './compound-table-strokes.js';
 export type TableSpaceReceipt = {
     nodeId: string;
     scope: 'nodes';
@@ -49,7 +50,7 @@ function textParts(intent: ExportIntent, id: string, plan: ReadingPlan, forceKee
  const fragments=plan.fragments.filter(f=>f.nodeId===id).sort((a,b)=>a.start-b.start);
  return fragments.map((f,i)=>take(buildTextParagraph(intent,id,{...f,keepNext:forceKeep||f.keepNext,ordinaryBodyOrCell:!protectedFlow&&!plan.edges.some(e=>e.from===id||e.to===id),...(navigation?{navigation}:{}),...(offsets?{spaceBeforeTwips:i===0?offsets.before:0,spaceAfterTwips:i===fragments.length-1?offsets.after:0}:{})})).paragraph);
 }
-export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext): Result<{
+export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext,bodyHeightPt?:number): Result<{
     table: Table;
     receipt: {
         spacePolicy: TableSpaceReceipt;
@@ -124,6 +125,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
             span: number;
             rowSpan: number;
         }>();
+        const compound=compoundTableRows(intent,n,mapped,spacePolicy,bodyHeightPt);
         let continuationCells = 0, structuralEmptyParagraphs = 0;
         n.rowIds.forEach((rid: string, row: number) => nodes[rid].cellIds.forEach((cid: string, index: number) => { const p = nodes[cid].props, col = p.columnIndex ?? index, span = p.colSpan ?? 1, rs = p.rowSpan ?? 1; logicalCellIds.push(cid); for (let y = row; y < row + rs; y++)
             for (let x = col; x < col + span; x++)
@@ -151,6 +153,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                     structuralEmptyParagraphs++;
                 }
                 const fill = c.props.fillColor ?? (pos.row < n.props.headerRowCount ? n.props.headerFillColor : undefined);
+                if(compound&&col===0){if(children.length!==1)fail('DOCX_CAPABILITY_UNSUPPORTED','nodes.'+nodeId,'B DOCX rows require one native paragraph per cell');for(const run of compound.draw(row))children[0]!.addRunToFront(run);}
                 // Make the perimeter explicit on each physical cell. A native
                 // vertical merge has no horizontal edge between its members.
                 const noBorder = { style: BorderStyle.NONE, size: 0, color: border.color };
@@ -167,6 +170,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
     });
 }
 export function buildBodyFlow(intent: ExportIntent, options: {
+    bodyHeightPt?:number;
     sectionId?: string;
     rootIds?: readonly string[];
     navigation?: NavigationContext;
@@ -213,7 +217,7 @@ export function buildBodyFlow(intent: ExportIntent, options: {
                         children.push(structuralParagraph());
                         tableSeparators++;
                     }
-                    const built = take(buildTable(intent, id, options.navigation));
+                    const built = take(buildTable(intent, id, options.navigation,options.bodyHeightPt));
                     children.push(built.table);
                     tableSpaces.push(built.receipt.spacePolicy);
                 }

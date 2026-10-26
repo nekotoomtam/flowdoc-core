@@ -131,10 +131,10 @@ export function buildSections(intent: ExportIntent) {
             return [nativeRule(n, pw - toPoints(page.margin.left) - toPoints(page.margin.right)).paragraph]; if (n.type === 'table-of-contents')
             return [new TableOfContents('Contents', { headingStyleRange: '1-3', useAppliedParagraphOutlineLevel: true, hyperlink: true, beginDirty: true, ...(n.props.scope?.kind === 'section' ? { entriesFromBookmark: ctx.sectionName } : {}) })]; fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + id, 'Unknown body capability'); };
         const ending=s.endingArea?.rootIds.length?s.endingArea:undefined;
-        const flow = take(buildBodyFlow(intent, { sectionId: s.sectionId, navigation: ctx, special, omittedRootIds: new Set([...emptyContents,...ending?.rootIds??[]]) }));
+        const flow = take(buildBodyFlow(intent, { sectionId: s.sectionId,bodyHeightPt:bodyHeight, navigation: ctx, special, omittedRootIds: new Set([...emptyContents,...ending?.rootIds??[]]) }));
         let children: FileChild[] = flow.children;
         if(ending){
-            const note=take(buildBodyFlow(intent,{sectionId:s.sectionId,rootIds:ending.rootIds,navigation:ctx,special}));
+            const note=take(buildBodyFlow(intent,{sectionId:s.sectionId,bodyHeightPt:bodyHeight,rootIds:ending.rootIds,navigation:ctx,special}));
             const envelope=endingAreaEnvelope(intent,ending.rootIds,pw-toPoints(page.margin.left)-toPoints(page.margin.right));
             const keepTogether=envelope+2<=bodyHeight;
             // The library's first note child must be a Paragraph. A structural

@@ -7,6 +7,15 @@ import {composeSizing,sizingEntry} from '../helpers/formatSizing.js';
 import {createHash} from 'node:crypto';
 import {deflateSync} from 'node:zlib';
 import {fonts,noImages,staged} from './helpers.js';
+it('rejects B ending-Area cells with unequal native row margins instead of under-drawing the row',async()=>{
+ const t=endingTemplate(),f=t.areaFormats.panel.fragment,pt=(value:number)=>({value,unit:'pt'});
+ f.nodes.text.children=[{id:'literal',type:'text',text:'X'}];f.nodes.other={...f.nodes.text,id:'other',children:[{id:'otherliteral',type:'text',text:'Y'}]};
+ f.nodes.table={id:'table',type:'table',props:{headerRowCount:0,repeatHeaderRows:false,borderStyle:'thickThinWideGap',borderWidth:pt(.35)},columns:[{width:pt(100)},{width:pt(100)}],rowIds:['row']};
+ f.nodes.row={id:'row',type:'table-row',props:{allowBreak:true},cellIds:['one','two']};
+ f.nodes.one={id:'one',type:'table-cell',props:{padding:{top:pt(20),bottom:pt(0),left:pt(4),right:pt(4)}},childIds:['text']};f.nodes.two={id:'two',type:'table-cell',props:{padding:{top:pt(0),bottom:pt(20),left:pt(4),right:pt(4)}},childIds:['other']};f.rootIds=['table'];
+ const d=composeSizing(t,[sizingEntry('SIGN')]),engine=await api.createDocxEngine(fonts());if(!engine.ok)throw Error(JSON.stringify(engine));const sink=staged(),r=await engine.value.generateDocxTo(d,noImages,sink.output,{textLayout:'native'});
+ expect(r.ok).toBe(false);if(!r.ok)expect(r.issues[0]).toMatchObject({code:'DOCX_CAPABILITY_UNSUPPORTED',message:expect.stringContaining('uniform emitted')});expect(sink.chunks).toHaveLength(0);
+});
 it('keeps the final Area once in editable native page-bottom content without a visible note marker',async()=>{
  const d=endingDocument(),before=JSON.stringify(d),e=await api.createDocxEngine(fonts());if(!e.ok)throw Error(JSON.stringify(e));
  const sink=staged(),r=await e.value.generateDocxTo(d,noImages,sink.output,{textLayout:'native'});expect(r.ok,JSON.stringify(r)).toBe(true);if(!r.ok)return;

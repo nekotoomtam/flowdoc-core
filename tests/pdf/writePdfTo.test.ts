@@ -6,7 +6,7 @@ import {writePdfTo} from '../../src/pdf/writePdfTo.js';
 import {writePdf} from '../../src/pdf/writePdf.js';
 const ref=(b:Uint8Array,key:string)=>({key,byteLength:b.length,sha256:createHash('sha256').update(b).digest('hex')});
 it('preserves streamed/buffered PDF identity for shared styled borders',async()=>{
- const f=await fixture(1),page=f.draw.pages[0];page.images=[];page.borders=['single','dashed','dotted','double','dashSmallGap'].map((style,i)=>({nodeId:'edge'+i,x1Pt:10,y1Pt:10+i*10,x2Pt:100,y2Pt:10+i*10,widthPt:.75,color:'224466',style}));
+ const f=await fixture(1),page=f.draw.pages[0];page.images=[];page.borders=['single','dashed','dotted','double','dashSmallGap','thickThinWideGap'].map((style,i)=>({nodeId:'edge'+i,x1Pt:10,y1Pt:10+i*10,x2Pt:100,y2Pt:10+i*10,widthPt:style==='thickThinWideGap'?.35:.75,color:'224466',style}));
  const sink=collector();await writePdfTo(f.draw,[],f.provider,sink);expect(Buffer.concat(sink.parts)).toEqual(Buffer.from(writePdf(f.draw,[])));
 });
 async function fixture(count=24){

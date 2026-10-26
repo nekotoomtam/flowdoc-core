@@ -1,10 +1,10 @@
-# FlowDoc Core 0.5.0 template entrypoint
+# FlowDoc Core 0.5.1 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes development package0.5.0 after release0.4.7, including opt-in font-height
+This describes development package0.5.1 after release0.5.0, including opt-in font-height
 calculation, Section19, group-label continuation and streamed task input/PDF.
 Ordinary pt rendering is unchanged. See the root README for the exact native
 helper/session contract and font-height API inputs/errors. Service owns task
@@ -69,8 +69,8 @@ headings and protected content retain their own keep rules. There is no blanket
 keep-whole-list promise. Table/cell insets and border quantization have explicit
 adaptation receipts; a structurally valid package does not prove native fit.
 
-Table `props.borderStyle` accepts `single`, `none`, `dashed`, `dotted`, `dashSmallGap` and
-`double` in models18/19. Omission retains single0.5pt black. `borderColor` sets
+Table `props.borderStyle` accepts `single`, `none`, `dashed`, `dotted`, `dashSmallGap`,
+`double` and `thickThinWideGap` in models18/19. Omission retains single0.5pt black. `borderColor` sets
 RGB without `#`; `borderWidth:Length` sets the nominal component-line weight.
 New table weights must be0.25..12pt in exact eighth-point steps, with equivalent
 pt/mm input. Double means two component strokes and an equal gap (3x envelope).
@@ -108,7 +108,29 @@ default widths are unchanged. For the E profile while retaining a0.5pt header
 separator, use `borderStyle:"dashSmallGap"`, `borderWidth:{value:0.25,unit:"pt"}`
 and `borders.headerBottom:{style:"single",width:{value:0.5,unit:"pt"}}`.
 
-Line nodes add `props.lineStyle` with the same kinds; thickness/color and
+`thickThinWideGap` is the opt-in B table profile. Unlike native table borders,
+its width is the total envelope: thick component0.6w, thin0.2w, gap0.2w;
+dash4w/gap12w with flat caps. Widths0.25..12pt must be exact EMU values rather
+than eighth-points. At0.35pt this is0.21/0.07pt components,0.07pt gap and
+1.4pt dashes separated by4.2pt. Set `borderStyle:"thickThinWideGap"`,
+`borderWidth:{value:0.35,unit:"pt"}`, and `borders.headerBottom` to the same
+style; none overrides can hide outer/interior edges. Other visible DOCX edges
+must also use B. Non-B native edges still require exact eighth-point widths.
+
+PDF paints B directly, including page-fragment closures. DOCX emits row-bound
+DrawingML paths over editable native table text. It supports unmerged, unshaded
+cells with one literal ASCII text block each; body text must fit one authored
+line, while headers allow up to8 authored lines. Conservative font bounds or
+native source measurements must prove no automatic wrap. A required native
+measurement needs both bundled shaper/segmenter resources. Unsupported cells,
+wrapping, merges, images and generated spans fail DOCX_CAPABILITY_UNSUPPORTED
+before staged output commit. Row extents use owned font line metrics and native
+insets; no row heights or page cuts are forced. Regenerate after Word edits or
+font changes. Vertical dash phase restarts per row; Word continuation-page
+closing rules are not promised. Native Word geometry for arbitrary fonts is
+not certified by the profile. B is table-only and is rejected for line nodes.
+
+Line nodes add `props.lineStyle` with the native kinds above (excluding B); thickness/color and
 spaceBefore/spaceAfter remain. Non-single styles require a portable component
 weight; omitted/single retains the original line contract. A none line keeps
 its reserved spacing. PDF and DOCX use the same named kinds/colors/weights;

@@ -8,6 +8,26 @@ import {buildPageContent} from '../../src/pdf/primitives.js';
 import {sizingTemplate,composeSizing} from '../helpers/formatSizing.js';
 const pt=(value:number)=>({value,unit:'pt'});
 const take=(r:any)=>{if(!r.ok)throw Error(JSON.stringify(r));return r.value;};
+it('accepts B at exact EMU width while keeping native table weights on eighth-points',()=>{
+ const t=mergedTemplate(),p=t.areaFormats.merged.fragment.nodes.table.props;
+ Object.assign(p,{borderStyle:'thickThinWideGap',borderWidth:pt(.35),borders:{headerBottom:{style:'thickThinWideGap'},insideHorizontal:{style:'none'}}});
+ expect(validateTemplate(t).ok).toBe(true);expect(validateResolvedDocument(composed(t))).toEqual([]);
+ p.borders.headerBottom={style:'single'};expect(validateTemplate(t).ok).toBe(false);
+});
+it('keeps B table-only and rejects it for a standalone rule',()=>{
+ const t=mergedTemplate(),f=t.areaFormats.merged;
+ f.fragment.nodes.rule={id:'rule',type:'line',props:{lineStyle:'thickThinWideGap',thickness:pt(.35)}};f.fragment.rootIds.push('rule');
+ expect(validateTemplate(t).ok).toBe(false);
+});
+it('rejects explicit null or undefined nested widths rather than treating them as omitted',()=>{
+ for(const width of [null,undefined]){const t=mergedTemplate();t.areaFormats.merged.fragment.nodes.table.props.borders={top:{width}};expect(validateTemplate(t).ok).toBe(false);}
+});
+it('paints B as two flat sparse components inside its total 0.35pt envelope',()=>{
+ const page:any={widthPt:100,heightPt:100,backgroundColor:'FFFFFF',commands:[],borders:[{nodeId:'b',x1Pt:10,y1Pt:20,x2Pt:90,y2Pt:20,widthPt:.35,color:'000000',style:'thickThinWideGap'}]};
+ const s=buildPageContent(page,[],new Map()).toString();
+ expect(s).toContain('0.21 w');expect(s).toContain('0.07 w');expect(s).toContain('[1.4 4.2] 0 d');expect(s).toContain('0 J');expect(s.match(/ l S/g)).toHaveLength(2);
+ expect(s).toContain('10 80.07 m');expect(s).toContain('10 79.86 m');
+});
 function composed(t:any){const v=take(validateTemplate(t));return take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:{main:{data:{details:[{format:'merged',data:{}}]}}}}))));}
 it.each(['single','none','dashed','dotted','double','dashSmallGap'])('accepts shared table and rule kind %s at authored/resolved boundaries',kind=>{
  const t=mergedTemplate(),f=t.areaFormats.merged;f.fragment.nodes.table.props={...f.fragment.nodes.table.props,borderStyle:kind,borderWidth:pt(.75)};
