@@ -76,6 +76,10 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
         const adapted = plainTextGrid && allPadding;
         const border = nativeStroke(resolveTableStroke(n,'insideHorizontal'));
         const sides={top:nativeStroke(resolveTableStroke(n,'top')),right:nativeStroke(resolveTableStroke(n,'right')),bottom:nativeStroke(resolveTableStroke(n,'bottom')),left:nativeStroke(resolveTableStroke(n,'left')),insideHorizontal:border,insideVertical:nativeStroke(resolveTableStroke(n,'insideVertical')),headerBottom:nativeStroke(resolveTableStroke(n,'headerBottom'))};
+        // Ordinary open rows inherit the table outline. Explicit cell-level
+        // NONE would override that outline at a native Word page boundary.
+        // Keep merged tables on the explicit perimeter policy.
+        const inheritOpenBodyEdges = sides.insideHorizontal.style === BorderStyle.NONE && sides.bottom.style !== BorderStyle.NONE && mapped.cells.every(cell => (nodes[cell.nodeId].props.rowSpan ?? 1) === 1 && (nodes[cell.nodeId].props.colSpan ?? 1) === 1);
         // Suppress paint explicitly while retaining the established spacing rules.
         // Source row flow excludes its painted stroke envelope. In the bounded
         // native Exact/one-line profile Word also reserves the terminal outer
@@ -152,7 +156,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                 const noBorder = { style: BorderStyle.NONE, size: 0, color: border.color };
                 const topBorder=row===0?sides.top:row===n.props.headerRowCount?sides.headerBottom:sides.insideHorizontal;
                 const bottomBorder=row===n.rowIds.length-1?sides.bottom:row===n.props.headerRowCount-1?sides.headerBottom:sides.insideHorizontal;
-                const cellBorders = { top: continuation ? noBorder : topBorder, bottom: row < pos.row + pos.rowSpan - 1 ? noBorder : bottomBorder, left: col===0?sides.left:sides.insideVertical, right: col+pos.span===grid.length?sides.right:sides.insideVertical };
+                const cellBorders = { ...(inheritOpenBodyEdges && row > n.props.headerRowCount ? {} : { top: continuation ? noBorder : topBorder }), ...(inheritOpenBodyEdges && row >= n.props.headerRowCount && row < n.rowIds.length - 1 ? {} : { bottom: row < pos.row + pos.rowSpan - 1 ? noBorder : bottomBorder }), left: col===0?sides.left:sides.insideVertical, right: col+pos.span===grid.length?sides.right:sides.insideVertical };
                 cells.push(new TableCell({ children, borders: cellBorders, width: { type: WidthType.DXA, size: grid.slice(col, col + pos.span).reduce((a, b) => a + b, 0) }, ...(pos.span > 1 ? { columnSpan: pos.span } : {}), ...(pos.rowSpan > 1 ? { verticalMerge: continuation ? VerticalMergeType.CONTINUE : VerticalMergeType.RESTART } : {}), margins: { top: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeTopTwips, right: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeRightTwips, bottom: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeBottomTwips, left: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeLeftTwips }, ...(fill ? { shading: { fill } } : {}) }));
                 col += pos.span;
             }
