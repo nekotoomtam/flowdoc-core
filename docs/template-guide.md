@@ -75,8 +75,9 @@ adaptation receipts; a structurally valid package does not prove native fit.
 Table `props.borderStyle` accepts `single`, `none`, `dashed`, `dotted`, `dashSmallGap`,
 `double` and `thickThinWideGap` in models18/19. Omission retains single0.5pt black. `borderColor` sets
 RGB without `#`; `borderWidth:Length` sets the nominal component-line weight.
-New table weights must be0.25..12pt in exact eighth-point steps, with equivalent
-pt/mm input. Double means two component strokes and an equal gap (3x envelope).
+Native visible table weights must be0.25..12pt in exact eighth-point steps,
+with equivalent pt/mm input. B/none admit exact EMU weights in that range;
+B uses the total-envelope interpretation described below. Double means two component strokes and an equal gap (3x envelope).
 White remains painted white; none hides paint while retaining fills and insets.
 
 `props.borders` optionally overrides `top`, `right`, `bottom`, `left`,
@@ -387,3 +388,18 @@ retains legacy fingerprints. Core composition ignores the metadata; the matching
 Service resolves an optional request `fileName`, then the configured default,
 then `document`, and appends the selected format. See the Project Control output
 file names plan for the candidate's cross-repository acceptance boundary.
+
+
+## Before a0.5.2 release package is frozen
+
+- Validate template, request and output format against the actual selected
+  package. Optional naming never changes18/19 Section semantics;20 is a separate
+  experimental direct-Core contract, not Service admission.
+- Retain layout/Word evidence only for its measured fonts, geometry, page/row
+  rules and supported DOCX profile. A filename or style name is not visual proof.
+- Freeze documented source before packing; record package version, source commit,
+  archive hash and runtime/resources, then check the packed consumer. A later
+  README change requires new archive identity before release, not an overwritten
+  historical package or a manually invented checksum.
+- Follow Project Control release rules for the separate Service/plugin gates,
+  snapshot/tag/push and installation authorization. These notes do not run them.

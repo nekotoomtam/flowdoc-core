@@ -220,6 +220,20 @@ with selected identities, hashes and license hashes, without filesystem paths.
 Core does not fetch fonts, resolve a latest release, authorize catalog activation or infer
 approved weights from filenames. The caller owns catalog authorization/readiness.
 
+## 0.5.2 manual and package boundary
+
+The default-file-name metadata is available to18/19 templates and experimental20;
+see [output naming](#output-base-name-metadata-in052). Request overrides and
+attachment naming belong to Service, not Core's rendering APIs. Shared table
+edge/style options, B's bounded DOCX profile, Area alignment, font quantization
+and Word-edit limitations are detailed in [the template guide](docs/template-guide.md).
+
+The development documentation may advance after a verified package was pinned.
+Before release, build a new archive from the final documented source, verify its
+Linux consumer and record exact source/hash in Service. Retain earlier archives;
+do not claim the existing pinned package contains later README changes. Complete
+Service/plugin/release acceptance remains separately owned by Project Control.
+
 ## Release branches
 
 Before preparing or promoting a release, follow the shared
