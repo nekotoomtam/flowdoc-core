@@ -8,6 +8,7 @@ import { measurePageBand, selectPageBands, type MeasuredBand } from './pageBands
 import type { BandMode } from '../template/types.js';
 import { measureFixedTextBlock } from './fixedTextBlock.js';
 import { cellTableFlow } from './cellTableFlow.js';
+import {legacyTableStrokeGeometry,resolveTableStroke,tableStrokeEnvelope,strokePaintProps} from '../composition/strokeStyle.js';
 import {tableStartHeight}from'./tableStart.js';
 import { collectContents } from '../composition/contents.js';
 import { measureContents } from './measureContents.js';
@@ -52,7 +53,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     const contentsById = new Map<string, ReturnType<typeof collectContents>>();
     const contentsByScope = new Map<string, ReturnType<typeof collectContents>>();
     for(const id of d.rootIds){const node=d.nodes[id];if(node?.type!=='table-of-contents')continue;
-        const owner=d.nodeModelVersion===19&&node.props.scope?.kind==='section'?d.sourceMap[id]!.sectionId:undefined;
+        const owner=d.nodeModelVersion!==18&&node.props.scope?.kind==='section'?d.sourceMap[id]!.sectionId:undefined;
         const key=owner===undefined?'document':'section:'+owner;
         if(!contentsByScope.has(key))contentsByScope.set(key,collectContents(d,owner));
         contentsById.set(id,contentsByScope.get(key)!);
@@ -144,7 +145,14 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                     const fw = item.frameWidth, fh = item.heightPt, scale = Math.min(fw / image.width, fh / image.height), iw = image.width * scale, ih = image.height * scale;
                     const frameLeft = x + (item.align === 'right' ? width - fw : item.align === 'center' ? (width - fw) / 2 : 0);
                     addImage({ nodeId: item.nodeId, resourceId: item.resourceId, xPt: frameLeft + (fw - iw) / 2, yPt: at + (fh - ih) / 2, widthPt: iw, heightPt: ih });
-                }, border(x1Pt, y1Pt, x2Pt, y2Pt, nodeId) { if(bounded){x1Pt=Math.max(left+.25,Math.min(left+available-.25,x1Pt));x2Pt=Math.max(left+.25,Math.min(left+available-.25,x2Pt));} current.borders ??= []; current.borders.push({ x1Pt, y1Pt, x2Pt, y2Pt, nodeId, widthPt: 0.5, color: t.props.borderColor ?? '000000' }); }
+                }, border(x1Pt, y1Pt, x2Pt, y2Pt, nodeId, stroke=resolveTableStroke(t,'insideHorizontal')) {
+                    if(!legacyTableStrokeGeometry(t)){
+                        const half=tableStrokeEnvelope(t)/2,minX=bounded?left:0,maxX=bounded?left+available:current.widthPt,minY=bounded?fixed!.start:0,maxY=bounded?limit():current.heightPt;
+                        if(maxX-minX<half*2||maxY-minY<half*2)throw new LayoutError(nodeId,'Stroke exceeds available frame');
+                        x1Pt=Math.max(minX+half,Math.min(maxX-half,x1Pt));x2Pt=Math.max(minX+half,Math.min(maxX-half,x2Pt));y1Pt=Math.max(minY+half,Math.min(maxY-half,y1Pt));y2Pt=Math.max(minY+half,Math.min(maxY-half,y2Pt));
+                        if(Math.hypot(x2Pt-x1Pt,y2Pt-y1Pt)<=epsilon)throw new LayoutError(nodeId,'Styled stroke does not fit available frame');
+                    }else if(bounded){x1Pt=Math.max(left+.25,Math.min(left+available-.25,x1Pt));x2Pt=Math.max(left+.25,Math.min(left+available-.25,x2Pt));}
+                    current.borders ??= []; current.borders.push({ x1Pt, y1Pt, x2Pt, y2Pt, nodeId, ...strokePaintProps(stroke) }); }
             });
             if(bounded)y+=.25;
             return;
@@ -152,7 +160,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     };
     const sections = d.sections!;
     for (const section of sections) {
-        if (!section.rootIds.some(id => d.nodes[id]?.type !== 'page-break' && (d.nodeModelVersion!==19||d.nodes[id]?.type!=='table-of-contents'||contentsById.get(id)!.length>0)) && !d.formatInstances?.some(f=>f.sectionId===section.sectionId&&f.sizing.mode==='fixed') && !((section.role === 'cover' || section.sourceKind === 'blank')))
+        if (!section.rootIds.some(id => d.nodes[id]?.type !== 'page-break' && (d.nodeModelVersion===18||d.nodes[id]?.type!=='table-of-contents'||contentsById.get(id)!.length>0)) && !d.formatInstances?.some(f=>f.sectionId===section.sectionId&&f.sizing.mode==='fixed') && !((section.role === 'cover' || section.sourceKind === 'blank')))
             continue;
         hideNumbers = "numbering" in section && section.numbering?.visibility === 'hide';
         sectionId = section.sectionId;
@@ -270,7 +278,11 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                 const m = measureRule(n, available);
                 ensureHeight(m.height, id);
                 current.borders ??= [];
-                current.borders.push({ nodeId: id, x1Pt: left + m.offset, x2Pt: left + m.offset + m.width, y1Pt: y + m.before + m.thickness / 2, y2Pt: y + m.before + m.thickness / 2, widthPt: m.thickness, color: m.color });
+                if(m.stroke.style!=='none'){
+                    const half=m.thickness/2,inset=m.stroke.style==='dotted'?m.stroke.widthPt/2:0,x1=left+m.offset,x2=x1+m.width;
+                    if(inset&&m.width<=2*inset)throw new LayoutError(id,'Stroke exceeds available line width');
+                    current.borders.push({ nodeId: id, x1Pt: x1+inset, x2Pt: x2-inset, y1Pt: y + m.before + half, y2Pt: y + m.before + half, ...strokePaintProps(m.stroke) });
+                }
                 y += m.height;
             }
             else if (n?.type === 'image') {
@@ -354,7 +366,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         }
         bounds?.onSectionEnd?.({y,top,bottom});
     }
-    if(d.nodeModelVersion===19&&!pages.length)throw new LayoutError(d.rootIds[0]??'document','No layout content in document');
+    if(d.nodeModelVersion!==18&&!pages.length)throw new LayoutError(d.rootIds[0]??'document','No layout content in document');
     assignSystemPageNumbers(d, { pages });
     return { pages, ...(omittedNodeIds.size?{omittedNodeIds:[...omittedNodeIds]}:{}), ...(warnings.length ? { warnings } : {}), ...(pageTexts.length ? { pageTexts } : {}), ...(pageFieldSlots.length ? { pageFieldSlots } : {}), ...(contentsSlots.length ? { contentsSlots } : {}) };
     }catch(error){if(error instanceof LayoutError)error.warnings=warnings;throw error;}

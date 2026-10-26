@@ -4,13 +4,14 @@ import {toPt} from '../composition/resolvedDocument.js';
 import type {ResolvedDocument,Table} from '../composition/resolvedDocument.js';
 import {measureCellContent} from './measureCellContent.js';
 import {nativeTableProbe} from './nativeTableProbe.js';
+import {resolveTableStroke,type ResolvedStroke,type TableBorderSide} from '../composition/strokeStyle.js';
 import type {MeasuredCellItem,PaddingPt} from './measureCellContent.js';
 
 import type {Issue} from '../result.js';
 import {LayoutError} from './textFlow.js';
 import {FormatStop,formatCursor} from './formatLayout.js';
 import type {TextRuntime} from './textFlow.js';
-export interface CellTablePageSink {bounded?:boolean;omitImage?(nodeId:string):boolean;warn?(issue:Issue):void;top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;fill?(x:number,y:number,width:number,height:number,color:string,nodeId:string):void;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string):void}
+export interface CellTablePageSink {bounded?:boolean;omitImage?(nodeId:string):boolean;warn?(issue:Issue):void;top:number;bottom:number;nextCapacity?:number;left:number;availableWidth:number;y:number;fill?(x:number,y:number,width:number,height:number,color:string,nodeId:string):void;nextPage():void;emitItem(item:MeasuredCellItem,x:number,y:number,width:number):void;border(x1:number,y1:number,x2:number,y2:number,nodeId:string,stroke?:ResolvedStroke):void}
 interface Cell extends GridCell {fillColor?:string|undefined;padding:PaddingPt;contentWidth:number;lines:{line:MeasuredCellItem;offset:number;drawn:boolean}[];label?:{first:MeasuredCellItem[];continuation:()=>Promise<MeasuredCellItem[]>;active:MeasuredCellItem[];shown:boolean;windowFrom:number}}
 const eps=1e-6;
 export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRuntime,s:CellTablePageSink):Promise<void>{
@@ -61,10 +62,13 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
   const ys=[0];for(const h of heights)ys.push(ys.at(-1)!+h);return {heights,ys};
  };
  const paintedCells=new Set<string>();
- const paint=(list:Cell[],ys:number[],from:number,to:number,at:number,sharedTop=false)=>{
+ const paint=(list:Cell[],ys:number[],from:number,to:number,at:number,sharedTop=false,header=false)=>{
   // Union collinear edges: shared or partially shared cell edges are stroked once.
-  const edges=new Map<string,{axis:'h'|'v';fixed:number;segments:[number,number][]}>();
-  const edge=(axis:'h'|'v',fixed:number,a:number,b:number)=>{if(b-a<eps)return;const key=axis+':'+fixed.toFixed(6),e=edges.get(key)??{axis,fixed,segments:[]};e.segments.push([a,b]);edges.set(key,e);};
+  const edges=new Map<string,{axis:'h'|'v';fixed:number;segments:[number,number][];stroke:ResolvedStroke}>();
+  const edge=(axis:'h'|'v',fixed:number,a:number,b:number)=>{if(b-a<eps)return;
+   const side:TableBorderSide=axis==='v'?Math.abs(fixed-s.left)<eps?'left':Math.abs(fixed-s.left-xs.at(-1)!)<eps?'right':'insideVertical':Math.abs(fixed-at)<eps?(sharedTop?'headerBottom':'top'):Math.abs(fixed-(at+to-from))<eps?(header&&body.length?'headerBottom':'bottom'):'insideHorizontal';
+   const stroke=resolveTableStroke(t,side);if(stroke.style==='none')return;
+   const key=axis+':'+fixed.toFixed(6),e=edges.get(key)??{axis,fixed,segments:[],stroke};e.segments.push([a,b]);edges.set(key,e);};
   for(const c of list){const start=ys[c.row]!,end=ys[c.row+c.rowSpan]!,lo=Math.max(start,from),hi=Math.min(end,to);if(hi-lo<=eps)continue;
    paintedCells.add(c.id);const x=s.left+xs[c.column]!,right=s.left+xs[c.column+c.colSpan]!,top=at+lo-from,bottom=at+hi-from;
    if(c.fillColor)s.fill?.(x,top,right-x,bottom-top,c.fillColor,c.id);
@@ -73,10 +77,10 @@ export async function cellTableFlow(d:ResolvedDocument,t:Table,runtime:TextRunti
    for(const l of c.lines){const y=start+l.offset;if(!l.drawn&&y>=from-eps&&y+l.line.heightPt<=to+eps){s.emitItem(l.line,x+c.padding.left,at+y-from,c.contentWidth);l.drawn=true;}}
   }
   // Hiding strokes does not change the existing cell measurement or page cuts.
-  for(const e of t.props.borderStyle==='none'?[]:edges.values()){e.segments.sort((a,b)=>a[0]-b[0]);let [a,b]=e.segments[0]!;const emit=()=>e.axis==='h'?s.border(a,e.fixed,b,e.fixed,t.id):s.border(e.fixed,a,e.fixed,b,t.id);
+  for(const e of edges.values()){e.segments.sort((a,b)=>a[0]-b[0]);let [a,b]=e.segments[0]!;const emit=()=>e.axis==='h'?s.border(a,e.fixed,b,e.fixed,t.id,e.stroke):s.border(e.fixed,a,e.fixed,b,t.id,e.stroke);
    for(const [lo,hi] of e.segments.slice(1)){if(lo<=b+eps)b=Math.max(b,hi);else{emit();a=lo;b=hi;}}emit();}
  };
- const drawHeader=()=>{for(const c of headerCells)for(const l of c.lines)l.drawn=false;paint(headerCells,[0,headerHeight],0,headerHeight,s.y);s.y+=headerHeight;};
+ const drawHeader=()=>{for(const c of headerCells)for(const l of c.lines)l.drawn=false;paint(headerCells,[0,headerHeight],0,headerHeight,s.y,false,true);s.y+=headerHeight;};
  const fullBodyHeight=Math.max(s.bottom-s.top,s.nextCapacity??0)-(t.props.repeatHeaderRows?headerHeight:0);
  omitOversizedImages(body,fullBodyHeight);
  let from=0,first=true,pendingLabel:Cell|undefined;

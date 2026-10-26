@@ -15,7 +15,7 @@ const take = (r: any) => { if (!r.ok)
     fail(r.issues[0].code, r.issues[0].path, r.issues[0].message); return r.value; };
 export function buildSections(intent: ExportIntent) {
     const sections: ISectionOptions[] = [], receipts: any[] = [], endingAreas:any[]=[], footnotes:Record<string,{children:Paragraph[]}>={}, anchors = anchorBookmarks(intent), nodes: any = intent.document.nodes, sourceSections = intent.document.sections as any[];
-    const emptyContents = new Set<string>((Object.values(nodes) as any[]).filter(n => intent.document.nodeModelVersion === 19 && n.type === 'table-of-contents' && collectContents(intent.document, n.props.scope?.kind === 'section' ? (intent.document.sourceMap as any)[n.id].sectionId : undefined).length === 0).map(n => n.id));
+    const emptyContents = new Set<string>((Object.values(nodes) as any[]).filter(n => intent.document.nodeModelVersion !== 18 && n.type === 'table-of-contents' && collectContents(intent.document, n.props.scope?.kind === 'section' ? (intent.document.sourceMap as any)[n.id].sectionId : undefined).length === 0).map(n => n.id));
     const visibleSections = new Set(sourceSections.filter(s => s.role === 'cover' || s.sourceKind === 'blank' || s.rootIds.some((id: string) => nodes[id].type !== 'page-break' && !emptyContents.has(id)) || intent.document.formatInstances?.some(f => f.sectionId === s.sectionId && f.sizing.mode === 'fixed')));
     const omittedSections = sourceSections.filter(s => !visibleSections.has(s)).map(s => ({sectionId: s.sectionId, reason: 'no-layout-content'}));
     if (!visibleSections.size) fail('DOCX_CAPABILITY_UNSUPPORTED', 'sections', 'Document has no layout content');
@@ -131,10 +131,10 @@ export function buildSections(intent: ExportIntent) {
             return [nativeRule(n, pw - toPoints(page.margin.left) - toPoints(page.margin.right)).paragraph]; if (n.type === 'table-of-contents')
             return [new TableOfContents('Contents', { headingStyleRange: '1-3', useAppliedParagraphOutlineLevel: true, hyperlink: true, beginDirty: true, ...(n.props.scope?.kind === 'section' ? { entriesFromBookmark: ctx.sectionName } : {}) })]; fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + id, 'Unknown body capability'); };
         const ending=s.endingArea?.rootIds.length?s.endingArea:undefined;
-        const flow = take(buildBodyFlow(intent, { sectionId: s.sectionId, navigation: ctx, special, omittedRootIds: new Set([...emptyContents,...ending?.rootIds??[]]) }));
+        const flow = take(buildBodyFlow(intent, { sectionId: s.sectionId,bodyHeightPt:bodyHeight, navigation: ctx, special, omittedRootIds: new Set([...emptyContents,...ending?.rootIds??[]]) }));
         let children: FileChild[] = flow.children;
         if(ending){
-            const note=take(buildBodyFlow(intent,{sectionId:s.sectionId,rootIds:ending.rootIds,navigation:ctx,special}));
+            const note=take(buildBodyFlow(intent,{sectionId:s.sectionId,bodyHeightPt:bodyHeight,rootIds:ending.rootIds,navigation:ctx,special}));
             const envelope=endingAreaEnvelope(intent,ending.rootIds,pw-toPoints(page.margin.left)-toPoints(page.margin.right));
             const keepTogether=envelope+2<=bodyHeight;
             // The library's first note child must be a Paragraph. A structural

@@ -4,6 +4,7 @@ import {requireGenuineIntent} from './profile.js';
 import {sourceGraph,fieldDigitBudget} from './fields.js';
 import {fail,type ExportIntent} from './types.js';
 import {toPoints} from './units.js';
+import {hasCompoundTableStroke} from '../composition/strokeStyle.js';
 interface Extent {height:number;firstLineHeight:number;lines:number;}
 const records=new WeakMap<ExportIntent,ReadonlyMap<string,Extent>>();
 const key=(scope:string,id:string,width:number,start=0)=>JSON.stringify([scope,id,width,start]);
@@ -39,7 +40,7 @@ export async function prepareReadingMeasurements(intent:ExportIntent,runtime:Tex
   }
   for(const kind of ['header','footer']as const){const b=s[kind]??(intent.document as any)[kind];if(b){const bw=b.placement?(p.orientation==='portrait'?210:297)*72/25.4-toPoints(b.placement.left)-toPoints(b.placement.right):width;band(s[kind]?`sections.${index}.${kind}.nodes`:`${kind}.nodes`,b,bw);}}
  }
- for(const t of intent.tables){const n=nodes[t.nodeId];for(const rid of n.rowIds){for(const cid of nodes[rid].cellIds){const c=nodes[cid],index=nodes[rid].cellIds.indexOf(cid),col=c.props.columnIndex??index,span=c.props.colSpan??1,pad=t.cells.find(v=>v.nodeId===cid)!.paddingTwips;slot(c.childIds,(t.columnTwips.slice(col,col+span).reduce((a,b)=>a+b,0)-pad.left-pad.right)/20);}}
+ for(const t of intent.tables){const n=nodes[t.nodeId];for(const rid of n.rowIds){if(hasCompoundTableStroke(n))row(n,rid);for(const cid of nodes[rid].cellIds){const c=nodes[cid],index=nodes[rid].cellIds.indexOf(cid),col=c.props.columnIndex??index,span=c.props.colSpan??1,pad=t.cells.find(v=>v.nodeId===cid)!.paddingTwips;slot(c.childIds,(t.columnTwips.slice(col,col+span).reduce((a,b)=>a+b,0)-pad.left-pad.right)/20);}}
   for(const g of n.rowGroups??[])if(g.keepStart&&g.prefixRowIds.length)for(const rid of [...n.rowIds.slice(0,n.props.repeatHeaderRows?n.props.headerRowCount:0),...g.prefixRowIds,g.firstMemberRowId])row(n,rid);
  }
  const result=new Map<string,Extent>();let units=0,calls=0;

@@ -1,4 +1,5 @@
 import {validateRowGroups} from './rowGroups.js';
+import {lineStrokeErrors,tableStrokeErrors} from '../composition/strokeStyle.js';
 import {toPt} from '../composition/resolvedDocument.js';
 import {MAX_CONTENTS_LEVEL,contentsTitle} from '../composition/contents.js';
 import {validateLink} from '../composition/linkContract.js';
@@ -7,7 +8,7 @@ import type {Table,DocumentNode} from '../composition/resolvedDocument.js';
 import type {Issue} from '../result.js';
 import type {ObjectSchema,Fragment,Repeat,CellRepeat} from './types.js';
 import {object,keys,name,text,own,issue} from './checks.js';
-export interface GraphContext {groupLabelSpans?:boolean;scopedContents?:boolean;sectionIds?:string[]|undefined;pageBreaks?:boolean;rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
+export interface GraphContext {assembly?:boolean;groupLabelSpans?:boolean;scopedContents?:boolean;sectionIds?:string[]|undefined;pageBreaks?:boolean;rowGroups?:boolean;groupDeclarations?:import('./types.js').RowGroup[]|undefined;bandText?:boolean;pageFields?:boolean;scopeSchemas?:Record<string,ObjectSchema>|undefined;heightModes?:boolean;fixedRootIds?:string[];allowEmptyRoots?:boolean;styles:Record<string,unknown>;globalSchema:ObjectSchema;localSchema:ObjectSchema;repeats:Repeat[];resolved?:boolean;images?:boolean;merged?:boolean;links?:boolean;contents?:boolean;cellContent?:boolean;itemImages?:boolean;cellRepeats?:CellRepeat[];areas?:boolean}
 export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Issue[]{
  let currentNode:string|undefined;
  const issues:Issue[]=[],fail=(p:string,nodeId=currentNode)=>issues.push({...issue('INVALID_TEMPLATE',p),...(nodeId===undefined?{}:{nodeId})});
@@ -55,7 +56,8 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
   if(n.type==='page-break'&&ctx.pageBreaks){
    if(!keys(n,['id','type'])||!input.rootIds.includes(id))fail(p);
   }else if(n.type==='line'&&ctx.heightModes){
-   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['align','width','thickness','color','spaceBefore','spaceAfter'])){fail(p);continue;}
+   if(!keys(n,['id','type','props'])||!object(n.props)||!keys(n.props,['lineStyle','align','width','thickness','color','spaceBefore','spaceAfter'])){fail(p);continue;}
+   for(const key of lineStrokeErrors(n.props))fail(p+'.props.'+key);
    if(own(n.props,'align')&&!['left','center','right'].includes(n.props.align))fail(p+'.props.align');
    if(own(n.props,'color')&&(typeof n.props.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props.color)))fail(p+'.props.color');
    for(const key of ['width','thickness','spaceBefore','spaceAfter'])if(own(n.props,key)){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<0||(['width','thickness'].includes(key)&&v.value===0)||!Number.isFinite(toPt(v as any)))fail(p+'.props.'+key);}
@@ -81,8 +83,9 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
     else if(c.type==='line-break'){if(!keys(c,['id','type']))fail(cp);}
     else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.'))fail(cp);}
     else if(ctx.links&&['url','link','reference'].includes(c.type)){
-     const {id:_,targetSectionId,...command}=c;
-     if(targetSectionId!==undefined&&(c.type!=='reference'||!ctx.sectionIds?.includes(targetSectionId)))fail(cp+'.targetSectionId');
+     const {id:_,targetSectionId,targetInstanceKey,...command}=c;
+     if(targetInstanceKey!==undefined&&(!ctx.assembly||c.type!=='reference'||typeof targetInstanceKey!=='string'||! /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(targetInstanceKey)))fail(cp+'.targetInstanceKey');
+     if(targetSectionId!==undefined&&(ctx.assembly||c.type!=='reference'||!ctx.sectionIds?.includes(targetSectionId)))fail(cp+'.targetSectionId');
      const candidate=Object.fromEntries(Object.entries(command).map(([key,value])=>[key,!ctx.resolved&&key!=='type'&&scalarRef(value)?(key==='url'||key==='value'?'https://example.com':'bound'):value]));
      if(!validateLink(candidate))fail(cp);
     }else fail(cp);
@@ -100,8 +103,8 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    else {const s=n.props.source;if(!object(s)||!keys(s,['scope','key'])||![...Object.keys(scopes),...(ctx.itemImages?['item']:[]),...(ctx.rowGroups?['group']:[])].includes(s.scope)||!name(s.key)||s.key.includes('.'))fail(p+'.props.source');}
    for(const key of ['width','height']){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<=0)fail(p+'.props.'+key);}
   }else if(n.type==='table'){
-   if(!keys(n,['id','type','props','columns','rowIds',...(ctx.resolved&&ctx.rowGroups?['rowGroups']:[])])||!object(n.props)||!keys(n.props,['headerRowCount','repeatHeaderRows',...(ctx.cellContent?['headerFillColor','borderColor','borderStyle']:[])])||!Number.isInteger(n.props.headerRowCount)||n.props.headerRowCount<0||n.props.headerRowCount>1||typeof n.props.repeatHeaderRows!=='boolean'||!Array.isArray(n.columns)||!n.columns.length){fail(p);continue;}
-   if(own(n.props,'borderStyle')&&!['single','none'].includes(n.props.borderStyle))fail(p+'.props.borderStyle');
+   if(!keys(n,['id','type','props','columns','rowIds',...(ctx.resolved&&ctx.rowGroups?['rowGroups']:[])])||!object(n.props)||!keys(n.props,['headerRowCount','repeatHeaderRows',...(ctx.cellContent?['headerFillColor','borderColor','borderStyle','borderWidth','borders']:[])])||!Number.isInteger(n.props.headerRowCount)||n.props.headerRowCount<0||n.props.headerRowCount>1||typeof n.props.repeatHeaderRows!=='boolean'||!Array.isArray(n.columns)||!n.columns.length){fail(p);continue;}
+   for(const key of tableStrokeErrors(n.props))fail(p+'.props.'+key);
    for(const k of ['headerFillColor','borderColor'])if(own(n.props,k)&&(typeof n.props[k]!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props[k])))fail(p+'.props.'+k);
    for(const c of n.columns)if(!object(c)||!keys(c,['width'])||!object(c.width)||!keys(c.width,['unit','value'])||!['mm','pt'].includes(c.width.unit)||typeof c.width.value!=='number'||!Number.isFinite(c.width.value)||c.width.value<=0)fail(p+'.columns');
    children=refs(n.rowIds,p+'.rowIds');if(n.props.headerRowCount>children.length)fail(p+'.props.headerRowCount');

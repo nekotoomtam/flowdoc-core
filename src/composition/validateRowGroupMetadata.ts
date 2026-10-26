@@ -9,7 +9,7 @@ export function validateRowGroupMetadata(d: Record<string, any>): Issue[] {
         if (t?.type !== 'table' || !own(t, 'rowGroups'))
             continue;
         const path = 'nodes.' + tableId + '.rowGroups';
-        if ((![18,19].includes(d.nodeModelVersion)) || !Array.isArray(t.rowGroups) || !Array.isArray(t.rowIds)) {
+        if ((![18,19,20].includes(d.nodeModelVersion)) || !Array.isArray(t.rowGroups) || !Array.isArray(t.rowIds)) {
             fail(path);
             continue;
         }
@@ -18,7 +18,7 @@ export function validateRowGroupMetadata(d: Record<string, any>): Issue[] {
         let previousEnd = t.props?.headerRowCount ?? 0;
         for (const [index, g] of t.rowGroups.entries()) {
             const p = path + `[${index}]`;
-            if (!object(g) || !keys(g, ['groupId', 'groupIndex', 'rowIds', 'prefixRowIds', 'firstMemberRowId', 'empty', 'keepStart', ...(d.nodeModelVersion===19?['groupLabel']:[])]) || !name(g.groupId) || g.groupId.includes('~') || !Number.isSafeInteger(g.groupIndex) || g.groupIndex !== (nextIndex.get(g.groupId) ?? 0) || !Array.isArray(g.rowIds) || !g.rowIds.length || !g.rowIds.every(name) || !Array.isArray(g.prefixRowIds) || (!g.prefixRowIds.length&&!own(g,'groupLabel')) || !g.prefixRowIds.every(name) || typeof g.empty !== 'boolean' || typeof g.keepStart !== 'boolean') {
+            if (!object(g) || !keys(g, ['groupId', 'groupIndex', 'rowIds', 'prefixRowIds', 'firstMemberRowId', 'empty', 'keepStart', ...(d.nodeModelVersion!==18?['groupLabel']:[])]) || !name(g.groupId) || g.groupId.includes('~') || !Number.isSafeInteger(g.groupIndex) || g.groupIndex !== (nextIndex.get(g.groupId) ?? 0) || !Array.isArray(g.rowIds) || !g.rowIds.length || !g.rowIds.every(name) || !Array.isArray(g.prefixRowIds) || (!g.prefixRowIds.length&&!own(g,'groupLabel')) || !g.prefixRowIds.every(name) || typeof g.empty !== 'boolean' || typeof g.keepStart !== 'boolean') {
                 fail(p);
                 continue;
             }

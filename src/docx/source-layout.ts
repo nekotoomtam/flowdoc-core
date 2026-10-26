@@ -1,4 +1,5 @@
 import {sourceWordBoundaries} from './source-word-boundaries.js';
+import {legacyTableStrokeGeometry} from '../composition/strokeStyle.js';
 import {mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,isAbsolute} from 'node:path';
@@ -64,6 +65,7 @@ export async function prepareSourceLayout(intent:ExportIntent,resources:Pick<Exp
     const table=row&&Object.values(nodes).find(n=>n.type==='table'&&n.rowIds.includes(row.id));
     if(!row||row.type!=='table-row'||!table||table.type!=='table'||(cell.props.colSpan??1)!==1||(cell.props.rowSpan??1)!==1){retain('native-merged-or-unresolved-cell');continue;}
     if(table.rowIds.indexOf(row.id)<table.props.headerRowCount||!row.props.allowBreak||reading.value.keptRows[table.id]?.includes(row.id)||(table.rowGroups??[]).some(g=>g.keepStart&&g.prefixRowIds.length>0&&g.rowIds.includes(row.id))||reading.value.edges.some(e=>e.from===table.id||e.to===table.id)){retain('native-flow-protected-by-reading-plan');continue;}
+    if(!legacyTableStrokeGeometry(table)){retain('native-custom-table-borders');continue;}
     owner=table.id;const column=cell.props.columnIndex??row.cellIds.indexOf(cell.id);
     width=toPoints(table.columns[column]!.width)-toPoints(cell.props.padding?.left??{unit:'pt',value:4})-toPoints(cell.props.padding?.right??{unit:'pt',value:4});
     // Native tables use a half-point border. Source cell origins use its centre;

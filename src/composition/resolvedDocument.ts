@@ -14,10 +14,10 @@ export interface TextBlock {
 export type SourceOrigin={origin?:never;sectionId?:never;contentIndex:number;format:string}|{origin:'content';sectionId:string;contentIndex:number;format:string}|{origin:'authored';sectionId:string;contentIndex?:never;format?:never};
 export type SourceEntry=SourceOrigin&{sourceId:string;groupId?:string;groupIndex?:number;itemIndex?:number;repeatId?:string;areaId?:string;areaEntryIndex?:number;areaFormatId?:string}
 export interface PageBreak {id:string;type:'page-break'}
-export interface LineBlock {id:string;type:'line';props:{align?:'left'|'center'|'right';width?:Length;thickness?:Length;color?:string;spaceBefore?:Length;spaceAfter?:Length}}
+export interface LineBlock {id:string;type:'line';props:{lineStyle?:import('./strokeStyle.js').StrokeKind;align?:'left'|'center'|'right';width?:Length;thickness?:Length;color?:string;spaceBefore?:Length;spaceAfter?:Length}}
 export interface ResolvedGroupLabel {cellId:string;sourceCellId:string;memberCount:number}
 export interface ResolvedRowGroup {groupId:string;groupIndex:number;rowIds:string[];prefixRowIds:string[];firstMemberRowId:string;empty:boolean;keepStart:boolean;groupLabel?:ResolvedGroupLabel}
-export interface Table {rowGroups?:ResolvedRowGroup[];id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean;headerFillColor?:string;borderColor?:string;borderStyle?:'single'|'none'};columns:{width:Length}[];rowIds:string[]}
+export interface Table {rowGroups?:ResolvedRowGroup[];id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean;headerFillColor?:string;borderColor?:string;borderStyle?:import('./strokeStyle.js').StrokeKind;borderWidth?:Length;borders?:Partial<Record<import('./strokeStyle.js').TableBorderSide,import('./strokeStyle.js').BorderStroke>>};columns:{width:Length}[];rowIds:string[]}
 export interface TableRow {id:string;type:'table-row';props:{allowBreak:boolean};cellIds:string[]}
 export type CellPadding=Partial<Record<'top'|'right'|'bottom'|'left',Length>>;
 export interface TableCell {id:string;type:'table-cell';props:{fillColor?:string;columnIndex?:number;rowSpan?:number;colSpan?:number;padding?:CellPadding};childIds:string[]}
@@ -29,10 +29,10 @@ export interface FormatInstance {sectionId:string;areaId:string;areaEntryIndex:n
 export interface EndingArea {areaId:string;verticalAlign:'bottom';rootStartIndex:number;rootIds:string[]}
 export interface ResolvedDocument {
   formatInstances?:FormatInstance[];
-  schemaVersion:1|2;nodeModelVersion:18|19;template:{templateId:string;docKey:string;version:number};
+  schemaVersion:1|2;nodeModelVersion:18|19|20;template:{templateId:string;docKey:string;version:number};
   book:{contentSlot:'body';page:{size:'A4';orientation:'portrait'|'landscape';margin:{top:Length;right:Length;bottom:Length;left:Length}}};
   header?:ResolvedBand;footer?:ResolvedBand;
-  sections?:{endingArea?:EndingArea;numbering?:import("../template/types.js").PageNumbering;header?:ResolvedBand;footer?:ResolvedBand;headerMode?:import('../template/types.js').BandMode;footerMode?:import('../template/types.js').BandMode;role?:'body'|'cover';sourceKind?:'content'|'authored'|'blank';sectionId:string;pageLayoutId:string;page:ResolvedDocument['book']['page'];rootIds:string[]}[];
+  sections?:{definitionId?:string;instanceKey?:string;sectionKey?:string;endingArea?:EndingArea;numbering?:import("../template/types.js").PageNumbering;header?:ResolvedBand;footer?:ResolvedBand;headerMode?:import('../template/types.js').BandMode;footerMode?:import('../template/types.js').BandMode;role?:'body'|'cover';sourceKind?:'content'|'authored'|'blank';sectionId:string;pageLayoutId:string;page:ResolvedDocument['book']['page'];rootIds:string[]}[];
   styles:Record<string,TextStyle>;rootIds:string[];nodes:Record<string,DocumentNode>;sourceMap:Record<string,SourceEntry>;
 }
 export function toPt(length:Length):number {return length.unit==='mm'?length.value*72/25.4:length.value;}

@@ -7,6 +7,7 @@ export class SourceFontMetrics {
  readonly units:number;
  readonly winAscent:number;
  readonly winDescent:number;
+ readonly nativeLineUnits:number;
  private readonly glyphCount:number;
  private readonly horizontalCount:number;
  private readonly longLoca:boolean;
@@ -16,6 +17,8 @@ export class SourceFontMetrics {
   for(let i=0;i<count;i++){const p=12+i*16,offset=b.readUInt32BE(p+8),length=b.readUInt32BE(p+12);this.range(offset,length);this.tables.set(b.toString('ascii',p,p+4),{offset,length});}
   const head=this.table('head',54),os=this.table('OS/2',78),maxp=this.table('maxp',6),hhea=this.table('hhea',36);
   this.units=b.readUInt16BE(head+18);this.winAscent=b.readUInt16BE(os+74);this.winDescent=b.readUInt16BE(os+76);
+  this.nativeLineUnits=(b.readUInt16BE(os+62)&128)?b.readInt16BE(os+68)-b.readInt16BE(os+70)+Math.max(0,b.readInt16BE(os+72)):this.winAscent+this.winDescent;
+  if(this.nativeLineUnits<=0)this.invalid();
   this.glyphCount=b.readUInt16BE(maxp+4);this.horizontalCount=b.readUInt16BE(hhea+34);
   const format=b.readInt16BE(head+50);this.longLoca=format===1;
   if(!this.units||!this.glyphCount||!this.horizontalCount||this.horizontalCount>this.glyphCount||![0,1].includes(format))this.invalid();

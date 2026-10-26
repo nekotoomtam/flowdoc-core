@@ -1,10 +1,11 @@
-# FlowDoc Core 0.5.0 template entrypoint
+# FlowDoc Core 0.5.2 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes development package0.5.0 after release0.4.7, including opt-in font-height
+This describes development package0.5.2 after release0.5.0, including optional
+output base-name metadata, experimental direct-Core Model20 assembly, opt-in font-height
 calculation, Section19, group-label continuation and streamed task input/PDF.
 Ordinary pt rendering is unchanged. See the root README for the exact native
 helper/session contract and font-height API inputs/errors. Service owns task
@@ -12,7 +13,9 @@ storage, credentials, streaming delivery and process supervision.
 Height adjustment does not keep text width, wrapping, or line clearance constant.
 Release identity is established by the matching snapshot/tag after the release gates.
 
-Models 18 and 19 are accepted. Model19 uses UUID Section instances and array input; its Stage2 fixed-height text frames are allowed only at Section flow roots, including top-level Area Formats. Text-node props.heightMode:fixed / props.height frames fail on text/body overflow and cannot control Section pages or bands. They are separate from Area Format sizing.fixed below. Cell/repeat frames and nested Areas remain prohibited; Stage3 TOCs require props.scope `{kind:"section"}` or `{kind:"document"}`, with one per scope after expansion. Section scope uses the owning Section. Empty scopes create no page; number slots are reserved and filled from actual target page numbering in one layout pass. Model18 TOCs remain unscoped. Model18 keeps its original behavior. Models 4–17 and their legacy content envelopes have been retired. Historical explanations remain in Git history and must not be used as current authoring instructions.
+Models18/19 remain the Service-facing contracts. Core also accepts experimental
+Model20 for direct use as described in the appendix; this does not enable it in
+Service or the installed FlowDocMake. Models 18 and 19 are accepted. Model19 uses UUID Section instances and array input; its Stage2 fixed-height text frames are allowed only at Section flow roots, including top-level Area Formats. Text-node props.heightMode:fixed / props.height frames fail on text/body overflow and cannot control Section pages or bands. They are separate from Area Format sizing.fixed below. Cell/repeat frames and nested Areas remain prohibited; Stage3 TOCs require props.scope `{kind:"section"}` or `{kind:"document"}`, with one per scope after expansion. Section scope uses the owning Section. Empty scopes create no page; number slots are reserved and filled from actual target page numbering in one layout pass. Model18 TOCs remain unscoped. Model18 keeps its original behavior. Models 4–17 and their legacy content envelopes have been retired. Historical explanations remain in Git history and must not be used as current authoring instructions.
 
 Read [Developer Documentation](../../flowdoc-project-control/docs/developer/authoring/README.md) for definitions, node properties, defaults, binding scopes, tables, contents, page numbering, image sizing and review rules. The [authoring workflow](../../flowdoc-project-control/docs/domains/flowdoc-ai-template-authoring-guide.md) covers draft creation through a complete reviewed PDF. Publish requires explicit user confirmation.
 
@@ -69,15 +72,73 @@ headings and protected content retain their own keep rules. There is no blanket
 keep-whole-list promise. Table/cell insets and border quantization have explicit
 adaptation receipts; a structurally valid package does not prove native fit.
 
-Table `props.borderStyle` optionally accepts `"single"` or `"none"` in models18
-and19. Omission retains a single0.5pt border, with `props.borderColor` defaulting
-to `"000000"`. Set `borderStyle:"none"` to suppress all outer and internal table
-strokes in PDF and DOCX, including merged cells; color is ignored for painting
-in this mode but must still be valid RGB if supplied. Cell fills remain visible.
-This is table-wide, not a per-cell override. Existing measurement, padding and
-pagination rules remain in place; native Word can still lay out borderless
-tables differently. Explicit `borderColor:"FFFFFF"` remains a painted white
-border and is never converted automatically. Existing templates are unchanged.
+Table `props.borderStyle` accepts `single`, `none`, `dashed`, `dotted`, `dashSmallGap`,
+`double` and `thickThinWideGap` in models18/19. Omission retains single0.5pt black. `borderColor` sets
+RGB without `#`; `borderWidth:Length` sets the nominal component-line weight.
+Native visible table weights must be0.25..12pt in exact eighth-point steps,
+with equivalent pt/mm input. B/none admit exact EMU weights in that range;
+B uses the total-envelope interpretation described below. Double means two component strokes and an equal gap (3x envelope).
+White remains painted white; none hides paint while retaining fills and insets.
+
+`props.borders` optionally overrides `top`, `right`, `bottom`, `left`,
+`insideHorizontal`, `insideVertical`, and `headerBottom`. Each takes
+`{style?,width?:Length,color?}`. Each omitted member inherits the table-wide
+property, then the old default. Omitted headerBottom follows insideHorizontal.
+For example, keep the repeating label separator while hiding body row rules:
+
+```json
+{"borderStyle":"dotted","borderWidth":{"value":0.5,"unit":"pt"},
+ "borders":{"insideHorizontal":{"style":"none"},
+            "headerBottom":{"style":"single","width":{"value":0.5,"unit":"pt"}}}}
+```
+
+These are table-edge policies, not cell-level border overrides. Merged interior
+edges stay hidden. PDF page fragments close with the configured outer strokes;
+DOCX emits native table/cell border instructions. Word's border conflict rules,
+dash spacing and page-fragment painting still need native Word review. Custom
+profiles retain native cell geometry rather than borrowing the proven legacy
+half-point-only accommodation/source-word anchors. Old omitted/single/none
+profiles retain their existing path.
+
+`dashSmallGap` is shared by table borders and `line.props.lineStyle`. DOCX
+uses Word's native `dashSmallGap` with the authored nominal width. PDF uses a
+scalable vector profile of measured Word sample E: at nominal0.25pt its paint
+width is0.24pt, dash0.8pt, gap0.4pt, butt caps and phase0. All three lengths scale
+linearly with the authored width; layout continues to reserve the nominal
+stroke envelope. This approximates Word's raster border tiles. Other weights,
+tile seams and intersection phase are not guaranteed to match Word; the measured
+0.5pt native sample has a different dash/gap ratio. Existing style patterns and
+default widths are unchanged. For the E profile while retaining a0.5pt header
+separator, use `borderStyle:"dashSmallGap"`, `borderWidth:{value:0.25,unit:"pt"}`
+and `borders.headerBottom:{style:"single",width:{value:0.5,unit:"pt"}}`.
+
+`thickThinWideGap` is the opt-in B table profile. Unlike native table borders,
+its width is the total envelope: thick component0.6w, thin0.2w, gap0.2w;
+dash4w/gap12w with flat caps. Widths0.25..12pt must be exact EMU values rather
+than eighth-points. At0.35pt this is0.21/0.07pt components,0.07pt gap and
+1.4pt dashes separated by4.2pt. Set `borderStyle:"thickThinWideGap"`,
+`borderWidth:{value:0.35,unit:"pt"}`, and `borders.headerBottom` to the same
+style; none overrides can hide outer/interior edges. Other visible DOCX edges
+must also use B. Non-B native edges still require exact eighth-point widths.
+
+PDF paints B directly, including page-fragment closures. DOCX emits row-bound
+DrawingML paths over editable native table text. It supports unmerged, unshaded
+cells with one literal ASCII text block each; body text must fit one authored
+line, while headers allow up to8 authored lines. Conservative font bounds or
+native source measurements must prove no automatic wrap. A required native
+measurement needs both bundled shaper/segmenter resources. Unsupported cells,
+wrapping, merges, images and generated spans fail DOCX_CAPABILITY_UNSUPPORTED
+before staged output commit. Row extents use owned font line metrics and native
+insets; no row heights or page cuts are forced. Regenerate after Word edits or
+font changes. Vertical dash phase restarts per row; Word continuation-page
+closing rules are not promised. Native Word geometry for arbitrary fonts is
+not certified by the profile. B is table-only and is rejected for line nodes.
+
+Line nodes add `props.lineStyle` with the native kinds above (excluding B); thickness/color and
+spaceBefore/spaceAfter remain. Non-single styles require a portable component
+weight; omitted/single retains the original line contract. A none line keeps
+its reserved spacing. PDF and DOCX use the same named kinds/colors/weights;
+pixel-identical dash phase or native Word pagination is not implied.
 
 The DOCX cell-margin adapter maps unequal vertical margins in an eligible text row
 to shared row-minimum margins plus first/last paragraph before/after offsets.
@@ -287,3 +348,58 @@ and formatSizing.version2. The suffix uses the selected label font; missing
 glyphs block generation without fallback. This unpromoted candidate also retains
 the decimal PDF image-coordinate serialization fix; do not overwrite an older
 archive using the new bytes. Project Control owns cross-repository acceptance.
+
+
+## Experimental Model20 Section definitions and uses
+
+Authority Boundary: this appendix describes only Core's opt-in experimental
+assembly contract, governed by the Project Control repeatable-Section plan dated2026-10-26.
+It does not replace18/19 guidance or certify native Word/Service acceptance.
+
+Model20 uses the19 authored Section/Area content model plus a unique sectionKey
+per saved Section definition. id remains UUID; label/nameBase remain authoring
+metadata. key/formats/role from older structures are not permitted. Calls are
+ordered sections arrays of {sectionKey,instanceKey,data,header?,footer?}; internal
+id is not a caller lookup. instanceKey is unique per request and stable under
+caller reorder. Data and bands validate against the selected definition. No
+geometry override is accepted. Definitions omitted from the call do not render.
+An empty assembly, unknown key, repeated instance or undeclared data is an error.
+
+Each use starts a new native Section/page and retains the definition's band and
+numbering rules. Local bookmarks and Section TOCs belong to that use. Static
+cross-use links require targetInstanceKey;19 targetSectionId is not accepted as
+an ambiguous target for20. Document-scoped TOC may occur only once in the expanded
+document. Repeating a definition containing that TOC is therefore rejected.
+
+Area sizing and ending-Area behavior remain per use, with their existing
+constraints. Bounds apply to the total expansion, not separately reset per use.
+The example77-row B-stroke pilot exceeded the unchanged default DOCX XML cap;
+its structural proof used the already-supported explicit100000-node option.
+This does not raise the product default or promise arbitrary-size exports.
+
+## Optional output base name (models18/19/20)
+
+Optional `defaultFileName` is document-level metadata beside `docKey`, shared by
+all selected Sections. It is a base name, without `.pdf`/`.docx`. Blank removes
+the default. Validation trims/NFC normalizes names, limits them to200 code points
+and240 UTF-8 bytes, and rejects controls/format characters, path/Windows forbidden
+characters, device names, trailing dots and PDF/DOCX suffixes. Missing metadata
+retains legacy fingerprints. Core composition ignores the metadata; the matching
+Service resolves an optional request `fileName`, then the configured default,
+then `document`, and appends the selected format. See the Project Control output
+file names plan for the candidate's cross-repository acceptance boundary.
+
+
+## Before a0.5.2 release package is frozen
+
+- Validate template, request and output format against the actual selected
+  package. Optional naming never changes18/19 Section semantics;20 is a separate
+  experimental direct-Core contract, not Service admission.
+- Retain layout/Word evidence only for its measured fonts, geometry, page/row
+  rules and supported DOCX profile. A filename or style name is not visual proof.
+- Freeze documented source before packing; record package version, source commit,
+  archive hash and runtime/resources, then check the packed consumer. A later
+  README change requires new archive identity before release, not an overwritten
+  historical package or a manually invented checksum.
+- Follow Project Control release rules for the separate Service/plugin gates,
+  snapshot/tag/push and installation authorization. These notes do not run them.

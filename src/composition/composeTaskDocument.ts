@@ -31,16 +31,17 @@ export async function composeTaskDocument(template:ValidatedTemplate,input:TaskV
  try{
   check();if(await input.kind()!=='object')return fail('INVALID_DATA');
   for await(const[k]of input.properties())if(!['contract','template','data','sections'].includes(k))return fail('INVALID_DATA');
-  const contract=await get(input,'contract'),pin=await get(input,'template');if(!contract||!pin||await contract.scalar()!=='flowdoc-task-input/1')return fail('INVALID_DATA');
+  const contract=await get(input,'contract'),pin=await get(input,'template');if(!contract||!pin||await contract.scalar()!==(t.nodeModelVersion===20?'flowdoc-task-input/2':'flowdoc-task-input/1'))return fail('INVALID_DATA');
   if(!isDeepStrictEqual(plain(await small(pin)),{templateId:t.templateId,docKey:t.docKey,version:t.version,fingerprint:template.fingerprint,nodeModelVersion:t.nodeModelVersion}))return fail('INVALID_DATA');
   if(t.sections.length>2000)return fail('LIMIT_EXCEEDED');
   const projected:TaskValue={kind:()=>input.kind(),byteLength:()=>input.byteLength(),scalar:()=>input.scalar(),elements:()=>input.elements(),async *properties(){for await(const[k,v]of input.properties())if(k==='data'||k==='sections')yield[k,v];}};
   let markerBytes=0;const markers=new Map<string,TaskImageResource>();
   const validation=await validateNormalizedTaskInput(template,projected,{...(signal?{signal}:{}),write:async()=>{},images:{collect:async(v,c)=>{check();if(!v)throw new TaskCompositionError('INVALID_DATA');const m=marker(await small(v));markerBytes+=Buffer.byteLength(c.pointer)+256;if(markerBytes>8*1048576)throw new TaskCompositionError('LIMIT_EXCEEDED');markers.set(c.pointer,m);},seal:async()=>{},resolve:async c=>markers.get(c.pointer)!}},access);
   if(!validation.ok)return validation;markers.clear();
-  const global=await get(input,'data'),sectionInput=await get(input,'sections'),sections:any={};if(!global||!sectionInput)return fail('INVALID_DATA');
+  const global=await get(input,'data'),sectionInput=await get(input,'sections'),sections:any=t.nodeModelVersion===20?[]:{};if(!global||!sectionInput)return fail('INVALID_DATA');
   const sectionById=new Map<string,TaskValue>();if(t.nodeModelVersion===19)for await(const entry of sectionInput.elements()){const id=await get(entry,'id');sectionById.set(await id!.scalar() as string,entry);}
-  for(const s of t.sections){const entry=t.nodeModelVersion===19?sectionById.get(s.id):await get(sectionInput,(s as import('../template/types.js').AreaSection).key);if(!entry)return fail('INVALID_DATA');sections[s.id]={data:await get(entry,'data'),header:await get(entry,'header'),footer:await get(entry,'footer')};}
+  if(t.nodeModelVersion===20){for await(const entry of sectionInput.elements()){const key=await get(entry,'sectionKey'),instance=await get(entry,'instanceKey'),sectionKey=await key!.scalar(),instanceKey=await instance!.scalar();const s=t.sections.find(s=>s.sectionKey===sectionKey)!;sections.push({id:s.id,sectionKey,instanceKey,data:await get(entry,'data'),header:await get(entry,'header'),footer:await get(entry,'footer')});}}
+  else for(const s of t.sections){const entry=t.nodeModelVersion===19?sectionById.get(s.id):await get(sectionInput,('key' in s?s.key:''));if(!entry)return fail('INVALID_DATA');sections[s.id]={data:await get(entry,'data'),header:await get(entry,'header'),footer:await get(entry,'footer')};}
   const d:ResolvedDocument={schemaVersion:t.schemaVersion,nodeModelVersion:t.nodeModelVersion,template:{templateId:t.templateId,docKey:t.docKey,version:t.version},book:{contentSlot:'body',page:structuredClone(t.pageLayouts[t.book.defaultPageLayoutId]!.page)},styles:structuredClone(t.styles),rootIds:[],nodes:Object.create(null),sourceMap:Object.create(null)};
   const lookup=async(scope:any,key:string):Promise<TaskValue>=>{if(!scope||typeof scope.properties!=='function')throw new TaskCompositionError('INVALID_DATA');const found=await get(scope,key);if(!found)throw new TaskCompositionError('INVALID_DATA');return found;};
   const collection=async(scope:any,key:string,area=false)=>{const list=await lookup(scope,key);if(await list.kind()!=='array')throw new TaskCompositionError('INVALID_DATA');

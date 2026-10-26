@@ -1,4 +1,6 @@
 import { required } from './types.js';
+import {resolveTableStroke,legacyTableStrokeGeometry} from '../composition/strokeStyle.js';
+import {nativeStroke} from './borders.js';
 import { toPoints } from './units.js';
 import { deriveTableSpace, type TableSpaceDecision } from './geometry-policy.js';
 import { Table, TableRow, TableCell, Paragraph, WidthType, TableLayoutType, BorderStyle, VerticalMergeType, LineRuleType, type FileChild } from 'docx';
@@ -11,6 +13,7 @@ import {sourceGuide} from './source-layout.js';
 import { buildImageParagraph } from './images.js';
 import type { NavigationContext } from './fields.js';
 import {distributeVerticalOffsets} from './cell-vertical-offsets.js';
+import {compoundTableRows} from './compound-table-strokes.js';
 export type TableSpaceReceipt = {
     nodeId: string;
     scope: 'nodes';
@@ -47,7 +50,7 @@ function textParts(intent: ExportIntent, id: string, plan: ReadingPlan, forceKee
  const fragments=plan.fragments.filter(f=>f.nodeId===id).sort((a,b)=>a.start-b.start);
  return fragments.map((f,i)=>take(buildTextParagraph(intent,id,{...f,keepNext:forceKeep||f.keepNext,ordinaryBodyOrCell:!protectedFlow&&!plan.edges.some(e=>e.from===id||e.to===id),...(navigation?{navigation}:{}),...(offsets?{spaceBeforeTwips:i===0?offsets.before:0,spaceAfterTwips:i===fragments.length-1?offsets.after:0}:{})})).paragraph);
 }
-export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext): Result<{
+export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext,bodyHeightPt?:number): Result<{
     table: Table;
     receipt: {
         spacePolicy: TableSpaceReceipt;
@@ -69,12 +72,16 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
             fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + nodeId, 'Native empty table without rows is unsupported');
         const plainTextGrid = mapped.cells.every(cell => { const c = nodes[cell.nodeId]; return c.childIds.every((id: string) => nodes[id].type === 'text-block' && nodes[id].props.heightMode !== 'fixed'); });
         const sourcePoints = mapped.cells.map(cell => { const padding = nodes[cell.nodeId].props.padding; return { sourceTopPt: padding?.top ? toPoints(padding.top) : 4, sourceBottomPt: padding?.bottom ? toPoints(padding.bottom) : 4 }; });
-        const decisions = mapped.cells.map((cell, i) => deriveTableSpace({ plainTextGrid, uniformSingleHalfPointBorder: true, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom }));
+        const decisions = mapped.cells.map((cell, i) => deriveTableSpace({ plainTextGrid, uniformSingleHalfPointBorder: legacyTableStrokeGeometry(n), ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom }));
         const allPadding = decisions.every(d => d.policy === 'border-centre-inset');
         const adapted = plainTextGrid && allPadding;
-        const border = { style: BorderStyle.SINGLE, size: 4, color: n.props.borderColor ?? '000000' };
+        const border = nativeStroke(resolveTableStroke(n,'insideHorizontal'));
+        const sides={top:nativeStroke(resolveTableStroke(n,'top')),right:nativeStroke(resolveTableStroke(n,'right')),bottom:nativeStroke(resolveTableStroke(n,'bottom')),left:nativeStroke(resolveTableStroke(n,'left')),insideHorizontal:border,insideVertical:nativeStroke(resolveTableStroke(n,'insideVertical')),headerBottom:nativeStroke(resolveTableStroke(n,'headerBottom'))};
+        // Ordinary open rows inherit the table outline. Explicit cell-level
+        // NONE would override that outline at a native Word page boundary.
+        // Keep merged tables on the explicit perimeter policy.
+        const inheritOpenBodyEdges = sides.insideHorizontal.style === BorderStyle.NONE && sides.bottom.style !== BorderStyle.NONE && mapped.cells.every(cell => (nodes[cell.nodeId].props.rowSpan ?? 1) === 1 && (nodes[cell.nodeId].props.colSpan ?? 1) === 1);
         // Suppress paint explicitly while retaining the established spacing rules.
-        const perimeterBorder = n.props.borderStyle === 'none' ? { ...border, style: BorderStyle.NONE, size: 0 } : border;
         // Source row flow excludes its painted stroke envelope. In the bounded
         // native Exact/one-line profile Word also reserves the terminal outer
         // stroke. Charge that emitted thickness once, at the physical last row,
@@ -118,6 +125,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
             span: number;
             rowSpan: number;
         }>();
+        const compound=compoundTableRows(intent,n,mapped,spacePolicy,bodyHeightPt);
         let continuationCells = 0, structuralEmptyParagraphs = 0;
         n.rowIds.forEach((rid: string, row: number) => nodes[rid].cellIds.forEach((cid: string, index: number) => { const p = nodes[cid].props, col = p.columnIndex ?? index, span = p.colSpan ?? 1, rs = p.rowSpan ?? 1; logicalCellIds.push(cid); for (let y = row; y < row + rs; y++)
             for (let x = col; x < col + span; x++)
@@ -145,20 +153,24 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                     structuralEmptyParagraphs++;
                 }
                 const fill = c.props.fillColor ?? (pos.row < n.props.headerRowCount ? n.props.headerFillColor : undefined);
+                if(compound&&col===0){if(children.length!==1)fail('DOCX_CAPABILITY_UNSUPPORTED','nodes.'+nodeId,'B DOCX rows require one native paragraph per cell');for(const run of compound.draw(row))children[0]!.addRunToFront(run);}
                 // Make the perimeter explicit on each physical cell. A native
                 // vertical merge has no horizontal edge between its members.
                 const noBorder = { style: BorderStyle.NONE, size: 0, color: border.color };
-                const cellBorders = { top: continuation ? noBorder : perimeterBorder, bottom: row < pos.row + pos.rowSpan - 1 ? noBorder : perimeterBorder, left: perimeterBorder, right: perimeterBorder };
+                const topBorder=row===0?sides.top:row===n.props.headerRowCount?sides.headerBottom:sides.insideHorizontal;
+                const bottomBorder=row===n.rowIds.length-1?sides.bottom:row===n.props.headerRowCount-1?sides.headerBottom:sides.insideHorizontal;
+                const cellBorders = { ...(inheritOpenBodyEdges && row > n.props.headerRowCount ? {} : { top: continuation ? noBorder : topBorder }), ...(inheritOpenBodyEdges && row >= n.props.headerRowCount && row < n.rowIds.length - 1 ? {} : { bottom: row < pos.row + pos.rowSpan - 1 ? noBorder : bottomBorder }), left: col===0?sides.left:sides.insideVertical, right: col+pos.span===grid.length?sides.right:sides.insideVertical };
                 cells.push(new TableCell({ children, borders: cellBorders, width: { type: WidthType.DXA, size: grid.slice(col, col + pos.span).reduce((a, b) => a + b, 0) }, ...(pos.span > 1 ? { columnSpan: pos.span } : {}), ...(pos.rowSpan > 1 ? { verticalMerge: continuation ? VerticalMergeType.CONTINUE : VerticalMergeType.RESTART } : {}), margins: { top: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeTopTwips, right: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeRightTwips, bottom: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeBottomTwips, left: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeLeftTwips }, ...(fill ? { shading: { fill } } : {}) }));
                 col += pos.span;
             }
             rows.push(new TableRow({ children: cells, tableHeader: n.props.repeatHeaderRows && row < n.props.headerRowCount, cantSplit: !nodes[rid].props.allowBreak, keepNext: plan.keptRows[nodeId]?.includes(rid) ?? false }));
         }
-        const table = new Table({ rows, columnWidths: [...grid], width: { type: WidthType.DXA, size: grid.reduce((a, b) => a + b, 0) }, layout: TableLayoutType.FIXED, indent: { type: WidthType.DXA, size: 0 }, borders: { top: perimeterBorder, right: perimeterBorder, bottom: perimeterBorder, left: perimeterBorder, insideHorizontal: perimeterBorder, insideVertical: perimeterBorder } });
+        const table = new Table({ rows, columnWidths: [...grid], width: { type: WidthType.DXA, size: grid.reduce((a, b) => a + b, 0) }, layout: TableLayoutType.FIXED, indent: { type: WidthType.DXA, size: 0 }, borders: { top: sides.top, right: sides.right, bottom: sides.bottom, left: sides.left, insideHorizontal: sides.insideHorizontal, insideVertical: sides.insideVertical } });
         return { table, receipt: { spacePolicy, nodeId, logicalCellIds, continuationCells, structuralEmptyParagraphs, keptRowIds: plan.keptRows[nodeId] ?? [], groupEdges: plan.edges.length, wordLayoutVerified: false } };
     });
 }
 export function buildBodyFlow(intent: ExportIntent, options: {
+    bodyHeightPt?:number;
     sectionId?: string;
     rootIds?: readonly string[];
     navigation?: NavigationContext;
@@ -205,7 +217,7 @@ export function buildBodyFlow(intent: ExportIntent, options: {
                         children.push(structuralParagraph());
                         tableSeparators++;
                     }
-                    const built = take(buildTable(intent, id, options.navigation));
+                    const built = take(buildTable(intent, id, options.navigation,options.bodyHeightPt));
                     children.push(built.table);
                     tableSpaces.push(built.receipt.spacePolicy);
                 }
