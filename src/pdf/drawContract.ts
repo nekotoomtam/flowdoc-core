@@ -15,7 +15,7 @@ export interface GlyphRun {
   sourceStart?:number; links?:LinkSpan[]; glyphInkBoundsPt?:({left:number;right:number}|null)[];
   bounds: {xPt:number;yPt:number;widthPt:number;heightPt:number}; glyphs: Glyph[];
 }
-export interface Border {x1Pt:number;y1Pt:number;x2Pt:number;y2Pt:number;widthPt:number;color:string;nodeId:string}
+export interface Border {x1Pt:number;y1Pt:number;x2Pt:number;y2Pt:number;widthPt:number;color:string;nodeId:string;style?:Exclude<import('../composition/strokeStyle.js').StrokeKind,'none'>}
 export interface DrawImage {resourceId:string;nodeId:string;xPt:number;yPt:number;widthPt:number;heightPt:number}
 export interface Fill {nodeId:string;xPt:number;yPt:number;widthPt:number;heightPt:number;color:string}
 export interface DrawPage {fills?:Fill[];

@@ -1,4 +1,5 @@
 import { required } from './types.js';
+import {lineStrokeErrors,tableStrokeErrors} from '../composition/strokeStyle.js';
 import {validEndingArea} from '../composition/endingArea.js';
 import type { ResolvedDocument, ResourceSnapshot, DocxProfile, Preflight, ExportIntent, EffectiveStyle, Result, NormalizedText } from './types.js';
 import { capture, fail, freeze } from './types.js';
@@ -225,7 +226,8 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile): Omit<Capsul
             }
             else if (n.type === 'line') {
                 keys(n, ['id', 'type', 'props'], at);
-                keys(p, ['align', 'width', 'thickness', 'color', 'spaceBefore', 'spaceAfter'], at + '.props');
+                keys(p, ['lineStyle', 'align', 'width', 'thickness', 'color', 'spaceBefore', 'spaceAfter'], at + '.props');
+                requireValue(lineStrokeErrors(p).length===0,at+'.props','Invalid shared line style');
                 requireValue([undefined, 'left', 'center', 'right'].includes(p.align), at + '.props.align', 'Invalid line alignment');
                 for (const k of ['width', 'thickness', 'spaceBefore', 'spaceAfter'])
                     if (p[k] !== undefined)
@@ -246,9 +248,8 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile): Omit<Capsul
             }
             else if (n.type === 'table') {
                 keys(n, ['id', 'type', 'props', 'columns', 'rowIds', 'rowGroups'], at);
-                keys(p, ['headerRowCount', 'repeatHeaderRows', 'headerFillColor', 'borderColor', 'borderStyle'], at + '.props');
-                if (own(p, 'borderStyle'))
-                    requireValue(['single','none'].includes(p.borderStyle), at + '.props.borderStyle', 'Invalid table border style');
+                keys(p, ['headerRowCount', 'repeatHeaderRows', 'headerFillColor', 'borderColor', 'borderStyle','borderWidth','borders'], at + '.props');
+                requireValue(tableStrokeErrors(p).length===0,at+'.props','Invalid shared table border style');
                 idList(n.rowIds, at + '.rowIds');
                 requireValue(Array.isArray(n.columns) && n.columns.length > 0 && Number.isSafeInteger(p.headerRowCount) && p.headerRowCount >= 0 && p.headerRowCount <= n.rowIds.length && typeof p.repeatHeaderRows === 'boolean', at + '.props', 'Invalid table/header');
                 for (const k of ['borderColor', 'headerFillColor'])

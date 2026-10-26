@@ -69,15 +69,38 @@ headings and protected content retain their own keep rules. There is no blanket
 keep-whole-list promise. Table/cell insets and border quantization have explicit
 adaptation receipts; a structurally valid package does not prove native fit.
 
-Table `props.borderStyle` optionally accepts `"single"` or `"none"` in models18
-and19. Omission retains a single0.5pt border, with `props.borderColor` defaulting
-to `"000000"`. Set `borderStyle:"none"` to suppress all outer and internal table
-strokes in PDF and DOCX, including merged cells; color is ignored for painting
-in this mode but must still be valid RGB if supplied. Cell fills remain visible.
-This is table-wide, not a per-cell override. Existing measurement, padding and
-pagination rules remain in place; native Word can still lay out borderless
-tables differently. Explicit `borderColor:"FFFFFF"` remains a painted white
-border and is never converted automatically. Existing templates are unchanged.
+Table `props.borderStyle` accepts `single`, `none`, `dashed`, `dotted` and
+`double` in models18/19. Omission retains single0.5pt black. `borderColor` sets
+RGB without `#`; `borderWidth:Length` sets the nominal component-line weight.
+New table weights must be0.25..12pt in exact eighth-point steps, with equivalent
+pt/mm input. Double means two component strokes and an equal gap (3x envelope).
+White remains painted white; none hides paint while retaining fills and insets.
+
+`props.borders` optionally overrides `top`, `right`, `bottom`, `left`,
+`insideHorizontal`, `insideVertical`, and `headerBottom`. Each takes
+`{style?,width?:Length,color?}`. Each omitted member inherits the table-wide
+property, then the old default. Omitted headerBottom follows insideHorizontal.
+For example, keep the repeating label separator while hiding body row rules:
+
+```json
+{"borderStyle":"dotted","borderWidth":{"value":0.5,"unit":"pt"},
+ "borders":{"insideHorizontal":{"style":"none"},
+            "headerBottom":{"style":"single","width":{"value":0.5,"unit":"pt"}}}}
+```
+
+These are table-edge policies, not cell-level border overrides. Merged interior
+edges stay hidden. PDF page fragments close with the configured outer strokes;
+DOCX emits native table/cell border instructions. Word's border conflict rules,
+dash spacing and page-fragment painting still need native Word review. Custom
+profiles retain native cell geometry rather than borrowing the proven legacy
+half-point-only accommodation/source-word anchors. Old omitted/single/none
+profiles retain their existing path.
+
+Line nodes add `props.lineStyle` with the same five kinds; thickness/color and
+spaceBefore/spaceAfter remain. Non-single styles require a portable component
+weight; omitted/single retains the original line contract. A none line keeps
+its reserved spacing. PDF and DOCX use the same named kinds/colors/weights;
+pixel-identical dash phase or native Word pagination is not implied.
 
 The DOCX cell-margin adapter maps unequal vertical margins in an eligible text row
 to shared row-minimum margins plus first/last paragraph before/after offsets.

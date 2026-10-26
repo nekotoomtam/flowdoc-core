@@ -1,4 +1,5 @@
 export { loadBundledResources } from './runtime/loadBundledResources.js';
+export type {StrokeKind,BorderStroke,TableBorderSide} from './composition/strokeStyle.js';
 export {loadLibraryFonts} from './fonts/resources.js';
 export {selectFont} from './fonts/selection.js';
 export {calculateFontHeightAdjustment,FONT_HEIGHT_METHOD} from './fonts/heightAdjustment.js';

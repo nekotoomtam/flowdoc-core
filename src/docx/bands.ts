@@ -1,4 +1,6 @@
 import { required } from './types.js';
+import {resolveLineStroke,strokeEnvelope} from '../composition/strokeStyle.js';
+import {nativeStroke} from './borders.js';
 import { Paragraph, Table, TableRow, TableCell, WidthType, TableLayoutType, BorderStyle, LineRuleType, type FileChild } from 'docx';
 import { fail, type ExportIntent } from './types.js';
 import { toPoints, toTwips, columnGrid } from './units.js';
@@ -11,7 +13,7 @@ const take = (r: any) => { if (!r.ok)
     fail(r.issues[0].code, r.issues[0].path, r.issues[0].message); return r.value; };
 const noBorder = { style: BorderStyle.NONE, size: 0, color: 'auto' }, borders = { top: noBorder, left: noBorder, bottom: noBorder, right: noBorder, insideHorizontal: noBorder, insideVertical: noBorder };
 export function nativeRule(node: any, width: number) { const p = node.props, w = p.width ? toPoints(p.width) : width, sourceThickness = p.thickness ? toPoints(p.thickness) : 0.5, t=Math.round(sourceThickness*8)/8, before = p.spaceBefore ? toTwips(p.spaceBefore) : 0, after = p.spaceAfter ? toTwips(p.spaceAfter) : 0; if (w <= 0 || w > width || sourceThickness <= 0 || t < .25 || t > 12)
-    fail('DOCX_GEOMETRY_UNREPRESENTABLE', 'nodes.' + node.id, 'Rule geometry cannot be represented'); const dx = p.align === 'right' ? width - w : p.align === 'center' ? (width - w) / 2 : 0; return { paragraph: new Paragraph({ run: { size: 2, sizeComplexScript: 2, bold: false, italics: false }, indent: { left: Math.round(dx * 20), right: Math.round((width - w - dx) * 20) }, spacing: { before, after, line: 20, lineRule: LineRuleType.EXACT }, border: { bottom: { style: BorderStyle.SINGLE, size: t * 8, color: p.color ?? '000000', space: 0 } } }), heightPt: 1 + t + (before + after) / 20,quantization:{nodeId:node.id,sourceThicknessPt:sourceThickness,nativeThicknessPt:t,deltaPt:t-sourceThickness} }; }
+    fail('DOCX_GEOMETRY_UNREPRESENTABLE', 'nodes.' + node.id, 'Rule geometry cannot be represented'); const dx = p.align === 'right' ? width - w : p.align === 'center' ? (width - w) / 2 : 0,stroke={...resolveLineStroke(node),widthPt:t},envelope=strokeEnvelope(stroke); return { paragraph: new Paragraph({ run: { size: 2, sizeComplexScript: 2, bold: false, italics: false }, indent: { left: Math.round(dx * 20), right: Math.round((width - w - dx) * 20) }, spacing: { before, after:after+(stroke.style==='none'?Math.round(envelope*20):0), line: 20, lineRule: LineRuleType.EXACT }, border: { bottom: { ...nativeStroke(stroke), space: 0 } } }), heightPt: 1 + envelope + (before + after) / 20,quantization:{nodeId:node.id,sourceThicknessPt:sourceThickness,nativeThicknessPt:t,deltaPt:t-sourceThickness} }; }
 export function buildBand(intent: ExportIntent, band: any, scope: string, page: any, ctx: NavigationContext, options: {
     mapHeaderGap?: boolean;
 } = {}) {
