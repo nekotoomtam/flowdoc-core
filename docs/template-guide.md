@@ -4,7 +4,9 @@
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes development package0.5.2 after release0.5.0, including optional
+This describes development package0.5.2, distinct from the existing frozen
+release v0.5.2. Identify the development candidate by source commit and archive
+checksum, not version number alone. It includes optional
 output base-name metadata, experimental direct-Core Model20 assembly, opt-in font-height
 calculation, Section19, group-label continuation and streamed task input/PDF.
 Ordinary pt rendering is unchanged. See the root README for the exact native
@@ -12,6 +14,10 @@ helper/session contract and font-height API inputs/errors. Service owns task
 storage, credentials, streaming delivery and process supervision.
 Height adjustment does not keep text width, wrapping, or line clearance constant.
 Release identity is established by the matching snapshot/tag after the release gates.
+
+The native DOCX run-compaction change preserves authored span boundaries and
+text order without increasing XML/drawing/archive limits. Package/text tests
+do not establish native Word visual or pagination fidelity.
 
 Models18/19 remain the Service-facing contracts. Core also accepts experimental
 Model20 for direct use as described in the appendix; this does not enable it in

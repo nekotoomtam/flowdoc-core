@@ -82,10 +82,18 @@ legacy prepared snapshot, renderer capability, public endpoint or PDF readiness 
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version:0.5.2 on development; the latest release snapshot remains0.5.0.
+Package version:0.5.2 on development. The existing release snapshot is tagged
+v0.5.2; this development checkout is a different candidate, identified by its
+source commit and packed-archive checksum. It does not replace that release.
 This package includes Section19, scoped contents, Format sizing v2, group-label
 spans, streamed task images/PDF and the opt-in height calculation below.
 Release identity requires the matching tagged snapshot and acceptance gates.
+
+Native DOCX text emission coalesces eligible adjacent untracked runs within an
+authored span. Authored boundaries and text order remain significant; the XML,
+drawing and archive limits are unchanged. This is not a claim of native Word
+visual, kerning or pagination equivalence. A changed README is also a changed
+packed artifact: consumers must pin the checksum of the package actually built.
 Historical0.4.0 accepted **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
 
 ## Internal bounded task composition
