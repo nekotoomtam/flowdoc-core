@@ -49,6 +49,40 @@ publish/rename staged bytes only after `result.ok`. The package is buffered
 before chunk delivery, not constant-memory streaming. Cooperative cancellation
 does not replace a caller-owned process deadline for stalled native work.
 
+### Explicit image omissions in this candidate
+
+The default remains strict: each referenced image needs verified prepared bytes.
+For an intentionally partial export, the caller may pass:
+
+```ts
+const result = await engine.generateDocxTo(document, images, stagedOutput, {
+  imageOmissions: {
+    contract: DOCX_IMAGE_OMISSIONS_CONTRACT, // exported as docx-image-omissions/1
+    nodeIds: omittedBodyImageNodeIds,
+  },
+});
+```
+
+The selection is snapshotted before resource reads. It contains at most10000
+unique existing body image node IDs, each at most2048 characters, at most8MiB
+UTF-8 IDs in aggregate. Unknown/nonimage IDs, unsupported contract versions and
+extra properties refuse. This selects placements, not resource IDs: a shared
+resource remains mandatory if any unselected placement references it. Selecting
+header/footer IDs is not supported by this opt-in contract. Existing geometry,
+container, resource and output budgets still apply.
+
+Selected images keep the same native paragraph/run settings, alignment and
+at-least authored frame height, with no drawing or synthetic image bytes. The
+caller still receives an IMAGE_UNAVAILABLE warning per omitted node and an
+image-omission adaptation with node/frame and retain-authored-frame policy.
+Native Word24/40pt copy checks support that representation for the tested cases;
+artifact wordVerified remains false, and other geometry requires scoped review.
+A Service caller should disclose partial completeness and avoid counting these
+warnings again after its corresponding durable diagnostics are committed.
+Empty selections retain strict behavior. Invalid resources that are not selected,
+malformed source graphs, cancellation and sink failures are never suppressed.
+No XML/drawing/resource/default-byte ceiling is increased by this option.
+
 ### Resource selection and Word editing
 
 | Resources passed to `createDocxEngine` | Layout path |

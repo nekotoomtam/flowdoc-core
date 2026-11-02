@@ -8,6 +8,8 @@ export type {FontHeightAdjustmentMetric,FontHeightAdjustmentInput,FontHeightAdju
 export type {FontSelection,LibraryTextStyle,LibraryFontInput,FontLicense} from './fonts/types.js';
 export {createPdfEngine} from './pdf/createPdfEngine.js';
 export {createDocxEngine} from './docx/engine.js';
+export type {DocxImageOmissions} from './docx/image-omissions.js';
+export {DOCX_IMAGE_OMISSIONS_CONTRACT} from './docx/image-omissions.js';
 export type {DocxEngine,DocxResources,DocxOptions,DocxOutput,DocxArtifact,PreparedImageProvider} from './docx/engine.js';
 export type {PdfEngine,PdfArtifact,PdfStreamArtifact,PdfOutput} from './pdf/createPdfEngine.js';
 export {PDF_STREAM_CONTRACT} from './pdf/streamResources.js';

@@ -1,5 +1,11 @@
 # FlowDoc Core
 
+This development candidate adds opt-in placement-scoped DOCX image omissions.
+`DocxOptions.imageOmissions` uses the exported `DOCX_IMAGE_OMISSIONS_CONTRACT`
+and existing body image node IDs. Selected pictures retain their native empty
+paragraph frames; unselected resources remain mandatory. See the template guide
+for limits, warning receipts and the strict default. This is not a release.
+
 0.5.2 development candidate adds optional `defaultFileName` metadata and the
 opt-in experimental Model20 Section assembly contract described below. Service
 0.5.2 still admits only18/19; Model20 is a direct-Core experimental API. No

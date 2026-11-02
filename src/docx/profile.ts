@@ -14,6 +14,7 @@ interface Capsule {
     texts: NormalizedText[];
     tables: ExportIntent['tables'];
     profile: DocxProfile;
+    imageOmissions: ReadonlySet<string>;
 }
 const capsules = new WeakMap<Preflight, Capsule>();
 const intentOrigins = new WeakMap<ExportIntent, Preflight>();
@@ -98,7 +99,7 @@ function deriveStyles(d: any, r: PrivateResources) {
     }
     return styles;
 }
-function inspect(d: any, r: PrivateResources, profile: DocxProfile): Omit<Capsule, 'document' | 'resources' | 'profile'> {
+function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: ReadonlySet<string> = new Set()): Omit<Capsule, 'document' | 'resources' | 'profile' | 'imageOmissions'> {
     keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', 'sections', 'header', 'footer', 'formatInstances'], 'document');
     requireValue([1, 2].includes(d.schemaVersion) && [18, 19, 20].includes(d.nodeModelVersion), 'document', 'Unsupported schema/model combination');
     keys(d.template, ['templateId', 'docKey', 'version'], 'template');
@@ -219,7 +220,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile): Omit<Capsul
                 requireValue(name(p.resourceId) && [undefined, 'left', 'center', 'right'].includes(p.align) && toPoints(p.width) > 0 && toPoints(p.height) > 0, at + '.props', 'Invalid image frame');
                 toTwips(p.width, at + '.props.width');
                 toTwips(p.height, at + '.props.height');
-                if (!r.images.has(p.resourceId))
+                if (!r.images.has(p.resourceId) && !(path === 'nodes' && omitted.has(id)))
                     fail('DOCX_RESOURCE_INVALID', at + '.props.resourceId', 'Missing verified image', id);
                 if (toPoints(p.width) > available + 1e-6)
                     fail('DOCX_GEOMETRY_UNREPRESENTABLE', at + '.props.width', 'Image frame exceeds available width', id);
@@ -432,7 +433,10 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile): Omit<Capsul
     }
     return { styles, texts, tables };
 }
-export function preflightDocx(document: Readonly<ResolvedDocument>, resources: ResourceSnapshot, profile: DocxProfile = defaultProfile): Result<Preflight> { return capture(() => { validateProfile(profile); const p = structuredClone(profile), d = jsonSnapshot(document, p.limits.maxNodes), r = snapshotResources(resources, p), mapped = inspect(d, r, p); const value: Preflight = freeze({ kind: 'preflight', profileId: p.id, sourceDigest: hash(JSON.stringify(d)), resourceIdentities: structuredClone(r.identities), rendered: false }); capsules.set(value, { document: d, resources: r, profile: p, ...mapped }); return value; }); }
+export function preflightDocx(document: Readonly<ResolvedDocument>, resources: ResourceSnapshot, profile: DocxProfile = defaultProfile): Result<Preflight> { return preflightSelected(document,resources,profile,new Set()); }
+/** Internal engine path; selection has already been snapshotted against its owned document. */
+export function preflightDocxWithImageOmissions(document: Readonly<ResolvedDocument>, resources: ResourceSnapshot, selected: ReadonlySet<string>): Result<Preflight> { return preflightSelected(document,resources,defaultProfile,selected); }
+function preflightSelected(document: Readonly<ResolvedDocument>, resources: ResourceSnapshot, profile: DocxProfile, selected: ReadonlySet<string>): Result<Preflight> { return capture(() => { validateProfile(profile); const imageOmissions=new Set(selected), p = structuredClone(profile), d = jsonSnapshot(document, p.limits.maxNodes), r = snapshotResources(resources, p), mapped = inspect(d, r, p,imageOmissions); const value: Preflight = freeze({ kind: 'preflight', profileId: p.id, sourceDigest: hash(JSON.stringify(d)), resourceIdentities: structuredClone(r.identities), rendered: false }); capsules.set(value, { document: d, resources: r, profile: p, imageOmissions, ...mapped }); return value; }); }
 export function deriveExportIntent(preflight: Preflight): Result<ExportIntent> { return capture(() => { const capsule = capsules.get(preflight); if (!capsule)
     fail('DOCX_INPUT_INVALID', 'preflight', 'Expected a genuine immutable U1 preflight result'); const intent: ExportIntent = freeze({ kind: 'export-intent', sourceDigest: preflight.sourceDigest, profileId: preflight.profileId, document: structuredClone(capsule.document), styles: structuredClone(capsule.styles), textBlocks: structuredClone(capsule.texts), tables: structuredClone(capsule.tables), resourceIdentities: structuredClone(capsule.resources.identities), rendered: false, serializationAvailable: false }); intentOrigins.set(intent, preflight); return intent; }); }
 // Internal defensive accessor for later writer modules; never exports live bytes.
@@ -441,6 +445,7 @@ export function snapshotResourceBytes(preflight: Preflight, kind: "font" | "imag
     fail("DOCX_RESOURCE_INVALID", "resources." + id, "Snapshot resource missing"); return Uint8Array.from(resource.bytes); }
 export function requireGenuineIntent(intent: ExportIntent): void { if (!intentOrigins.has(intent))
     fail("DOCX_INPUT_INVALID", "intent", "Expected genuine immutable derived intent"); }
+export function intentOmitsImage(intent: ExportIntent, nodeId: string, scope = 'nodes'): boolean { requireGenuineIntent(intent); return scope === 'nodes' && capsules.get(intentOrigins.get(intent)!)!.imageOmissions.has(nodeId); }
 export function intentResourceBytes(intent: ExportIntent, kind: "font" | "image", id: string): Uint8Array { requireGenuineIntent(intent); return snapshotResourceBytes(intentOrigins.get(intent)!, kind, id); }
 export function requireIntentGlyphs(intent: ExportIntent, fontId: string, text: string, path: string): void { requireGenuineIntent(intent); const font = capsules.get(intentOrigins.get(intent)!)!.resources.fonts.find(f => f.identity.id === fontId); if (!font)
     fail('FONT_FACE_UNAVAILABLE', path, 'Verified font missing'); for (const ch of text)
