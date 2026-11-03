@@ -11,6 +11,7 @@ import {fonts,noImages,staged} from './helpers.js';
 import {sectionTemplate} from '../helpers/sections.js';
 import {bandTemplate} from '../helpers/bands.js';
 import {NativeShapeSession} from '../../src/runtime/nativeShapeSession.js';
+import * as prefixFit from '../../src/runtime/prefixFit.js';
 
 const native=it.runIf(process.platform==='linux');
 native('can retain measured relationships with native editable text and no word boxes',async()=>{
@@ -187,4 +188,17 @@ native('cancels during source shaping, reaps resources and publishes no partial 
   expect(sink.chunks).toEqual([]);expect(sink.aborts).toContain('DOCX_CANCELLED');
   expect((await readdir(tmpdir())).filter(s=>s.startsWith(prefix)).sort()).toEqual(before);
  }finally{hook.mockRestore();}
+});
+native('cancels after prefix initialization and removes the owned source snapshots',async()=>{
+ const engine=await api.createDocxEngine({...resources(),pythonExecutable:'python'});if(!engine.ok)throw Error(JSON.stringify(engine));
+ const prefix='flowdoc-docx-source-',before=(await readdir(tmpdir())).filter(s=>s.startsWith(prefix)).sort();
+ const controller=new AbortController(),request=NativeShapeSession.prototype.request,configure=prefixFit.configurePrefixFit;let armed=false;
+ const configHook=vi.spyOn(prefixFit,'configurePrefixFit').mockImplementationOnce(async(...args)=>{await configure(...args);armed=true;});
+ const shapeHook=vi.spyOn(NativeShapeSession.prototype,'request').mockImplementation(function(this:NativeShapeSession,...args:Parameters<NativeShapeSession['request']>){if(armed)controller.abort();return request.apply(this,args);});
+ try{
+  const sink=staged(),result=await engine.value.generateDocxTo(document(),noImages,sink.output,{signal:controller.signal});
+  expect(armed).toBe(true);expect(result.ok).toBe(false);if(!result.ok)expect(result.issues[0]?.code).toBe('DOCX_CANCELLED');
+  expect(sink.chunks).toEqual([]);expect(sink.aborts).toContain('DOCX_CANCELLED');
+  expect((await readdir(tmpdir())).filter(s=>s.startsWith(prefix)).sort()).toEqual(before);
+ }finally{shapeHook.mockRestore();configHook.mockRestore();}
 });

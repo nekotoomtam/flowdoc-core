@@ -32,6 +32,7 @@ export class NativeShapeSession {
   if(this.pending){clearTimeout(this.pending.timer);this.pending.reject(this.failure);this.pending=undefined;}
   this.chunks=[];this.bytes=0;this.child.kill('SIGKILL');
  }
+ assertUsable(){if(this.failure)throw this.failure;}
  request(text:string):Promise<any>{
   if(!text.isWellFormed()||Buffer.byteLength(text)>this.limits.maxBuffer)return Promise.reject(Error('Invalid native input'));
   const run=this.tail.then(()=>{

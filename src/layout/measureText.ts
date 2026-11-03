@@ -5,6 +5,7 @@ import type {TextBlock,TextStyle} from '../composition/resolvedDocument.js';
 import type {GlyphRun} from '../pdf/drawContract.js';
 import type {TextRuntime,ShapedText} from './textFlow.js';
 import {LayoutError} from './textFlow.js';
+import {tryPrefixFit} from '../runtime/prefixFit.js';
 export interface MeasuredLine {heightPt:number;occupiedWidthPt?:number;run?:Omit<GlyphRun,'id'>}
 export async function measureText(node:TextBlock,style:TextStyle,available:number,runtime:TextRuntime,firstLineWidth=available):Promise<MeasuredLine[]>{
  let lineWidth=firstLineWidth;
@@ -44,13 +45,15 @@ export async function measureText(node:TextBlock,style:TextStyle,available:numbe
     let end=start;
     for(const boundary of breaks){
      if(boundary<=start)continue;
-     if(extent(await shape(paragraph.slice(start,boundary)))<=lineWidth+epsilon)end=boundary;else break;
+     const text=paragraph.slice(start,boundary);
+     if(await tryPrefixFit(runtime,text,fontId,size,lineWidth,epsilon)||extent(await shape(text))<=lineWidth+epsilon)end=boundary;else break;
     }
     if(end===start){
      const firstBreak=breaks.find(b=>b>start)!;
      for(const part of new Intl.Segmenter('th',{granularity:'grapheme'}).segment(paragraph.slice(start,firstBreak))){
       const boundary=start+part.index+part.segment.length;
-      if(extent(await shape(paragraph.slice(start,boundary)))<=lineWidth+epsilon)end=boundary;else break;
+      const text=paragraph.slice(start,boundary);
+      if(await tryPrefixFit(runtime,text,fontId,size,lineWidth,epsilon)||extent(await shape(text))<=lineWidth+epsilon)end=boundary;else break;
      }
     }
     if(end===start)throw new LayoutError(id,'A whole grapheme cannot fit the content width');

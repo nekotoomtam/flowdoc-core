@@ -16,7 +16,7 @@ import {prepareSourceLayout,sourceGuide} from './source-layout.js';
 import { hash, snapshotResources } from './resources.js';
 import { MappingError, fail, type ResourceFont, type ResourceSnapshot, type Result, type Issue } from './types.js';
 export type PreparedImageProvider = PdfImageProvider;
-export type DocxResources = Pick<ExportResources, 'fonts'> & Partial<Pick<ExportResources,'shaperPath'|'segmenterPath'>>;
+export type DocxResources = Pick<ExportResources, 'fonts'> & Partial<Pick<ExportResources,'shaperPath'|'segmenterPath'|'pythonExecutable'>>;
 export interface DocxOptions {
     /** Only explicitly selected body image placements may lack a resource. */
     imageOmissions?: DocxImageOmissions;
@@ -174,7 +174,7 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                     const intent=deriveExportIntent(preflight.value);
                     if(!intent.ok)throw new MappingError(intent.issues[0]!);
                     if(resources.shaperPath&&resources.segmenterPath){
-                        await prepareSourceLayout(intent.value,{fonts:resources.fonts,shaperPath:resources.shaperPath,segmenterPath:resources.segmenterPath},signal,textLayout==='native');
+                        await prepareSourceLayout(intent.value,{fonts:resources.fonts,shaperPath:resources.shaperPath,segmenterPath:resources.segmenterPath,...(resources.pythonExecutable?{pythonExecutable:resources.pythonExecutable}:{})},signal,textLayout==='native');
                         await prepareMetricBaselines(intent.value,resources.shaperPath,signal,(scope,id)=>scope==='nodes'&&sourceGuide(intent.value,id)!==undefined);
                     }else if(resources.shaperPath)await prepareMetricBaselines(intent.value,resources.shaperPath,signal);
                     const result = await writeDocx(intent.value, {

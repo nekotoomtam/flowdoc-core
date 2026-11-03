@@ -83,6 +83,7 @@ export class NativeSegmenterSession {
    request.resolve(value);this.pump();
   }catch(error){this.fail(error instanceof Error?error:Error('Invalid segmenter response'));}
  }
+ assertUsable(){if(this.failure)throw this.failure;}
  request(text:string):Promise<number[]>{
   if(this.failure)return Promise.reject(this.failure);
   if(!text||!text.isWellFormed())return Promise.reject(Error('Invalid segmenter input'));
