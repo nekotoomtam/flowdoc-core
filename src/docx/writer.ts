@@ -81,6 +81,36 @@ async function cleanup(sink: DocxSink, error: unknown): Promise<Result<DocxRecei
 catch (e) {
     issues.push({ code: 'DOCX_CLEANUP_FAILED', path: 'sink.abort', message: e instanceof Error ? e.message : 'Cleanup failed' });
 } return { ok: false, issues, warnings: [] }; }
+type NativeReceiptFacts = Pick<ReturnType<typeof buildSections>, 'endingAreas'|'omittedSections'|'receipts'|'anchors'|'leadingExcluded'>;
+interface NativePackagePreparation {zip:any;originalBytes:Buffer;fontSignatureChanged:boolean;receiptFacts:NativeReceiptFacts;nativeStyleXml:string;sectionProvenance:import('./compaction.js').GeneratedCompactionContext['sections']}
+// Constructor graphs stop here; only ZIP bytes and plain receipt/ownership facts
+// cross into XML planning. The caller never retains native sections/footnotes.
+async function prepareNativePackage(intent:ExportIntent,options:WriteOptions):Promise<NativePackagePreparation>{
+        const built = buildSections(intent), images = Object.values(intent.document.nodes).filter((n: any) => n.type === 'image').length + built.imageReferences;
+        if (images > (options.maxImageReferences ?? 10000))
+            fail('DOCX_OUTPUT_BUDGET_EXCEEDED', 'resources.images', 'Package image reference budget exceeded');
+        const fonts = embeddedFonts(intent), tocStyles = [...new Set((Object.values(intent.document.nodes) as any[]).filter(n => n.type === 'table-of-contents').map(n => n.props.textStyleId))];
+        if (tocStyles.length > 1)
+            fail('DOCX_CAPABILITY_UNSUPPORTED', 'styles', 'Multiple distinct TOC styles need a verified per-TOC style mapping');
+        const styles = tocStyles.length ? { paragraphStyles: [1, 2, 3].map(level => ({ id: 'TOC' + level, name: 'TOC ' + level, run: nativeRunStyle(required(intent.styles[required(tocStyles[0], 'toc.style')], 'toc.style')), paragraph: { spacing: { before: 0, after: 0, line: required(intent.styles[required(tocStyles[0], 'toc.style')], 'toc.style').line.twips, lineRule: 'atLeast' as const } } })) } : undefined;
+        cancelled(options);
+        await Promise.resolve();
+        cancelled(options);
+        const bytes = await Packer.toBuffer(new Document({ sections: built.sections, fonts,...built.endingAreas.length?{footnotes:built.footnotes}:{}, features: { updateFields: true }, ...(styles ? { styles } : {}) }));
+        cancelled(options);
+        if (bytes.length > (options.maxOutputBytes ?? 32 * 1024 * 1024))
+            fail('DOCX_OUTPUT_BUDGET_EXCEEDED', 'output', 'Buffered DOCX exceeds output byte budget');
+        const zip = await JSZip.loadAsync(bytes);
+        if(built.endingAreas.length)await finishEndingAreas(zip,built.endingAreas);
+        const fontTable=zip.file('word/fontTable.xml');
+        if(!fontTable)fail('DOCX_SERIALIZATION_FAILED','word/fontTable.xml','Missing embedded font table');
+        const originalFontTable=await fontTable.async('string'),correctedFontTable=correctFontSignatures(originalFontTable,fonts),fontSignatureChanged=correctedFontTable!==originalFontTable;
+        if(fontSignatureChanged)zip.file('word/fontTable.xml',correctedFontTable);
+
+ const nativeStyleXml=await zip.file('word/styles.xml').async('string');
+ const sectionProvenance=built.receipts.map(r=>{const source=intent.document.sections!.find(s=>s.sectionId===r.sectionId);if(!source)fail('DOCX_SERIALIZATION_FAILED','sections','Missing emitted section ownership');const footer=source.footer??intent.document.footer;return {sectionId:r.sectionId,footerMode:footer?r.footer.mode:'none',footerOwned:!!footer};});
+ return {zip,originalBytes:bytes,fontSignatureChanged,nativeStyleXml,sectionProvenance,receiptFacts:{endingAreas:built.endingAreas,omittedSections:built.omittedSections,receipts:built.receipts,anchors:built.anchors,leadingExcluded:built.leadingExcluded}};
+}
 export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: WriteOptions = {}): Promise<Result<DocxReceipt>> {
     try {
         options = { ...options };
@@ -112,27 +142,9 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
                         text += block.text;
                 requireIntentGlyphs(intent, required(intent.styles[n.props.textStyleId], 'styles').font.id, text, 'nodes.' + n.id + '.generated-contents');
             }
-        const built = buildSections(intent), images = Object.values(intent.document.nodes).filter((n: any) => n.type === 'image').length + built.imageReferences;
-        if (images > (options.maxImageReferences ?? 10000))
-            fail('DOCX_OUTPUT_BUDGET_EXCEEDED', 'resources.images', 'Package image reference budget exceeded');
-        const fonts = embeddedFonts(intent), tocStyles = [...new Set((Object.values(intent.document.nodes) as any[]).filter(n => n.type === 'table-of-contents').map(n => n.props.textStyleId))];
-        if (tocStyles.length > 1)
-            fail('DOCX_CAPABILITY_UNSUPPORTED', 'styles', 'Multiple distinct TOC styles need a verified per-TOC style mapping');
-        const styles = tocStyles.length ? { paragraphStyles: [1, 2, 3].map(level => ({ id: 'TOC' + level, name: 'TOC ' + level, run: nativeRunStyle(required(intent.styles[required(tocStyles[0], 'toc.style')], 'toc.style')), paragraph: { spacing: { before: 0, after: 0, line: required(intent.styles[required(tocStyles[0], 'toc.style')], 'toc.style').line.twips, lineRule: 'atLeast' as const } } })) } : undefined;
-        cancelled(options);
-        await Promise.resolve();
-        cancelled(options);
-        let bytes = await Packer.toBuffer(new Document({ sections: built.sections, fonts,...built.endingAreas.length?{footnotes:built.footnotes}:{}, features: { updateFields: true }, ...(styles ? { styles } : {}) }));
-        cancelled(options);
-        if (bytes.length > (options.maxOutputBytes ?? 32 * 1024 * 1024))
-            fail('DOCX_OUTPUT_BUDGET_EXCEEDED', 'output', 'Buffered DOCX exceeds output byte budget');
-        const zip = await JSZip.loadAsync(bytes);
-        if(built.endingAreas.length)await finishEndingAreas(zip,built.endingAreas);
-        const fontTable=zip.file('word/fontTable.xml');
-        if(!fontTable)fail('DOCX_SERIALIZATION_FAILED','word/fontTable.xml','Missing embedded font table');
-        const originalFontTable=await fontTable.async('string'),correctedFontTable=correctFontSignatures(originalFontTable,fonts),fontSignatureChanged=correctedFontTable!==originalFontTable;
-        if(fontSignatureChanged)zip.file('word/fontTable.xml',correctedFontTable);
-        const sourceSerialized=await serializeSourceLayout(intent,zip,options.signal);
+        let {zip,originalBytes:bytes,fontSignatureChanged,receiptFacts,nativeStyleXml,sectionProvenance}=await prepareNativePackage(intent,options);
+        const ownedStyleIds=new Set<string>();
+        const sourceSerialized=await serializeSourceLayout(intent,zip,options.signal,ownedStyleIds);
         // Keep normal packages byte-for-byte on their native-tested path. Only
         // over-budget generated word layouts attempt lossless container sharing;
         // the unchanged final guard still checks every expanded package part.
@@ -152,9 +164,11 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
                 const count=(value:string)=>(value.match(/<(?![!?/])[A-Za-z_][\w:.-]*(?=[\s/>])/g)||[]).length;
                 if(expanded-count(original)+count(compact)>xmlBudget){
                     const styles=await zip.file('word/styles.xml').async('string');
-                    const shared=compactSourceWordStyles(compact,styles,new Set(appliedSourceGuides(intent).map(g=>g.tag)));
+                    const shared=compactSourceWordStyles(compact,styles,new Set(appliedSourceGuides(intent).map(g=>g.tag)),ownedStyleIds);
                     if(shared.compactedRuns){zip.file('word/document.xml',shared.xml);zip.file('word/styles.xml',shared.styles);}
                 }
+                const {compactGeneratedPackage}=await import('./compaction.js');
+                await compactGeneratedPackage(zip,{sourceSerialized:true,ownedStyleIds,nativeStyleXml,sections:sectionProvenance},{xmlBudget,...(options.signal?{signal:options.signal}:{})});
             }
         }
         let xmlNodes = 0, drawings = 0;
@@ -178,12 +192,12 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
                 }
             }
         }
-        if(sourceSerialized||fontSignatureChanged||built.endingAreas.length){
+        if(sourceSerialized||fontSignatureChanged||receiptFacts.endingAreas.length){
             bytes=await zip.generateAsync({type:'nodebuffer',compression:'DEFLATE'});
             cancelled(options);
             if(bytes.length>(options.maxOutputBytes??32*1024*1024))fail('DOCX_OUTPUT_BUDGET_EXCEEDED','output','Final DOCX exceeds output byte budget');
         }
-        const adaptations: any[] = [...built.endingAreas,...baselineReceipts(intent),...sourceLayoutReceipts(intent), ...built.omittedSections.map(s => ({kind: 'empty-section-omission', ...s})), ...built.receipts.flatMap(s => s.tableSpaces.map((t: any) => ({ kind: 'table-space-policy', ...t })))], columnPaths = new Set<string | undefined>();
+        const adaptations: any[] = [...receiptFacts.endingAreas,...baselineReceipts(intent),...sourceLayoutReceipts(intent), ...receiptFacts.omittedSections.map(s => ({kind: 'empty-section-omission', ...s})), ...receiptFacts.receipts.flatMap(s => s.tableSpaces.map((t: any) => ({ kind: 'table-space-policy', ...t })))], columnPaths = new Set<string | undefined>();
         for (const table of intent.tables) {
             const source: any = (intent.document.nodes as any)[table.nodeId];
             for (const group of source.rowGroups ?? []) if (group.groupLabel) {
@@ -211,10 +225,10 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
             for (const [key, x] of Object.entries(v))
                 lengths(x, path + '.' + key); }
         lengths(intent.document, 'document');
-        for (const section of built.receipts)
+        for (const section of receiptFacts.receipts)
             for (const kind of ['header', 'footer'])
                 adaptations.push(...section[kind].quantization);
-        for (const s of built.receipts)
+        for (const s of receiptFacts.receipts)
             if (JSON.stringify(s.sourceMarginTwips) !== JSON.stringify({ top: s.reservedMarginTwips.top, right: s.reservedMarginTwips.right, bottom: s.reservedMarginTwips.bottom, left: s.reservedMarginTwips.left }))
                 adaptations.push({ kind: 'maximum-band-reservation', sectionId: s.sectionId, source: s.sourceMarginTwips, reserved: s.reservedMarginTwips });
         adaptations.push(...readingMeasurementReceipt(intent));
@@ -223,7 +237,7 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
             const sourceThicknessPt=n.props.thickness?toPoints(n.props.thickness):.5,nativeThicknessPt=Math.round(sourceThicknessPt*8)/8;
             adaptations.push({kind:'rule-thickness-quantization',scope:'nodes',nodeId:n.id,sourceThicknessPt,nativeThicknessPt,deltaPt:nativeThicknessPt-sourceThicknessPt});
         }
-        for (const s of built.receipts) {
+        for (const s of receiptFacts.receipts) {
             adaptations.push({ kind: 'empty-footer-space-policy', sectionId: s.sectionId, ...s.footer.emptySpace, sourceOffsetTwips: s.footer.offsetTwips, wordVerified: false });
             adaptations.push({ kind: 'empty-header-space-policy', sectionId: s.sectionId, ...s.header.emptySpace, sourceOffsetTwips: s.header.offsetTwips, wordVerified: false });
             if (s.header.spacePolicy === 'native-visible-header')
@@ -231,7 +245,7 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
             else if (s.header.fallbackReason)
                 adaptations.push({ kind: 'maximum-header-space-fallback', sectionId: s.sectionId, reason: s.header.fallbackReason, nativeTopTwips: s.nativeMarginTwips.top });
         }
-        const receipt: DocxReceipt = freeze({ mediaType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', sha256: hash(bytes), bytes: bytes.length, sourceDigest: intent.sourceDigest, profileId: intent.profileId, fieldRefresh: 'required', wordVerified: false, resources: intent.resourceIdentities, autoFormats: intent.document.formatInstances ?? [], sections: built.receipts, bookmarks: built.anchors, numbering: { leadingExcludedSections: built.leadingExcluded, fieldDigitEnvelope: fieldDigitBudget(intent) }, adaptations, buffered: true });
+        const receipt: DocxReceipt = freeze({ mediaType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', sha256: hash(bytes), bytes: bytes.length, sourceDigest: intent.sourceDigest, profileId: intent.profileId, fieldRefresh: 'required', wordVerified: false, resources: intent.resourceIdentities, autoFormats: intent.document.formatInstances ?? [], sections: receiptFacts.receipts, bookmarks: receiptFacts.anchors, numbering: { leadingExcludedSections: receiptFacts.leadingExcluded, fieldDigitEnvelope: fieldDigitBudget(intent) }, adaptations, buffered: true });
         cancelled(options);
         await sink.write(Uint8Array.from(bytes));
         cancelled(options);

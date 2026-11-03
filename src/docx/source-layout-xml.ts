@@ -24,7 +24,7 @@ export function sourceParagraph(intent:ExportIntent,nodeId:string,eligible:boole
 
 interface ZipLike {file(name:string):{async(kind:'string'):Promise<string>}|null;file(name:string,value:string):unknown;}
 /** Candidate adapter: consume only private source guides, never caller XML hints. */
-export async function serializeSourceLayout(intent:ExportIntent,zip:ZipLike,signal?:AbortSignal){
+export async function serializeSourceLayout(intent:ExportIntent,zip:ZipLike,signal?:AbortSignal,ownedStyleIds?:Set<string>){
  const guides=appliedSourceGuides(intent);if(!guides.length)return false;
  // Only complete, ordinary source-guided grids participate. Keep a single
  // continuous row budget rather than independently round each cell's total.
@@ -55,7 +55,7 @@ export async function serializeSourceLayout(intent:ExportIntent,zip:ZipLike,sign
  const register=(kind:'paragraph'|'character',properties:string)=>{
   const id='fd'+kind[0]+hash(properties).slice(0,20);
   if(!nativeStyles.has(id))nativeStyles.set(id,`<w:style w:type="${kind}" w:styleId="${id}"><w:name w:val="${id}"/>${kind==='paragraph'?'<w:basedOn w:val="Normal"/>':''}${properties}</w:style>`);
-  return id;
+  ownedStyleIds?.add(id);return id;
  };
  function characterStyle(g:SourceGuide,position:number,spacing:number|undefined,thai:boolean){
   const s=g.style,f=esc(s.font.nativeFamily??s.font.family),flag=(name:string,on:boolean)=>on?`<w:${name}/>`:`<w:${name} w:val="false"/>`;
@@ -127,7 +127,7 @@ export function compactSourceWordContainers(xml:string,tags:ReadonlySet<string>)
  });
 }
 
-export function compactSourceWordStyles(xml:string,styles:string,tags:ReadonlySet<string>){
+export function compactSourceWordStyles(xml:string,styles:string,tags:ReadonlySet<string>,ownedStyleIds?:Set<string>){
  const definitions=new Map<string,{type:string;body:string}>(),added=new Map<string,string>();let compactedRuns=0;
  for(const m of styles.matchAll(/<w:style\b([^>]*)>([\s\S]*?)<\/w:style>/g)){
   const id=/\bw:styleId="([^"]+)"/.exec(m[1]!)?.[1],type=/\bw:type="([^"]+)"/.exec(m[1]!)?.[1];
@@ -144,5 +144,6 @@ export function compactSourceWordStyles(xml:string,styles:string,tags:ReadonlySe
    return `<w:txbxContent><w:p><w:pPr><w:pStyle w:val="${id}"/></w:pPr><w:r>${text}</w:r></w:p></w:txbxContent>`;
   });
  });
+ for(const id of added.keys())ownedStyleIds?.add(id);
  return {xml:output,styles:added.size?styles.replace('</w:styles>',[...added.values()].join('')+'</w:styles>'):styles,compactedRuns};
 }

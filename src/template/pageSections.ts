@@ -38,7 +38,7 @@ export function validatePageSections(t: Record<string, any>): Issue[] {
         seen.add(s.id);
         if(t.nodeModelVersion===20){if(typeof s.sectionKey!=='string'||! /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(s.sectionKey)||publicKeys.has(s.sectionKey))fail(p+'.sectionKey');publicKeys.add(s.sectionKey);}
         if(t.nodeModelVersion!==18){
-         if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.id)||!name(s.label)||!name(s.nameBase)||own(s,'role'))fail(p);
+         if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.id)||!name(s.label)||!name(s.nameBase)||(t.nodeModelVersion===19&&own(s,'role')))fail(p);
          if(own(s,'origin')&&(!object(s.origin)||!keys(s.origin,['templateId','revision','sectionId'])||!name(s.origin.templateId)||!name(s.origin.sectionId)||!Number.isSafeInteger(s.origin.revision)||s.origin.revision<1))fail(p+'.origin');
         }
         if (own(s, 'label') && typeof s.label !== 'string')
@@ -47,7 +47,7 @@ export function validatePageSections(t: Record<string, any>): Issue[] {
             fail(p + '.pageLayoutId');
         if (own(s, 'role') && !['body', 'cover'].includes(s.role))
             fail(p + '.role');
-        if (s.role === 'cover' && (i !== 0 || s.source?.kind !== 'authored'))
+        if (s.role === 'cover' && ((t.nodeModelVersion!==20&&i !== 0) || s.source?.kind !== 'authored'))
             fail(p + '.role');
         for (const k of ['headerMode', 'footerMode'])
             if (own(s, k) && !['all', 'first', 'continuation', 'none'].includes(s[k]))

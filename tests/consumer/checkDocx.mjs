@@ -11,7 +11,7 @@ const entry=fileURLToPath(import.meta.resolve('@flowdoc/core'));
 assert(entry.startsWith('/consumer/node_modules/@flowdoc/core/dist/'));
 await assert.rejects(access(new URL('../src/index.ts',import.meta.resolve('@flowdoc/core'))));
 const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.resolve('@flowdoc/core')),'utf8'));
-assert.deepEqual(pkg.dependencies,{docx:'9.13.0',jszip:'3.10.2',pngjs:'7.0.0'});
+assert.deepEqual(pkg.dependencies,{docx:'9.13.0',jszip:'3.10.2',pngjs:'7.0.0','@xmldom/xmldom':'0.9.12'});
 for(const name of ['install','postinstall','prepare'])assert.equal(pkg.scripts[name],undefined);
 const ok=r=>{assert.equal(r.ok,true,JSON.stringify(r));return r.value;};
 const hash=b=>createHash('sha256').update(b).digest('hex');

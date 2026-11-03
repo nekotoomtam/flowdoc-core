@@ -1,4 +1,4 @@
-import {assemblyKey,instanceSectionId} from './prepareAssembly.js';
+import {assemblyKey,instanceSectionId,coverOrder} from './prepareAssembly.js';
 import type {ValidatedTemplate,ObjectSchema,AreaField,ArrayField,StringField,ImageField,LinkField} from '../template/types.js';
 import type {Result,Issue} from '../result.js';
 import {validateField} from './validateValues.js';
@@ -74,12 +74,12 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
   await keys(input,'',['data','sections','meta']);const raw=await get(input,'sections');
   const entries=new Map<string,{value:TaskValue;path:string}>();
   if(t.nodeModelVersion===20){
-   if(!raw||await raw.kind()!=='array')fail('SECTION_INPUT_SHAPE','/sections');let i=0;
+   if(!raw||await raw.kind()!=='array')fail('SECTION_INPUT_SHAPE','/sections');let i=0;const uses:{sectionKey:unknown}[]=[];
    for await(const e of raw!.elements()){const p='/sections/'+i++;if(i>2000)fail('LIMIT_EXCEEDED','/sections');if(await e.kind()!=='object')fail('SECTION_INPUT_SHAPE',p);
     const key=await scalar(await get(e,'sectionKey'),p+'/sectionKey'),instance=await scalar(await get(e,'instanceKey'),p+'/instanceKey');
-    if(!t.sections.some(s=>s.sectionKey===key))fail('SECTION_KEY_UNKNOWN',p+'/sectionKey');if(!assemblyKey(instance))fail('SECTION_INSTANCE_REQUIRED',p+'/instanceKey');
+    if(!t.sections.some(s=>s.sectionKey===key))fail('SECTION_KEY_UNKNOWN',p+'/sectionKey');uses.push({sectionKey:key});if(!assemblyKey(instance))fail('SECTION_INSTANCE_REQUIRED',p+'/instanceKey');
     if(entries.has(instance as string))fail('SECTION_INSTANCE_DUPLICATE',p+'/instanceKey');if(!await get(e,'data'))fail('MISSING_REQUIRED',p+'/data');entries.set(instance as string,{value:e,path:p});
-   }if(!i)fail('SECTION_ASSEMBLY_EMPTY','/sections');
+   }if(!i)fail('SECTION_ASSEMBLY_EMPTY','/sections');const cover=coverOrder(t,uses)[0];if(cover)fail(cover.code,'/sections');
   }else if(t.nodeModelVersion===19){if(!raw||await raw.kind()!=='array')fail('SECTION_INPUT_SHAPE','/sections');let i=0;for await(const e of raw!.elements()){const p='/sections/'+i++;if(await e.kind()!=='object')fail('SECTION_INPUT_SHAPE',p);const rawId=await scalar(await get(e,'id'),p+'/id');if(typeof rawId!=='string')fail('SECTION_ID_REQUIRED',p+'/id');const id=rawId as string;if(entries.has(id))fail('SECTION_INPUT_DUPLICATE',p+'/id');if(!t.sections.some(s=>s.id===id))fail('SECTION_INPUT_UNKNOWN',p+'/id');if(!await get(e,'data'))fail('MISSING_REQUIRED',p+'/data');entries.set(id,{value:e,path:p});}
    for(const s of t.sections)if(!entries.has(s.id))fail('SECTION_INPUT_MISSING','/sections/'+s.id);
   }else{const v=raw??memory({});await keys(v,'/sections',t.sections.map(s=>('key' in s?s.key:'')));for(const s of t.sections)entries.set(s.id,{value:await get(v,'key' in s?s.key:'')??memory({}),path:'/sections/'+esc('key' in s?s.key:'')});}

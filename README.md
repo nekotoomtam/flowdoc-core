@@ -451,6 +451,9 @@ Definitions can repeat with distinct instanceKey; unused definitions are omitted
 Each use has independent runtime Section identity and bands. Public/instance
 keys match [A-Za-z][A-Za-z0-9_-]{0,63}; at most2000 definitions/uses, with existing
 expansion budgets still active. No implicit18/19 migration or meaning change.
+The model20-only transition candidate also permits an authored cover definition:
+its actual use must be first and unique. This prerequisite does not remove18/19
+support or establish completion of the separately governed transition.
 Prepared schema3 and normalized flowdoc-task-input/2 pin20 and its fingerprint;
 18/19 prepared/task contracts remain unchanged. Local links are use-local;
 explicit cross-use references use targetInstanceKey and fail on missing targets.
@@ -470,3 +473,23 @@ Download selection and request overrides belong to a matching Service candidate;
 Core does not rename files or expose storage paths. The bounded implementation
 and verification are governed by Project Control's
 `docs/domains/flowdoc-output-file-names-plan-2026-10-26.md`.
+
+## Private bounded DOCX XML compaction candidate
+
+Authority Boundary: Core owns this package implementation and its local limits.
+Project Control governs acceptance in `flowdoc-model20-only-transition-2026-11-03.md`.
+This candidate is not a release, Service pin or general Word-fidelity claim.
+
+Generated source-layout packages that still exceed the XML budget may use a
+private compaction stage. Under-budget packages retain their previous path.
+The stage shares eligible styles and defaults, preserves heading emphasis for
+Word field refresh, removes narrowly inactive picture defaults and reuses only
+verified same-section footer parts. It stages and validates all changes before
+publication; unsupported input retains the existing budget refusal.
+
+The exact runtime parser dependency is `@xmldom/xmldom`0.9.12. Parsing is bounded
+to complete story units (including whole tables):1MiB/20000 elements per unit,
+4096 units per story and128 levels. Strict XML1.0, namespace, UTF8, ownership,
+relationship and cancellation checks apply. These eligibility limits do not
+raise the50000 XML/rels nodes,10000 drawings or32MiB output caps. There is no
+uploaded-DOCX optimizer API or new public receipt/option contract.

@@ -398,7 +398,10 @@ It does not replace18/19 guidance or certify native Word/Service acceptance.
 
 Model20 uses the19 authored Section/Area content model plus a unique sectionKey
 per saved Section definition. id remains UUID; label/nameBase remain authoring
-metadata. key/formats/role from older structures are not permitted. Calls are
+metadata. Legacy key/formats are not permitted. Optional role is body or cover;
+a cover must have an authored source, occur first in the actual call and occur
+only once. Definition order does not decide cover position. Prepared and
+streamed task validation enforce the same rule before composition. Calls are
 ordered sections arrays of {sectionKey,instanceKey,data,header?,footer?}; internal
 id is not a caller lookup. instanceKey is unique per request and stable under
 caller reorder. Data and bands validate against the selected definition. No
