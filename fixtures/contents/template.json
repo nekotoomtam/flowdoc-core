@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
-  "templateId": "tpl-contents",
+  "nodeModelVersion": 20,
+  "templateId": "59712424-f335-5adb-84bf-a615de9c8e82",
   "docKey": "contents-trial",
   "version": 1,
   "name": "Contents trial",
@@ -53,8 +53,7 @@
   },
   "sections": [
     {
-      "id": "main",
-      "key": "main",
+      "id": "28f319be-bb3f-5e35-80cf-9fe90fa21fe0",
       "source": {
         "kind": "authored",
         "fragment": {
@@ -82,7 +81,9 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0001",
+      "label": "main",
+      "nameBase": "main"
     }
   ],
   "areaFormats": {
@@ -335,7 +336,10 @@
             "id": "toc",
             "type": "table-of-contents",
             "props": {
-              "textStyleId": "body"
+              "textStyleId": "body",
+              "scope": {
+                "kind": "document"
+              }
             }
           }
         }

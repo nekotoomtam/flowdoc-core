@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
-  "templateId": "section-ownership",
+  "nodeModelVersion": 20,
+  "templateId": "b9de9832-619a-5332-8932-77a8b8d19f4f",
   "docKey": "page-numbering",
   "version": 1,
   "name": "Cover and reserved text trial",
@@ -184,7 +184,7 @@
   },
   "sections": [
     {
-      "id": "introduction",
+      "id": "b415711c-966e-5dce-8517-374015ed5af7",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -243,7 +243,6 @@
         }
       },
       "role": "cover",
-      "key": "introduction",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -386,10 +385,12 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0001",
+      "label": "introduction",
+      "nameBase": "introduction"
     },
     {
-      "id": "contents",
+      "id": "ae6debaf-8f11-54da-8e1d-669d30bef7b0",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -402,13 +403,15 @@
               "id": "toc",
               "type": "table-of-contents",
               "props": {
-                "textStyleId": "body"
+                "textStyleId": "body",
+                "scope": {
+                  "kind": "document"
+                }
               }
             }
           }
         }
       },
-      "key": "contents",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -573,10 +576,12 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0002",
+      "label": "contents",
+      "nameBase": "contents"
     },
     {
-      "id": "body",
+      "id": "01a69434-9420-54a2-81be-8db72d9589f7",
       "pageLayoutId": "landscape",
       "source": {
         "kind": "authored",
@@ -817,7 +822,6 @@
         },
         "repeats": []
       },
-      "key": "body",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -990,14 +994,15 @@
         "mode": "restart",
         "startAt": 99
       },
-      "formats": {}
+      "sectionKey": "S0003",
+      "label": "body",
+      "nameBase": "body"
     },
     {
-      "id": "intentional-blank",
+      "id": "39c509a0-6a33-5d33-8ac4-301663818c49",
       "source": {
         "kind": "blank"
       },
-      "key": "intentional-blank",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -1140,10 +1145,12 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0004",
+      "label": "intentional-blank",
+      "nameBase": "intentional-blank"
     },
     {
-      "id": "hidden",
+      "id": "9a57efbc-a51f-531e-839f-ab8975bb6994",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -1192,7 +1199,6 @@
           }
         }
       },
-      "key": "hidden",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -1361,10 +1367,12 @@
         "mode": "continue",
         "visibility": "hide"
       },
-      "formats": {}
+      "sectionKey": "S0005",
+      "label": "hidden",
+      "nameBase": "hidden"
     },
     {
-      "id": "excluded",
+      "id": "ae122ba6-5337-5aac-8ad8-4269c27f2f24",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -1413,7 +1421,6 @@
           }
         }
       },
-      "key": "excluded",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -1567,10 +1574,12 @@
       "numbering": {
         "mode": "exclude"
       },
-      "formats": {}
+      "sectionKey": "S0006",
+      "label": "excluded",
+      "nameBase": "excluded"
     },
     {
-      "id": "closing",
+      "id": "6e74a3f2-913f-5605-8034-614b897a1d60",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -1623,7 +1632,6 @@
           }
         }
       },
-      "key": "closing",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -1792,7 +1800,9 @@
         "mode": "restart",
         "startAt": 1
       },
-      "formats": {}
+      "sectionKey": "S0007",
+      "label": "closing",
+      "nameBase": "closing"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
-  "templateId": "tpl-srs-basic",
+  "nodeModelVersion": 20,
+  "templateId": "b79f77de-007c-5774-8eac-1ce433d37e2c",
   "docKey": "srs-basic",
   "version": 1,
   "name": "SRS MVP",
@@ -40,8 +40,8 @@
         "data": {
           "projectName": "ระบบจัดการเอกสาร"
         },
-        "sections": {
-          "main": {
+        "sections": [
+          {
             "data": {
               "details": [
                 {
@@ -68,9 +68,11 @@
                   }
                 }
               ]
-            }
+            },
+            "sectionKey": "S0001",
+            "instanceKey": "I0001"
           }
-        }
+        ]
       }
     }
   ],
@@ -102,8 +104,7 @@
   },
   "sections": [
     {
-      "id": "main",
-      "key": "main",
+      "id": "412e25a3-b5da-5d5b-8cc2-8af4af9c925a",
       "source": {
         "kind": "authored",
         "fragment": {
@@ -132,7 +133,9 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0001",
+      "label": "main",
+      "nameBase": "main"
     }
   ],
   "areaFormats": {

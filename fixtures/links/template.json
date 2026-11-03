@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
-  "templateId": "tpl-links",
+  "nodeModelVersion": 20,
+  "templateId": "1a17f4a6-c48a-5e17-8853-5e15d1edd1be",
   "docKey": "links-trial",
   "version": 1,
   "name": "Links trial",
@@ -61,8 +61,7 @@
   },
   "sections": [
     {
-      "id": "main",
-      "key": "main",
+      "id": "b688bcfc-aae2-5063-8f39-35be83c77a27",
       "source": {
         "kind": "authored",
         "fragment": {
@@ -90,7 +89,9 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0001",
+      "label": "main",
+      "nameBase": "main"
     }
   ],
   "areaFormats": {

@@ -4,8 +4,13 @@
     "projectName": "รายงานทดสอบระบบหน้า PAGE-SECTIONS",
     "photo": "22222222-2222-4222-8222-222222222222"
   },
-  "sections": {
-    "body": {
+  "sections": [
+    {
+      "sectionKey": "S0001",
+      "instanceKey": "I0001",
+      "data": {}
+    },
+    {
       "data": {
         "details": [
           {
@@ -20,7 +25,14 @@
             }
           }
         ]
-      }
+      },
+      "sectionKey": "S0002",
+      "instanceKey": "I0002"
+    },
+    {
+      "sectionKey": "S0003",
+      "instanceKey": "I0003",
+      "data": {}
     }
-  }
+  ]
 }

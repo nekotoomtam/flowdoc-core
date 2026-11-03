@@ -1,3 +1,4 @@
+import {defaultUses} from '../helpers/sectionUses.js';
 import {expect,it} from 'vitest';
 import {mergedTemplate,mergedDoc} from '../helpers/merged.js';
 import {fakeRuntime} from '../helpers/document.js';
@@ -28,7 +29,7 @@ it('paints B as two flat sparse components inside its total 0.35pt envelope',()=
  expect(s).toContain('0.21 w');expect(s).toContain('0.07 w');expect(s).toContain('[1.4 4.2] 0 d');expect(s).toContain('0 J');expect(s.match(/ l S/g)).toHaveLength(2);
  expect(s).toContain('10 80.07 m');expect(s).toContain('10 79.86 m');
 });
-function composed(t:any){const v=take(validateTemplate(t));return take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:{main:{data:{details:[{format:'merged',data:{}}]}}}}))));}
+function composed(t:any){const v=take(validateTemplate(t));return take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:defaultUses(t).map((u:any)=>u.sectionKey===(t.sections.length===1?t.sections[0]:t.sections.find((s:any)=>s.sectionKey==='main')).sectionKey?{...u,instanceKey:"main",data:{details:[{format:'merged',data:{}}]}}:u)}))));}
 it.each(['single','none','dashed','dotted','double','dashSmallGap'])('accepts shared table and rule kind %s at authored/resolved boundaries',kind=>{
  const t=mergedTemplate(),f=t.areaFormats.merged;f.fragment.nodes.table.props={...f.fragment.nodes.table.props,borderStyle:kind,borderWidth:pt(.75)};
  f.fragment.nodes.rule={id:'rule',type:'line',props:{lineStyle:kind,thickness:pt(.75),color:'123456'}};f.fragment.rootIds.push('rule');

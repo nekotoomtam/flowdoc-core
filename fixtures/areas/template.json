@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
-  "templateId": "area-demo",
+  "nodeModelVersion": 20,
+  "templateId": "4ba38998-78d8-5635-8b66-e2767f5150ad",
   "docKey": "area-demo",
   "version": 1,
   "name": "Array image evidence",
@@ -343,13 +343,11 @@
   },
   "sections": [
     {
-      "id": "contents",
-      "key": "contents",
+      "id": "a767180b-efd5-5365-8f16-c1354fd59fc2",
       "inputSchema": {
         "type": "object",
         "fields": {}
       },
-      "formats": {},
       "source": {
         "kind": "authored",
         "fragment": {
@@ -361,17 +359,22 @@
               "id": "toc",
               "type": "table-of-contents",
               "props": {
-                "textStyleId": "body"
+                "textStyleId": "body",
+                "scope": {
+                  "kind": "document"
+                }
               }
             }
           }
         },
         "repeats": []
-      }
+      },
+      "sectionKey": "S0001",
+      "label": "contents",
+      "nameBase": "contents"
     },
     {
-      "id": "evidence",
-      "key": "evidence",
+      "id": "4fa233a3-62ca-55e7-8750-2523ac5b89f3",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -381,7 +384,6 @@
           }
         }
       },
-      "formats": {},
       "source": {
         "kind": "authored",
         "fragment": {
@@ -515,11 +517,13 @@
           }
         },
         "repeats": []
-      }
+      },
+      "sectionKey": "S0002",
+      "label": "evidence",
+      "nameBase": "evidence"
     },
     {
-      "id": "evidence2",
-      "key": "evidence2",
+      "id": "0914ca79-77b8-5b47-80c9-a797376e5569",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -529,7 +533,6 @@
           }
         }
       },
-      "formats": {},
       "source": {
         "kind": "authored",
         "fragment": {
@@ -663,11 +666,13 @@
           }
         },
         "repeats": []
-      }
+      },
+      "sectionKey": "S0003",
+      "label": "evidence2",
+      "nameBase": "evidence2"
     },
     {
-      "id": "merged",
-      "key": "merged",
+      "id": "1adc5431-0ad2-5dab-8288-5940ec61d235",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -677,7 +682,6 @@
           }
         }
       },
-      "formats": {},
       "source": {
         "kind": "authored",
         "fragment": {
@@ -888,16 +892,17 @@
           }
         },
         "repeats": []
-      }
+      },
+      "sectionKey": "S0004",
+      "label": "merged",
+      "nameBase": "merged"
     },
     {
-      "id": "summary",
-      "key": "summary",
+      "id": "d63ed8d6-c5e8-58a9-85c6-8f3892ebacbf",
       "inputSchema": {
         "type": "object",
         "fields": {}
       },
-      "formats": {},
       "source": {
         "kind": "authored",
         "fragment": {
@@ -935,7 +940,10 @@
           }
         },
         "repeats": []
-      }
+      },
+      "sectionKey": "S0005",
+      "label": "summary",
+      "nameBase": "summary"
     }
   ]
 }

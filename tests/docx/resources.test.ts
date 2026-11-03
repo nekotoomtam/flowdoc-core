@@ -1,3 +1,4 @@
+import {sectionUse,defaultUses} from '../helpers/sectionUses.js';
 import {describe,it,expect} from 'vitest';
 import JSZip from 'jszip';
 import {createRequire} from 'node:module';
@@ -75,7 +76,7 @@ it.each(['Sarabun','BaiJamjuree'])('accepts actual Core library selection for %s
  expect(resources.ok,JSON.stringify(resources)).toBe(true);if(!resources.ok)return;
  const t=sectionTemplate();t.sections=[t.sections[0]];t.areaFormats={};t.schemaVersion=2;
  for(const key of Object.keys(t.styles))t.styles[key]={font:{kind:'library',releaseId,weight:400,style:'normal'},fontSize:{value:12,unit:'pt'},lineHeightPt:20};
- const v=validateTemplate(t);if(!v.ok)throw Error(JSON.stringify(v));const p=prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:'English ไทย'},sections:{}});if(!p.ok)throw Error(JSON.stringify(p));const d=composeDocument(v.value,p.value);if(!d.ok)throw Error(JSON.stringify(d));
+ const v=validateTemplate(t);if(!v.ok)throw Error(JSON.stringify(v));const p=prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:'English ไทย'},sections:defaultUses(t)});if(!p.ok)throw Error(JSON.stringify(p));const d=composeDocument(v.value,p.value);if(!d.ok)throw Error(JSON.stringify(d));
  // This test covers library identity/embedding; its placeholder executables are
  // deliberately not runtime capabilities. Real source shaping is tested separately.
  const engine=await createDocxEngine({fonts:resources.value.fonts});if(!engine.ok)throw Error(JSON.stringify(engine));const sink=staged(),before=JSON.stringify(d.value);

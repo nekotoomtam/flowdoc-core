@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
-  "templateId": "cell-repeat",
+  "nodeModelVersion": 20,
+  "templateId": "166e30a6-7902-50f3-893a-75eb1b19cec8",
   "docKey": "cell-repeat",
   "version": 1,
   "name": "Array image evidence",
@@ -53,8 +53,7 @@
   },
   "sections": [
     {
-      "id": "main",
-      "key": "main",
+      "id": "5416bbf2-cd77-57fd-8b76-5b9797e93378",
       "source": {
         "kind": "authored",
         "fragment": {
@@ -82,7 +81,9 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0001",
+      "label": "main",
+      "nameBase": "main"
     }
   ],
   "areaFormats": {
@@ -101,7 +102,10 @@
             "id": "toc",
             "type": "table-of-contents",
             "props": {
-              "textStyleId": "body"
+              "textStyleId": "body",
+              "scope": {
+                "kind": "document"
+              }
             }
           }
         }

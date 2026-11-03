@@ -1,3 +1,4 @@
+import {sectionUse,defaultUses} from '../helpers/sectionUses.js';
 import {expect,it} from 'vitest';
 import JSZip from 'jszip';
 import * as api from '../../src/index.js';
@@ -5,10 +6,10 @@ import {mergedTemplate} from '../helpers/merged.js';
 import {fonts,noImages,staged} from './helpers.js';
 const pt=(value:number)=>({value,unit:'pt'});
 const take=(r:any)=>{if(!r.ok)throw Error(JSON.stringify(r));return r.value;};
-async function exported(t:any){const v=take(api.validateTemplate(t)),d=take(api.composeDocument(v,take(api.prepareGeneration(v,{docKey:t.docKey,sections:{main:{data:{details:[{format:'merged',data:{}}]}}}})))),sink=staged();take(await take(await api.createDocxEngine(fonts())).generateDocxTo(d,noImages,sink.output));const z=await JSZip.loadAsync(Buffer.concat(sink.chunks));return z.file('word/document.xml')!.async('string');}
+async function exported(t:any){const v=take(api.validateTemplate(t)),d=take(api.composeDocument(v,take(api.prepareGeneration(v,{docKey:t.docKey,sections:[sectionUse(t.sections[0],'main',{details:[{format:'merged',data:{}}]})]})))),sink=staged();take(await take(await api.createDocxEngine(fonts())).generateDocxTo(d,noImages,sink.output));const z=await JSZip.loadAsync(Buffer.concat(sink.chunks));return z.file('word/document.xml')!.async('string');}
 it('rejects B merged grids without committing output instead of silently drawing wrong row outlines',async()=>{
  const t=mergedTemplate();Object.assign(t.areaFormats.merged.fragment.nodes.table.props,{borderStyle:'thickThinWideGap',borderWidth:pt(.35)});
- const v=take(api.validateTemplate(t)),d=take(api.composeDocument(v,take(api.prepareGeneration(v,{docKey:t.docKey,sections:{main:{data:{details:[{format:'merged',data:{}}]}}}})))),sink=staged();
+ const v=take(api.validateTemplate(t)),d=take(api.composeDocument(v,take(api.prepareGeneration(v,{docKey:t.docKey,sections:[sectionUse(t.sections[0],'main',{details:[{format:'merged',data:{}}]})]})))),sink=staged();
  const r=await take(await api.createDocxEngine(fonts())).generateDocxTo(d,noImages,sink.output);
  expect(r.ok).toBe(false);if(!r.ok)expect(r.issues[0]?.code).toBe('DOCX_CAPABILITY_UNSUPPORTED');expect(sink.chunks).toHaveLength(0);
 });

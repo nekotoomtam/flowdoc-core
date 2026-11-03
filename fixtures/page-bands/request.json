@@ -4,8 +4,32 @@
     "projectName": "รายงานผลการทดสอบระบบงาน",
     "photo": "22222222-2222-4222-8222-222222222222"
   },
-  "sections": {
-    "body": {
+  "sections": [
+    {
+      "header": {
+        "projectName": "บริษัทตัวอย่าง — หัวกระดาษ",
+        "logo": ""
+      },
+      "footer": {
+        "contact": "ข้อมูลติดต่อ — ท้ายกระดาษ"
+      },
+      "sectionKey": "S0001",
+      "instanceKey": "I0001",
+      "data": {}
+    },
+    {
+      "header": {
+        "projectName": "บริษัทตัวอย่าง — หัวกระดาษ",
+        "logo": ""
+      },
+      "footer": {
+        "contact": "ข้อมูลติดต่อ — ท้ายกระดาษ"
+      },
+      "sectionKey": "S0002",
+      "instanceKey": "I0002",
+      "data": {}
+    },
+    {
       "data": {
         "details": [
           {
@@ -27,43 +51,33 @@
       },
       "footer": {
         "contact": "ข้อมูลติดต่อ — ท้ายกระดาษ"
-      }
+      },
+      "sectionKey": "S0003",
+      "instanceKey": "I0003"
     },
-    "introduction": {
+    {
       "header": {
         "projectName": "บริษัทตัวอย่าง — หัวกระดาษ",
         "logo": ""
       },
       "footer": {
         "contact": "ข้อมูลติดต่อ — ท้ายกระดาษ"
-      }
+      },
+      "sectionKey": "S0004",
+      "instanceKey": "I0004",
+      "data": {}
     },
-    "contents": {
+    {
       "header": {
         "projectName": "บริษัทตัวอย่าง — หัวกระดาษ",
         "logo": ""
       },
       "footer": {
         "contact": "ข้อมูลติดต่อ — ท้ายกระดาษ"
-      }
-    },
-    "intentional-blank": {
-      "header": {
-        "projectName": "บริษัทตัวอย่าง — หัวกระดาษ",
-        "logo": ""
       },
-      "footer": {
-        "contact": "ข้อมูลติดต่อ — ท้ายกระดาษ"
-      }
-    },
-    "closing": {
-      "header": {
-        "projectName": "บริษัทตัวอย่าง — หัวกระดาษ",
-        "logo": ""
-      },
-      "footer": {
-        "contact": "ข้อมูลติดต่อ — ท้ายกระดาษ"
-      }
+      "sectionKey": "S0005",
+      "instanceKey": "I0005",
+      "data": {}
     }
-  }
+  ]
 }

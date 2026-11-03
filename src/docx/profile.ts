@@ -100,8 +100,8 @@ function deriveStyles(d: any, r: PrivateResources) {
     return styles;
 }
 function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: ReadonlySet<string> = new Set()): Omit<Capsule, 'document' | 'resources' | 'profile' | 'imageOmissions'> {
-    keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', 'sections', 'header', 'footer', 'formatInstances'], 'document');
-    requireValue([1, 2].includes(d.schemaVersion) && [18, 19, 20].includes(d.nodeModelVersion), 'document', 'Unsupported schema/model combination');
+    keys(d, ['schemaVersion', 'nodeModelVersion', 'template', 'book', 'styles', 'rootIds', 'nodes', 'sourceMap', 'sections', 'formatInstances'], 'document');
+    requireValue([1, 2].includes(d.schemaVersion) && d.nodeModelVersion===20, 'document', 'Unsupported schema/model combination');
     keys(d.template, ['templateId', 'docKey', 'version'], 'template');
     requireValue(name(d.template.templateId) && name(d.template.docKey) && Number.isSafeInteger(d.template.version) && d.template.version > 0, 'template', 'Invalid template identity');
     keys(d.book, ['contentSlot', 'page'], 'book');
@@ -242,10 +242,8 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
                 keys(n, ['id', 'type', 'props'], at);
                 keys(p, ['textStyleId', 'scope'], at + '.props');
                 requireValue(own(styles, p.textStyleId), at + '.props.textStyleId', 'Missing TOC style');
-                if (p.scope !== undefined) {
-                    keys(p.scope, ['kind'], at + '.props.scope');
-                    requireValue(d.nodeModelVersion !== 18 && ['section', 'document'].includes(p.scope.kind), at + '.props.scope', 'Invalid scoped TOC');
-                }
+                keys(p.scope, ['kind'], at + '.props.scope');
+                requireValue(['section', 'document'].includes(p.scope.kind), at + '.props.scope', 'Invalid scoped TOC');
             }
             else if (n.type === 'table') {
                 keys(n, ['id', 'type', 'props', 'columns', 'rowIds', 'rowGroups'], at);
@@ -359,7 +357,8 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
         const roots: string[] = [];
         for (const [i, s] of d.sections.entries()) {
             const p = 'sections.' + i;
-            keys(s, [...(d.nodeModelVersion===20?['definitionId','instanceKey','sectionKey']:[]),'endingArea','numbering', 'header', 'footer', 'headerMode', 'footerMode', 'role', 'sourceKind', 'sectionId', 'pageLayoutId', 'page', 'rootIds'], p);
+            keys(s, [...(['definitionId','instanceKey','sectionKey']),'endingArea','numbering', 'header', 'footer', 'headerMode', 'footerMode', 'role', 'sourceKind', 'sectionId', 'pageLayoutId', 'page', 'rootIds'], p);
+            requireValue(name(s.definitionId)&&name(s.instanceKey)&&name(s.sectionKey)&&s.sectionId==='instance-'+s.instanceKey,p+'.instanceKey','Model20 definition and occurrence identity required');
             requireValue(name(s.pageLayoutId) && !s.pageLayoutId.includes('~') && ['body', 'cover'].includes(s.role) && ['authored', 'blank'].includes(s.sourceKind) && (s.role !== 'cover' || i === 0 && s.sourceKind === 'authored') && (s.sourceKind !== 'blank' || s.rootIds?.length === 0), p, 'Invalid section');
             const bodyWidth = page(s.page, p + '.page');
             idList(s.rootIds, p + '.rootIds');
@@ -381,9 +380,6 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
         }
         requireValue(JSON.stringify(roots) === JSON.stringify(d.rootIds), 'rootIds', 'Section roots and document roots differ');
     }
-    for (const kind of ['header', 'footer'])
-        if (d[kind])
-            band(d[kind], kind, d.book.page);
     graph(d.nodes, d.rootIds, d.sourceMap, 'nodes', baseWidth);
     const members = new Map<string, string>();
     for (const section of d.sections) {

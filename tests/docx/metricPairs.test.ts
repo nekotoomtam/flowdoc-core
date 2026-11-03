@@ -1,3 +1,4 @@
+import {sectionUse,defaultUses} from '../helpers/sectionUses.js';
 import {it,expect} from 'vitest';
 import {resolve} from 'node:path';
 import {readFileSync} from 'node:fs';
@@ -11,7 +12,7 @@ async function exportText(text:string,shaper=true,split?:number){
  for(const s of Object.values(template.styles) as any[]){s.fontSize={unit:'pt',value:12};s.lineHeightPt=18;}
  if(split!==undefined)template.sections[0].source.fragment.nodes.title.children=[{id:'first',type:'text',text:text.slice(0,split)},{id:'second',type:'text',text:text.slice(split)}];
  const validated=api.validateTemplate(template);if(!validated.ok)throw Error(JSON.stringify(validated));
- const prepared=api.prepareGeneration(validated.value,{docKey:template.docKey,data:{projectName:text},sections:{}});if(!prepared.ok)throw Error(JSON.stringify(prepared));
+ const prepared=api.prepareGeneration(validated.value,{docKey:template.docKey,data:{projectName:text},sections:defaultUses(template)});if(!prepared.ok)throw Error(JSON.stringify(prepared));
  const doc=api.composeDocument(validated.value,prepared.value);if(!doc.ok)throw Error(JSON.stringify(doc));
  const frozen=JSON.stringify(doc.value),sink=staged();
  const engine=await api.createDocxEngine({...fonts(),...(shaper?{shaperPath:resolve('runtime/linux-x64/flowdoc-rustybuzz-smoke')}: {})});if(!engine.ok)throw Error(JSON.stringify(engine));

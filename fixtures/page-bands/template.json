@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
-  "templateId": "tpl-page-bands",
+  "nodeModelVersion": 20,
+  "templateId": "18ce9804-72f0-5cac-8153-7a42ec684e33",
   "docKey": "page-bands",
   "version": 1,
   "name": "Cover and reserved text trial",
@@ -184,7 +184,7 @@
   },
   "sections": [
     {
-      "id": "introduction",
+      "id": "5369b827-b8f7-5b82-8b9e-f53b51a8679a",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -243,12 +243,10 @@
         }
       },
       "role": "cover",
-      "key": "introduction",
       "inputSchema": {
         "type": "object",
         "fields": {}
       },
-      "formats": {},
       "header": {
         "baseTextStyleId": "body",
         "inputSchema": {
@@ -375,10 +373,13 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0001",
+      "label": "introduction",
+      "nameBase": "introduction"
     },
     {
-      "id": "contents",
+      "id": "9dc321a3-560b-5688-8528-d6095ef9757f",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -391,18 +392,19 @@
               "id": "toc",
               "type": "table-of-contents",
               "props": {
-                "textStyleId": "body"
+                "textStyleId": "body",
+                "scope": {
+                  "kind": "document"
+                }
               }
             }
           }
         }
       },
-      "key": "contents",
       "inputSchema": {
         "type": "object",
         "fields": {}
       },
-      "formats": {},
       "header": {
         "baseTextStyleId": "body",
         "inputSchema": {
@@ -529,10 +531,13 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0002",
+      "label": "contents",
+      "nameBase": "contents"
     },
     {
-      "id": "body",
+      "id": "63aeec67-10ff-571b-81da-fc660d00379a",
       "pageLayoutId": "landscape",
       "source": {
         "kind": "authored",
@@ -773,7 +778,6 @@
         },
         "repeats": []
       },
-      "key": "body",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -783,7 +787,6 @@
           }
         }
       },
-      "formats": {},
       "header": {
         "baseTextStyleId": "body",
         "inputSchema": {
@@ -910,19 +913,20 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0003",
+      "label": "body",
+      "nameBase": "body"
     },
     {
-      "id": "intentional-blank",
+      "id": "e8fcae12-9f4c-543e-8ab2-a0508c11b8ef",
       "source": {
         "kind": "blank"
       },
-      "key": "intentional-blank",
       "inputSchema": {
         "type": "object",
         "fields": {}
       },
-      "formats": {},
       "header": {
         "baseTextStyleId": "body",
         "inputSchema": {
@@ -1049,10 +1053,13 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0004",
+      "label": "intentional-blank",
+      "nameBase": "intentional-blank"
     },
     {
-      "id": "closing",
+      "id": "0c6dd71a-9b1e-536a-8e3e-384ecc37e66d",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -1105,12 +1112,10 @@
           }
         }
       },
-      "key": "closing",
       "inputSchema": {
         "type": "object",
         "fields": {}
       },
-      "formats": {},
       "header": {
         "baseTextStyleId": "body",
         "inputSchema": {
@@ -1237,7 +1242,10 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0005",
+      "label": "closing",
+      "nameBase": "closing"
     }
   ]
 }

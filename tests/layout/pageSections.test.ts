@@ -5,9 +5,9 @@ import {documentFlow} from '../../src/layout/documentFlow.js';
 import {indexDestinations,resolveLinkGeometry} from '../../src/layout/linkGeometry.js';
 import {fillContentsNumbers} from '../../src/layout/fillContentsNumbers.js';
 it('starts sections on new pages with independent dimensions and no duplicate text',async()=>{
- const t=sectionTemplate();t.sections.push({...structuredClone(t.sections[0]),id:'tail',key:'tail'});
+ const t=sectionTemplate();t.sections.push({...structuredClone(t.sections[0]),id:'10000000-0000-4000-8000-000000000003',sectionKey:'tail',label:'Tail',nameBase:'Tail'});
  const d=composed(t),r=await documentFlow(d,fakeRuntime);
- expect(r.pages).toHaveLength(3);expect(r.pages.map(p=>p.sectionId)).toEqual(['intro','main','tail']);
+ expect(r.pages).toHaveLength(3);expect(r.pages.map(p=>p.sectionId)).toEqual(['instance-intro','instance-main','instance-tail']);
  expect(r.pages.map(p=>p.sectionPageIndex)).toEqual([0,0,0]);
  expect(r.pages[1]!.widthPt).toBeGreaterThan(r.pages[0]!.widthPt);
  expect(r.pages.flatMap(p=>p.commands).map(c=>c.text)).toEqual(['Demo','โครงการ Demo: Body','Demo']);
@@ -16,33 +16,33 @@ it('does not insert an extra page when the preceding section exactly fills its p
  const t=sectionTemplate(),margin=t.pageLayouts.normal.page.margin;
  margin.top={value:20,unit:'pt'};margin.bottom={value:297*72/25.4-20-t.styles.body.lineHeightPt,unit:'pt'};
  const r=await documentFlow(composed(t),fakeRuntime);
- expect(r.pages.map(p=>p.sectionId)).toEqual(['intro','main']);
+ expect(r.pages.map(p=>p.sectionId)).toEqual(['instance-intro','instance-main']);
  expect(r.pages[0]!.commands[0]!.bounds.yPt).toBe(20);
 });
 it('uses global contents and cross-section destinations',async()=>{
  const t=sectionTemplate();const f=t.sections[0].source.fragment;
- f.rootIds=['toc'];f.nodes={toc:{id:'toc',type:'table-of-contents',props:{textStyleId:'body'}}};
+ f.rootIds=['toc'];f.nodes={toc:{id:'toc',type:'table-of-contents',props:{textStyleId:'body',scope:{kind:'document'}}}};
  t.areaFormats['section-note'].fragment.nodes.note.props.anchorId='target';t.areaFormats['section-note'].fragment.nodes.note.props.toc={level:1};
  const d=composed(t),draw=await documentFlow(d,fakeRuntime),anchors=indexDestinations(d,draw);
  await fillContentsNumbers(draw,anchors,fakeRuntime);resolveLinkGeometry(d,draw,anchors);
- expect(anchors.target?.pageIndex).toBe(1);
+ expect(anchors[JSON.stringify(['instance-main','target'])]?.pageIndex).toBe(1);
  expect(draw.pages[0]!.commands.some(c=>c.text==='โครงการ Demo: Body')).toBe(true);
  expect(draw.pages[0]!.commands.some(c=>c.text==='2')).toBe(true);
 });
 it('skips empty sections at middle/end and keeps continuation metadata',async()=>{
- const t=sectionAreaTemplate();t.sections.splice(1,0,{...structuredClone(t.sections[2]),id:'empty-middle',key:'empty-middle',source:{kind:'authored',repeats:[],fragment:{rootIds:[],nodes:{}}}});
+ const t=sectionAreaTemplate();t.sections.splice(1,0,{...structuredClone(t.sections[2]),id:'10000000-0000-4000-8000-000000000004',sectionKey:'empty-middle',label:'Empty',nameBase:'Empty',source:{kind:'authored',repeats:[],fragment:{rootIds:[],nodes:{}}}});
  const r=await documentFlow(composed(t,[{format:'section-note',data:{text:Array.from({length:90},(_,i)=>'L'+i).join('\n')}}]),fakeRuntime);
- expect(r.pages[0]!.sectionId).toBe('intro');expect(r.pages.slice(1).every(p=>p.sectionId==='main')).toBe(true);
+ expect(r.pages[0]!.sectionId).toBe('instance-intro');expect(r.pages.slice(1).every(p=>p.sectionId==='instance-main')).toBe(true);
  expect(r.pages.slice(1).map(p=>p.sectionPageIndex)).toEqual(r.pages.slice(1).map((_,i)=>i));
  expect(r.pages.flatMap(p=>p.commands).filter(c=>/^L\d+$/.test(c.text)).map(c=>c.text)).toEqual(Array.from({length:89},(_,i)=>'L'+(i+1)));
 });
 it('flows a long table then authored image and reports oversized image',async()=>{
  const t=sectionTemplate();t.globalSchema.fields.photo={type:'image'};
  t.globalSchema.fields.photo.default='11111111-1111-4111-8111-111111111111';
- t.sections.push({id:'images',key:'images',inputSchema:{type:'object',fields:{}},formats:{},source:{kind:'authored',repeats:[],fragment:{rootIds:['photo'],nodes:{photo:{id:'photo',type:'image',props:{source:{scope:'global',key:'photo'},width:{value:80,unit:'mm'},height:{value:30,unit:'mm'},align:'center'}}}}}});
+ t.sections.push({id:'10000000-0000-4000-8000-000000000005',sectionKey:'images',label:'Images',nameBase:'Images',inputSchema:{type:'object',fields:{}},source:{kind:'authored',repeats:[],fragment:{rootIds:['photo'],nodes:{photo:{id:'photo',type:'image',props:{source:{scope:'global',key:'photo'},width:{value:80,unit:'mm'},height:{value:30,unit:'mm'},align:'center'}}}}}});
  const d=composed(t,[{format:'requirement-list',data:{items:[{code:'REQ-01',detail:Array.from({length:70},(_,i)=>'ROW'+i).join('\n')}]}}]);
- const r=await documentFlow(d,fakeRuntime);expect(r.pages.length).toBeGreaterThan(3);expect(r.pages.at(-1)?.sectionId).toBe('images');
- expect(r.pages.filter(p=>p.sectionId==='main').every(p=>p.borders?.length)).toBe(true);
+ const r=await documentFlow(d,fakeRuntime);expect(r.pages.length).toBeGreaterThan(3);expect(r.pages.at(-1)?.sectionId).toBe('instance-images');
+ expect(r.pages.filter(p=>p.sectionId==='instance-main').every(p=>p.borders?.length)).toBe(true);
  const n=Object.values(d.nodes).find(n=>n.type==='image')!;if(n.type!=='image')return;n.props.height.value=500;
  await expect(documentFlow(d,fakeRuntime)).rejects.toMatchObject({nodeId:n.id});
 });

@@ -15,7 +15,7 @@ const take = (r: any) => { if (!r.ok)
     fail(r.issues[0].code, r.issues[0].path, r.issues[0].message); return r.value; };
 export function buildSections(intent: ExportIntent) {
     const sections: ISectionOptions[] = [], receipts: any[] = [], endingAreas:any[]=[], footnotes:Record<string,{children:Paragraph[]}>={}, anchors = anchorBookmarks(intent), nodes: any = intent.document.nodes, sourceSections = intent.document.sections as any[];
-    const emptyContents = new Set<string>((Object.values(nodes) as any[]).filter(n => intent.document.nodeModelVersion !== 18 && n.type === 'table-of-contents' && collectContents(intent.document, n.props.scope?.kind === 'section' ? (intent.document.sourceMap as any)[n.id].sectionId : undefined).length === 0).map(n => n.id));
+    const emptyContents = new Set<string>((Object.values(nodes) as any[]).filter(n => n.type === 'table-of-contents' && collectContents(intent.document, n.props.scope?.kind === 'section' ? (intent.document.sourceMap as any)[n.id].sectionId : undefined).length === 0).map(n => n.id));
     const visibleSections = new Set(sourceSections.filter(s => s.role === 'cover' || s.sourceKind === 'blank' || s.rootIds.some((id: string) => nodes[id].type !== 'page-break' && !emptyContents.has(id)) || intent.document.formatInstances?.some(f => f.sectionId === s.sectionId && f.sizing.mode === 'fixed')));
     const omittedSections = sourceSections.filter(s => !visibleSections.has(s)).map(s => ({sectionId: s.sectionId, reason: 'no-layout-content'}));
     if (!visibleSections.size) fail('DOCX_CAPABILITY_UNSUPPORTED', 'sections', 'Document has no layout content');
@@ -69,11 +69,11 @@ export function buildSections(intent: ExportIntent) {
         const bandReceipt: any = {}, groups: any = {}, estimated: any = { ...sourceMargin };
         let dynamicHeader = false;
         for (const kind of ['header', 'footer'] as const) {
-            const b = s[kind] ?? (intent.document as any)[kind], requested = s[kind + 'Mode'], effective = s.role === 'body' && s.sourceKind !== 'blank' ? requested : 'none';
+            const b = s[kind], requested = s[kind + 'Mode'], effective = s.role === 'body' && s.sourceKind !== 'blank' ? requested : 'none';
             const makeEmpty = () => kind === 'header' ? new Header({ children: [structuralParagraph()] }) : new Footer({ children: [structuralParagraph()] });
             let real: any, prepared: any;
             if (b && effective !== 'none') {
-                const scope = s[kind] ? 'sections.' + index + '.' + kind + '.nodes' : kind + '.nodes';
+                const scope = 'sections.' + index + '.' + kind + '.nodes';
                 const eligibility = kind === 'header' ? headerSpaceEligibility(b) : { eligible: false };
                 const mapHeaderGap = kind === 'header' && eligibility.eligible;
                 if (kind === 'header')
@@ -95,12 +95,12 @@ export function buildSections(intent: ExportIntent) {
             groups[kind] = { default: b && ['all', 'continuation'].includes(effective) ? real() : makeEmpty(), first: b && ['all', 'first'].includes(effective) ? real() : makeEmpty() };
             bandReceipt[kind] = { mode: effective, sourceMode: requested, reservedHeightTwips: prepared?.reservedHeightTwips ?? 0, offsetTwips: prepared?.offsetTwips ?? sourceMargin[kind === 'header' ? 'top' : 'bottom'], spacePolicy: prepared?.spacePolicy ?? 'none', shape: prepared?.shape, fallbackReason: prepared?.fallbackReason, gapTwips: prepared?.gapTwips ?? 0, wordFootprintVerified: false, quantization: prepared?.quantization ?? [] };
         }
-        const headerBand = s.header ?? (intent.document as any).header, headerMode = bandReceipt.header.mode;
+        const headerBand = s.header, headerMode = bandReceipt.header.mode;
         const emptySpace = deriveHeaderSpace({ effectiveFirstEmpty: !headerBand || !['all', 'first'].includes(headerMode), effectiveDefaultEmpty: !headerBand || !['all', 'continuation'].includes(headerMode), previousDistanceTwips: margin.header });
         margin.header = emptySpace.nativeDistanceTwips;
         bandReceipt.header.nativeDistanceTwips = margin.header;
         bandReceipt.header.emptySpace = emptySpace;
-        const footerBand = s.footer ?? (intent.document as any).footer, footerMode = bandReceipt.footer.mode;
+        const footerBand = s.footer, footerMode = bandReceipt.footer.mode;
         const emptyFooterSpace = deriveFooterSpace({ effectiveFirstEmpty: !footerBand || !['all', 'first'].includes(footerMode), effectiveDefaultEmpty: !footerBand || !['all', 'continuation'].includes(footerMode), previousDistanceTwips: margin.footer });
         // Even an empty native footer has a paragraph. Keep it below the body edge.
         margin.footer = emptyFooterSpace.nativeDistanceTwips;

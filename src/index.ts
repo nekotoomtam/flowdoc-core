@@ -36,13 +36,12 @@ export type {ContentsBlock,ContentsScope} from './composition/resolvedDocument.j
 export {readGenerationJson} from './data/readGenerationJson.js';
 export type {AreaField,AreaEntry,AreaFormat,TemplateArea} from './template/types.js';
 
-export type {PreparedSection} from './data/types.js';
 
 export type {SystemPageField} from "./composition/resolvedDocument.js";
 
 export type {ResolvedRowGroup,ResolvedGroupLabel} from './composition/resolvedDocument.js';
 
-export type {Template18,Template19,Template20,SectionDefinition,InstanceSection,AreaSection,BindingScope,PageNumbering,RowGroup,GroupLabel} from './template/types.js';
-export type {PreparedSection19,PreparedSection20} from './data/types.js';
+export type {Template20,SectionDefinition,BindingScope,PageNumbering,RowGroup,GroupLabel} from './template/types.js';
+export type {PreparedSection20} from './data/types.js';
 export {normalizeTaskInput} from './data/taskInput.js';
 export type {TaskValue,TaskImageContext,TaskImageResource,TaskInputOptions,TaskInputLimits,TaskInputSummary} from './data/taskInput.js';

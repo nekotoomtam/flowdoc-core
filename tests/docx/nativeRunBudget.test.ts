@@ -9,18 +9,18 @@ const message = (n: number) => 'Record ' + n + ' — audit ownership text ' + ('
 function template(children: unknown[] = [{id: 'leaf', type: 'field-ref', scope: 'local', key: 'message'}]): any {
     const mm = {value: 20, unit: 'mm'};
     return {
-        schemaVersion: 1, nodeModelVersion: 19, templateId: 'audit-fixture', docKey: 'audit-fixture', version: 1, name: 'audit-fixture', examples: [],
+        schemaVersion: 1, nodeModelVersion: 20, templateId: 'audit-fixture', docKey: 'audit-fixture', version: 1, name: 'audit-fixture', examples: [],
         book: {contentSlot: 'body', defaultPageLayoutId: 'normal'}, globalSchema: {type: 'object', fields: {}},
         styles: {body: {fontFamilyKey: 'sarabun', fontWeight: 'normal', fontSize: {value: 12, unit: 'pt'}, lineHeightPt: 20}},
         pageLayouts: {normal: {page: {size: 'A4', orientation: 'portrait', margin: {top: mm, right: mm, bottom: mm, left: mm}}}},
         areaFormats: {item: {key: 'item', ownerAreaId: 'parts', inputSchema: {type: 'object', fields: {message: {type: 'string', required: true}}}, repeats: [], fragment: {rootIds: ['text'], nodes: {text: {id: 'text', type: 'text-block', role: {role: 'paragraph'}, props: {textStyleId: 'body'}, children}}}}},
-        sections: [{id: sectionId, label: 'Audit', nameBase: 'Audit', inputSchema: {type: 'object', fields: {parts: {type: 'area', areaId: 'parts'}}}, source: {kind: 'authored', repeats: [], fragment: {rootIds: ['parts'], nodes: {parts: {id: 'parts', type: 'area', props: {areaId: 'parts'}}}}}}],
+        sections: [{id: sectionId, sectionKey: 'audit', label: 'Audit', nameBase: 'Audit', inputSchema: {type: 'object', fields: {parts: {type: 'area', areaId: 'parts'}}}, source: {kind: 'authored', repeats: [], fragment: {rootIds: ['parts'], nodes: {parts: {id: 'parts', type: 'area', props: {areaId: 'parts'}}}}}}],
     };
 }
 async function generate(messages: string[], children?: unknown[]) {
     const validated = api.validateTemplate(template(children));
     if (!validated.ok) throw Error(JSON.stringify(validated));
-    const prepared = api.prepareGeneration(validated.value, {docKey: 'audit-fixture', data: {}, sections: [{id: sectionId, data: {parts: messages.map(message => ({format: 'item', data: {message}}))}}]});
+    const prepared = api.prepareGeneration(validated.value, {docKey: 'audit-fixture', data: {}, sections: [{sectionKey: 'audit', instanceKey: 'audit', data: {parts: messages.map(message => ({format: 'item', data: {message}}))}}]});
     if (!prepared.ok) throw Error(JSON.stringify(prepared));
     const composed = api.composeDocument(validated.value, prepared.value);
     if (!composed.ok) throw Error(JSON.stringify(composed));

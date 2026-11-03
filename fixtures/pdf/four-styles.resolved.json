@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
+  "nodeModelVersion": 20,
   "template": {
     "templateId": "pdf-fixture",
     "docKey": "pdf-fixture",
@@ -289,87 +289,87 @@
     "heading0": {
       "sourceId": "heading0",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "body0": {
       "sourceId": "body0",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "heading1": {
       "sourceId": "heading1",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "body1": {
       "sourceId": "body1",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "heading2": {
       "sourceId": "heading2",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "body2": {
       "sourceId": "body2",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "heading3": {
       "sourceId": "heading3",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "body3": {
       "sourceId": "body3",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "heading0-text": {
       "sourceId": "heading0-text",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "body0-text": {
       "sourceId": "body0-text",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "heading1-text": {
       "sourceId": "heading1-text",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "body1-text": {
       "sourceId": "body1-text",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "heading2-text": {
       "sourceId": "heading2-text",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "body2-text": {
       "sourceId": "body2-text",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "heading3-text": {
       "sourceId": "heading3-text",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "body3-text": {
       "sourceId": "body3-text",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     }
   },
   "sections": [
     {
-      "sectionId": "main",
+      "sectionId": "instance-main",
       "pageLayoutId": "normal",
       "page": {
         "size": "A4",
@@ -406,7 +406,10 @@
       "sourceKind": "authored",
       "role": "body",
       "headerMode": "none",
-      "footerMode": "none"
+      "footerMode": "none",
+      "definitionId": "10000000-0000-4000-8000-000000000001",
+      "sectionKey": "main",
+      "instanceKey": "main"
     }
   ]
 }

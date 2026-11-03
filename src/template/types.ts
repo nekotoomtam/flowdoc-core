@@ -5,7 +5,7 @@ export interface ImageField {type:'image';required?:boolean;default?:string;labe
 export interface LinkField {type:'link';required?:boolean;default?:BoundLink;label?:string;description?:string}
 export type BindingScope='global'|'section'|'header'|'footer'|'local'|'group'|'item';
 export type ScalarBinding=string|{scope:BindingScope;key:string};
-export type TemplateLink={id:string}&({type:'url';value:ScalarBinding}|{type:'link';text:ScalarBinding;url:ScalarBinding}|{type:'reference';text:ScalarBinding;target:ScalarBinding;targetSectionId?:string;targetInstanceKey?:string});
+export type TemplateLink={id:string}&({type:'url';value:ScalarBinding}|{type:'link';text:ScalarBinding;url:ScalarBinding}|{type:'reference';text:ScalarBinding;target:ScalarBinding;targetInstanceKey?:string});
 export type TemplateInline=Exclude<TextInline,{type:'url'|'link'|'reference'}>|FieldRef|TemplateLink;
 export interface ArrayField {type:'array';required?:boolean;default?:import('../data/types.js').PreparedItem[];items:ObjectSchema<StringField|LinkField|ImageField|ArrayField>;label?:string;description?:string}
 export interface ObjectSchema<F=StringField|ArrayField|ImageField|LinkField|AreaField> {type:'object';fields:Record<string,F>}
@@ -39,11 +39,7 @@ export interface BandColumns {id:string;type:'columns';props:{gap?:import('../co
 export interface BandPlacement {mode:"page";left:import("../composition/resolvedDocument.js").Length;right:import("../composition/resolvedDocument.js").Length;offset:import("../composition/resolvedDocument.js").Length}
 export interface PageBandDefinition {placement?:BandPlacement;inputSchema:ObjectSchema<StringField|ImageField|LinkField>;fragment:{rootIds:string[];nodes:Record<string,LineBlock|TemplateTextBlock|TemplateImageBlock|BandColumns>};baseTextStyleId:string;sizing?:BandSizing;gap?:import('../composition/resolvedDocument.js').Length}
 
-export interface AreaSection extends TemplateSection {key:string;inputSchema:ObjectSchema;formats:Record<string,never>;header?:PageBandDefinition;footer?:PageBandDefinition;numbering?:PageNumbering}
-export type Template18=TemplateBase&{nodeModelVersion:18;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:AreaSection[]};
-export interface InstanceSection extends Omit<AreaSection,'key'|'formats'> {label:string;nameBase:string;origin?:{templateId:string;revision:number;sectionId:string}}
-export type Template19=Omit<Template18,'nodeModelVersion'|'sections'>&{nodeModelVersion:19;sections:InstanceSection[]};
-export interface SectionDefinition extends InstanceSection {sectionKey:string}
-export type Template20=Omit<Template19,'nodeModelVersion'|'sections'>&{nodeModelVersion:20;sections:SectionDefinition[]};
-export type TemplateDefinition=Template18|Template19|Template20;
+export interface SectionDefinition extends TemplateSection {sectionKey:string;label:string;nameBase:string;origin?:{templateId:string;revision:number;sectionId:string};inputSchema:ObjectSchema;header?:PageBandDefinition;footer?:PageBandDefinition;numbering?:PageNumbering}
+export type Template20=TemplateBase&{nodeModelVersion:20;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:SectionDefinition[]};
+export type TemplateDefinition=Template20;
 export type PageNumbering={mode:"continue";visibility?:"show"|"hide"}|{mode:"restart";startAt?:number;visibility?:"show"|"hide"}|{mode:"exclude";visibility?:"show"|"hide"};

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
-  "templateId": "tpl-area-document",
+  "nodeModelVersion": 20,
+  "templateId": "75c477f9-81d5-58c0-8b07-c6acc3b12b22",
   "docKey": "area-document",
   "version": 1,
   "name": "Explicit Area document",
@@ -53,8 +53,7 @@
   },
   "sections": [
     {
-      "id": "main",
-      "key": "main",
+      "id": "045e012e-2177-5d36-8e9c-64bb859a6029",
       "source": {
         "kind": "authored",
         "fragment": {
@@ -83,7 +82,9 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0001",
+      "label": "main",
+      "nameBase": "main"
     }
   ],
   "areaFormats": {

@@ -23,22 +23,22 @@ it.each([
  ['header repeat',(t:any)=>{const f=t.areaFormats.merged;f.fragment.nodes.h.childIds.push('photo','caption');f.fragment.nodes.a.childIds=['at','footer'];f.cellRepeats[0].cellId='h';}],
  ['row nesting',(t:any)=>{const f=t.areaFormats.merged;f.fragment.nodes.a.props.rowSpan=1;f.repeats=[{tableId:'table',rowTemplateId:'r1',source:{scope:'local',key:'evidenceList'}}];}],
 ] as const)('rejects %s',(_,change)=>{const t=cellRepeatTemplate();change(t);expect(validateTemplate(t).ok).toBe(false);});
-it('keeps item error paths and unknown warnings',()=>{
+it('keeps item error paths and rejects unknown fields',()=>{
  const t=valid(cellRepeatTemplate());for(const item of [{caption:'missing'},{photo:12},{photo:null}]){
-  const r=prepareGeneration(t,cellRepeatRequest([{photo},item]));expect(r.ok).toBe(false);if(!r.ok)expect(r.issues.some(i=>i.path==='sections.main.data.details[0].data.evidenceList[1].photo')).toBe(true);
+  const r=prepareGeneration(t,cellRepeatRequest([{photo},item]));expect(r.ok).toBe(false);if(!r.ok)expect(r.issues.some(i=>i.path==='sections[0].data.details[0].data.evidenceList[1].photo')).toBe(true);
  }
- const r=prepareGeneration(t,cellRepeatRequest([{photo,extra:'ignored'}]));expect(r.ok).toBe(true);expect(r.warnings[0]?.path).toBe('sections.main.data.details[0].data.evidenceList[0].extra');
+ const r=prepareGeneration(t,cellRepeatRequest([{photo,extra:'ignored'}]));expect(r.ok).toBe(false);if(!r.ok)expect(r.issues).toContainEqual(expect.objectContaining({code:'INVALID_DATA',path:'sections[0].data.details[0].data.evidenceList[0].extra'}));expect(r.warnings).toEqual([]);
 });
 it('uses optional defaults but required overrides default',()=>{
  const input=cellRepeatTemplate(),f=input.areaFormats.merged.inputSchema.fields.evidenceList;f.default=[{photo,caption:'default'}];
- const req=cellRepeatRequest();delete (req.sections.main.data.details[0]!.data as any).evidenceList;
- const r=prepareGeneration(valid(input),req);expect(r.ok&&r.value.sections.main.data.details.entries[0]?.data.evidenceList).toEqual(f.default);
+ const req=cellRepeatRequest();delete (req.sections[0].data.details[0]!.data as any).evidenceList;
+ const r=prepareGeneration(valid(input),req);expect(r.ok&&r.value.sections[0].data.details.entries[0]?.data.evidenceList).toEqual(f.default);
  f.required=true;expect(prepareGeneration(valid(input),req).ok).toBe(false);
  f.default=[{photo:7}];expect(validateTemplate(input).ok).toBe(false);
 });
 it('accepts global array binding and rejects null arrays',()=>{
  const t=cellRepeatTemplate(),f=t.areaFormats.merged;t.globalSchema.fields=f.inputSchema.fields;f.inputSchema.fields={};f.cellRepeats[0].source.scope='global';
- const r:any=cellRepeatRequest();r.data={evidenceList:[{photo}]};r.sections.main.data.details[0].data={};expect(prepareGeneration(valid(t),r).ok).toBe(true);
+ const r:any=cellRepeatRequest();r.data={evidenceList:[{photo}]};r.sections[0].data.details[0].data={};expect(prepareGeneration(valid(t),r).ok).toBe(true);
  r.data.evidenceList=null;expect(prepareGeneration(valid(t),r).ok).toBe(false);
 });
 

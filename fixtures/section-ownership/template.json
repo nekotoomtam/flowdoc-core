@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
-  "templateId": "section-ownership",
+  "nodeModelVersion": 20,
+  "templateId": "d53a58db-4017-59aa-8976-cb50bd9829ff",
   "docKey": "section-ownership",
   "version": 1,
   "name": "Cover and reserved text trial",
@@ -184,7 +184,7 @@
   },
   "sections": [
     {
-      "id": "introduction",
+      "id": "1e8b2373-f012-554d-8853-13e22152de95",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -243,7 +243,6 @@
         }
       },
       "role": "cover",
-      "key": "introduction",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -386,10 +385,12 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0001",
+      "label": "introduction",
+      "nameBase": "introduction"
     },
     {
-      "id": "contents",
+      "id": "e63b0d74-572f-5047-8ed9-f2426d0e418a",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -402,13 +403,15 @@
               "id": "toc",
               "type": "table-of-contents",
               "props": {
-                "textStyleId": "body"
+                "textStyleId": "body",
+                "scope": {
+                  "kind": "document"
+                }
               }
             }
           }
         }
       },
-      "key": "contents",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -551,10 +554,12 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0002",
+      "label": "contents",
+      "nameBase": "contents"
     },
     {
-      "id": "body",
+      "id": "9919862c-b499-54b5-8e41-43d173d71304",
       "pageLayoutId": "landscape",
       "source": {
         "kind": "authored",
@@ -795,7 +800,6 @@
         },
         "repeats": []
       },
-      "key": "body",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -942,14 +946,15 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0003",
+      "label": "body",
+      "nameBase": "body"
     },
     {
-      "id": "intentional-blank",
+      "id": "9bbd63c2-63e5-5c31-8e21-d22cba954371",
       "source": {
         "kind": "blank"
       },
-      "key": "intentional-blank",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -1092,10 +1097,12 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0004",
+      "label": "intentional-blank",
+      "nameBase": "intentional-blank"
     },
     {
-      "id": "closing",
+      "id": "1edca690-d266-50e7-8877-41921369f491",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -1148,7 +1155,6 @@
           }
         }
       },
-      "key": "closing",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -1291,7 +1297,9 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0005",
+      "label": "closing",
+      "nameBase": "closing"
     }
   ]
 }

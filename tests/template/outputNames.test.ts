@@ -5,7 +5,7 @@ import {composeDocument} from '../../src/composition/composeDocument.js';
 import {ownedTemplate,ownedRequest} from '../helpers/sectionOwnership.js';
 const take=(r:any)=>{expect(r.ok,JSON.stringify(r)).toBe(true);return r.value;};
 function template(model:number){const t=ownedTemplate();if(model!==18){for(const [i,s]of t.sections.entries()){s.id=`10000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`;s.nameBase='Section';s.label='Section '+i;delete s.key;delete s.formats;if(model===20)s.sectionKey='s'+i;}t.nodeModelVersion=model;}return t;}
-it.each([18,19,20])('retains a normalized defaultFileName as versioned model%d metadata',model=>{
+it.each([20])('retains a normalized defaultFileName as versioned model%d metadata',model=>{
  const t=template(model),before=take(validateTemplate(t));t.defaultFileName='  รายงาน CLIS 2602S  ';const next=take(validateTemplate(t));
  expect(next.definition.defaultFileName).toBe('รายงาน CLIS 2602S');expect(next.fingerprint).not.toBe(before.fingerprint);expect(t.defaultFileName).toBe('  รายงาน CLIS 2602S  ');
 });

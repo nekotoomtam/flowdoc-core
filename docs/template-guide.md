@@ -7,8 +7,8 @@ Owner: flowdoc-core. This file locates this package's implemented contract and r
 This describes development package0.5.2, distinct from the existing frozen
 release v0.5.2. Identify the development candidate by source commit and archive
 checksum, not version number alone. It includes optional
-output base-name metadata, experimental direct-Core Model20 assembly, opt-in font-height
-calculation, Section19, group-label continuation and streamed task input/PDF.
+output base-name metadata, model20-only assembly, opt-in font-height
+calculation, model20 Sections, group-label continuation and streamed task input/PDF.
 Ordinary pt rendering is unchanged. See the root README for the exact native
 helper/session contract and font-height API inputs/errors. Service owns task
 storage, credentials, streaming delivery and process supervision.
@@ -19,9 +19,23 @@ The native DOCX run-compaction change preserves authored span boundaries and
 text order without increasing XML/drawing/archive limits. Package/text tests
 do not establish native Word visual or pagination fidelity.
 
-Models18/19 remain the Service-facing contracts. Core also accepts experimental
-Model20 for direct use as described in the appendix; this does not enable it in
-Service or the installed FlowDocMake. Models 18 and 19 are accepted. Model19 uses UUID Section instances and array input; its Stage2 fixed-height text frames are allowed only at Section flow roots, including top-level Area Formats. Text-node props.heightMode:fixed / props.height frames fail on text/body overflow and cannot control Section pages or bands. They are separate from Area Format sizing.fixed below. Cell/repeat frames and nested Areas remain prohibited; Stage3 TOCs require props.scope `{kind:"section"}` or `{kind:"document"}`, with one per scope after expansion. Section scope uses the owning Section. Empty scopes create no page; number slots are reserved and filled from actual target page numbering in one layout pass. Model18 TOCs remain unscoped. Model18 keeps its original behavior. Models 4–17 and their legacy content envelopes have been retired. Historical explanations remain in Git history and must not be used as current authoring instructions.
+This candidate accepts nodeModelVersion20 only. Saved definitions use UUID id,
+sectionKey and label/nameBase; requests supply ordered
+sections:[{sectionKey,instanceKey,data,header?,footer?}]. Unused definitions are
+omitted; repeated definitions require distinct instance keys. Internal IDs are
+not caller lookup keys. Prepared schema3 and normalized task/2 pin20; old model
+and snapshot contracts fail admission. Convert old templates offline with their
+matching SDK before validating the result; there is no runtime conversion.
+
+Fixed-height text frames may occur at Section flow roots and top-level Area
+Formats. They fail on overflow without clipping/shrinking, and cannot control
+pages or bands. Cell/repeat frames and nested Areas remain prohibited. TOCs
+require scope `{kind:"section"}` or `{kind:"document"}`, one per expanded scope.
+Local scope follows the occurrence, not definition ID. Empty scopes add no page;
+an entirely empty body is refused. Number slots are filled from actual target
+numbering in one layout pass. Service/plugin support requires separate acceptance;
+this Core contract does not update installed consumers.
+
 
 Read [Developer Documentation](../../flowdoc-project-control/docs/developer/authoring/README.md) for definitions, node properties, defaults, binding scopes, tables, contents, page numbering, image sizing and review rules. The [authoring workflow](../../flowdoc-project-control/docs/domains/flowdoc-ai-template-authoring-guide.md) covers draft creation through a complete reviewed PDF. Publish requires explicit user confirmation.
 
@@ -113,7 +127,7 @@ keep-whole-list promise. Table/cell insets and border quantization have explicit
 adaptation receipts; a structurally valid package does not prove native fit.
 
 Table `props.borderStyle` accepts `single`, `none`, `dashed`, `dotted`, `dashSmallGap`,
-`double` and `thickThinWideGap` in models18/19. Omission retains single0.5pt black. `borderColor` sets
+`double` and `thickThinWideGap` in model20. Omission retains single0.5pt black. `borderColor` sets
 RGB without `#`; `borderWidth:Length` sets the nominal component-line weight.
 Native visible table weights must be0.25..12pt in exact eighth-point steps,
 with equivalent pt/mm input. B/none admit exact EMU weights in that range;
@@ -244,7 +258,7 @@ not calibrated automatically. Existing PDF baselines stay immutable.
 
 ## Font styles and resources in 0.4.0
 
-`schemaVersion` is independent of `nodeModelVersion:18` and the template's own
+`schemaVersion` is independent of `nodeModelVersion:20` and the template's own
 `version`. Schema 1 keeps the existing Sarabun style contract and fingerprint;
 keep confirmed legacy documents in that schema rather than changing a number
 to make them library-font documents. Schema 2 uses a style such as:
@@ -293,7 +307,7 @@ Schema 2 validation alone does not establish readiness for the actual input.
 - `fixtures/table/`: short, empty and long tables with continuation.
 - `fixtures/row-groups/`: repeated logical table groups.
 
-Always validate a template and prepare its matching request before composition. Model18 uses a `sections` request object keyed by Section keys; model19 uses the Section-ID array described above. The prepared snapshot retains Section IDs. Area formats use explicit ownerAreaId and key. They cannot declare another Area in their input schema. A reusable format with business arrays is distinct from an Area placement.
+Always validate a template and prepare its matching request before composition. Model20 uses the ordered definition-key/instance-key array described above. The prepared snapshot retains definition IDs and occurrence keys. Area formats use explicit ownerAreaId and key. They cannot declare another Area in their input schema. A reusable format with business arrays is distinct from an Area placement.
 
 Run the Core build/tests and packed Linux consumer described in [README](../README.md).
 For a font-aware consumer, exercise every selected face and required character set,
@@ -306,7 +320,7 @@ links and every rendered page.
 
 An authored Area placement can set `props.verticalAlign: "bottom"` (or `"top"`
 for default flow). Bottom is allowed only for the final top-level root Area of a
-body Section, in models18/19. It is not available in cells or cover Sections;
+body Section, in model20. It is not available in cells or cover Sections;
 fixed Format budgets, page breaks and TOCs inside that Area are rejected. Data
 still supplies ordinary Area Format entries, not positions or fit hints. Multiple
 entries form one ending Area; no entries add no visible block or page.
@@ -337,7 +351,7 @@ content parity or release readiness from this experiment.
 
 ## Packaged Format sizing v2 development candidate
 
-Model19 Area Format definitions optionally declare `sizing: {mode: "auto"}` or
+Model20 Area Format definitions optionally declare `sizing: {mode: "auto"}` or
 `{mode: "fixed", height: {value: 300, unit: "pt"}}` (pt/mm). Omitted sizing retains
 legacy auto. Fixed requires a Section flow-root Area and cannot contain a TOC.
 Each call reserves min(declared maximum, current body remainder), even when
@@ -358,14 +372,14 @@ Project Control owns cross-repository verification and release acceptance.
 
 ## Group-label spans development candidate
 
-Model19 (schema1 or2) rowGroups optionally declares
+Model20 (font schema1 or2) rowGroups optionally declares
 `groupLabel:{cellTemplateId:"member-label",emptyCellTemplateId:"empty-label"}`.
 The member and empty label cells bind the same group field, occupy the same grid column/colSpan, have no
 authored rowSpan, and each contains one text-block with a required nonempty
 string field-ref in group scope. Labels cannot contain links, anchors, images
 or TOCs. The group needs member/empty row templates; a prefix is optional here.
-Normal rowGroups without groupLabel retain their existing contract. Model18
-rejects this optional declaration; it is not silently discarded.
+Normal rowGroups without groupLabel retain their existing contract. Legacy node
+models are rejected at admission.
 
 The empty template row must set allowBreak:false. Core derives span from member count (empty uses one fallback row). An empty
 group collection emits no group; equal names remain distinct instances.
@@ -383,20 +397,20 @@ a successful partial PDF must be reported as incomplete. Totals remain authored
 ordinary rows, not a new aggregation or group-footer hook.
 
 Consumers must preserve the declaration and inspect groupLabelSpans.version1
-on a matched Service/FlowDocMake contract, with model19/schema1,2, diagnostics1
+on a matched Service/FlowDocMake contract, with model20/font schema1,2, diagnostics1
 and formatSizing.version2. The suffix uses the selected label font; missing
 glyphs block generation without fallback. This unpromoted candidate also retains
 the decimal PDF image-coordinate serialization fix; do not overwrite an older
 archive using the new bytes. Project Control owns cross-repository acceptance.
 
 
-## Experimental Model20 Section definitions and uses
+## Model20 Section definitions and uses
 
-Authority Boundary: this appendix describes only Core's opt-in experimental
-assembly contract, governed by the Project Control repeatable-Section plan dated2026-10-26.
-It does not replace18/19 guidance or certify native Word/Service acceptance.
+Authority Boundary: Core owns this candidate assembly contract. Project Control
+governs cross-repository acceptance in the model20-only transition plan dated2026-11-03.
+This does not certify installed Service/plugin or universal Word fidelity.
 
-Model20 uses the19 authored Section/Area content model plus a unique sectionKey
+Model20 uses authored Section/Area content and a unique sectionKey
 per saved Section definition. id remains UUID; label/nameBase remain authoring
 metadata. Legacy key/formats are not permitted. Optional role is body or cover;
 a cover must have an authored source, occur first in the actual call and occur
@@ -420,14 +434,14 @@ The example77-row B-stroke pilot exceeded the unchanged default DOCX XML cap;
 its structural proof used the already-supported explicit100000-node option.
 This does not raise the product default or promise arbitrary-size exports.
 
-## Optional output base name (models18/19/20)
+## Optional output base name (model20)
 
 Optional `defaultFileName` is document-level metadata beside `docKey`, shared by
 all selected Sections. It is a base name, without `.pdf`/`.docx`. Blank removes
 the default. Validation trims/NFC normalizes names, limits them to200 code points
 and240 UTF-8 bytes, and rejects controls/format characters, path/Windows forbidden
 characters, device names, trailing dots and PDF/DOCX suffixes. Missing metadata
-retains legacy fingerprints. Core composition ignores the metadata; the matching
+retains the unnamed-template fingerprint. Core composition ignores the metadata; the matching
 Service resolves an optional request `fileName`, then the configured default,
 then `document`, and appends the selected format. See the Project Control output
 file names plan for the candidate's cross-repository acceptance boundary.
@@ -436,8 +450,8 @@ file names plan for the candidate's cross-repository acceptance boundary.
 ## Before a0.5.2 release package is frozen
 
 - Validate template, request and output format against the actual selected
-  package. Optional naming never changes18/19 Section semantics;20 is a separate
-  experimental direct-Core contract, not Service admission.
+  package. Optional naming does not change model20 occurrence semantics;
+  Service admission is separately verified.
 - Retain layout/Word evidence only for its measured fonts, geometry, page/row
   rules and supported DOCX profile. A filename or style name is not visual proof.
 - Freeze documented source before packing; record package version, source commit,

@@ -1,6 +1,4 @@
-import {prepareAssembly,validatePreparedAssembly} from '../data/prepareAssembly.js';
-import {validatePreparedInstances} from '../data/prepareInstances.js';
-import {validatePreparedSections} from '../data/prepareSections.js';
+import {validatePreparedAssembly} from '../data/prepareAssembly.js';
 import type {Result} from '../result.js';
 import type {ValidatedTemplate} from '../template/types.js';
 import type {PreparedInput} from '../data/types.js';
@@ -9,8 +7,6 @@ export function validatePreparedInput(template:ValidatedTemplate,input:unknown):
  return checked.ok?{ok:true,value:structuredClone(checked.value),warnings:structuredClone(checked.warnings)}:checked;
 }
 export function checkPreparedInput(template:ValidatedTemplate,input:unknown):Result<PreparedInput>{
- if(template.definition.nodeModelVersion===20)return validatePreparedAssembly(template,input);
- if(template.definition.nodeModelVersion===19)return validatePreparedInstances(template,input);
- if(template.definition.nodeModelVersion!==18)return {ok:false,issues:[{code:'INVALID_DATA',path:'nodeModelVersion',message:'Only Area18 documents are supported'}],warnings:[]};
- return validatePreparedSections(template,input);
+ if(template.definition.nodeModelVersion!==20)return {ok:false,issues:[{code:'INVALID_DATA',path:'nodeModelVersion',message:'Only model20 documents are supported'}],warnings:[]};
+ return validatePreparedAssembly(template,input);
 }

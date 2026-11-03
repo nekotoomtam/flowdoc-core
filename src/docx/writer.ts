@@ -108,7 +108,7 @@ async function prepareNativePackage(intent:ExportIntent,options:WriteOptions):Pr
         if(fontSignatureChanged)zip.file('word/fontTable.xml',correctedFontTable);
 
  const nativeStyleXml=await zip.file('word/styles.xml').async('string');
- const sectionProvenance=built.receipts.map(r=>{const source=intent.document.sections!.find(s=>s.sectionId===r.sectionId);if(!source)fail('DOCX_SERIALIZATION_FAILED','sections','Missing emitted section ownership');const footer=source.footer??intent.document.footer;return {sectionId:r.sectionId,footerMode:footer?r.footer.mode:'none',footerOwned:!!footer};});
+ const sectionProvenance=built.receipts.map(r=>{const source=intent.document.sections!.find(s=>s.sectionId===r.sectionId);if(!source)fail('DOCX_SERIALIZATION_FAILED','sections','Missing emitted section ownership');const footer=source.footer;return {sectionId:r.sectionId,footerMode:footer?r.footer.mode:'none',footerOwned:!!footer};});
  return {zip,originalBytes:bytes,fontSignatureChanged,nativeStyleXml,sectionProvenance,receiptFacts:{endingAreas:built.endingAreas,omittedSections:built.omittedSections,receipts:built.receipts,anchors:built.anchors,leadingExcluded:built.leadingExcluded}};
 }
 export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: WriteOptions = {}): Promise<Result<DocxReceipt>> {
@@ -126,7 +126,7 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
             if (!Number.isSafeInteger(value) || value < 0 || value > defaultValue)
                 fail('DOCX_INPUT_INVALID', 'options.' + key, 'Invalid or excessive output budget');
         }
-        const allNodes = [...Object.values(intent.document.nodes), ...[(intent.document as any).header, (intent.document as any).footer, ...(intent.document.sections as any[]).flatMap(s => [s.header, s.footer])].filter(Boolean).flatMap(b => Object.values(b.nodes))] as any[];
+        const allNodes = [...Object.values(intent.document.nodes), ...[...(intent.document.sections as any[]).flatMap(s => [s.header, s.footer])].filter(Boolean).flatMap(b => Object.values(b.nodes))] as any[];
         if(options.maxXmlNodes!==undefined&&(!Number.isSafeInteger(options.maxXmlNodes)||options.maxXmlNodes<0||options.maxXmlNodes>300000))fail('DOCX_INPUT_INVALID','options.maxXmlNodes','Invalid expanded XML budget');
         const xmlBudget=Math.min(options.maxXmlNodes??options.maxPackageNodes??50000,options.maxPackageNodes??300000);
         if (allNodes.length > (options.maxPackageNodes ?? 50000))
