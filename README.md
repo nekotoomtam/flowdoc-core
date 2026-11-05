@@ -1,5 +1,7 @@
 # FlowDoc Core
 
+> **Release withdrawn — 2026-11-05:** Core/Service v0.6.0 is withdrawn by owner request. The release branch is restored to v0.5.2. Version 0.6.0 code, packages and scoped lab evidence remain candidates; current-chat actual-use acceptance has not passed. The 0.6.0 preparation instructions below do not authorize installation or publication.
+
 This development candidate adds opt-in placement-scoped DOCX image omissions.
 `DocxOptions.imageOmissions` uses the exported `DOCX_IMAGE_OMISSIONS_CONTRACT`
 and existing body image node IDs. Selected pictures retain their native empty
