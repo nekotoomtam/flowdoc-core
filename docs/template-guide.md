@@ -1,10 +1,10 @@
-# FlowDoc Core 0.5.2 template entrypoint
+# FlowDoc Core 0.6.0 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes development package0.5.2, distinct from the existing frozen
+This describes development package0.6.0, distinct from the existing frozen
 release v0.5.2. Identify the development candidate by source commit and archive
 checksum, not version number alone. It includes optional
 output base-name metadata, model20-only assembly, opt-in font-height
@@ -14,6 +14,18 @@ helper/session contract and font-height API inputs/errors. Service owns task
 storage, credentials, streaming delivery and process supervision.
 Height adjustment does not keep text width, wrapping, or line clearance constant.
 Release identity is established by the matching snapshot/tag after the release gates.
+
+### 0.6.0 merged group-label inset boundary
+
+M1 maps eligible merged group-label source top padding to uniform peer-cell
+padding plus a single first-label paragraph offset. For example, source24pt
+with peer8pt becomes physical8pt plus paragraph-before16pt once; these values
+are derived from input, not template IDs or constants. Mixed peers, unsupported
+label flow/content, ending Areas and custom border geometry keep the original
+path. Source documents and Menu textboxes are unchanged. Adaptation receipts
+retain `wordVerified:false`; supplied Word fixtures do not certify all layouts.
+Native DOCX merged labels still occur once, without repeated continuation text
+on later pages. General source-only Word pagination remains experimental.
 
 The native DOCX run-compaction change preserves authored span boundaries and
 text order without increasing XML/drawing/archive limits. Package/text tests

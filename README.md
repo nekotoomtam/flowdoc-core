@@ -83,12 +83,22 @@ prepared snapshot, renderer capability, public endpoint or PDF readiness claim.
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
 
-Package version:0.5.2 on development. The existing release snapshot is tagged
+Package version:0.6.0 on development. The existing release snapshot is tagged
 v0.5.2; this development checkout is a different candidate, identified by its
 source commit and packed-archive checksum. It does not replace that release.
 This package includes Model20, scoped contents, Format sizing v2, group-label
 spans, streamed task images/PDF and the opt-in height calculation below.
 Release identity requires the matching tagged snapshot and acceptance gates.
+
+0.6.0 is model20-only; models18/19 and task-input/1 require explicit offline
+conversion, not a version-field edit. It includes bounded prefix-fit measurement
+in the owned native text runtime and M1 merged-label inset mapping: eligible
+uniform peers supply the physical cell top, with the remaining source inset
+applied once before the label paragraph. Unsupported cases retain native
+behavior. Menu textboxes are unchanged. Word still does not repeat merged
+Module labels with a continuation suffix on later pages; general native row/
+frame prediction and complete font-fallback certification remain unverified.
+This is a local development integration, not a release or installation.
 
 Native DOCX text emission coalesces eligible adjacent untracked runs within an
 authored span. Authored boundaries and text order remain significant; the XML,
