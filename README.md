@@ -4,13 +4,14 @@ This development candidate adds opt-in placement-scoped DOCX image omissions.
 `DocxOptions.imageOmissions` uses the exported `DOCX_IMAGE_OMISSIONS_CONTRACT`
 and existing body image node IDs. Selected pictures retain their native empty
 paragraph frames; unselected resources remain mandatory. See the template guide
-for limits, warning receipts and the strict default. This is not a release.
+for limits, warning receipts and the strict default. Release identity is
+established by the matching annotated snapshot/tag, not this feature description.
 
 This model20-only development candidate accepts nodeModelVersion20 at template,
 prepared, normalized-task and resolved-document boundaries. Models18/19 require
 explicit offline conversion; changing the version number is not conversion.
 Service and plugin acceptance are separately governed in Project Control's
-`flowdoc-model20-only-transition-2026-11-03.md`. This is not a release or installation.
+`flowdoc-model20-only-transition-2026-11-03.md`. Installation is a separate step.
 
 
 0.5.1 adds shared named table/line stroke styles, per-table-edge overrides and
@@ -81,11 +82,11 @@ This normalized contract is internal input for Service task processing, not a ne
 prepared snapshot, renderer capability, public endpoint or PDF readiness claim.
 ## Authority Boundary
 
-Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
+Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. The matching model20 authoring guide is [Developer Documentation](../flowdoc-project-control/docs/developer/authoring-model20/README.md); older prepared18/19 guides describe earlier packages.
 
-Package version:0.6.0 on development. The existing release snapshot is tagged
-v0.5.2; this development checkout is a different candidate, identified by its
-source commit and packed-archive checksum. It does not replace that release.
+Package version:0.6.0. Identify its exact source commit and packed-archive
+checksum, then verify the matching v0.6.0 annotated release snapshot. The earlier
+v0.5.2 snapshot/artifact remains immutable; version numbers are not conversion.
 This package includes Model20, scoped contents, Format sizing v2, group-label
 spans, streamed task images/PDF and the opt-in height calculation below.
 Release identity requires the matching tagged snapshot and acceptance gates.
@@ -98,7 +99,8 @@ applied once before the label paragraph. Unsupported cases retain native
 behavior. Menu textboxes are unchanged. Word still does not repeat merged
 Module labels with a continuation suffix on later pages; general native row/
 frame prediction and complete font-fallback certification remain unverified.
-This is a local development integration, not a release or installation.
+Git release publication does not install this package or certify arbitrary
+Word documents. See the Service0.6.0 update instructions before changing runtime.
 
 Native DOCX text emission coalesces eligible adjacent untracked runs within an
 authored span. Authored boundaries and text order remain significant; the XML,

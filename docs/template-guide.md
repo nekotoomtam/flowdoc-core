@@ -4,9 +4,9 @@
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes development package0.6.0, distinct from the existing frozen
-release v0.5.2. Identify the development candidate by source commit and archive
-checksum, not version number alone. It includes optional
+This describes package0.6.0; the earlier v0.5.2 release remains frozen. Identify
+the exact source and archive checksum and verify the matching v0.6.0 snapshot/tag,
+not version number alone. It includes optional
 output base-name metadata, model20-only assembly, opt-in font-height
 calculation, model20 Sections, group-label continuation and streamed task input/PDF.
 Ordinary pt rendering is unchanged. See the root README for the exact native
