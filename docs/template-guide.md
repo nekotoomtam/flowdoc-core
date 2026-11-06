@@ -1,11 +1,11 @@
-# FlowDoc Core 0.6.0 template entrypoint
+# FlowDoc Core 0.5.5 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes package0.6.0; the earlier v0.5.2 release remains frozen. Identify
-the exact source and archive checksum and verify the matching v0.6.0 snapshot/tag,
+This describes package0.5.5; the earlier v0.5.2 release remains frozen. Identify
+the exact source and archive checksum and verify the matching v0.5.5 snapshot/tag,
 not version number alone. It includes optional
 output base-name metadata, model20-only assembly, opt-in font-height
 calculation, model20 Sections, group-label continuation and streamed task input/PDF.
@@ -15,7 +15,7 @@ storage, credentials, streaming delivery and process supervision.
 Height adjustment does not keep text width, wrapping, or line clearance constant.
 Release identity is established by the matching snapshot/tag after the release gates.
 
-### 0.6.0 merged group-label inset boundary
+### 0.5.5 merged group-label inset boundary
 
 M1 maps eligible merged group-label source top padding to uniform peer-cell
 padding plus a single first-label paragraph offset. For example, source24pt

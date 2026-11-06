@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-> **Release withdrawn — 2026-11-05:** Core/Service v0.6.0 is withdrawn by owner request. The release branch is restored to v0.5.2. Version 0.6.0 code, packages and scoped lab evidence remain candidates; current-chat actual-use acceptance has not passed. The 0.6.0 preparation instructions below do not authorize installation or publication.
+> **Candidate 0.5.5 — 2026-11-06:** Owner selected Core/Service 0.5.5 for the retained model20-only runtime. This is local Git/package preparation; no publication or installation. The withdrawn v0.6.0 history and the existing v0.5.2 release remain unchanged.
 
 This development candidate adds opt-in placement-scoped DOCX image omissions.
 `DocxOptions.imageOmissions` uses the exported `DOCX_IMAGE_OMISSIONS_CONTRACT`
@@ -86,14 +86,14 @@ prepared snapshot, renderer capability, public endpoint or PDF readiness claim.
 
 Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. The matching model20 authoring guide is [Developer Documentation](../flowdoc-project-control/docs/developer/authoring-model20/README.md); older prepared18/19 guides describe earlier packages.
 
-Package version:0.6.0. Identify its exact source commit and packed-archive
-checksum, then verify the matching v0.6.0 annotated release snapshot. The earlier
+Package version:0.5.5. Identify its exact source commit and packed-archive
+checksum, then verify the matching v0.5.5 annotated release snapshot. The earlier
 v0.5.2 snapshot/artifact remains immutable; version numbers are not conversion.
 This package includes Model20, scoped contents, Format sizing v2, group-label
 spans, streamed task images/PDF and the opt-in height calculation below.
 Release identity requires the matching tagged snapshot and acceptance gates.
 
-0.6.0 is model20-only; models18/19 and task-input/1 require explicit offline
+0.5.5 is model20-only; models18/19 and task-input/1 require explicit offline
 conversion, not a version-field edit. It includes bounded prefix-fit measurement
 in the owned native text runtime and M1 merged-label inset mapping: eligible
 uniform peers supply the physical cell top, with the remaining source inset
@@ -102,7 +102,7 @@ behavior. Menu textboxes are unchanged. Word still does not repeat merged
 Module labels with a continuation suffix on later pages; general native row/
 frame prediction and complete font-fallback certification remain unverified.
 Git release publication does not install this package or certify arbitrary
-Word documents. See the Service0.6.0 update instructions before changing runtime.
+Word documents. See the Service0.5.5 update instructions before changing runtime.
 
 Native DOCX text emission coalesces eligible adjacent untracked runs within an
 authored span. Authored boundaries and text order remain significant; the XML,
