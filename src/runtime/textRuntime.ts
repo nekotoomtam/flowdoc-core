@@ -5,6 +5,7 @@ import {FontError} from '../fonts/types.js';
 import type {ExportResources} from './exportResources.js';
 import type {ShapedText,TextRuntime} from '../layout/textFlow.js';
 import {scriptSpans} from './scriptSpans.js';
+import {registerPrefixOwner,invalidatePrefixOwner,closePrefixOwner} from './prefixFit.js';
 export const subprocessOptions={timeout:30_000,maxBuffer:16*1024*1024,windowsHide:true};
 export function byteOffsets(text:string):Map<number,number>{
  if(!text.isWellFormed())throw Error('Malformed Unicode');
@@ -31,34 +32,37 @@ export function decodeShape(raw:any,text:string,sizePt:number):ShapedText{
  return {glyphs,ascentPt:top,descentPt:bottom,inkLeftPt:left,inkRightPt:right,glyphInkBoundsPt:raw.glyphs.map((g:any)=>g.ink?{left:(g.xOffset+g.ink.xMin)*scale,right:(g.xOffset+g.ink.xMax)*scale}:null)};
 }
 export function createTextRuntime(resources:Pick<ExportResources,'fonts'|'shaperPath'|'segmenterPath'>,signal?:AbortSignal):TextRuntime&{close():Promise<void>}{
+ resources={...resources,fonts:structuredClone(resources.fonts)};
  const sessions=new Map<string,NativeShapeSession>();
  let segmenter:NativeSegmenterSession|undefined,closed=false,closing:Promise<void>|undefined;
+ let runtime:TextRuntime&{close():Promise<void>};
  const close=()=>{
   if(closing)return closing;closed=true;signal?.removeEventListener('abort',abort);
   closing=(async()=>{
-   const results=await Promise.allSettled([...sessions.values()].map(s=>s.close()).concat(segmenter?[segmenter.close()]:[]));
+   const results=await Promise.allSettled([...sessions.values()].map(s=>s.close()).concat(segmenter?[segmenter.close()]:[],[closePrefixOwner(runtime)]));
    sessions.clear();segmenter=undefined;
    const errors=results.filter(r=>r.status==='rejected');if(errors.length)throw new AggregateError(errors.map(r=>r.reason),'Text runtime cleanup failed');
   })();return closing;
  };
  const abort=()=>{void close().catch(()=>{});};
- signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort();
- return {
+ const check=()=>{if(closed)throw Error('Text runtime closed');signal?.throwIfAborted();segmenter?.assertUsable();for(const s of sessions.values())s.assertUsable();};
+ runtime={
   fontId:style=>selectFont(style,resources.fonts).id,
   close,
   async breaks(text){
-   if(closed)throw Error('Text runtime closed');signal?.throwIfAborted();
+   check();
    segmenter??=new NativeSegmenterSession(resources.segmenterPath,['--serve'],{signal});
    return segmenter.request(text);
   },
   async shape(text,fontId,sizePt){
-   if(closed)throw Error('Text runtime closed');signal?.throwIfAborted();
+   check();
    const font=resources.fonts.find(f=>f.id===fontId);if(!font)throw Error('Missing font');
    let session=sessions.get(fontId);
    if(!session){session=new NativeShapeSession(resources.shaperPath,['--serve',font.path,fontId]);sessions.set(fontId,session);}
+   try{
    const spans=scriptSpans(text),shapes:ShapedText[]=[];
    for(const span of spans){
-    if(closed)throw Error('Text runtime closed');signal?.throwIfAborted();
+    check();
     const raw=await session.request(span.text);
     if(raw.text!==span.text||raw.fontId!==fontId)throw Error('Mismatched shape result');
     if(raw.glyphs?.some((g:any)=>g.glyphId===0))throw new FontError('FONT_GLYPH_MISSING');
@@ -78,6 +82,9 @@ export function createTextRuntime(resources:Pick<ExportResources,'fonts'|'shaper
     cursor+=shape.glyphs.reduce((sum,g)=>sum+g.advancePt,0);
    }
    return combined;
+   }catch(error){invalidatePrefixOwner(runtime);throw error;}
   }
  };
+ registerPrefixOwner(runtime,resources.fonts,check,signal);
+ signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort();return runtime;
 }

@@ -6,7 +6,7 @@ function fixture(count=6){
  d.book.page.margin.top={unit:'pt',value:0};d.book.page.margin.bottom={unit:'pt',value:297*72/25.4-108};
  return d;
 }
-const runtime=(bottom:number,id='main'):any=>({...fakeRuntime,spacingProbe:{bodyBottomPt:(section:string)=>section===id?bottom:undefined}});
+const runtime=(bottom:number,id='instance-main'):any=>({...fakeRuntime,spacingProbe:{bodyBottomPt:(section:string)=>section===id?bottom:undefined}});
 it('uses the native body boundary for line capacity without changing source or line metrics',async()=>{
  const d=fixture(),saved=JSON.stringify(d),before=await documentFlow(d,fakeRuntime),after=await documentFlow(d,runtime(90));
  expect(before.pages).toHaveLength(1);expect(after.pages).toHaveLength(2);expect(after.pages.map(p=>p.commands.length)).toEqual([5,1]);

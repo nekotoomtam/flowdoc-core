@@ -1,3 +1,4 @@
+import {sectionUse,defaultUses} from '../helpers/sectionUses.js';
 import {readFileSync} from 'node:fs';
 import {deflateSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
@@ -12,7 +13,7 @@ export function imageDocument(band=false){
  if(band)t.sections[0].header={fragment:graph,baseTextStyleId:'body',inputSchema:{type:'object',fields:{}}};
  else t.sections[0].source={kind:'authored',repeats:[],fragment:graph};
  const v=api.validateTemplate(t);if(!v.ok)throw Error(JSON.stringify(v));
- const p=api.prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:'Small image',photo:imageId},sections:{}});if(!p.ok)throw Error(JSON.stringify(p));
+ const p=api.prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:'Small image',photo:imageId},sections:defaultUses(t)});if(!p.ok)throw Error(JSON.stringify(p));
  const d=api.composeDocument(v.value,p.value);if(!d.ok)throw Error(JSON.stringify(d));return d.value;
 }
 export function imageProvider(kind:'jpeg'|'rgb-deflate'='jpeg',alpha=false){

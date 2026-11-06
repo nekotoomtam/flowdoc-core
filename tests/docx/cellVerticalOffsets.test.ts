@@ -11,7 +11,7 @@ function fixture(uniform=false):any {
   d.nodes[id]={id,type:'table-cell',props:{padding:{top:{unit:'pt',value:i&&!uniform?35.45:5.3},bottom:{unit:'pt',value:i&&!uniform?40.05:3.3},left:{unit:'pt',value:4},right:{unit:'pt',value:4}}},childIds:[id+'1',id+'2']};
   for(const n of [1,2])d.nodes[id+n]={id:id+n,type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body'},children:[{id:id+n+'-leaf',type:'text',text:id+n}]};
  }
- for(const n of Object.values(d.nodes) as any[])for(const id of [n.id,...(n.children??[]).map((c:any)=>c.id)])d.sourceMap[id]={origin:'authored',sectionId:'main',sourceId:id};return d;
+ for(const n of Object.values(d.nodes) as any[])for(const id of [n.id,...(n.children??[]).map((c:any)=>c.id)])d.sourceMap[id]={origin:'authored',sectionId:'instance-main',sourceId:id};return d;
 }
 async function exported(d:any){const before=JSON.stringify(d),e=await api.createDocxEngine(fonts());if(!e.ok)throw Error(JSON.stringify(e));const sink=staged(),r=await e.value.generateDocxTo(d,noImages,sink.output,{textLayout:'native'});if(!r.ok)throw Error(JSON.stringify(r));expect(JSON.stringify(d)).toBe(before);const z=await JSZip.loadAsync(Buffer.concat(sink.chunks));return {xml:await z.file('word/document.xml')!.async('string'),receipt:r.value,zip:z};}
 it('moves unequal vertical margins into first/last paragraph offsets without changing line height',async()=>{

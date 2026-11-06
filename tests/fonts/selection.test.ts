@@ -29,7 +29,7 @@ it('round trips schema 2 through validate, prepare and composition while preserv
  const old=validateTemplate(t);expect(old.ok).toBe(true);const before=JSON.stringify(t);
  const next=structuredClone(t);next.schemaVersion=2;for(const key of Object.keys(next.styles))next.styles[key]=style;
  const v=validateTemplate(next);expect(v.ok,JSON.stringify(v)).toBe(true);
- if(v.ok){const request={docKey:next.docKey,data:{},sections:Object.fromEntries(['evidence','evidence2','merged'].map(k=>[k,{data:{details:[]}}]))};const input=prepareGeneration(v.value,request);expect(input.ok,JSON.stringify(input)).toBe(true);if(!input.ok)throw Error('prepare');expect(composeDocument(v.value,input.value)).toMatchObject({ok:true,value:{schemaVersion:2}});}
+ if(v.ok){const request={docKey:next.docKey,data:{},sections:next.sections.map((s:any)=>({sectionKey:s.sectionKey,instanceKey:s.sectionKey,data:Object.hasOwn(s.inputSchema.fields,'details')?{details:[]}:{}}))};const input=prepareGeneration(v.value,request);expect(input.ok,JSON.stringify(input)).toBe(true);if(!input.ok)throw Error('prepare');expect(composeDocument(v.value,input.value)).toMatchObject({ok:true,value:{schemaVersion:2}});}
  expect(JSON.stringify(t)).toBe(before);expect(validateTemplate(t)).toEqual(old);
  const pending=structuredClone(next);for(const s of Object.values(pending.styles) as any[])s.font={kind:'unselected'};expect(validateTemplate(pending).ok).toBe(true);
  for(const font of [{kind:'library',releaseId:release,weight:'400',style:'normal'},{kind:'library',releaseId:release,weight:1001,style:'normal'},{kind:'library',releaseId:'/tmp/font.ttf',weight:400,style:'normal'},{kind:'unselected',releaseId:release}]){

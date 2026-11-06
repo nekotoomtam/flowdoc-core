@@ -71,9 +71,9 @@ it('supports a label in another column with colSpan and preserves authored style
  expect(label.props).toMatchObject({columnIndex:1,colSpan:2,rowSpan:2,fillColor:'eeeeee'});expect(d.nodes[label.childIds[0]].props.textAlign).toBe('center');
 });
 it('isolates two copied Sections and repeated Format instances with the same local IDs',()=>{
- const t=groupLabelTemplate(),s=structuredClone(t.sections[0]);s.id='10000000-0000-4000-8000-000000000012';s.label='Results 2';s.inputSchema.fields.details.areaId='second-details';s.source.fragment.nodes.area.props.areaId='second-details';t.sections.push(s);
+ const t=groupLabelTemplate(),s=structuredClone(t.sections[0]);s.id='10000000-0000-4000-8000-000000000012';s.label='Results 2';s.sectionKey='other';s.inputSchema.fields.details.areaId='second-details';s.source.fragment.nodes.area.props.areaId='second-details';t.sections.push(s);
  t.areaFormats.secondMeeting={...structuredClone(t.areaFormats.meeting),ownerAreaId:'second-details'};
- const r=groupLabelRequest(t),copy=structuredClone(r.sections[0]);copy.id=s.id;copy.data.details[0].data.companies[0].members=[{name:'Other'}];r.sections.push(copy);
+ const r=groupLabelRequest(t),copy=structuredClone(r.sections[0]);copy.sectionKey='other';copy.instanceKey='other';copy.data.details[0].data.companies[0].members=[{name:'Other'}];r.sections.push(copy);
  r.sections[0].data.details.push(structuredClone(r.sections[0].data.details[0]));
  const v=ok(validateTemplate(t)),d=ok(composeDocument(v,ok(prepareGeneration(v,r))));
  expect(d.rootIds).toHaveLength(3);expect(new Set(d.rootIds).size).toBe(3);
@@ -123,6 +123,6 @@ it.each(['memberCount','cellId','sourceCellId','span','itemIndex','labelSource',
 it('rejects the feature on model18 while retaining original model18 and model19 rowGroups',()=>{
  const t=groupLabelTemplate(),s=t.sections[0];t.nodeModelVersion=18;s.key='main';s.formats={};delete s.nameBase;expect(validateTemplate(t).ok).toBe(false);
  const old=rowGroupTemplate(),v=ok(validateTemplate(old));expect(composeDocument(v,ok(prepareGeneration(v,rowGroupRequest()))).ok).toBe(true);
- const newer=rowGroupTemplate(),ns=newer.sections[0];newer.nodeModelVersion=19;ns.id='10000000-0000-4000-8000-000000000011';ns.label='Original';ns.nameBase='Original';delete ns.key;delete ns.formats;
+ const newer=rowGroupTemplate(),ns=newer.sections[0];newer.nodeModelVersion=20;ns.id='10000000-0000-4000-8000-000000000011';ns.label='Original';ns.nameBase='Original';delete ns.key;delete ns.formats;
  const nv=ok(validateTemplate(newer));expect(composeDocument(nv,ok(prepareGeneration(nv,groupLabelRequest(newer)))).ok).toBe(true);
 });

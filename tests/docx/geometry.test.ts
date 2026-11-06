@@ -1,3 +1,4 @@
+import {sectionUse,defaultUses} from '../helpers/sectionUses.js';
 import {imageId,imageProvider} from './imageFixtures.js';
 import {mergedTemplate} from '../helpers/merged.js';
 import {it,expect} from 'vitest';
@@ -28,7 +29,7 @@ it.each(['safe','unsafe-mark','different-padding','long-wrap','ligature'])('boun
  if(mode==='different-padding')nodes.a.props.padding={left:{unit:'pt',value:3},right:{unit:'pt',value:4},top:{unit:'pt',value:4},bottom:{unit:'pt',value:4}};
  if(mode==='long-wrap')nodes.at.children=[{id:'long',type:'text',text:'AT '.repeat(80)}];
  if(mode==='ligature')nodes.at.children=[{id:'ligature',type:'text',text:'first AT'}];
- const d=composed(t,{docKey:'merged',data:{},sections:{main:{data:{details:[{format:'merged',data:{}}]}}}}),before=JSON.stringify(d),r=await generate(d,noImages,true);
+ const d=composed(t,{docKey:'merged',data:{},sections:[sectionUse(t.sections[0],'main',{details:[{format:'merged',data:{}}]})]}),before=JSON.stringify(d),r=await generate(d,noImages,true);
  const policy=r.artifact.adaptations.find((a:any)=>a.kind==='table-space-policy') as any;
  const preserved=mode==='long-wrap'||mode==='ligature';
  expect(policy.horizontalPolicy).toBe(mode==='safe'?'border-centre-inset':preserved?'border-centre-inset-preserve-width':'retain-native');
@@ -40,14 +41,14 @@ it.each(['safe','unsafe-mark','different-padding','long-wrap','ligature'])('boun
 });
 it.each(['none','all','first','continuation'])('zeroes header distance only when both effective headers are empty: %s',async mode=>{
  const t=bandTemplate();t.sections=[t.sections[0]];t.areaFormats={};t.sections[0].headerMode=mode;
- const d=composed(t,{docKey:t.docKey,data:{projectName:'Body'},sections:{intro:{header:{projectName:'Head'},footer:{projectName:'Foot'}}}}),r=await generate(d);
+ const d=composed(t,{docKey:t.docKey,data:{projectName:'Body'},sections:defaultUses(t).map((u:any)=>u.sectionKey==='intro'?{...u,header:{projectName:'Head'},footer:{projectName:'Foot'}}:u)}),r=await generate(d);
  const a=r.artifact.adaptations.find((a:any)=>a.kind==='empty-header-space-policy') as any;
  expect(a.policy).toBe(mode==='none'?'empty-header-zero':'retain-h3');expect(a.nativeDistanceTwips===0).toBe(mode==='none');if(mode==='first'||mode==='continuation')expect(a.reason).toBe('mixed-header-visibility');
 });
 it.each([['normal','normal'],['bold','normal'],['normal','italic'],['bold','italic']])('preserves complex script and explicit emphasis %s/%s without baseline or Exact-line patches',async(weight,style)=>{
  const t=bandTemplate();t.sections=[t.sections[0]];t.areaFormats={};delete t.sections[0].header;delete t.sections[0].footer;
  for(const s of Object.values(t.styles) as any[]){s.fontWeight=weight;s.fontStyle=style;}
- const d=composed(t,{docKey:t.docKey,data:{projectName:'ไทย English ไทย'},sections:{}}),r=await generate(d);
+ const d=composed(t,{docKey:t.docKey,data:{projectName:'ไทย English ไทย'},sections:defaultUses(t)}),r=await generate(d);
  expect(r.xml).toContain('<w:cs/>');expect(r.xml).toContain(weight==='bold'?'<w:b/>':'<w:b w:val="false"/>');expect(r.xml).toContain(style==='italic'?'<w:i/>':'<w:i w:val="false"/>');
  expect(r.xml).toContain('w:lineRule="atLeast"');expect(r.xml).not.toContain('w:lineRule="exact"');expect(r.xml).not.toContain('<w:position');
 });
@@ -55,7 +56,7 @@ it.each([['normal','normal'],['bold','normal'],['normal','italic'],['bold','ital
 it.each(['merged','padding-mismatch'])('bounds merged-grid border mapping without altering topology: %s',async mode=>{
  const t=mergedTemplate(),n=t.areaFormats.merged.fragment.nodes;
  if(mode==='padding-mismatch')n.a.props.padding={top:{unit:'pt',value:3},bottom:{unit:'pt',value:4},left:{unit:'pt',value:4},right:{unit:'pt',value:4}};
- const d=composed(t,{docKey:'merged',data:{},sections:{main:{data:{details:[{format:'merged',data:{}}]}}}}),before=JSON.stringify(d),r=await generate(d);
+ const d=composed(t,{docKey:'merged',data:{},sections:[sectionUse(t.sections[0],'main',{details:[{format:'merged',data:{}}]})]}),before=JSON.stringify(d),r=await generate(d);
  const policy=r.artifact.adaptations.find((a:any)=>a.kind==='table-space-policy') as any;
  expect(policy.policy).toBe(mode==='merged'?'border-centre-inset':'retain-native');
  expect(r.xml).toContain('<w:gridSpan w:val="3"/>');expect(r.xml).toContain('<w:gridSpan w:val="2"/>');
@@ -75,7 +76,7 @@ it('retains native padding for a valid merged grid containing an image',async()=
  const t=mergedTemplate(),n=t.areaFormats.merged.fragment.nodes;
  t.globalSchema.fields.photo={type:'image',required:true};n.b.childIds=['pic'];delete n.bt;
  n.pic={id:'pic',type:'image',props:{width:{unit:'pt',value:100},height:{unit:'pt',value:30},source:{scope:'global',key:'photo'}}};
- const d=composed(t,{docKey:'merged',data:{photo:imageId},sections:{main:{data:{details:[{format:'merged',data:{}}]}}}}),before=JSON.stringify(d),r=await generate(d,imageProvider().provider);
+ const d=composed(t,{docKey:'merged',data:{photo:imageId},sections:[sectionUse(t.sections[0],'main',{details:[{format:'merged',data:{}}]})]}),before=JSON.stringify(d),r=await generate(d,imageProvider().provider);
  const policy=r.artifact.adaptations.find((a:any)=>a.kind==='table-space-policy') as any;
  expect(policy.policy).toBe('retain-native');expect(r.xml).toContain('<w:drawing>');
  expect(policy.cells.every((c:any)=>c.nativeTopTwips===80&&c.nativeBottomTwips===80)).toBe(true);expect(JSON.stringify(d)).toBe(before);
@@ -84,7 +85,7 @@ it('retains native padding for a valid merged grid containing an image',async()=
 it.each(['absent','none','all','first','continuation'])('keeps an empty footer out of the body edge, preserving visible or mixed footers: %s',async mode=>{
  const t=bandTemplate();t.sections=[t.sections[0]];t.areaFormats={};delete t.sections[0].header;
  t.sections[0].footerMode=mode==='absent'?'all':mode;if(mode==='absent')delete t.sections[0].footer;
- const d=composed(t,{docKey:t.docKey,data:{projectName:'BODY'},sections:{intro:{footer:{projectName:'FOOT'}}}}),before=JSON.stringify(d),r=await generate(d);
+ const d=composed(t,{docKey:t.docKey,data:{projectName:'BODY'},sections:defaultUses(t).map((u:any)=>u.sectionKey==='intro'&&mode!=='absent'?{...u,footer:{projectName:'FOOT'}}:u)}),before=JSON.stringify(d),r=await generate(d);
  const policy=r.artifact.adaptations.find((a:any)=>a.kind==='empty-footer-space-policy') as any,empty=mode==='absent'||mode==='none';
  const footerParts=await Promise.all(Object.keys(r.zip.files).filter(name=>/^word\/footer\d+\.xml$/.test(name)).map(name=>r.zip.file(name)!.async('string')));
  expect(footerParts.filter(xml=>xml.includes('>FOOT</w:t>')).length).toBe(empty?0:mode==='all'?2:1);

@@ -1,3 +1,4 @@
+import {defaultUses} from '../helpers/sectionUses.js';
 import {it,expect} from 'vitest';
 import {endingTemplate,endingDocument} from '../helpers/endingArea.js';
 import {composeSizing,sizingEntry} from '../helpers/formatSizing.js';
@@ -55,10 +56,10 @@ it.each(['suffix','owner','fixed','unknown'])('rejects forged resolved ending Ar
  if(kind==='unknown')d.sections[0].endingArea.extra=true;
  expect(validateResolvedDocument(d).length).toBeGreaterThan(0);
 });
-it('supports the same final Area option on model18 without changing its request envelope',async()=>{
- const t=endingTemplate();t.nodeModelVersion=18;delete t.areaFormats.panel.sizing;const s=t.sections[0];delete s.nameBase;s.key='main';s.formats={};
+it('supports the final Area option without Format sizing on model20',async()=>{
+ const t=endingTemplate();delete t.areaFormats.panel.sizing;
  const v=validateTemplate(t);expect(v.ok,JSON.stringify(v)).toBe(true);if(!v.ok)return;
- const q=prepareGeneration(v.value,{docKey:t.docKey,data:{},sections:{main:{data:{parts:[sizingEntry('SIGN')]}}}});expect(q.ok,JSON.stringify(q)).toBe(true);if(!q.ok)return;
+ const q=prepareGeneration(v.value,{docKey:t.docKey,data:{},sections:defaultUses(t).map((u:any)=>u.sectionKey===(t.sections.length===1?t.sections[0]:t.sections.find((s:any)=>s.sectionKey==='main')).sectionKey?{...u,instanceKey:"main",data:{parts:[sizingEntry('SIGN')]}}:u)});expect(q.ok,JSON.stringify(q)).toBe(true);if(!q.ok)return;
  const d=composeDocument(v.value,q.value);expect(d.ok,JSON.stringify(d)).toBe(true);if(!d.ok)return;
  const draw=await documentFlow(d.value,fakeRuntime);expect(draw.pages).toHaveLength(1);expect(draw.pages[0].commands.at(-1)!.bounds.yPt).toBeCloseTo(top+80);
 });

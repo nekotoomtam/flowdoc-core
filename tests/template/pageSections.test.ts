@@ -1,3 +1,4 @@
+import {defaultUses} from '../helpers/sectionUses.js';
 import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {validateTemplate} from '../../src/template/validateTemplate.js';
@@ -14,7 +15,7 @@ it('legacy empty content stays rejected and global defaults still apply',()=>{
  const t=JSON.parse(readFileSync('fixtures/srs-basic/template.json','utf8'));const old=validateTemplate(t);expect(old.ok).toBe(true);if(!old.ok)return;
  expect(prepareGeneration(old.value,{docKey:t.docKey,data:{projectName:'Demo'}}).ok).toBe(false);
  const n=sectionTemplate();n.globalSchema.fields.projectName={type:'string',default:'Default'};
- const r=prepareGeneration(valid(n),{docKey:n.docKey,data:{},sections:{main:{data:{details:[]}}}});expect(r.ok&&r.value.data.projectName).toBe('Default');
+ const r=prepareGeneration(valid(n),{docKey:n.docKey,data:{},sections:defaultUses(n).map((u:any)=>u.sectionKey===(n.sections.length===1?n.sections[0]:n.sections.find((s:any)=>s.sectionKey==='main')).sectionKey?{...u,instanceKey:"main",data:{details:[]}}:u)});expect(r.ok&&r.value.data.projectName).toBe('Default');
 });
 it.each([
  ['duplicate section',(t:any)=>t.sections.push(structuredClone(t.sections[0]))],
@@ -30,7 +31,7 @@ it.each([
 ])('rejects %s',(_,mutate)=>{const t=sectionTemplate();mutate(t);expect(validateTemplate(t).ok).toBe(false);});
 it('prepares authored-only sections and rejects lost/tampered request indices',()=>{
  const t=sectionTemplate();t.sections.pop();t.areaFormats={};const v=valid(t);
- const p=prepareGeneration(v,{docKey:t.docKey,data:{projectName:'Demo'}});expect(p.ok).toBe(true);if(!p.ok)return;
+ const p=prepareGeneration(v,{docKey:t.docKey,data:{projectName:'Demo'},sections:defaultUses(t)});expect(p.ok).toBe(true);if(!p.ok)return;
  expect(validatePreparedInput(v,p.value).ok).toBe(true);
  expect(validatePreparedInput(v,{...p.value,originalContentCount:1}).ok).toBe(false);
  expect(prepareGeneration(v,{docKey:t.docKey,data:{projectName:'Demo'},content:[{format:'x',data:{}}]}).ok).toBe(false);

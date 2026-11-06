@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 19,
-  "templateId": "e0-W",
+  "nodeModelVersion": 20,
+  "templateId": "d129d525-1a38-5d9b-80d3-8b39a8f33317",
   "docKey": "e0-W",
   "version": 1,
   "name": "Pagination baseline W",
@@ -123,7 +123,7 @@
   "examples": [],
   "sections": [
     {
-      "id": "10000000-0000-4000-8000-000000000010",
+      "id": "03d31b6f-7954-57db-8099-82566e11bcb5",
       "label": "W authored first",
       "nameBase": "W authored first",
       "inputSchema": {
@@ -175,10 +175,11 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0001"
     },
     {
-      "id": "10000000-0000-4000-8000-000000000011",
+      "id": "b79283ac-e5a1-5c93-8bee-e67413ec70a4",
       "label": "W authored last",
       "nameBase": "W authored last",
       "inputSchema": {
@@ -230,10 +231,11 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0002"
     },
     {
-      "id": "10000000-0000-4000-8000-000000000012",
+      "id": "9c1ae49d-fa72-5e9d-8c76-77a8b2540eec",
       "label": "W natural wrap",
       "nameBase": "W natural wrap",
       "inputSchema": {
@@ -285,10 +287,11 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0003"
     },
     {
-      "id": "10000000-0000-4000-8000-000000000013",
+      "id": "c08428a2-77c2-5a3a-8033-da48a56c71c5",
       "label": "W cell authored",
       "nameBase": "W cell authored",
       "inputSchema": {
@@ -413,10 +416,11 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0004"
     },
     {
-      "id": "10000000-0000-4000-8000-000000000014",
+      "id": "b5f7540d-5aa1-5382-8a01-af00ccbb8581",
       "label": "W protected controls",
       "nameBase": "W protected controls",
       "inputSchema": {
@@ -694,7 +698,8 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0005"
     }
   ]
 }

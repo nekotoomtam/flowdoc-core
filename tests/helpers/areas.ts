@@ -1,6 +1,6 @@
 import {mergedTemplate} from './merged.js';
 export function areaTemplate():any {
- const t=mergedTemplate();t.nodeModelVersion=18;
+ const t=mergedTemplate();t.nodeModelVersion=20;
  const f=t.areaFormats.merged;t.sections[0].source={kind:'authored',fragment:f.fragment,repeats:[]};t.sections[0].inputSchema=f.inputSchema;f.inputSchema.fields.details={type:'area',areaId:'area-001'};
  f.fragment.nodes.a.childIds.push('placement');
  f.fragment.nodes.placement={id:'placement',type:'area',props:{areaId:'area-001'}};

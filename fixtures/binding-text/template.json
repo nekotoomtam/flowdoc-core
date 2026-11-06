@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
-  "templateId": "tpl-binding-text",
+  "nodeModelVersion": 20,
+  "templateId": "9d1f2613-d652-54f7-84a7-7c3743a93c4f",
   "docKey": "binding-text",
   "version": 1,
   "name": "Bound text PDF",
@@ -60,8 +60,7 @@
   },
   "sections": [
     {
-      "id": "main",
-      "key": "main",
+      "id": "1092d30f-1e34-5944-8963-d0d2c39dcbe3",
       "source": {
         "kind": "authored",
         "fragment": {
@@ -89,7 +88,9 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0001",
+      "label": "main",
+      "nameBase": "main"
     }
   ],
   "areaFormats": {

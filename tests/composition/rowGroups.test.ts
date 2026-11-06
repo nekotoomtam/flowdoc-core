@@ -1,3 +1,4 @@
+import {defaultUses} from '../helpers/sectionUses.js';
 import {it,expect} from 'vitest';
 import {validateTemplate} from '../../src/template/validateTemplate.js';
 import {prepareGeneration} from '../../src/data/prepareGeneration.js';
@@ -23,12 +24,12 @@ it('removes outer empty groups and chooses the authored empty row for inner empt
 it('validates nested values with indexed paths and refuses forged prepared extras',()=>{
  const v=ok(validateTemplate(rowGroupTemplate()));
  for(const members of [null,'wrong',[{name:4}],undefined]){const r=rowGroupRequest([{name:'X',...(members===undefined?{}:{members})}]);const p=prepareGeneration(v,r);expect(p.ok).toBe(false);if(!p.ok)expect(p.issues.some(i=>i.path.includes('companies[0].members'))).toBe(true);}
- const p=ok(prepareGeneration(v,rowGroupRequest()));p.sections.main.data.details.entries[0].data.companies[0].members[0].extra='bad';expect(composeDocument(v,p).ok).toBe(false);
+ const p=ok(prepareGeneration(v,rowGroupRequest()));p.sections[0].data.details.entries[0].data.companies[0].members[0].extra='bad';expect(composeDocument(v,p).ok).toBe(false);
 });
 it('clones nested defaults and distinguishes absent optional arrays from explicit empty arrays',()=>{
  const t=rowGroupTemplate(),a=t.areaFormats.meeting.inputSchema.fields.companies;a.required=false;a.default=[{name:'Default',members:[{name:'Member'}]}];a.items.fields.members.required=false;
- const v=ok(validateTemplate(t)),r=rowGroupRequest();delete (r.sections.main.data.details[0]!.data as any).companies;
- const p=ok(prepareGeneration(v,r));p.sections.main.data.details.entries[0].data.companies[0].members[0].name='changed';expect(rows(ok(composeDocument(v,ok(prepareGeneration(v,r)))))).toContain('Member');
+ const v=ok(validateTemplate(t)),r=rowGroupRequest();delete (r.sections[0].data.details[0]!.data as any).companies;
+ const p=ok(prepareGeneration(v,r));p.sections[0].data.details.entries[0].data.companies[0].members[0].name='changed';expect(rows(ok(composeDocument(v,ok(prepareGeneration(v,r)))))).toContain('Member');
  expect(rows(compose(t,rowGroupRequest([])))).toEqual(['before','after']);
  expect(rows(compose(t,rowGroupRequest([{name:'X'}])))).toContain('empty');
 });
@@ -74,8 +75,8 @@ it('supports two disjoint groups in a table and repeated instances across sectio
  for(const rid of f.rowGroups[0].rowTemplateIds){for(const id of [rid,rid+'Cell',rid+'Text']){const v=structuredClone(n[id]);v.id='second'+id;if(v.cellIds)v.cellIds=v.cellIds.map((x:string)=>'second'+x);if(v.childIds)v.childIds=v.childIds.map((x:string)=>'second'+x);if(v.children)v.children.forEach((c:any)=>c.id='second'+c.id);n[v.id]=v;}}
  n.table.rowIds.push(...f.rowGroups[0].rowTemplateIds.map((x:string)=>'second'+x));
  const second=structuredClone(f.rowGroups[0]);second.id='second';second.rowTemplateIds=second.rowTemplateIds.map((x:string)=>'second'+x);second.memberRepeat.rowTemplateId='secondmember';second.memberRepeat.emptyRowTemplateId='secondempty';f.rowGroups.push(second);
- const r=rowGroupRequest();r.sections.main.data.details.push(structuredClone(r.sections.main.data.details[0]!));
- const s=structuredClone(t.sections[0]);s.id='other';s.key='other';s.inputSchema.fields.details.areaId='other-details';s.source.fragment.nodes.area.props.areaId='other-details';t.areaFormats.otherMeeting={...structuredClone(f),ownerAreaId:'other-details'};t.sections.push(s);(r.sections as any).other=structuredClone(r.sections.main);
+ const r=rowGroupRequest();r.sections[0].data.details.push(structuredClone(r.sections[0].data.details[0]!));
+ const s=structuredClone(t.sections[0]);s.id='10000000-0000-4000-8000-000000000002';s.sectionKey='other';s.label='Other';s.nameBase='Other';s.inputSchema.fields.details.areaId='other-details';s.source.fragment.nodes.area.props.areaId='other-details';t.areaFormats.otherMeeting={...structuredClone(f),ownerAreaId:'other-details'};t.sections.push(s);r.sections.push({...structuredClone(r.sections[0]),sectionKey:'other',instanceKey:'other'});
  const d=compose(t,r);expect(d.rootIds).toHaveLength(4);expect(new Set(Object.keys(d.nodes)).size).toBe(4*(1+16*3));expect(validateResolvedDocument(d)).toEqual([]);
  for(const id of d.rootIds)expect(d.nodes[id].rowGroups.map((g:any)=>g.groupId)).toEqual(['companies','companies','second','second']);
 });
@@ -90,14 +91,14 @@ it('binds inner images and links and outer group values without falling through 
 });
 it('supports authored section/global sources and Area formats',()=>{
  for(const scope of ['section','global']){const t=rowGroupTemplate(),s=t.sections[0],f=t.areaFormats.meeting,r=rowGroupRequest();
-  (scope==='global'?t.globalSchema:s.inputSchema).fields.companies=f.inputSchema.fields.companies;f.rowGroups[0].source.scope=scope;s.source={kind:'authored',fragment:f.fragment,repeats:[],rowGroups:f.rowGroups};s.formats={};delete s.inputSchema.fields.details;delete t.areaFormats;
-  const data=r.sections.main.data.details[0]!.data;if(scope==='global')r.data=data;else (r.sections.main as any).data=data;if(scope==='global')r.sections.main.data={};
+  (scope==='global'?t.globalSchema:s.inputSchema).fields.companies=f.inputSchema.fields.companies;f.rowGroups[0].source.scope=scope;s.source={kind:'authored',fragment:f.fragment,repeats:[],rowGroups:f.rowGroups};delete s.inputSchema.fields.details;delete t.areaFormats;
+  const data=r.sections[0].data.details[0]!.data;if(scope==='global')r.data=data;else (r.sections[0] as any).data=data;if(scope==='global')r.sections[0].data={};
   expect(rows(compose(t,r))).toContain('C');
  }
  const t=rowGroupTemplate(),s=t.sections[0],f=t.areaFormats.meeting;
- t.areaFormats={meeting:{...f,key:'meeting',ownerAreaId:'area'}};s.formats={};s.inputSchema.fields.details={type:'area',areaId:'area'};
+ t.areaFormats={meeting:{...f,key:'meeting',ownerAreaId:'area'}};s.inputSchema.fields.details={type:'area',areaId:'area'};
  s.source={kind:'authored',repeats:[],fragment:{rootIds:['area'],nodes:{area:{id:'area',type:'area',props:{areaId:'area'}}}}};
- const r:any={docKey:t.docKey,data:{},sections:{main:{data:{details:[{format:'meeting',data:rowGroupRequest().sections.main.data.details[0]!.data}]}}}};
+ const r:any={docKey:t.docKey,data:{},sections:defaultUses(t).map((u:any)=>u.sectionKey===(t.sections.length===1?t.sections[0]:t.sections.find((s:any)=>s.sectionKey==='main')).sectionKey?{...u,instanceKey:"main",data:{details:[{format:'meeting',data:rowGroupRequest().sections[0].data.details[0]!.data}]}}:u)};
  expect(rows(compose(t,r))).toContain('C');
 });
 it('rejects forged group boundaries and identities after a JSON round-trip',()=>{
@@ -111,7 +112,7 @@ it('rejects a forged resolved span entering a group from a static row',()=>{
  expect(validateResolvedDocument(d).length).toBeGreaterThan(0);
 });
 it('bounds total expansion across instances without returning a partial document',()=>{
- const t=rowGroupTemplate(),v=ok(validateTemplate(t)),r=rowGroupRequest([{name:'Big',members:Array.from({length:13000},()=>({name:'Member'}))}]);r.sections.main.data.details.push(structuredClone(r.sections.main.data.details[0]!));
+ const t=rowGroupTemplate(),v=ok(validateTemplate(t)),r=rowGroupRequest([{name:'Big',members:Array.from({length:13000},()=>({name:'Member'}))}]);r.sections[0].data.details.push(structuredClone(r.sections[0].data.details[0]!));
  const result=composeDocument(v,ok(prepareGeneration(v,r)));expect(result.ok).toBe(false);if(!result.ok)expect(result.issues[0]!.code).toBe('EXPANSION_LIMIT');expect(result).not.toHaveProperty('value');
 });
 it('counts header and footer identities in the same budget as the body',()=>{
@@ -129,10 +130,10 @@ it('supports valid colSpan and rejects otherwise-valid rowSpan crossing a group 
  n.beforeCell.props.rowSpan=2;n.company.cellIds=[];delete n.companyCell;delete n.companyText;
  expect(validateTemplate(t).ok).toBe(false);
 });
-it('keeps required-before-default and unknown-key warning rules at the second level',()=>{
+it('keeps required-before-default and strict unknown-key rules at the second level',()=>{
  const t=rowGroupTemplate(),inner=t.areaFormats.meeting.inputSchema.fields.companies.items.fields.members;inner.default=[{name:'Default'}];
  const v=ok(validateTemplate(t));expect(prepareGeneration(v,rowGroupRequest([{name:'X'}])).ok).toBe(false);
- const r=rowGroupRequest([{name:'X',members:[{name:'Person',unused:'ignore'}]}]);const p=ok(prepareGeneration(v,r));
- expect(p.warnings[0].path).toBe('sections.main.data.details[0].data.companies[0].members[0].unused');
- expect(rows(ok(composeDocument(v,p)))).toContain('Person');
+ const r=rowGroupRequest([{name:'X',members:[{name:'Person',unused:'ignore'}]}]);const p=prepareGeneration(v,r);expect(p.ok).toBe(false);if(p.ok)throw Error('unknown key accepted');
+ expect(p.issues).toContainEqual(expect.objectContaining({code:'INVALID_DATA',path:'sections[0].data.details[0].data.companies[0].members[0].unused'}));expect(p.warnings).toEqual([]);
+ delete r.sections[0].data.details[0].data.companies[0].members[0].unused;expect(rows(ok(composeDocument(v,ok(prepareGeneration(v,r)))))).toContain('Person');
 });

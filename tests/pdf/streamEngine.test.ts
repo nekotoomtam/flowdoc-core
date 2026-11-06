@@ -22,7 +22,7 @@ it('preserves generation failure together with runtime cleanup failure',async()=
 async function setup(){const tempRoot=await mkdtemp(join(tmpdir(),'stream-engine-'));const font=await readFile('assets/fonts/Sarabun-Regular.ttf');const close=vi.fn(async()=>{});const engine=createEngine({tempRoot,fonts:[]} as any,{runtime:()=>({...fakeRuntime,close}),subset:async()=>[{fontId:'font-regular',subsetBytes:font,subsetPrefix:'FDTEST',postScriptName:'FlowDocTest'}],write:writePdf});return {tempRoot,engine,close};}
 function sink(){const parts:Buffer[]=[],abort=vi.fn(async()=>{});return {parts,abort,async write(c:Uint8Array){parts.push(Buffer.from(c));}};}
 it('exports a bounded receipt through the engine and matches legacy TOC, links and page-field output',async()=>{
- const s=await setup();try{const d=contentsDocument(30);d.sections[0].footer={baseTextStyleId:'body',rootIds:['page'],nodes:{page:{id:'page',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body'},children:[{id:'current',type:'system-page-field',field:'current',width:{value:24,unit:'pt'}}]}},sourceMap:{page:{origin:'authored',sectionId:'main',sourceId:'page'},current:{origin:'authored',sectionId:'main',sourceId:'current'}}};
+ const s=await setup();try{const d=contentsDocument(30);d.sections[0].footer={baseTextStyleId:'body',rootIds:['page'],nodes:{page:{id:'page',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body'},children:[{id:'current',type:'system-page-field',field:'current',width:{value:24,unit:'pt'}}]}},sourceMap:{page:{origin:'authored',sectionId:'instance-main',sourceId:'page'},current:{origin:'authored',sectionId:'instance-main',sourceId:'current'}}};
  const out=sink(),result=await s.engine.generatePdfTo(d,empty(),out);expect(result.ok).toBe(true);if(!result.ok)throw Error(JSON.stringify(result));const legacy=await s.engine.generatePdf(d);expect(legacy.ok).toBe(true);if(!legacy.ok)throw Error(JSON.stringify(legacy));
  const bytes=Buffer.concat(out.parts);expect(bytes).toEqual(Buffer.from(legacy.value.bytes));expect(result.value).toMatchObject({byteLength:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex'),mediaType:'application/pdf',pageCount:legacy.value.pageCount});expect(result.value).not.toHaveProperty('bytes');expect(out.abort).not.toHaveBeenCalled();expect(s.close).toHaveBeenCalledTimes(2);expect(await readdir(s.tempRoot)).toEqual([]);
  }finally{await rm(s.tempRoot,{recursive:true,force:true});}
@@ -55,9 +55,9 @@ it('enforces page limit while layout is running instead of retaining excess page
 it('counts body and repeated band placements during layout before subsetting',async()=>{
  const d:any=document();d.nodes={};d.rootIds.splice(0);d.sourceMap={};
  const header:any={baseTextStyleId:'body',rootIds:[],nodes:{},sourceMap:{}};
- for(let i=0;i<100;i++){const id='logo'+i;header.rootIds.push(id);header.nodes[id]={id,type:'image',props:{resourceId:'photo',width:{value:1,unit:'pt'},height:{value:0.01,unit:'pt'}}};header.sourceMap[id]={origin:'authored',sectionId:'main',sourceId:id};}
+ for(let i=0;i<100;i++){const id='logo'+i;header.rootIds.push(id);header.nodes[id]={id,type:'image',props:{resourceId:'photo',width:{value:1,unit:'pt'},height:{value:0.01,unit:'pt'}}};header.sourceMap[id]={origin:'authored',sectionId:'instance-main',sourceId:id};}
  d.sections[0].header=header;
- for(let i=0;i<101;i++){const id='image'+i;d.nodes[id]={id,type:'image',props:{resourceId:'photo',width:{value:100,unit:'pt'},height:{value:600,unit:'pt'}}};d.rootIds.push(id);d.sourceMap[id]={origin:'authored',sectionId:'main',sourceId:id};}
+ for(let i=0;i<101;i++){const id='image'+i;d.nodes[id]={id,type:'image',props:{resourceId:'photo',width:{value:100,unit:'pt'},height:{value:600,unit:'pt'}}};d.rootIds.push(id);d.sourceMap[id]={origin:'authored',sectionId:'instance-main',sourceId:id};}
  let measured=0;const runtime={...fakeRuntime,async shape(...args:any[]){measured++;return fakeRuntime.shape(args[0]);}};
  await expect(flow.documentFlow(d,runtime,{photo:{width:2,height:2}},{maxPages:2000,maxImagePlacements:10000} as any)).rejects.toThrow('Image placement limit exceeded');
  expect(measured).toBe(0);

@@ -9,14 +9,17 @@ import { selectFont } from '../fonts/selection.js';
 import { FontError } from '../fonts/types.js';
 import { writeDocx } from './writer.js';
 import { prepareDocxImages } from './images.js';
-import { defaultProfile, snapshotDocxDocument,preflightDocx,deriveExportIntent } from './profile.js';
+import { defaultProfile, snapshotDocxDocument,preflightDocxWithImageOmissions,deriveExportIntent } from './profile.js';
+import { snapshotImageOmissions, type DocxImageOmissions } from './image-omissions.js';
 import {prepareMetricBaselines} from './metric-baseline.js';
 import {prepareSourceLayout,sourceGuide} from './source-layout.js';
 import { hash, snapshotResources } from './resources.js';
 import { MappingError, fail, type ResourceFont, type ResourceSnapshot, type Result, type Issue } from './types.js';
 export type PreparedImageProvider = PdfImageProvider;
-export type DocxResources = Pick<ExportResources, 'fonts'> & Partial<Pick<ExportResources,'shaperPath'|'segmenterPath'>>;
+export type DocxResources = Pick<ExportResources, 'fonts'> & Partial<Pick<ExportResources,'shaperPath'|'segmenterPath'|'pythonExecutable'>>;
 export interface DocxOptions {
+    /** Only explicitly selected body image placements may lack a resource. */
+    imageOmissions?: DocxImageOmissions;
     signal?: AbortSignal;
     maxBytes?: number;
     /** Expanded XML elements, independently bounded from source nodes. Default 50000; maximum 300000. */
@@ -119,7 +122,7 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                         fail('DOCX_INPUT_INVALID', 'output', 'A staged write/abort output is required');
                     const write = output.write.bind(output);
                     abort = output.abort.bind(output);
-                    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => !['signal', 'maxBytes','maxXmlNodes','textLayout'].includes(k)))
+                    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => !['signal', 'maxBytes','maxXmlNodes','textLayout','imageOmissions'].includes(k)))
                         fail('DOCX_INPUT_INVALID', 'options', 'Invalid DOCX options');
                     const { signal, maxBytes,maxXmlNodes,textLayout } = options;
                     if(textLayout!==undefined&&!['native','source'].includes(textLayout))fail('DOCX_INPUT_INVALID','options.textLayout','Invalid text layout policy');
@@ -142,6 +145,7 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                         }
                         return { ok: false, issues, warnings: [] };
                     }
+                    const imageOmissions = snapshotImageOmissions(pinned, options.imageOmissions);
                     // Quantize only the renderer-owned snapshot. Measurement and
                     // emitted glyphs must use the same native half-point size.
                     const sizeAdaptations = [];
@@ -162,15 +166,15 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                         fail('DOCX_OUTPUT_BUDGET_EXCEEDED', 'document.nodes', 'Image reference budget exceeded');
                     for (const style of Object.values(pinned.styles))
                         selectFont(style, resources.fonts);
-                    const prepared = await prepareDocxImages(pinned, images, total, signal);
+                    const prepared = await prepareDocxImages(pinned, images, total, signal, imageOmissions);
                     const [major=0,minor=0]=process.versions.node.split('.').map(Number);
                     if(major!==24||minor<15)fail('DOCX_CAPABILITY_UNSUPPORTED','runtime.node','Pinned writer requires Node >=24.15.0 <25');
-                    const preflight=preflightDocx(pinned,{...snapshot,images:prepared});
+                    const preflight=preflightDocxWithImageOmissions(pinned,{...snapshot,images:prepared},imageOmissions);
                     if(!preflight.ok)throw new MappingError(preflight.issues[0]!);
                     const intent=deriveExportIntent(preflight.value);
                     if(!intent.ok)throw new MappingError(intent.issues[0]!);
                     if(resources.shaperPath&&resources.segmenterPath){
-                        await prepareSourceLayout(intent.value,{fonts:resources.fonts,shaperPath:resources.shaperPath,segmenterPath:resources.segmenterPath},signal,textLayout==='native');
+                        await prepareSourceLayout(intent.value,{fonts:resources.fonts,shaperPath:resources.shaperPath,segmenterPath:resources.segmenterPath,...(resources.pythonExecutable?{pythonExecutable:resources.pythonExecutable}:{})},signal,textLayout==='native');
                         await prepareMetricBaselines(intent.value,resources.shaperPath,signal,(scope,id)=>scope==='nodes'&&sourceGuide(intent.value,id)!==undefined);
                     }else if(resources.shaperPath)await prepareMetricBaselines(intent.value,resources.shaperPath,signal);
                     const result = await writeDocx(intent.value, {
@@ -185,7 +189,8 @@ export async function createDocxEngine(input: DocxResources): Promise<Result<Doc
                     if (!result.ok)
                         return result;
                     const receipt = result.value;
-                    return { ok: true, value: { mediaType: receipt.mediaType, byteLength: receipt.bytes, sha256: receipt.sha256, pageCount: null, fieldRefresh: 'required', wordVerified: false, buffered: true, adaptations: [...sizeAdaptations, ...(textLayout?[{kind:'docx-text-layout',requested:textLayout,policy:textLayout==='native'?'native-paragraphs':'source-word-layout',wordVerified:false}]:[]), ...receipt.adaptations] }, warnings: result.warnings };
+                    const omissions = [...imageOmissions].map(nodeId => {const n=pinned.nodes[nodeId] as any;return {kind:'image-omission',nodeId,policy:'retain-authored-frame',frame:{width:n.props.width,height:n.props.height,align:n.props.align??'left'},wordVerified:false};});
+                    return { ok: true, value: { mediaType: receipt.mediaType, byteLength: receipt.bytes, sha256: receipt.sha256, pageCount: null, fieldRefresh: 'required', wordVerified: false, buffered: true, adaptations: [...sizeAdaptations, ...omissions, ...(textLayout?[{kind:'docx-text-layout',requested:textLayout,policy:textLayout==='native'?'native-paragraphs':'source-word-layout',wordVerified:false}]:[]), ...receipt.adaptations] }, warnings: [...result.warnings,...[...imageOmissions].map(nodeId=>({code:'IMAGE_UNAVAILABLE',path:'nodes.'+nodeId,nodeId,message:'Image explicitly omitted; authored frame retained'}))] };
                 }
                 catch (error) {
                     const found = issue(error, 'DOCX_SERIALIZATION_FAILED'), issues = [found];

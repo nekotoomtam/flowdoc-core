@@ -3,7 +3,7 @@ import {document,fakeRuntime} from '../helpers/document.js';
 import {validateResolvedDocument} from '../../src/composition/validateResolvedDocument.js';
 import {documentFlow} from '../../src/layout/documentFlow.js';
 import {writePdf} from '../../src/pdf/writePdf.js';
-function imageDoc(){const d:any=document();d.nodeModelVersion=18;d.nodes.t={id:'t',type:'image',props:{width:{value:200,unit:'pt'},height:{value:100,unit:'pt'},resourceId:'photo'}};delete d.sourceMap.leaf;return d;}
+function imageDoc(){const d:any=document();d.nodeModelVersion=20;d.nodes.t={id:'t',type:'image',props:{width:{value:200,unit:'pt'},height:{value:100,unit:'pt'},resourceId:'photo'}};delete d.sourceMap.leaf;return d;}
 const resources={photo:{kind:'rgb',width:2,height:2,bytes:new Uint8Array([255,0,0,0,255,0,0,0,255,255,255,255]),alpha:new Uint8Array([255,128,0,255])}};
 it('aligns frames inside printable width while keeping the image centered within each frame',async()=>{
  const left=20*72/25.4,available=(210-40)*72/25.4;
@@ -37,7 +37,7 @@ it('writes legal decimal image matrices for the UAT header and near-zero coordin
   matrix.forEach((token,i)=>expect(Math.abs(Number(token)-expected[i]!)).toBeLessThanOrEqual(0.00000051));
  }
 });
-it('moves whole frames across pages and rejects over-page frames',async()=>{const d=imageDoc();d.nodes.t.props.height.value=450;d.nodes.u=structuredClone(d.nodes.t);d.nodes.u.id='u';d.rootIds.push('u');d.sourceMap.u={origin:'authored',sectionId:'main',sourceId:'u'};expect((await documentFlow(d,fakeRuntime,resources as any)).pages).toHaveLength(2);d.nodes.t.props.height.value=1000;await expect(documentFlow(d,fakeRuntime,resources as any)).rejects.toThrow();});
+it('moves whole frames across pages and rejects over-page frames',async()=>{const d=imageDoc();d.nodes.t.props.height.value=450;d.nodes.u=structuredClone(d.nodes.t);d.nodes.u.id='u';d.rootIds.push('u');d.sourceMap.u={origin:'authored',sectionId:'instance-main',sourceId:'u'};expect((await documentFlow(d,fakeRuntime,resources as any)).pages).toHaveLength(2);d.nodes.t.props.height.value=1000;await expect(documentFlow(d,fakeRuntime,resources as any)).rejects.toThrow();});
 it('keeps the frame when no resource is available',async()=>{const d=imageDoc();d.nodes.u=structuredClone(d.nodes.t);d.nodes.u.id='u';d.nodes.u.props.resourceId='missing';d.rootIds.unshift('u');const draw=await documentFlow(d,fakeRuntime,resources as any);expect(draw.pages[0].images).toHaveLength(1);expect(draw.pages[0].images[0].yPt).toBeCloseTo(20*72/25.4+100);});
 import {validateImageResources} from '../../src/pdf/imageResources.js';
 import {createEngine} from '../../src/pdf/createPdfEngine.js';

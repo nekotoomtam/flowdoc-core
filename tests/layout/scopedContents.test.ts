@@ -9,12 +9,12 @@ import {indexDestinations,resolveLinkGeometry} from '../../src/layout/linkGeomet
 import {fillContentsNumbers} from '../../src/layout/fillContentsNumbers.js';
 it('collects separate Section headings while permitting one whole-document TOC',async()=>{
  const d=composeScoped(scopedTemplate(3,true));expect(validateResolvedDocument(d)).toEqual([]);
- expect(collectContents(d,sid(1)).map(e=>e.title)).toEqual(['Alpha H000 หัวข้อทดสอบ','Alpha H001 หัวข้อทดสอบ','Alpha H002 หัวข้อทดสอบ']);
+ expect(collectContents(d,'instance-section1').map(e=>e.title)).toEqual(['Alpha H000 หัวข้อทดสอบ','Alpha H001 หัวข้อทดสอบ','Alpha H002 หัวข้อทดสอบ']);
  const draw=await documentFlow(d,fakeRuntime),nodes=d.nodes,slots=draw.contentsSlots!;
  const tocIds=d.rootIds.filter(id=>nodes[id]?.type==='table-of-contents');expect(tocIds).toHaveLength(3);
  expect(tocIds.map(id=>slots.filter(s=>s.nodeId===id).length)).toEqual([6,3,3]);
  const anchors=indexDestinations(d,draw);await fillContentsNumbers(draw,anchors,fakeRuntime,true);resolveLinkGeometry(d,draw,anchors);
- for(const id of tocIds){const runs=draw.pages.flatMap(p=>p.commands).filter(c=>c.nodeId===id&&!c.id.startsWith('contents-number-'));const scope=(nodes[id] as any).props.scope.kind;if(scope==='section')expect(runs.every(c=>c.text.startsWith(d.sourceMap[id]!.sectionId===sid(1)?'Alpha':'Beta'))).toBe(true);}
+ for(const id of tocIds){const runs=draw.pages.flatMap(p=>p.commands).filter(c=>c.nodeId===id&&!c.id.startsWith('contents-number-'));const scope=(nodes[id] as any).props.scope.kind;if(scope==='section')expect(runs.every(c=>c.text.startsWith(d.sourceMap[id]!.sectionId==='instance-section1'?'Alpha':'Beta'))).toBe(true);}
 });
 it('rejects missing/unknown scope, duplicate scope and model18 scope extensions',()=>{
  for(const scope of [undefined,{}, {kind:'other'}, {kind:'section',sectionId:sid(2)}]){const t=scopedTemplate();t.sections[0].source.fragment.nodes.toc.props.scope=scope;if(scope===undefined)delete t.sections[0].source.fragment.nodes.toc.props.scope;expect(validateTemplate(t).ok).toBe(false);}
@@ -26,7 +26,7 @@ it('rejects duplicate document TOCs across different Sections after composition'
 });
 it('does not manufacture a page for an empty Section scope, including surrounding breaks',async()=>{
  const t=scopedTemplate();const f=t.sections[0].source.fragment;f.rootIds=['break','toc','tail'];f.nodes={break:f.nodes.break,toc:f.nodes.toc,tail:{id:'tail',type:'page-break'}};
- const d=composeScoped(t),draw=await documentFlow(d,fakeRuntime);expect(draw.pages.every(p=>p.sectionId===sid(2))).toBe(true);expect(draw.pages[0]!.countedPageNumber).toBe(7);
+ const d=composeScoped(t),draw=await documentFlow(d,fakeRuntime);expect(draw.pages.every(p=>p.sectionId==='instance-section2')).toBe(true);expect(draw.pages[0]!.countedPageNumber).toBe(7);
 });
 it('keeps Area-inserted TOCs owned by their Section and rejects duplicated expanded scopes',async()=>{
  const t=scopedTemplate(),s=t.sections[0],f=s.source.fragment,toc=f.nodes.toc;
@@ -46,7 +46,7 @@ it('rejects forged resolved scopes and an entirely empty scoped-TOC document',as
 it.each(['continue','restart','exclude'])('fills target numbers for %s after multipage TOC, reorder and content changes',async mode=>{
  const t=scopedTemplate(38,true);t.sections.reverse();t.sections[0].numbering=mode==='restart'?{mode,startAt:12,visibility:'hide'}:{mode};
  const request=scopedRequest(t);request.sections.reverse();const d=composeScoped(t,request),draw=await documentFlow(d,fakeRuntime),anchors=indexDestinations(d,draw),slots=structuredClone(draw.contentsSlots!);
- const toc=t.sections[0].id;const local=slots.filter(s=>s.nodeId.includes(toc)&&!(d.nodes[s.nodeId] as any).props.scope.kind.includes('document'));
+ const toc='instance-'+t.sections[0].sectionKey;const local=slots.filter(s=>s.nodeId.includes(toc)&&!(d.nodes[s.nodeId] as any).props.scope.kind.includes('document'));
  expect(new Set(local.map(s=>s.pageIndex)).size).toBeGreaterThan(1);
  const before=draw.pages.map(p=>structuredClone(p.commands));await fillContentsNumbers(draw,anchors,fakeRuntime,true);resolveLinkGeometry(d,draw,anchors);
  draw.pages.forEach((p,i)=>expect(p.commands.slice(0,before[i]!.length)).toEqual(before[i]));

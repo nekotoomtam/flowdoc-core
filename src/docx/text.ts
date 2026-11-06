@@ -62,14 +62,26 @@ export function buildTextParagraph(intent: ExportIntent, nodeId: string, options
         const style = required(intent.styles[block.styleId], 'styles'), run = nativeRunStyle(style, block.language), children: ParagraphChild[] = [];
         const baseline=baselineDecision(intent,scope,nodeId),exact=baseline?.policy==='font-metric-exact';
         const thaiEnds=thaiWordBoundaries(intent,scope,nodeId);
-        function runs(a: number, b: number) { const out: TextRun[] = []; for (const segment of block!.segments) {
+        function runs(a: number, b: number) {
+            const out: TextRun[] = [], plain: string[] = [];
+            // This call owns one authored span with constant run style/language
+            // and baseline. Latin/Common with no explicit tracking therefore
+            // have identical complete properties. Materialize one run before
+            // the next semantic barrier, rather than one per script segment.
+            const flushPlain = () => {
+                if (!plain.length) return;
+                out.push(new ScriptRun({...run, text: plain.join('')}, false, exact ? baseline.positionHalfPoints : undefined));
+                plain.length = 0;
+            };
+            for (const segment of block!.segments) {
             const left = Math.max(a, segment.start), right = Math.min(b, segment.end);
             if (left >= right)
                 continue;
             const pieces = block!.text.slice(left, right).split('\n');let offset=left;
-            pieces.forEach((piece, index) => { if (index){offset++;
+            pieces.forEach((piece, index) => { if (index){offset++;flushPlain();
                 out.push(new ScriptRun({ ...run, break: 1 }, segment.script === 'Thai',exact?baseline.positionHalfPoints:undefined));}
                 if(segment.script==='Thai'&&thaiEnds){
+                    flushPlain();
                     let at=offset;
                     for(const [index,end]of thaiEnds.entries()){
                         if(end<=at)continue;
@@ -80,7 +92,13 @@ export function buildTextParagraph(intent: ExportIntent, nodeId: string, options
                     offset+=piece.length;return;
                 }
                 let start=0;
-                const emit=(text:string,spacing?:number)=>{if(text)out.push(new ScriptRun({...run,text,...(spacing===undefined?{}:{characterSpacing:spacing})},segment.script==='Thai',exact?baseline.positionHalfPoints:undefined));};
+                const emit=(text:string,spacing?:number)=>{
+                    if(!text)return;
+                    if(segment.script!=='Thai'&&spacing===undefined){plain.push(text);return;}
+                    // Explicit zero is a barrier too; it is not inherited spacing.
+                    flushPlain();
+                    out.push(new ScriptRun({...run,text,...(spacing===undefined?{}:{characterSpacing:spacing})},segment.script==='Thai',exact?baseline.positionHalfPoints:undefined));
+                };
                 for(let i=0;i<piece.length;i++){
                     const spacing=segment.script==='Latin'?pairSpacingAt(intent,scope,nodeId,offset+i):undefined;
                     if(spacing===undefined)continue;
@@ -88,7 +106,7 @@ export function buildTextParagraph(intent: ExportIntent, nodeId: string, options
                 }
                 emit(piece.slice(start));offset+=piece.length;
             });
-        } return out; }
+        } flushPlain();return out; }
         const nav = options.navigation, fields = block.spans.some(s => s.type === 'system-page-field');
         if (fields && nav && (!nav.inBand || source.props.pageFieldLayout !== 'compact'))
             fail('DOCX_CAPABILITY_UNSUPPORTED', path, 'Native page fields require a compact band block; fixed-width field slots are unverified', nodeId);

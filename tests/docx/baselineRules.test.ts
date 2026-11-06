@@ -1,3 +1,4 @@
+import {sectionUse,defaultUses} from '../helpers/sectionUses.js';
 import {expect,it} from 'vitest';
 import {resolve} from 'node:path';
 import {mkdtemp,copyFile,writeFile,rm,readdir} from 'node:fs/promises';
@@ -12,7 +13,7 @@ function document(text:string){
  const t=sectionTemplate();t.sections=[t.sections[0]];t.areaFormats={};
  for(const style of Object.values(t.styles) as any[]){style.fontSize={unit:'pt',value:12};style.lineHeightPt=18;}
  const v=api.validateTemplate(t);if(!v.ok)throw Error(JSON.stringify(v));
- const p=api.prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:text},sections:{}});if(!p.ok)throw Error(JSON.stringify(p));
+ const p=api.prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:text},sections:defaultUses(t)});if(!p.ok)throw Error(JSON.stringify(p));
  const d=api.composeDocument(v.value,p.value);if(!d.ok)throw Error(JSON.stringify(d));return d.value;
 }
 async function exported(text:string,withShaper=true){

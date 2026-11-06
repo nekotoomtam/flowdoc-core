@@ -1,3 +1,4 @@
+import {sectionUse,defaultUses} from '../helpers/sectionUses.js';
 import {expect,it,vi} from 'vitest';
 import {resolve,join} from 'node:path';
 import {readFileSync} from 'node:fs';
@@ -10,6 +11,7 @@ import {fonts,noImages,staged} from './helpers.js';
 import {sectionTemplate} from '../helpers/sections.js';
 import {bandTemplate} from '../helpers/bands.js';
 import {NativeShapeSession} from '../../src/runtime/nativeShapeSession.js';
+import * as prefixFit from '../../src/runtime/prefixFit.js';
 
 const native=it.runIf(process.platform==='linux');
 native('can retain measured relationships with native editable text and no word boxes',async()=>{
@@ -22,11 +24,11 @@ native('can retain measured relationships with native editable text and no word 
 });
 native.each([false,true])('measures a cover with a fractional rule and a table, retaining its one-page bound: %s',async overflow=>{
  const fixture=(kind:string)=>JSON.parse(readFileSync(`tests/fixtures/docx-pagination-rules/R-${kind}.json`,'utf8'));
- const t=fixture('template');t.nodeModelVersion=18;t.sections=[t.sections[1]];delete t.sections[0].nameBase;Object.assign(t.sections[0],{role:'cover',key:'cover',formats:{}});
+ const t=fixture('template');t.nodeModelVersion=20;t.sections=[t.sections[1]];Object.assign(t.sections[0],{role:'cover',sectionKey:'cover'});
  const f=t.sections[0].source.fragment;f.rootIds=['r-space','cover-rule','r-table'];
  f.nodes['r-space'].props={textStyleId:'body'};f.nodes['r-space'].children=[{id:'cover-title-leaf',type:'text',text:overflow?'Long cover '.repeat(500):'I. Revision History'}];
  f.nodes['cover-rule']={id:'cover-rule',type:'line',props:{thickness:{unit:'pt',value:.566929}}};
- const d=composeForMetric(t,{docKey:t.docKey,data:{},sections:{}});
+ const d=composeForMetric(t,{docKey:t.docKey,data:{},sections:defaultUses(t)});
  if(overflow){const e=await api.createDocxEngine(resources());if(!e.ok)throw Error(JSON.stringify(e));const s=staged(),r=await e.value.generateDocxTo(d,noImages,s.output);expect(r.ok).toBe(false);if(!r.ok)expect(r.issues[0]?.message).toContain('Cover exceeds');expect(s.chunks).toEqual([]);return;}
  const r=await exported(d),xml=await r.zip.file('word/document.xml')!.async('string');expect(xml).toContain('w:tbl');expect(xml).toContain('w:sz="5"');
  expect(r.result.adaptations).toContainEqual(expect.objectContaining({kind:'rule-thickness-quantization',sourceThicknessPt:.566929,nativeThicknessPt:.625}));
@@ -66,7 +68,7 @@ native('keeps authored heading navigation while applying bounded source baseline
 });
 native('proves plain band and compact page-field baselines without replacing native fields',async()=>{
  const t=bandTemplate();t.sections=[t.sections[0]];t.areaFormats={};for(const style of Object.values(t.styles)as any[]){style.fontSize={unit:'pt',value:12};style.lineHeightPt=18;}const foot=t.sections[0].footer.fragment.nodes.title;foot.props.pageFieldLayout='compact';foot.children.push({id:'current',type:'system-page-field',field:'current',width:{value:36,unit:'pt'}});
- const r=await exported(composeForMetric(t,{docKey:t.docKey,data:{projectName:'BODY'},sections:{intro:{header:{projectName:'HEAD'},footer:{projectName:'PAGE'}}}}));const decisions=r.result.adaptations.filter((a:any)=>a.kind==='text-baseline-policy'&&a.scope!=='nodes');expect(decisions).toHaveLength(2);expect(decisions.every((a:any)=>a.policy==='font-metric-exact')).toBe(true);
+ const r=await exported(composeForMetric(t,{docKey:t.docKey,data:{projectName:'BODY'},sections:defaultUses(t).map((u:any)=>u.sectionKey==='intro'?{...u,header:{projectName:'HEAD'},footer:{projectName:'PAGE'}}:u)}));const decisions=r.result.adaptations.filter((a:any)=>a.kind==='text-baseline-policy'&&a.scope!=='nodes');expect(decisions).toHaveLength(2);expect(decisions.every((a:any)=>a.policy==='font-metric-exact')).toBe(true);
  const parts=await Promise.all(Object.keys(r.zip.files).filter(p=>/^word\/(?:header|footer)\d+\.xml$/.test(p)).map(p=>r.zip.file(p)!.async('string')));expect(parts.join('')).toContain('PAGE');expect(parts.join('')).toContain('w:fldChar');const fieldRun=[...parts.join('').matchAll(/<w:r(?:\s[^>]*)?>[\s\S]*?<\/w:r>/g)].find(m=>m[0].includes('PAGE'))![0];expect(fieldRun).toContain('<w:position w:val="0.5pt"/>');expect(parts.join('')).toContain('<w:position w:val="1"/>');
 });
 native('keeps source pair corrections for individually bounded merged cells in a mixed table',async()=>{
@@ -80,7 +82,7 @@ function document(size=12,bold=false,italic=false,releaseId?:string,content=text
  for(const style of Object.values(t.styles)as any[]){style.fontSize={unit:'pt',value:size};style.lineHeightPt=size*1.5;style.fontWeight=bold?'bold':'normal';style.fontStyle=italic?'italic':'normal';}
  if(releaseId){t.schemaVersion=2;for(const key of Object.keys(t.styles))t.styles[key]={font:{kind:'library',releaseId,weight:400,style:'normal'},fontSize:{unit:'pt',value:size},lineHeightPt:size*1.5};}
  const v=api.validateTemplate(t);if(!v.ok)throw Error(JSON.stringify(v));
- const p=api.prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:content},sections:{}});if(!p.ok)throw Error(JSON.stringify(p));
+ const p=api.prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:content},sections:defaultUses(t)});if(!p.ok)throw Error(JSON.stringify(p));
  const d=api.composeDocument(v.value,p.value);if(!d.ok)throw Error(JSON.stringify(d));return d.value;
 }
 native.each(['newline','anchored'])('retains previous metric behavior for a source-guide fallback: %s',async mode=>{
@@ -186,4 +188,17 @@ native('cancels during source shaping, reaps resources and publishes no partial 
   expect(sink.chunks).toEqual([]);expect(sink.aborts).toContain('DOCX_CANCELLED');
   expect((await readdir(tmpdir())).filter(s=>s.startsWith(prefix)).sort()).toEqual(before);
  }finally{hook.mockRestore();}
+});
+native('cancels after prefix initialization and removes the owned source snapshots',async()=>{
+ const engine=await api.createDocxEngine({...resources(),pythonExecutable:'python'});if(!engine.ok)throw Error(JSON.stringify(engine));
+ const prefix='flowdoc-docx-source-',before=(await readdir(tmpdir())).filter(s=>s.startsWith(prefix)).sort();
+ const controller=new AbortController(),request=NativeShapeSession.prototype.request,configure=prefixFit.configurePrefixFit;let armed=false;
+ const configHook=vi.spyOn(prefixFit,'configurePrefixFit').mockImplementationOnce(async(...args)=>{await configure(...args);armed=true;});
+ const shapeHook=vi.spyOn(NativeShapeSession.prototype,'request').mockImplementation(function(this:NativeShapeSession,...args:Parameters<NativeShapeSession['request']>){if(armed)controller.abort();return request.apply(this,args);});
+ try{
+  const sink=staged(),result=await engine.value.generateDocxTo(document(),noImages,sink.output,{signal:controller.signal});
+  expect(armed).toBe(true);expect(result.ok).toBe(false);if(!result.ok)expect(result.issues[0]?.code).toBe('DOCX_CANCELLED');
+  expect(sink.chunks).toEqual([]);expect(sink.aborts).toContain('DOCX_CANCELLED');
+  expect((await readdir(tmpdir())).filter(s=>s.startsWith(prefix)).sort()).toEqual(before);
+ }finally{shapeHook.mockRestore();configHook.mockRestore();}
 });

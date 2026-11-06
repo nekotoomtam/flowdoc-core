@@ -1,3 +1,4 @@
+import {sectionUse,defaultUses} from '../helpers/sectionUses.js';
 import {expect,it} from 'vitest';
 import {resolve} from 'node:path';
 import {readFileSync} from 'node:fs';
@@ -16,7 +17,7 @@ it('embeds and selects the actual Sarabun Light face alongside Sarabun Regular',
  const t=sectionTemplate();t.sections=[t.sections[0]];t.areaFormats={};t.schemaVersion=2;
  for(const key of Object.keys(t.styles))t.styles[key]={font:{kind:'library',releaseId,weight:300,style:'normal'},fontSize:{value:12,unit:'pt'},lineHeightPt:20};
  t.styles.unusedRegular={font:{kind:'library',releaseId,weight:400,style:'normal'},fontSize:{value:12,unit:'pt'},lineHeightPt:20};
- const v=api.validateTemplate(t);if(!v.ok)throw Error(JSON.stringify(v));const p=api.prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:'Light ไทย'},sections:{}});if(!p.ok)throw Error(JSON.stringify(p));
+ const v=api.validateTemplate(t);if(!v.ok)throw Error(JSON.stringify(v));const p=api.prepareGeneration(v.value,{docKey:t.docKey,data:{projectName:'Light ไทย'},sections:defaultUses(t)});if(!p.ok)throw Error(JSON.stringify(p));
  const d=api.composeDocument(v.value,p.value);if(!d.ok)throw Error(JSON.stringify(d));const before=JSON.stringify(d.value);
  const e=await api.createDocxEngine({fonts:resources});if(!e.ok)throw Error(JSON.stringify(e));const sink=staged(),r=await e.value.generateDocxTo(d.value,noImages,sink.output);
  expect(r.ok,JSON.stringify(r)).toBe(true);if(!r.ok)return;

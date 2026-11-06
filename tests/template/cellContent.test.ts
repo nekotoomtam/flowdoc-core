@@ -5,7 +5,7 @@ import {validateTemplate,prepareGeneration,composeDocument} from '../../src/inde
 import {validateResolvedDocument} from '../../src/composition/validateResolvedDocument.js';
 
 export function cellTemplate():any {
- const t=mergedTemplate();t.nodeModelVersion=18;
+ const t=mergedTemplate();t.nodeModelVersion=20;
  const f=t.areaFormats.merged;f.inputSchema.fields.photo={type:'image',required:true};
  f.fragment.nodes.pic={id:'pic',type:'image',props:{width:{value:100,unit:'pt'},height:{value:80,unit:'pt'},source:{scope:'local',key:'photo'}}};
  f.fragment.nodes.a.childIds.push('pic');
@@ -15,13 +15,13 @@ export function cellTemplate():any {
 it('accepts Area18 image children and binds distinct instances with source identity',()=>{
  const input=cellTemplate(),before=structuredClone(input),v=validateTemplate(input);
  expect(v.ok).toBe(true);if(!v.ok)return;
- const p=prepareGeneration(v.value,{docKey:'merged',data:{},sections:{main:{data:{details:[{format:'merged',data:{photo:'01a11aa0-c9e6-780a-ae76-834fad559f4d'}},{format:'merged',data:{photo:'01a11aa0-c9e6-780a-ae76-834fad559f4e'}}]}}}});
+ const p=prepareGeneration(v.value,{docKey:'merged',data:{},sections:[{sectionKey:'main',instanceKey:'main',data:{details:[{format:'merged',data:{photo:'01a11aa0-c9e6-780a-ae76-834fad559f4d'}},{format:'merged',data:{photo:'01a11aa0-c9e6-780a-ae76-834fad559f4e'}}]}}]});
  expect(p.ok).toBe(true);if(!p.ok)return;
  const r=composeDocument(v.value,p.value);expect(r.ok).toBe(true);if(!r.ok)return;
- expect((r.value.nodes['section-main~area-main-details~entry-0~format-merged~a'] as any).childIds).toEqual(['section-main~area-main-details~entry-0~format-merged~at','section-main~area-main-details~entry-0~format-merged~pic']);
- expect((r.value.nodes['section-main~area-main-details~entry-0~format-merged~pic'] as any).props.resourceId).toBe('01a11aa0-c9e6-780a-ae76-834fad559f4d');
- expect((r.value.nodes['section-main~area-main-details~entry-1~format-merged~pic'] as any).props.resourceId).toBe('01a11aa0-c9e6-780a-ae76-834fad559f4e');
- expect(r.value.sourceMap['section-main~area-main-details~entry-1~format-merged~pic']).toMatchObject({areaEntryIndex:1,sourceId:'pic'});
+ expect((r.value.nodes['section-instance-main~area-main-details~entry-0~format-merged~a'] as any).childIds).toEqual(['section-instance-main~area-main-details~entry-0~format-merged~at','section-instance-main~area-main-details~entry-0~format-merged~pic']);
+ expect((r.value.nodes['section-instance-main~area-main-details~entry-0~format-merged~pic'] as any).props.resourceId).toBe('01a11aa0-c9e6-780a-ae76-834fad559f4d');
+ expect((r.value.nodes['section-instance-main~area-main-details~entry-1~format-merged~pic'] as any).props.resourceId).toBe('01a11aa0-c9e6-780a-ae76-834fad559f4e');
+ expect(r.value.sourceMap['section-instance-main~area-main-details~entry-1~format-merged~pic']).toMatchObject({areaEntryIndex:1,sourceId:'pic'});
  expect(validateResolvedDocument(r.value)).toEqual([]);expect(input).toEqual(before);
 });
 it.each([4,5,6,7,8])('keeps image children and padding outside legacy model %s',version=>{
@@ -36,7 +36,7 @@ it.each([undefined,{}, {left:{value:0,unit:'pt'}}, {bottom:{value:2,unit:'mm'}}]
  expect(validateTemplate(t).ok).toBe(true);
 });
 it('accepts implicit cells with padding without mistaking them for explicit spans',()=>{
- const d=mergedDoc();d.nodeModelVersion=18;
+ const d=mergedDoc();d.nodeModelVersion=20;
  d.nodes.table.rowIds=['header'];d.nodes.header.cellIds=['h'];d.nodes.table.columns=[{width:{value:420,unit:'pt'}}];
  d.nodes={table:d.nodes.table,header:d.nodes.header,h:d.nodes.h,ht:d.nodes.ht};d.nodes.h.props={padding:{left:{value:0,unit:'pt'}}};
  const ids=new Set(Object.values(d.nodes).flatMap((n:any)=>[n.id,...(n.children??[]).map((c:any)=>c.id)]));for(const id of Object.keys(d.sourceMap))if(!ids.has(id))delete d.sourceMap[id];expect(validateResolvedDocument(d)).toEqual([]);
@@ -47,7 +47,7 @@ it.each(['missing','duplicate','parent','nested'])('rejects bad child topology %
  if(kind==='parent')n.b.childIds.push('pic');if(kind==='nested')n.a.childIds.push('table');
  expect(validateTemplate(t).ok).toBe(false);
 });
-it('retains contents in Area18',()=>{const d=contentsDocument();d.nodeModelVersion=18;expect(validateResolvedDocument(d)).toEqual([]);});
+it('retains contents in Area18',()=>{const d=contentsDocument();d.nodeModelVersion=20;expect(validateResolvedDocument(d)).toEqual([]);});
 it('rejects padding whose unit conversion overflows',()=>{const t=cellTemplate();t.areaFormats.merged.fragment.nodes.a.props.padding={top:{value:1e308,unit:'mm'}};expect(validateTemplate(t).ok).toBe(false);});
 it('rejects padding consuming the complete combined cell width at template validation',()=>{
  const t=cellTemplate();t.areaFormats.merged.fragment.nodes.b.props.padding={left:{value:280,unit:'pt'}};
@@ -61,7 +61,7 @@ it('binds a shared global image in repeated rows with independent node identitie
  f.inputSchema.fields.items={type:'array',items:{type:'object',fields:{text:{type:'string'}}}};
  f.repeats=[{tableId:'table',rowTemplateId:'r1',source:{scope:'local',key:'items'}}];
  const v=validateTemplate(t);expect(v.ok).toBe(true);if(!v.ok)return;
- const p=prepareGeneration(v.value,{docKey:'merged',data:{photo:'01a11aa0-c9e6-780a-ae76-834fad559f4d'},sections:{main:{data:{details:[{format:'merged',data:{items:[{text:'A'},{text:'B'}]}}]}}}});
+ const p=prepareGeneration(v.value,{docKey:'merged',data:{photo:'01a11aa0-c9e6-780a-ae76-834fad559f4d'},sections:[{sectionKey:'main',instanceKey:'main',data:{details:[{format:'merged',data:{items:[{text:'A'},{text:'B'}]}}]}}]});
  expect(p.ok).toBe(true);if(!p.ok)return;
  const r=composeDocument(v.value,p.value);expect(r.ok).toBe(true);if(!r.ok)return;
  const pictures=Object.values(r.value.nodes).filter(n=>n.type==='image');expect(pictures).toHaveLength(2);expect(new Set(pictures.map(n=>n.id)).size).toBe(2);

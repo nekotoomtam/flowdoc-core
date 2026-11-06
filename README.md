@@ -1,9 +1,19 @@
 # FlowDoc Core
 
-0.5.2 development candidate adds optional `defaultFileName` metadata and the
-opt-in experimental Model20 Section assembly contract described below. Service
-0.5.2 still admits only18/19; Model20 is a direct-Core experimental API. No
-release, installation or native Word fidelity claim follows from this version.
+> **Candidate 0.5.5 — 2026-11-06:** Owner selected Core/Service 0.5.5 for the retained model20-only runtime. This is local Git/package preparation; no publication or installation. The withdrawn v0.6.0 history and the existing v0.5.2 release remain unchanged.
+
+This development candidate adds opt-in placement-scoped DOCX image omissions.
+`DocxOptions.imageOmissions` uses the exported `DOCX_IMAGE_OMISSIONS_CONTRACT`
+and existing body image node IDs. Selected pictures retain their native empty
+paragraph frames; unselected resources remain mandatory. See the template guide
+for limits, warning receipts and the strict default. Release identity is
+established by the matching annotated snapshot/tag, not this feature description.
+
+This model20-only development candidate accepts nodeModelVersion20 at template,
+prepared, normalized-task and resolved-document boundaries. Models18/19 require
+explicit offline conversion; changing the version number is not conversion.
+Service and plugin acceptance are separately governed in Project Control's
+`flowdoc-model20-only-transition-2026-11-03.md`. Installation is a separate step.
 
 
 0.5.1 adds shared named table/line stroke styles, per-table-edge overrides and
@@ -14,27 +24,21 @@ line, header cells may contain authored breaks. Unsupported wrapping/merges
 fail explicitly. Word edits can require regeneration, and intermediate-page
 bottom closure is not promised. See the template guide for the exact contract.
 
-Package `0.5.2` retains model19 Section instances: UUID `id`,
-required display `label`/`nameBase`, no `key`/`formats`, and generation
-`sections:[{id,data,header?,footer?}]`. Saved definition order controls output;
-each saved ID is required exactly once. Prepared schema2 pins model19 and the
-definition fingerprint. Model18 retains its existing object input/schema1 reader.
-Section-local anchors are namespaced by instance; cross-Section references use
-an explicit `targetSectionId`. No implicit migration or font-size adjustment.
-Model19 Stage2 permits fixed-height text at Section flow roots, including top-level
-Area Formats. Text nodes with props.heightMode:fixed / props.height must fit their text and remaining body space; overflow fails
-without clipping, shrinking or moving that text frame. This is separate from
-Area Format sizing.fixed, whose maximum-height behavior is described below. Section page/band settings remain
-authoritative. Cell/repeat frames and nested Areas stay forbidden. Scoped/multiple
-TOCs use explicit model19 scope `{kind:"section"}` or `{kind:"document"}`.
-One TOC per Section and one per document may coexist; duplicates after Area
-expansion fail. Section scope uses its owning Section, not a caller-selected ID.
-Empty scopes add no page. Target numbers follow continue/restart/exclude; hidden
-numbers remain in contents and excluded targets retain title links without numbers.
-Pagination has one layout pass: fixed number slots are filled afterwards without
-reflow; an oversized number fails rather than guessing or retrying. Model18 keeps
-its existing unscoped contract. Release identity is the matching annotated tag on
-the release snapshot; installation is separate. Shared contract: Project Control Section–Area Stage0–3.
+Saved Section definitions have UUID `id`, unique `sectionKey`, and display
+`label`/`nameBase`. Generation uses `sections:[{sectionKey,instanceKey,data,header?,footer?}]`
+in caller order. A definition may repeat with distinct instance keys; unused
+definitions do not render. Prepared schema3 and `flowdoc-task-input/2` pin20 and
+the definition fingerprint. Legacy key/formats, Section-ID requests and task/1
+are rejected. Local anchors belong to their occurrence; cross-use references
+require `targetInstanceKey`.
+
+Model20 permits fixed-height text at Section flow roots, including top-level
+Area Formats. Text must fit without clipping/shrinking; cell/repeat frames and
+nested Areas stay forbidden. A cover occurrence must be first and unique.
+Scoped TOCs declare `{kind:"section"}` or `{kind:"document"}`. One per scope
+may coexist; duplicate expanded scopes fail. Section TOCs use their owning
+occurrence. Empty scopes add no page; an entirely empty body is refused.
+Number slots are filled from actual target numbering without a second layout.
 
 ## DOCX development output in 0.5.0
 
@@ -68,30 +72,49 @@ guide for receipts, native flow behavior and remaining fit limits.
 
 ## Internal task input reader
 
-`normalizeTaskInput(template, valueHandle, options)` validates model18/19
-values and writes `flowdoc-task-input/1` incrementally. Storage-neutral handles expose
+`normalizeTaskInput(template, valueHandle, options)` validates model20
+values and writes `flowdoc-task-input/2` incrementally. Storage-neutral handles expose
 object properties, array elements and bounded scalars; Core never loads a whole
 Section or Area entry. A collection pass precedes resolution so property order and
 forward image references do not select a first winner. Service owns file/image
 metadata and Section asset keys. Only typed image slots invoke its adapter; omitted
 images retain explicit version1 unavailable resources and reasons, including required
-fields. Legacy `prepareGeneration` still accepts its original UUID image values only.
+fields. The object API `prepareGeneration` still accepts its original UUID image values only.
 This normalized contract is internal input for Service task processing, not a new
-legacy prepared snapshot, renderer capability, public endpoint or PDF readiness claim.
+prepared snapshot, renderer capability, public endpoint or PDF readiness claim.
 ## Authority Boundary
 
-Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. Detailed authoring contracts are maintained in [Developer Documentation](../flowdoc-project-control/docs/developer/authoring/README.md).
+Owner: flowdoc-core. This README describes the package API, local build and resource runtime. Project Control owns shared plans, status and acceptance. The matching model20 authoring guide is [Developer Documentation](../flowdoc-project-control/docs/developer/authoring-model20/README.md); older prepared18/19 guides describe earlier packages.
 
-Package version:0.5.2 on development; the latest release snapshot remains0.5.0.
-This package includes Section19, scoped contents, Format sizing v2, group-label
+Package version:0.5.5. Identify its exact source commit and packed-archive
+checksum, then verify the matching v0.5.5 annotated release snapshot. The earlier
+v0.5.2 snapshot/artifact remains immutable; version numbers are not conversion.
+This package includes Model20, scoped contents, Format sizing v2, group-label
 spans, streamed task images/PDF and the opt-in height calculation below.
 Release identity requires the matching tagged snapshot and acceptance gates.
-Historical0.4.0 accepted **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–17 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
+
+0.5.5 is model20-only; models18/19 and task-input/1 require explicit offline
+conversion, not a version-field edit. It includes bounded prefix-fit measurement
+in the owned native text runtime and M1 merged-label inset mapping: eligible
+uniform peers supply the physical cell top, with the remaining source inset
+applied once before the label paragraph. Unsupported cases retain native
+behavior. Menu textboxes are unchanged. Word still does not repeat merged
+Module labels with a continuation suffix on later pages; general native row/
+frame prediction and complete font-fallback certification remain unverified.
+Git release publication does not install this package or certify arbitrary
+Word documents. See the Service0.5.5 update instructions before changing runtime.
+
+Native DOCX text emission coalesces eligible adjacent untracked runs within an
+authored span. Authored boundaries and text order remain significant; the XML,
+drawing and archive limits are unchanged. This is not a claim of native Word
+visual, kerning or pagination equivalence. A changed README is also a changed
+packed artifact: consumers must pin the checksum of the package actually built.
+Historical0.4.0 accepted **nodeModelVersion: 18 only**, with legacy schemaVersion 1 and library-font schemaVersion 2. Models 4–19 are rejected at template and resolved-document entrypoints. Changing a version number alone does not migrate a template.
 
 ## Internal bounded task composition
 
 `composeTaskDocument(validatedTemplate, normalizedValueHandle, {signal?})` consumes
-`flowdoc-task-input/1` with its exact template pin. Source collections are replayed
+`flowdoc-task-input/2` with its exact template pin. Source collections are replayed
 lazily through the same binding expansion steps as legacy composition. Each record
 is bounded to256 KiB; source/prepared payloads are never loaded as complete objects.
 Canonical normalized values are validated separately from raw request defaults.
@@ -199,9 +222,9 @@ if (!composed.ok) throw new Error(JSON.stringify(composed.issues));
 
 Use raw JSON text to detect duplicate decoded keys. Template validation returns a detached frozen definition and canonical fingerprint. Prepared snapshots are JSON-serializable and checked again at composition; this structural check is not authentication.
 
-A document defines page layouts and ordered Sections. Each Section owns its paper, header/footer, variables and authored content or intentional blank page. An Area is a named variable declared in globalSchema or a Section inputSchema and placed in an authored graph. areaFormats explicitly declare ownerAreaId and key; invocation data belongs to that format. Model18 Section formats must be empty; model19 has no Section formats/key and uses the ID-addressed array shown above. Requests do not accept legacy content arrays. Static content, covers and page breaks remain supported.
+A document defines page layouts and ordered Sections. Each Section owns its paper, header/footer, variables and authored content or intentional blank page. An Area is a named variable declared in globalSchema or a Section inputSchema and placed in an authored graph. areaFormats explicitly declare ownerAreaId and key; invocation data belongs to that format. Model20 has no Section formats/key and uses the ordered sectionKey/instanceKey array shown above. Requests do not accept legacy content arrays. Static content, covers and page breaks remain supported.
 
-Unknown business fields produce warnings. Invalid Area entries, missing required fields, unknown formats and wrong types fail rather than silently skipping content. Areas accept arrays or keyed objects according to their declaration. See the [local template entrypoint](docs/template-guide.md) and runnable fixtures.
+Unknown business fields fail validation. Invalid Area entries, missing required fields, unknown formats and wrong types fail rather than silently skipping content. Areas accept arrays or keyed objects according to their declaration. See the [local template entrypoint](docs/template-guide.md) and runnable fixtures.
 
 Text measurement uses a per-generation cache (32 MiB serialized payload, at most 8,192 entries) and a persistent shaper per font. Sessions close on success or failure. These bounds are not a total job-memory guarantee. Core contains no HTTP server or database.
 
@@ -222,7 +245,7 @@ approved weights from filenames. The caller owns catalog authorization/readiness
 
 ## 0.5.2 manual and package boundary
 
-The default-file-name metadata is available to18/19 templates and experimental20;
+The default-file-name metadata is available to model20 templates;
 see [output naming](#output-base-name-metadata-in052). Request overrides and
 attachment naming belong to Service, not Core's rendering APIs. Shared table
 edge/style options, B's bounded DOCX profile, Area alignment, font quantization
@@ -371,7 +394,7 @@ parity. Release promotion follows the gates above after this preparation.
 
 ## Packaged Format sizing v2
 
-Model19 Area Format definitions optionally declare `sizing: {mode: "auto"}` or
+Model20 Area Format definitions optionally declare `sizing: {mode: "auto"}` or
 `{mode: "fixed", height: {value: 300, unit: "pt"}}` (pt/mm). Omitted sizing retains
 legacy auto. Fixed requires a Section flow-root Area and cannot contain a TOC.
 Each call reserves min(declared maximum, current body remainder), even when
@@ -392,14 +415,14 @@ Project Control owns cross-repository verification and release acceptance.
 
 ## Group-label spans
 
-Model19 (schema1 or2) rowGroups optionally declares
+Model20 (font schema1 or2) rowGroups optionally declares
 `groupLabel:{cellTemplateId:"member-label",emptyCellTemplateId:"empty-label"}`.
 The member and empty label cells bind the same group field, occupy the same grid column/colSpan, have no
 authored rowSpan, and each contains one text-block with a required nonempty
 string field-ref in group scope. Labels cannot contain links, anchors, images
 or TOCs. The group needs member/empty row templates; a prefix is optional here.
-Normal rowGroups without groupLabel retain their existing contract. Model18
-rejects this optional declaration; it is not silently discarded.
+Normal rowGroups without groupLabel retain their existing contract. Legacy node
+models are rejected at admission.
 
 The empty template row must set allowBreak:false. Core derives span from member count (empty uses one fallback row). An empty
 group collection emits no group; equal names remain distinct instances.
@@ -417,38 +440,40 @@ a successful partial PDF must be reported as incomplete. Totals remain authored
 ordinary rows, not a new aggregation or group-footer hook.
 
 Consumers must preserve the declaration and inspect groupLabelSpans.version1
-on a matched Service/FlowDocMake contract, with model19/schema1,2, diagnostics1
+on a matched Service/FlowDocMake contract, with model20/font schema1,2, diagnostics1
 and formatSizing.version2. The suffix uses the selected label font; missing
 glyphs block generation without fallback. This package also retains
 the decimal PDF image-coordinate serialization fix; do not overwrite an older
 archive using the new bytes. Project Control owns cross-repository acceptance.
 
 
-## Experimental repeatable Section assembly candidate
+## Model20 Section assembly candidate
 
 Authority Boundary: Core owns this code-adjacent candidate contract. The shared
 plan/status is Project Control docs/domains/flowdoc-repeatable-section-assembly-plan-2026-10-26.md.
 This is not a released capability or a Service/FlowDocMake installation claim.
 
-Development package0.5.2 includes opt-in Model20. Saved
+This development candidate accepts Model20 only. Saved
 Sections have unique sectionKey and UUID id; label remains display-only. Calls
 use sections:[{sectionKey,instanceKey,data,header?,footer?}] in caller order.
 Definitions can repeat with distinct instanceKey; unused definitions are omitted.
 Each use has independent runtime Section identity and bands. Public/instance
 keys match [A-Za-z][A-Za-z0-9_-]{0,63}; at most2000 definitions/uses, with existing
 expansion budgets still active. No implicit18/19 migration or meaning change.
+The model20-only transition candidate also permits an authored cover definition:
+its actual use must be first and unique. The complete cross-repository transition remains separately governed.
 Prepared schema3 and normalized flowdoc-task-input/2 pin20 and its fingerprint;
-18/19 prepared/task contracts remain unchanged. Local links are use-local;
+Legacy prepared/task contracts are rejected. Local links are use-local;
 explicit cross-use references use targetInstanceKey and fail on missing targets.
 
-The candidate passes source and native-DOCX structure checks and produces an
-A/B/A PDF pilot. Native Word reflow is still unverified: the local Word windows
-disappeared twice before the pilot could be selected. Service integration and
-public discovery have not started. Do not deploy from these source-level results.
+Verification is scoped to the exact source/archive recorded in Project Control.
+The XML prerequisite at4a14176 passed full UAT/SRS DOCX and native Word comparison;
+later model20-only changes require their own acceptance. These fixtures do not
+establish universal Word fidelity or downstream Service/plugin readiness.
 
 ## Output base-name metadata in0.5.2
 
-Models18/19 and experimental20 may include `defaultFileName` beside `docKey`, without a PDF
+Model20 may include `defaultFileName` beside `docKey`, without a PDF
 or DOCX suffix. Blank clears the default; valid names are trimmed/NFC normalized.
 The exported `normalizeOutputName` validates the same portable base-name syntax.
 This metadata affects the template fingerprint but not composed page content.
@@ -456,3 +481,23 @@ Download selection and request overrides belong to a matching Service candidate;
 Core does not rename files or expose storage paths. The bounded implementation
 and verification are governed by Project Control's
 `docs/domains/flowdoc-output-file-names-plan-2026-10-26.md`.
+
+## Private bounded DOCX XML compaction candidate
+
+Authority Boundary: Core owns this package implementation and its local limits.
+Project Control governs acceptance in `flowdoc-model20-only-transition-2026-11-03.md`.
+This candidate is not a release, Service pin or general Word-fidelity claim.
+
+Generated source-layout packages that still exceed the XML budget may use a
+private compaction stage. Under-budget packages retain their previous path.
+The stage shares eligible styles and defaults, preserves heading emphasis for
+Word field refresh, removes narrowly inactive picture defaults and reuses only
+verified same-section footer parts. It stages and validates all changes before
+publication; unsupported input retains the existing budget refusal.
+
+The exact runtime parser dependency is `@xmldom/xmldom`0.9.12. Parsing is bounded
+to complete story units (including whole tables):1MiB/20000 elements per unit,
+4096 units per story and128 levels. Strict XML1.0, namespace, UTF8, ownership,
+relationship and cancellation checks apply. These eligibility limits do not
+raise the50000 XML/rels nodes,10000 drawings or32MiB output caps. There is no
+uploaded-DOCX optimizer API or new public receipt/option contract.

@@ -24,7 +24,7 @@ it('allows direct model19 fixed roots while retaining model18 Area prohibition',
  const legacy=areaCover();legacy.nodeModelVersion=18;Object.assign(legacy.sections[0],{id:'main',key:'main',formats:{}});delete legacy.sections[0].label;delete legacy.sections[0].nameBase;expect(validateTemplate(legacy).ok).toBe(false);
 });
 it('keeps fixed frames forbidden inside cell Areas in model19',()=>{
- const t=areaTemplate();t.nodeModelVersion=19;t.sections.forEach((s:any,i:number)=>{delete s.key;delete s.formats;s.id=`10000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`;s.label='Part'+i;s.nameBase='Part';});
+ const t=areaTemplate();t.nodeModelVersion=20;t.sections.forEach((s:any,i:number)=>{delete s.key;delete s.formats;s.id=`10000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`;s.label='Part'+i;s.nameBase='Part';});
  expect(validateTemplate(t).ok).toBe(true);Object.assign(t.areaFormats['format-001'].fragment.nodes.text.props,{heightMode:'fixed',height:{value:80,unit:'pt'}});expect(validateTemplate(t).ok).toBe(false);
 });
 it('assembles five native Areas in one Section without blank pages or lost Thai/image/table content',async()=>{

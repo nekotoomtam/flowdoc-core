@@ -13,6 +13,7 @@ import {sourceGuide} from './source-layout.js';
 import { buildImageParagraph } from './images.js';
 import type { NavigationContext } from './fields.js';
 import {distributeVerticalOffsets} from './cell-vertical-offsets.js';
+import {deriveMergedCellTopInset,type MergedCellTopInsetDecision} from './merged-cell-top-insets.js';
 import {compoundTableRows} from './compound-table-strokes.js';
 export type TableSpaceReceipt = {
     nodeId: string;
@@ -22,6 +23,7 @@ export type TableSpaceReceipt = {
     reason: string;
     horizontalPolicy: 'border-centre-inset' | 'border-centre-inset-preserve-width' | 'retain-native';
     verticalOffsetPolicy:'row-minimum-margins-and-paragraph-offsets'|'retain-native';
+    mergedCellTopInsets:MergedCellTopInsetDecision[];
     cells: {
         nodeId: string;
         sourceTopPt: number;
@@ -105,7 +107,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
         });
         const preserveWidth=horizontal&&!tableWidthProven(intent,nodeId);
         const metricParagraphs=mapped.cells.some(cell=>nodes[cell.nodeId].childIds.some((id:string)=>baselineDecision(intent,'nodes',id)!==undefined));
-        const spacePolicy: TableSpaceReceipt = { nodeId, scope: 'nodes', cellBorderPolicy: 'explicit-merged-cell-perimeter', terminalStrokeCompensationPt, policy: adapted ? 'border-centre-inset' : 'retain-native', horizontalPolicy: horizontal?(preserveWidth?'border-centre-inset-preserve-width':'border-centre-inset'):'retain-native',verticalOffsetPolicy:'retain-native', reason: !plainTextGrid ? 'unverified-grid-or-content' : !allPadding ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset', cells: mapped.cells.map((cell, i) => ({ nodeId: cell.nodeId, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom, nativeTopTwips: adapted ? required(decisions[i], 'table.decision').nativeTopTwips : cell.paddingTwips.top, nativeBottomTwips: (adapted ? required(decisions[i], 'table.decision').nativeBottomTwips : cell.paddingTwips.bottom)-(terminalCells.has(cell.nodeId)?Math.round(terminalStrokeCompensationPt*20):0),paragraphBeforeTwips:0,paragraphAfterTwips:0,
+        const spacePolicy: TableSpaceReceipt = { nodeId, scope: 'nodes', cellBorderPolicy: 'explicit-merged-cell-perimeter', terminalStrokeCompensationPt, policy: adapted ? 'border-centre-inset' : 'retain-native', horizontalPolicy: horizontal?(preserveWidth?'border-centre-inset-preserve-width':'border-centre-inset'):'retain-native',verticalOffsetPolicy:'retain-native', mergedCellTopInsets:[], reason: !plainTextGrid ? 'unverified-grid-or-content' : !allPadding ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset', cells: mapped.cells.map((cell, i) => ({ nodeId: cell.nodeId, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom, nativeTopTwips: adapted ? required(decisions[i], 'table.decision').nativeTopTwips : cell.paddingTwips.top, nativeBottomTwips: (adapted ? required(decisions[i], 'table.decision').nativeBottomTwips : cell.paddingTwips.bottom)-(terminalCells.has(cell.nodeId)?Math.round(terminalStrokeCompensationPt*20):0),paragraphBeforeTwips:0,paragraphAfterTwips:0,
             sourceLeftTwips:cell.paddingTwips.left,sourceRightTwips:cell.paddingTwips.right,
             nativeLeftTwips:cell.paddingTwips.left-(horizontal?5:0),nativeRightTwips:cell.paddingTwips.right+(horizontal?(preserveWidth?5:-5):0) })), baselinePolicy: metricParagraphs?'per-paragraph-metric-or-native':'native-at-least-unmatched', baselineMatchVerified: false };
         const plan = take(deriveReadingPlan(intent));
@@ -117,6 +119,34 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                 const c=nodes[id];return (c.props.colSpan??1)===1&&c.childIds.length>0&&c.childIds.every((id:string)=>nodes[id].type==='text-block'&&nodes[id].props.heightMode!=='fixed'&&!sourceGuide(intent,id));
             });
             if(distributeVerticalOffsets(ids.map(id=>required(spacePolicy.cells.find(c=>c.nodeId===id),'table.cell.space')),eligible))spacePolicy.verticalOffsetPolicy='row-minimum-margins-and-paragraph-offsets';
+        }
+        for(const group of n.rowGroups??[]){
+            const label=group.groupLabel;if(!label)continue;
+            const cell=nodes[label.cellId],space=spacePolicy.cells.find(v=>v.nodeId===label.cellId);
+            if(!cell||!space)continue; // Genuine intent validation owns metadata integrity.
+            const start=n.rowIds.indexOf(group.firstMemberRowId),span=cell.props.rowSpan??1;
+            const rowIds:string[]=n.rowIds.slice(start,start+span),children:string[]=cell.childIds;
+            const text=children.length===1?nodes[children[0]!]:undefined;
+            const block=intent.textBlocks.find(v=>v.scope==='nodes'&&v.nodeId===text?.id);
+            const fragments=plan.fragments.filter(v=>v.nodeId===text?.id);
+            let reason:string|undefined;
+            if(span<2)reason='not-a-merged-label';
+            else if(isEndingArea||start<n.props.headerRowCount||!legacyTableStrokeGeometry(n)||(cell.props.colSpan??1)!==1)reason='protected-table-geometry';
+            else if(text?.type!=='text-block'||text.props.heightMode==='fixed'||text.props.anchorId||text.props.toc||!block?.text.trim()||block.spans.some(v=>v.type!=='text')||sourceGuide(intent,text.id))reason='unsupported-label-content';
+            else if(fragments.length!==1||fragments[0]!.start!==0||fragments[0]!.end!==block.text.length||fragments[0]!.keepNext||fragments[0]!.keepLines||plan.edges.some(v=>v.from===text.id||v.to===text.id||v.from===nodeId||v.to===nodeId))reason='protected-label-flow';
+            else if(plan.keptRows[nodeId]?.includes(group.firstMemberRowId))reason='protected-label-flow';
+            else if(space.paragraphBeforeTwips!==0)reason='existing-paragraph-offset';
+            const peers=rowIds.map(rid=>{
+                const ids:string[]=nodes[rid].cellIds.filter((id:string)=>id!==cell.id);
+                if(ids.length!==n.columns.length-1||ids.some(id=>(nodes[id].props.rowSpan??1)!==1||(nodes[id].props.colSpan??1)!==1))return [];
+                return ids.map(id=>spacePolicy.cells.find(v=>v.nodeId===id)?.nativeTopTwips??NaN);
+            });
+            const decision=deriveMergedCellTopInset({cellId:cell.id,rowIds,sourceTopTwips:space.sourceTopTwips,nativeTopTwips:space.nativeTopTwips,peerTopTwips:peers,...reason?{ineligibleReason:reason}:{}});
+            spacePolicy.mergedCellTopInsets.push(decision);
+            if(decision.policy==='peer-top-and-single-label-offset'){
+                space.nativeTopTwips=decision.physicalTopTwips;
+                space.paragraphBeforeTwips=decision.firstLabelBeforeTwips;
+            }
         }
         const grid = mapped.columnTwips, rows: TableRow[] = [], logicalCellIds: string[] = [], occupancy = new Map<string, {
             id: string;

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
+  "nodeModelVersion": 20,
   "template": {
     "templateId": "pdf-fixture",
     "docKey": "pdf-fixture",
@@ -71,17 +71,17 @@
     "long-text": {
       "sourceId": "long-text",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     },
     "long-text-text": {
       "sourceId": "long-text-text",
       "origin": "authored",
-      "sectionId": "main"
+      "sectionId": "instance-main"
     }
   },
   "sections": [
     {
-      "sectionId": "main",
+      "sectionId": "instance-main",
       "pageLayoutId": "normal",
       "page": {
         "size": "A4",
@@ -111,7 +111,10 @@
       "sourceKind": "authored",
       "role": "body",
       "headerMode": "none",
-      "footerMode": "none"
+      "footerMode": "none",
+      "definitionId": "10000000-0000-4000-8000-000000000001",
+      "sectionKey": "main",
+      "instanceKey": "main"
     }
   ]
 }

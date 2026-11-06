@@ -8,6 +8,8 @@ export type {FontHeightAdjustmentMetric,FontHeightAdjustmentInput,FontHeightAdju
 export type {FontSelection,LibraryTextStyle,LibraryFontInput,FontLicense} from './fonts/types.js';
 export {createPdfEngine} from './pdf/createPdfEngine.js';
 export {createDocxEngine} from './docx/engine.js';
+export type {DocxImageOmissions} from './docx/image-omissions.js';
+export {DOCX_IMAGE_OMISSIONS_CONTRACT} from './docx/image-omissions.js';
 export type {DocxEngine,DocxResources,DocxOptions,DocxOutput,DocxArtifact,PreparedImageProvider} from './docx/engine.js';
 export type {PdfEngine,PdfArtifact,PdfStreamArtifact,PdfOutput} from './pdf/createPdfEngine.js';
 export {PDF_STREAM_CONTRACT} from './pdf/streamResources.js';
@@ -34,13 +36,12 @@ export type {ContentsBlock,ContentsScope} from './composition/resolvedDocument.j
 export {readGenerationJson} from './data/readGenerationJson.js';
 export type {AreaField,AreaEntry,AreaFormat,TemplateArea} from './template/types.js';
 
-export type {PreparedSection} from './data/types.js';
 
 export type {SystemPageField} from "./composition/resolvedDocument.js";
 
 export type {ResolvedRowGroup,ResolvedGroupLabel} from './composition/resolvedDocument.js';
 
-export type {Template18,Template19,Template20,SectionDefinition,InstanceSection,AreaSection,BindingScope,PageNumbering,RowGroup,GroupLabel} from './template/types.js';
-export type {PreparedSection19,PreparedSection20} from './data/types.js';
+export type {Template20,SectionDefinition,BindingScope,PageNumbering,RowGroup,GroupLabel} from './template/types.js';
+export type {PreparedSection20} from './data/types.js';
 export {normalizeTaskInput} from './data/taskInput.js';
 export type {TaskValue,TaskImageContext,TaskImageResource,TaskInputOptions,TaskInputLimits,TaskInputSummary} from './data/taskInput.js';

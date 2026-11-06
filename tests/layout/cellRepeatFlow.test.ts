@@ -13,9 +13,9 @@ it.each([false,true])('flows repeated images and long text over pages, merged=%s
  const v=ok(validateTemplate(t)),p=ok(prepareGeneration(v,cellRepeatRequest(Array.from({length:5},(_,i)=>({photo,caption:`BEGIN-${i}\n`+'ทดสอบข้อความยาว\n'.repeat(22)+`END-${i}`}))))),d=ok(composeDocument(v,p)),before=structuredClone(d);
  const r=await documentFlow(d,fakeRuntime,images);expect(r.pages.length).toBeGreaterThan(3);
  const placed=r.pages.flatMap(p=>p.images??[]);expect(placed).toHaveLength(5);expect(new Set(placed.map(i=>i.nodeId)).size).toBe(5);
- for(let i=0;i<5;i++)expect(placed[i]?.nodeId).toBe(`section-main~area-main-details~entry-0~format-merged~repeat-repeat-001~photo~item-${i}`);
- expect(r.pages[0]?.commands.some(c=>c.nodeId==='section-main~area-main-details~entry-0~format-merged~at')).toBe(true);expect(r.pages.at(-1)?.commands.some(c=>c.nodeId==='section-main~area-main-details~entry-0~format-merged~footer')).toBe(true);
- for(const page of r.pages)expect(page.commands.some(c=>c.nodeId==='section-main~area-main-details~entry-0~format-merged~ht')).toBe(true);
+ for(let i=0;i<5;i++)expect(placed[i]?.nodeId).toBe(`section-instance-main~area-main-details~entry-0~format-merged~repeat-repeat-001~photo~item-${i}`);
+ expect(r.pages[0]?.commands.some(c=>c.nodeId==='section-instance-main~area-main-details~entry-0~format-merged~at')).toBe(true);expect(r.pages.at(-1)?.commands.some(c=>c.nodeId==='section-instance-main~area-main-details~entry-0~format-merged~footer')).toBe(true);
+ for(const page of r.pages)expect(page.commands.some(c=>c.nodeId==='section-instance-main~area-main-details~entry-0~format-merged~ht')).toBe(true);
  expect(d).toEqual(before);
  })();
 });

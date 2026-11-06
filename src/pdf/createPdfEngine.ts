@@ -52,7 +52,7 @@ export function createEngine(resources: ExportResources, deps: Dependencies): Pd
     const generate=async(input:ResolvedDocument,imageInput:PdfImageResources={},streaming?:Streaming):Promise<Result<PdfArtifact|PdfStreamArtifact>>=>{
             if(streaming&&input&&typeof input==='object'){
                 let count=0;
-                for(const nodes of [input.nodes,input.header?.nodes,input.footer?.nodes,...(input.sections??[]).flatMap(s=>[s.header?.nodes,s.footer?.nodes])]){
+                for(const nodes of [input.nodes,...(input.sections??[]).flatMap(s=>[s.header?.nodes,s.footer?.nodes])]){
                     if(!nodes||typeof nodes!=='object')continue;
                     for(const node of Object.values(nodes)){count+=1+(node?.type==='text-block'&&Array.isArray(node.children)?node.children.length:0);if(count>50000)return fail('TASK_COMPOSITION_LIMIT','Task document exceeds the expanded node limit');}
                 }
@@ -71,7 +71,7 @@ export function createEngine(resources: ExportResources, deps: Dependencies): Pd
             catch {
                 return fail('INVALID_IMAGE_RESOURCE', 'Prepared image resources are invalid or exceed the memory budget');
             }
-            const warnings: Issue[] = [...Object.values(document.nodes), ...Object.values(document.header?.nodes ?? {}), ...Object.values(document.footer?.nodes ?? {}), ...(document.sections ?? []).flatMap(s => [...Object.values(s.header?.nodes ?? {}), ...Object.values(s.footer?.nodes ?? {})])].filter(n => n.type === 'image' && !Object.hasOwn(images, n.props.resourceId)).map(n => ({ code: 'IMAGE_UNAVAILABLE', path: 'nodes.' + n.id, nodeId: n.id, message: 'Image unavailable; authored frame retained' }));
+            const warnings: Issue[] = [...Object.values(document.nodes), ...(document.sections ?? []).flatMap(s => [...Object.values(s.header?.nodes ?? {}), ...Object.values(s.footer?.nodes ?? {})])].filter(n => n.type === 'image' && !Object.hasOwn(images, n.props.resourceId)).map(n => ({ code: 'IMAGE_UNAVAILABLE', path: 'nodes.' + n.id, nodeId: n.id, message: 'Image unavailable; authored frame retained' }));
             let temp: string | undefined, result: Result<PdfArtifact|PdfStreamArtifact>, stage = 'resource';
             let session: (TextRuntime & {
                 close(): Promise<void>;

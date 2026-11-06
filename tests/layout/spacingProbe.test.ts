@@ -24,7 +24,7 @@ it.each([NaN,-1])('rejects invalid experimental line metrics %s',async bad=>{
  await expect(measureText(d.nodes.t,d.styles.body,100,runtime)).rejects.toThrow();
 });
 it('scopes the body top to its section without changing the input',async()=>{
- const d=document();const before=JSON.stringify(d);const runtime:any={...fakeRuntime,spacingProbe:{bodyTopPt:(id:string)=>id==='main'?83:undefined}};
+ const d=document();const before=JSON.stringify(d);const runtime:any={...fakeRuntime,spacingProbe:{bodyTopPt:(id:string)=>id==='instance-main'?83:undefined}};
  const result=await documentFlow(d,runtime);expect(result.pages[0]!.commands[0]!.bounds.yPt).toBe(83);expect(JSON.stringify(d)).toBe(before);
 });
 it('charges one stroke per ordinary row without changing the default table',async()=>{

@@ -9,14 +9,14 @@ import {fillContentsNumbers} from '../../src/layout/fillContentsNumbers.js';
 import {indexDestinations} from '../../src/layout/linkGeometry.js';
 const ok=(r:any)=>{expect(r.ok,JSON.stringify(r)).toBe(true);return r.value;};
 it.each([undefined,{mode:'exclude'},{mode:'continue'},{mode:'continue',visibility:'hide'},{mode:'restart',startAt:5}])('keeps cover bands hidden with policy %j',async numbering=>{
- const t=ownedTemplate();t.nodeModelVersion=18;t.sections[0].role='cover';
+ const t=ownedTemplate();t.nodeModelVersion=20;t.sections[0].role='cover';
  if(numbering)t.sections[0].numbering=numbering;
  t.sections[0].footer=structuredClone(t.sections[0].header);
  t.sections[0].footer.fragment.nodes.head.children=[{id:'f',type:'text',text:'COVER FOOTER MUST NOT APPEAR'}];
  const target=t.sections[1].source.fragment.nodes.title;
  target.props.anchorId='body-start';target.props.toc={level:1};
  const f=t.sections[2].source.fragment;
- f.rootIds.push('toc');f.nodes.toc={id:'toc',type:'table-of-contents',props:{textStyleId:'body'}};
+ f.rootIds.push('toc');f.nodes.toc={id:'toc',type:'table-of-contents',props:{textStyleId:'body',scope:{kind:'document'}}};
  const v=ok(validateTemplate(t)),p=ok(prepareGeneration(v,ownedRequest(t))),d=ok(composeDocument(v,p));
  const draw=await documentFlow(d,fakeRuntime);
  const start=numbering?.mode==='restart'?5:numbering?.mode==='continue'?1:null;
@@ -28,4 +28,4 @@ it.each([undefined,{mode:'exclude'},{mode:'continue'},{mode:'continue',visibilit
  await fillContentsNumbers(draw,indexDestinations(d,draw),fakeRuntime,true);
  expect(draw.pages[2]!.commands.find(c=>c.id==='contents-number-0')?.text).toBe(String(start===null?1:start+1));
 });
-it('rejects visible cover numbering',()=>{const t=ownedTemplate();t.nodeModelVersion=18;t.sections[0].role='cover';t.sections[0].numbering={mode:'continue',visibility:'show'};expect(validateTemplate(t).ok).toBe(false);});
+it('rejects visible cover numbering',()=>{const t=ownedTemplate();t.nodeModelVersion=20;t.sections[0].role='cover';t.sections[0].numbering={mode:'continue',visibility:'show'};expect(validateTemplate(t).ok).toBe(false);});

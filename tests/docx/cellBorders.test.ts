@@ -1,3 +1,4 @@
+import {sectionUse,defaultUses} from '../helpers/sectionUses.js';
 import {expect,it} from 'vitest';
 import JSZip from 'jszip';
 import * as api from '../../src/index.js';
@@ -16,7 +17,7 @@ const single=(edge:string)=>`<w:${edge} w:val="single" w:color="345678" w:sz="4"
 it('sets explicit cell perimeters, preserving horizontal spans and suppressing internal vertical-merge edges',async()=>{
  const t=mergedTemplate();t.areaFormats.merged.fragment.nodes.table.props.borderColor='345678';
  t.areaFormats.merged.fragment.nodes.h.props.fillColor='CBEDFA';
- const {xml,receipt}=await exported(t,{docKey:t.docKey,data:{},sections:{main:{data:{details:[{format:'merged',data:{}}]}}}});
+ const {xml,receipt}=await exported(t,{docKey:t.docKey,data:{},sections:[sectionUse(t.sections[0],'main',{details:[{format:'merged',data:{}}]})]});
  const cells=xml.match(/<w:tc>[\s\S]*?<\/w:tc>/g)??[];expect(cells).toHaveLength(6);
  for(const cell of cells){expect(borders(cell)).toContain(single('left'));expect(borders(cell)).toContain(single('right'));}
  for(const i of [0,2,4,5])for(const edge of ['top','bottom'])expect(borders(cells[i]!)).toContain(single(edge));

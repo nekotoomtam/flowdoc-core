@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 19,
-  "templateId": "e0-R",
+  "nodeModelVersion": 20,
+  "templateId": "298ac6f2-34f3-54d9-895c-970a92a3024b",
   "docKey": "e0-R",
   "version": 1,
   "name": "Supplement baseline R",
@@ -78,7 +78,7 @@
   "examples": [],
   "sections": [
     {
-      "id": "30000000-0000-4000-8000-000000000107",
+      "id": "777ed66d-1aeb-5827-8a2c-56f91ede249f",
       "label": "R Thai natural body",
       "nameBase": "R Thai natural body",
       "inputSchema": {
@@ -130,10 +130,11 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0001"
     },
     {
-      "id": "30000000-0000-4000-8000-000000000108",
+      "id": "d20c3cc3-ce80-51bc-87cd-f32862f6310f",
       "label": "R Latin natural cell",
       "nameBase": "R Latin natural cell",
       "inputSchema": {
@@ -258,7 +259,8 @@
             }
           }
         }
-      }
+      },
+      "sectionKey": "S0002"
     }
   ]
 }

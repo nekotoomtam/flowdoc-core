@@ -13,7 +13,7 @@ import {tableStartHeight}from'./tableStart.js';
 import { collectContents } from '../composition/contents.js';
 import { measureContents } from './measureContents.js';
 import { toPt } from '../composition/resolvedDocument.js';
-import type { ResolvedDocument, Table } from '../composition/resolvedDocument.js';
+import type { ResolvedDocument, ResolvedBand, Table } from '../composition/resolvedDocument.js';
 import type { DrawDocument, DrawPage, DrawImage } from '../pdf/drawContract.js';
 import { LayoutError } from './textFlow.js';
 import type { TextRuntime } from './textFlow.js';
@@ -33,7 +33,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         headerMode?: BandMode;
         footerMode?: BandMode;
     } = {}, bands: Partial<Record<'header' | 'footer', MeasuredBand>> = {};
-    let activeBands: Pick<ResolvedDocument, 'header' | 'footer'> = d;
+    let activeBands: Partial<Record<'header' | 'footer', ResolvedBand>> = {};
     const bandCache = new Map<string, MeasuredBand>();
     const setPage = (page: ResolvedDocument['book']['page']) => {
         const [w, h] = page.orientation === 'portrait' ? [210, 297] : [297, 210];
@@ -53,7 +53,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     const contentsById = new Map<string, ReturnType<typeof collectContents>>();
     const contentsByScope = new Map<string, ReturnType<typeof collectContents>>();
     for(const id of d.rootIds){const node=d.nodes[id];if(node?.type!=='table-of-contents')continue;
-        const owner=d.nodeModelVersion!==18&&node.props.scope?.kind==='section'?d.sourceMap[id]!.sectionId:undefined;
+        const owner=node.props.scope?.kind==='section'?d.sourceMap[id]!.sectionId:undefined;
         const key=owner===undefined?'document':'section:'+owner;
         if(!contentsByScope.has(key))contentsByScope.set(key,collectContents(d,owner));
         contentsById.set(id,contentsByScope.get(key)!);
@@ -160,7 +160,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     };
     const sections = d.sections!;
     for (const section of sections) {
-        if (!section.rootIds.some(id => d.nodes[id]?.type !== 'page-break' && (d.nodeModelVersion===18||d.nodes[id]?.type!=='table-of-contents'||contentsById.get(id)!.length>0)) && !d.formatInstances?.some(f=>f.sectionId===section.sectionId&&f.sizing.mode==='fixed') && !((section.role === 'cover' || section.sourceKind === 'blank')))
+        if (!section.rootIds.some(id => d.nodes[id]?.type !== 'page-break' && (d.nodes[id]?.type!=='table-of-contents'||contentsById.get(id)!.length>0)) && !d.formatInstances?.some(f=>f.sectionId===section.sectionId&&f.sizing.mode==='fixed') && !((section.role === 'cover' || section.sourceKind === 'blank')))
             continue;
         hideNumbers = "numbering" in section && section.numbering?.visibility === 'hide';
         sectionId = section.sectionId;
@@ -172,7 +172,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         innerBottom = bottom;
         modes = section as typeof modes;
         bands = {};
-        activeBands = section as Pick<ResolvedDocument, 'header' | 'footer'>;
+        activeBands = section;
         if (pageRole === 'body')
             for (const k of ['header', 'footer'] as const) {
                 const b = activeBands[k];
@@ -366,7 +366,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         }
         bounds?.onSectionEnd?.({y,top,bottom});
     }
-    if(d.nodeModelVersion!==18&&!pages.length)throw new LayoutError(d.rootIds[0]??'document','No layout content in document');
+    if(!pages.length)throw new LayoutError(d.rootIds[0]??'document','No layout content in document');
     assignSystemPageNumbers(d, { pages });
     return { pages, ...(omittedNodeIds.size?{omittedNodeIds:[...omittedNodeIds]}:{}), ...(warnings.length ? { warnings } : {}), ...(pageTexts.length ? { pageTexts } : {}), ...(pageFieldSlots.length ? { pageFieldSlots } : {}), ...(contentsSlots.length ? { contentsSlots } : {}) };
     }catch(error){if(error instanceof LayoutError)error.warnings=warnings;throw error;}

@@ -4,6 +4,7 @@ import {mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,isAbsolute} from 'node:path';
 import {createTextRuntime} from '../runtime/textRuntime.js';
+import {configurePrefixFit,withPrefixBudget} from '../runtime/prefixFit.js';
 import {measureText} from '../layout/measureText.js';
 import type {ExportResources} from '../runtime/exportResources.js';
 import type {Glyph} from '../pdf/drawContract.js';
@@ -34,7 +35,7 @@ export function sourceLayoutReceipts(intent:ExportIntent){
   ...(c.applied.size?{paragraphMap:'customXml/flowdoc-paragraphs.xml'}:{}),fallbacks}];
 }
 /** Pure source measurement; no PDF engine, pagination result or captured draw input. */
-export async function prepareSourceLayout(intent:ExportIntent,resources:Pick<ExportResources,'fonts'|'shaperPath'|'segmenterPath'>,signal?:AbortSignal,nativeOnly=false){
+export async function prepareSourceLayout(intent:ExportIntent,resources:Pick<ExportResources,'fonts'|'shaperPath'|'segmenterPath'>&Partial<Pick<ExportResources,'pythonExecutable'>>,signal?:AbortSignal,nativeOnly=false){
  requireGenuineIntent(intent);if(!isAbsolute(resources.shaperPath)||!isAbsolute(resources.segmenterPath))fail('DOCX_RESOURCE_INVALID','resources','Shared source executables require absolute paths');
  const c:Capsule={guides:new Map(),applied:new Map(),fallbacks:[]},d=intent.document,nodes=d.nodes;
  const cancel=()=>{if(signal?.aborted)fail('DOCX_CANCELLED','options.signal','Export cancelled during source measurement');};
@@ -49,6 +50,11 @@ export async function prepareSourceLayout(intent:ExportIntent,resources:Pick<Exp
   await prepareReadingMeasurements(intent,runtime,signal);
   const reading=deriveReadingPlan(intent);if(!reading.ok){const issue=reading.issues[0]!;fail(issue.code,issue.path??'nodes',issue.message);}
   if(nativeOnly){c.fallbacks.push(...intent.textBlocks.filter(b=>b.scope==='nodes').map(b=>({nodeId:b.nodeId,reason:'explicit-native-paragraph-flow'})));cancel();capsules.set(intent,c);return;}
+  if(resources.pythonExecutable){
+   const alphabet=new Set<string>();let scanned=0;
+   for(const block of intent.textBlocks){if((scanned+=block.text.length)>65536)break;for(const ch of block.text)if(ch>=' '&&ch<='~')alphabet.add(ch);}
+   await configurePrefixFit(runtime,resources.pythonExecutable,[...alphabet].join(''));cancel();
+  }
   const fontMetrics=new Map<string,SourceFontMetrics>();
   for(const block of intent.textBlocks){
    cancel();const node=nodes[block.nodeId],retain=(reason:string)=>c.fallbacks.push({nodeId:block.nodeId,reason});
@@ -86,7 +92,11 @@ export async function prepareSourceLayout(intent:ExportIntent,resources:Pick<Exp
     if(blockUnits>262144||shapedUnits>1048576||blockRequests>2048||shapeRequests>8192)fail('DOCX_OUTPUT_BUDGET_EXCEEDED','source-layout.measurement','Source shaping budget exceeded');
     return runtime!.shape(text,fontId,sizePt);
    };
-   const measured=await measureText(node,style,width,{...runtime,shape});cancel();
+   const wrapped=withPrefixBudget(runtime,{...runtime,shape},work=>{
+    cancel();if(blockUnits+work>262144||shapedUnits+work>1048576)return false;
+    blockUnits+=work;shapedUnits+=work;return true;
+   });
+   const measured=await measureText(node,style,width,wrapped);cancel();
    if(measured.some(l=>!l.run)||measured.map(l=>l.run!.text).join('')!==block.text)fail('DOCX_GEOMETRY_UNREPRESENTABLE','nodes.'+node.id,'Source line coverage differs from authored text');
    let sourceStart=0,height=0;const lines:SourceLine[]=[];
    for(const line of measured){

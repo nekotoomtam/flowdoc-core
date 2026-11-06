@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "nodeModelVersion": 18,
-  "templateId": "tpl-page-sections",
+  "nodeModelVersion": 20,
+  "templateId": "489f557c-742e-5103-837b-33b62f6875c0",
   "docKey": "page-sections",
   "version": 1,
   "name": "Page sections trial",
@@ -184,7 +184,7 @@
   },
   "sections": [
     {
-      "id": "introduction",
+      "id": "cf582a6e-7a50-5bde-8f59-f0769e19106f",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -220,21 +220,25 @@
               "id": "toc",
               "type": "table-of-contents",
               "props": {
-                "textStyleId": "body"
+                "textStyleId": "body",
+                "scope": {
+                  "kind": "document"
+                }
               }
             }
           }
         }
       },
-      "key": "introduction",
       "inputSchema": {
         "type": "object",
         "fields": {}
       },
-      "formats": {}
+      "sectionKey": "S0001",
+      "label": "introduction",
+      "nameBase": "introduction"
     },
     {
-      "id": "body",
+      "id": "c89812ab-800d-5e1c-8070-4a61af74b5bf",
       "pageLayoutId": "landscape",
       "source": {
         "kind": "authored",
@@ -475,7 +479,6 @@
         },
         "repeats": []
       },
-      "key": "body",
       "inputSchema": {
         "type": "object",
         "fields": {
@@ -485,10 +488,12 @@
           }
         }
       },
-      "formats": {}
+      "sectionKey": "S0002",
+      "label": "body",
+      "nameBase": "body"
     },
     {
-      "id": "closing",
+      "id": "5c874eec-d636-5e91-894f-c203ba164fb9",
       "source": {
         "kind": "authored",
         "repeats": [],
@@ -541,12 +546,13 @@
           }
         }
       },
-      "key": "closing",
       "inputSchema": {
         "type": "object",
         "fields": {}
       },
-      "formats": {}
+      "sectionKey": "S0003",
+      "label": "closing",
+      "nameBase": "closing"
     }
   ]
 }

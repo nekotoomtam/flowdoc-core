@@ -7,7 +7,7 @@ const PNG = createRequire(import.meta.url)('pngjs').PNG;
 import { required } from './types.js';
 import { Paragraph, Run, XmlComponent, BuilderElement, docPropertiesUniqueNumericId, createTransformation, LineRuleType, type IContext } from 'docx';
 import { capture, fail, type ExportIntent, type Result } from './types.js';
-import { requireGenuineIntent, intentResourceBytes } from './profile.js';
+import { requireGenuineIntent, intentResourceBytes, intentOmitsImage } from './profile.js';
 import { toTwips } from './units.js';
 import { hash } from './resources.js';
 import { sourceGraph } from './fields.js';
@@ -45,12 +45,13 @@ export function buildImageParagraph(intent: ExportIntent, nodeId: string, scope 
     receipt: {
         nodeId: string;
         resourceId: string;
-        sha256: string;
+        sha256: string | null;
         frame: {
             widthTwips: number;
             heightTwips: number;
         };
-        picture: Picture;
+        picture: Picture | null;
+        omitted?: true;
         wrapper: {
             kind: string;
             paragraphMarkSizeHalfPoints: number;
@@ -65,6 +66,12 @@ export function buildImageParagraph(intent: ExportIntent, nodeId: string, scope 
         const source: any = sourceGraph(intent, scope)[nodeId], path = scope + '.' + nodeId;
         if (source?.type !== 'image')
             fail('DOCX_CAPABILITY_UNSUPPORTED', path, 'U2 requires a body image node', nodeId);
+        if (intentOmitsImage(intent, nodeId, scope)) {
+            const widthTwips = toTwips(source.props.width, path + '.props.width'), heightTwips = toTwips(source.props.height, path + '.props.height');
+            if (widthTwips < 1 || heightTwips < 1) fail('DOCX_GEOMETRY_UNREPRESENTABLE', path, 'Image frame quantizes to zero', nodeId);
+            const paragraph = new Paragraph({children:[new Run({size:2,sizeComplexScript:2,bold:false,italics:false,snapToGrid:false})],run:{size:2,sizeComplexScript:2,bold:false,italics:false},alignment:source.props.align??'left',spacing:{before:0,after:0,line:heightTwips,lineRule:LineRuleType.AT_LEAST}});
+            return {paragraph,receipt:{nodeId,resourceId:source.props.resourceId,sha256:null,frame:{widthTwips,heightTwips},picture:null,omitted:true,wrapper:{kind:'native-inline-drawing-paragraph',paragraphMarkSizeHalfPoints:2,minimumLineTwips:heightTwips,wordFootprintVerified:false},visualVerified:false}};
+        }
         const meta: any = intent.resourceIdentities.find((r: any) => r.id === source.props.resourceId && r.width !== undefined);
         if (!meta)
             fail('DOCX_RESOURCE_INVALID', path + '.props.resourceId', 'Verified image metadata missing', nodeId);
@@ -79,9 +86,9 @@ export function buildImageParagraph(intent: ExportIntent, nodeId: string, scope 
     });
 }
 /** All metadata/budgets are checked before opening the first referenced stream. */
-export async function prepareDocxImages(document: ResolvedDocument, input: PdfImageProvider, fontBytes: number, signal?: AbortSignal): Promise<ResourceImage[]> {
+export async function prepareDocxImages(document: ResolvedDocument, input: PdfImageProvider, fontBytes: number, signal?: AbortSignal, omitted: ReadonlySet<string> = new Set()): Promise<ResourceImage[]> {
     const graphs = [document.nodes, ...(document.sections ?? []).flatMap(s => [s.header, s.footer]).filter(b => b !== undefined).map(b => b.nodes)];
-    const ids = new Set(graphs.flatMap(g => Object.values(g).filter(n => n.type === 'image').map(n => n.props.resourceId)));
+    const ids = new Set(graphs.flatMap((g, i) => Object.values(g).filter(n => n.type === 'image' && !(i === 0 && omitted.has(n.id))).map(n => n.props.resourceId)));
     let provider: PdfImageProvider;
     try {
         provider = snapshotImageProvider(input);

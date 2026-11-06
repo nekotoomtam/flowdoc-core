@@ -1,3 +1,4 @@
+import {sectionUse,defaultUses} from '../helpers/sectionUses.js';
 import {expect,it} from 'vitest';
 import JSZip from 'jszip';
 import * as api from '../../src/index.js';
@@ -8,7 +9,7 @@ import {documentFlow} from '../../src/layout/documentFlow.js';
 import {validateResolvedDocument} from '../../src/composition/validateResolvedDocument.js';
 import {fonts,noImages,staged} from './helpers.js';
 function take<T>(r:api.Result<T>):T{if(!r.ok)throw Error(JSON.stringify(r));return r.value;}
-const request=(t:any)=>({docKey:t.docKey,data:{},sections:{main:{data:{details:[{format:'merged',data:{}}]}}}});
+const request=(t:any)=>({docKey:t.docKey,data:{},sections:[sectionUse(t.sections[0],'main',{details:[{format:'merged',data:{}}]})]});
 function composed(t:any){const v=take(api.validateTemplate(t));return take(api.composeDocument(v,take(api.prepareGeneration(v,request(t)))));}
 async function exported(t:any){
  const d=composed(t),before=JSON.stringify(d),sink=staged();
