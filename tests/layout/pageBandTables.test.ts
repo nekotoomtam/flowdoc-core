@@ -1,0 +1,78 @@
+import {it,expect} from 'vitest';
+import {assemblyTemplate} from '../helpers/assembly.js';
+import {fakeRuntime} from '../helpers/document.js';
+import {documentFlow} from '../../src/layout/documentFlow.js';
+import {validateTemplate,prepareGeneration,composeDocument,createDocxEngine} from '../../src/index.js';
+import {fonts,noImages,staged} from '../docx/helpers.js';
+import JSZip from 'jszip';
+
+function fixture(){
+ const t=assemblyTemplate();t.sections=t.sections.slice(0,1);
+ const s=t.sections[0];
+ const pt=(value:number)=>({value,unit:'pt'});
+ s.source.fragment.nodes.text.children=[{id:'body-run',type:'text',text:Array(60).fill('BODY').join('\n')}];
+ for(const kind of ['header','footer']){
+  s[kind]={baseTextStyleId:'body',inputSchema:{type:'object',fields:{}},fragment:{rootIds:['table'],nodes:{
+   table:{id:'table',type:'table',props:{headerRowCount:0,repeatHeaderRows:false},columns:[{width:pt(240)},{width:pt(70)}],rowIds:['first','last']},
+   first:{id:'first',type:'table-row',props:{allowBreak:false},cellIds:['merged','right']},
+   last:{id:'last',type:'table-row',props:{allowBreak:false},cellIds:['other']},
+   merged:{id:'merged',type:'table-cell',props:{columnIndex:0,rowSpan:2,fillColor:'E3F2FD'},childIds:['label']},
+   right:{id:'right',type:'table-cell',props:{columnIndex:1},childIds:[]},
+   other:{id:'other',type:'table-cell',props:{columnIndex:1},childIds:[]},
+   label:{id:'label',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body'},children:[{id:'prefix',type:'text',text:kind+' '},{id:'name',type:'field-ref',scope:'section',key:'name'}]}
+  }}};
+ }
+ return t;
+}
+
+function take<T>(result:{ok:true;value:T}|{ok:false;issues:unknown}):T{
+ if(!result.ok)throw Error(JSON.stringify(result.issues));return result.value;
+}
+it('repeats merged header and footer tables with each Section use and reserves their body space',async()=>{
+ const template=fixture(),v=take(validateTemplate(template));
+ const sections=['Alpha','Beta'].map((name,i)=>({sectionKey:'A',instanceKey:'bill-'+i,data:{name}}));
+ const d=take(composeDocument(v,take(prepareGeneration(v,{docKey:template.docKey,sections}))));
+ const {pages}=await documentFlow(d,fakeRuntime);
+ expect(pages.length).toBeGreaterThan(2);
+ for(const p of pages){
+  const name=p.sectionId==='instance-bill-0'?'Alpha':'Beta';
+  const header=p.commands.find(c=>c.text==='header '+name)!;
+  const footer=p.commands.find(c=>c.text==='footer '+name)!;
+  expect(header.bounds.yPt).toBeLessThan(footer.bounds.yPt);
+  expect(p.commands.filter(c=>c.text==='BODY').every(c=>c.bounds.yPt>header.bounds.yPt&&c.bounds.yPt+c.bounds.heightPt<footer.bounds.yPt)).toBe(true);
+  expect(p.fills?.length).toBe(2);
+ }
+});
+it('still rejects Area and page-break anywhere inside a page band',()=>{
+ for(const type of ['area','page-break']){
+  const t=fixture(),f=t.sections[0].header.fragment;
+  f.rootIds.push('extra');f.nodes.extra={id:'extra',type,props:{areaId:'x'}};
+  expect(validateTemplate(t).ok).toBe(false);
+ }
+});
+
+it('emits editable native tables including merged cells in both DOCX page bands',async()=>{
+ const t=fixture();
+ for(const kind of ['header','footer'])t.sections[0][kind].fragment.nodes.label.children.shift();
+ const v=take(validateTemplate(t));
+ const d=take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:[{sectionKey:'A',instanceKey:'bill-0',data:{name:'A'}}]}))));
+ const e=take(await createDocxEngine(fonts())),sink=staged();
+ take(await e.generateDocxTo(d,noImages,sink.output,{textLayout:'native'}));
+ const zip=await JSZip.loadAsync(Buffer.concat(sink.chunks));
+ for(const band of ['header','footer']){
+  const files=Object.keys(zip.files).filter(name=>name.startsWith('word/'+band)&&name.endsWith('.xml'));
+  expect(files).toHaveLength(2);
+  for(const file of files){
+   const xml=await zip.file(file)!.async('string');
+   expect(xml).toContain('<w:tbl>');
+   expect(xml).toContain('<w:vMerge w:val="restart"');
+   expect(xml).toContain('>A</w:t>');
+  }
+ }
+});
+it('rejects bands that consume the available body instead of clipping or repeating empty pages',async()=>{
+ const t=fixture(),s=t.sections[0],v1={unit:'pt',value:390};
+ s.header.sizing={mode:'fixed',height:v1};s.footer.sizing={mode:'fixed',height:v1};
+ const v=take(validateTemplate(t)),d=take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:[{sectionKey:'A',instanceKey:'bill-0',data:{name:'Alpha'}}]}))));
+ await expect(documentFlow(d,fakeRuntime)).rejects.toThrow('Page bands leave no body space');
+});

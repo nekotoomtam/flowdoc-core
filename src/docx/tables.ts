@@ -11,13 +11,13 @@ import { buildTextParagraph } from './text.js';
 import { baselineDecision,tableWidthProven } from './metric-baseline.js';
 import {sourceGuide} from './source-layout.js';
 import { buildImageParagraph } from './images.js';
-import type { NavigationContext } from './fields.js';
+import {sourceGraph,type NavigationContext} from './fields.js';
 import {distributeVerticalOffsets} from './cell-vertical-offsets.js';
 import {deriveMergedCellTopInset,type MergedCellTopInsetDecision} from './merged-cell-top-insets.js';
 import {compoundTableRows} from './compound-table-strokes.js';
 export type TableSpaceReceipt = {
     nodeId: string;
-    scope: 'nodes';
+    scope: string;
     cellBorderPolicy: 'explicit-merged-cell-perimeter';
     policy: TableSpaceDecision['policy'];
     reason: string;
@@ -52,7 +52,7 @@ function textParts(intent: ExportIntent, id: string, plan: ReadingPlan, forceKee
  const fragments=plan.fragments.filter(f=>f.nodeId===id).sort((a,b)=>a.start-b.start);
  return fragments.map((f,i)=>take(buildTextParagraph(intent,id,{...f,keepNext:forceKeep||f.keepNext,ordinaryBodyOrCell:!protectedFlow&&!plan.edges.some(e=>e.from===id||e.to===id),...(navigation?{navigation}:{}),...(offsets?{spaceBeforeTwips:i===0?offsets.before:0,spaceAfterTwips:i===fragments.length-1?offsets.after:0}:{})})).paragraph);
 }
-export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext,bodyHeightPt?:number): Result<{
+export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext,bodyHeightPt?:number,scope='nodes'): Result<{
     table: Table;
     receipt: {
         spacePolicy: TableSpaceReceipt;
@@ -67,15 +67,15 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
 }> {
     return capture(() => {
         requireGenuineIntent(intent);
-        const nodes: any = intent.document.nodes, n = nodes[nodeId], mapped = intent.tables.find(t => t.nodeId === nodeId && t.scope === 'nodes');
+        const nodes=sourceGraph(intent,scope), n=nodes[nodeId], mapped=intent.tables.find(t=>t.nodeId===nodeId&&t.scope===scope), inBand=scope!=='nodes';
         if (n?.type !== 'table' || !mapped)
-            fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + nodeId, 'Expected source body table');
+            fail('DOCX_CAPABILITY_UNSUPPORTED', scope + '.' + nodeId, 'Expected source table');
         if (!n.rowIds.length)
             fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + nodeId, 'Native empty table without rows is unsupported');
         const plainTextGrid = mapped.cells.every(cell => { const c = nodes[cell.nodeId]; return c.childIds.every((id: string) => nodes[id].type === 'text-block' && nodes[id].props.heightMode !== 'fixed'); });
         const sourcePoints = mapped.cells.map(cell => { const padding = nodes[cell.nodeId].props.padding; return { sourceTopPt: padding?.top ? toPoints(padding.top) : 4, sourceBottomPt: padding?.bottom ? toPoints(padding.bottom) : 4 }; });
         const decisions = mapped.cells.map((cell, i) => deriveTableSpace({ plainTextGrid, uniformSingleHalfPointBorder: legacyTableStrokeGeometry(n), ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom }));
-        const allPadding = decisions.every(d => d.policy === 'border-centre-inset');
+        const allPadding = !inBand&&decisions.every(d => d.policy === 'border-centre-inset');
         const adapted = plainTextGrid && allPadding;
         const border = nativeStroke(resolveTableStroke(n,'insideHorizontal'));
         const sides={top:nativeStroke(resolveTableStroke(n,'top')),right:nativeStroke(resolveTableStroke(n,'right')),bottom:nativeStroke(resolveTableStroke(n,'bottom')),left:nativeStroke(resolveTableStroke(n,'left')),insideHorizontal:border,insideVertical:nativeStroke(resolveTableStroke(n,'insideVertical')),headerBottom:nativeStroke(resolveTableStroke(n,'headerBottom'))};
@@ -107,20 +107,21 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
         });
         const preserveWidth=horizontal&&!tableWidthProven(intent,nodeId);
         const metricParagraphs=mapped.cells.some(cell=>nodes[cell.nodeId].childIds.some((id:string)=>baselineDecision(intent,'nodes',id)!==undefined));
-        const spacePolicy: TableSpaceReceipt = { nodeId, scope: 'nodes', cellBorderPolicy: 'explicit-merged-cell-perimeter', terminalStrokeCompensationPt, policy: adapted ? 'border-centre-inset' : 'retain-native', horizontalPolicy: horizontal?(preserveWidth?'border-centre-inset-preserve-width':'border-centre-inset'):'retain-native',verticalOffsetPolicy:'retain-native', mergedCellTopInsets:[], reason: !plainTextGrid ? 'unverified-grid-or-content' : !allPadding ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset', cells: mapped.cells.map((cell, i) => ({ nodeId: cell.nodeId, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom, nativeTopTwips: adapted ? required(decisions[i], 'table.decision').nativeTopTwips : cell.paddingTwips.top, nativeBottomTwips: (adapted ? required(decisions[i], 'table.decision').nativeBottomTwips : cell.paddingTwips.bottom)-(terminalCells.has(cell.nodeId)?Math.round(terminalStrokeCompensationPt*20):0),paragraphBeforeTwips:0,paragraphAfterTwips:0,
+        const spacePolicy: TableSpaceReceipt = { nodeId, scope, cellBorderPolicy: 'explicit-merged-cell-perimeter', terminalStrokeCompensationPt, policy: adapted ? 'border-centre-inset' : 'retain-native', horizontalPolicy: horizontal?(preserveWidth?'border-centre-inset-preserve-width':'border-centre-inset'):'retain-native',verticalOffsetPolicy:'retain-native', mergedCellTopInsets:[], reason: !plainTextGrid ? 'unverified-grid-or-content' : !allPadding ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset', cells: mapped.cells.map((cell, i) => ({ nodeId: cell.nodeId, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom, nativeTopTwips: adapted ? required(decisions[i], 'table.decision').nativeTopTwips : cell.paddingTwips.top, nativeBottomTwips: (adapted ? required(decisions[i], 'table.decision').nativeBottomTwips : cell.paddingTwips.bottom)-(terminalCells.has(cell.nodeId)?Math.round(terminalStrokeCompensationPt*20):0),paragraphBeforeTwips:0,paragraphAfterTwips:0,
             sourceLeftTwips:cell.paddingTwips.left,sourceRightTwips:cell.paddingTwips.right,
             nativeLeftTwips:cell.paddingTwips.left-(horizontal?5:0),nativeRightTwips:cell.paddingTwips.right+(horizontal?(preserveWidth?5:-5):0) })), baselinePolicy: metricParagraphs?'per-paragraph-metric-or-native':'native-at-least-unmatched', baselineMatchVerified: false };
-        const plan = take(deriveReadingPlan(intent));
+        const plan=inBand?undefined:take(deriveReadingPlan(intent));
         const hasVerticalMerge=mapped.cells.some(cell=>(nodes[cell.nodeId].props.rowSpan??1)>1);
         const isEndingArea=intent.document.sections?.some(s=>s.endingArea?.rootIds.includes(nodeId));
         for(const rid of n.rowIds){
             const ids:string[]=nodes[rid].cellIds;
-            const eligible=!isEndingArea&&!hasVerticalMerge&&ids.every(id=>{
+            const eligible=!inBand&&!isEndingArea&&!hasVerticalMerge&&ids.every(id=>{
                 const c=nodes[id];return (c.props.colSpan??1)===1&&c.childIds.length>0&&c.childIds.every((id:string)=>nodes[id].type==='text-block'&&nodes[id].props.heightMode!=='fixed'&&!sourceGuide(intent,id));
             });
             if(distributeVerticalOffsets(ids.map(id=>required(spacePolicy.cells.find(c=>c.nodeId===id),'table.cell.space')),eligible))spacePolicy.verticalOffsetPolicy='row-minimum-margins-and-paragraph-offsets';
         }
         for(const group of n.rowGroups??[]){
+            if(!plan)break;
             const label=group.groupLabel;if(!label)continue;
             const cell=nodes[label.cellId],space=spacePolicy.cells.find(v=>v.nodeId===label.cellId);
             if(!cell||!space)continue; // Genuine intent validation owns metadata integrity.
@@ -155,7 +156,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
             span: number;
             rowSpan: number;
         }>();
-        const compound=compoundTableRows(intent,n,mapped,spacePolicy,bodyHeightPt);
+        const compound=inBand?undefined:compoundTableRows(intent,n,mapped,spacePolicy,bodyHeightPt);
         let continuationCells = 0, structuralEmptyParagraphs = 0;
         n.rowIds.forEach((rid: string, row: number) => nodes[rid].cellIds.forEach((cid: string, index: number) => { const p = nodes[cid].props, col = p.columnIndex ?? index, span = p.colSpan ?? 1, rs = p.rowSpan ?? 1; logicalCellIds.push(cid); for (let y = row; y < row + rs; y++)
             for (let x = col; x < col + span; x++)
@@ -169,10 +170,12 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                 const c = nodes[pos.id], pad = mapped.cells.find(cell => cell.nodeId === pos.id)!.paddingTwips, continuation = pos.row !== row, children: Paragraph[] = [];
                 if (!continuation)
                     for (const child of c.childIds) {
-                        if (nodes[child].type === 'text-block')
+                        if(nodes[child].type==='text-block'&&inBand)
+                            children.push(take(buildTextParagraph(intent,child,{scope,...(navigation?{navigation}:{})})).paragraph);
+                        else if (nodes[child].type === 'text-block'&&plan)
                             children.push(...textParts(intent, child, plan, plan.keptRows[nodeId]?.includes(rid), navigation, row < n.props.headerRowCount || !nodes[rid].props.allowBreak || (n.rowGroups ?? []).some((g: any) => g.keepStart && g.prefixRowIds.length > 0 && g.rowIds.includes(rid)) || (c.props.rowSpan ?? 1) > 1 || (c.props.colSpan ?? 1) > 1 || plan.edges.some(e => e.from === nodeId || e.to === nodeId),{before:child===c.childIds[0]?spacePolicy.cells.find(v=>v.nodeId===pos.id)!.paragraphBeforeTwips:0,after:child===c.childIds.at(-1)?spacePolicy.cells.find(v=>v.nodeId===pos.id)!.paragraphAfterTwips:0}));
                         else if (nodes[child].type === 'image')
-                            children.push(take(buildImageParagraph(intent, child)).paragraph);
+                            children.push(take(buildImageParagraph(intent,child,scope)).paragraph);
                         else
                             fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + child, 'Unsupported cell content');
                     }
@@ -193,10 +196,10 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                 cells.push(new TableCell({ children, borders: cellBorders, width: { type: WidthType.DXA, size: grid.slice(col, col + pos.span).reduce((a, b) => a + b, 0) }, ...(pos.span > 1 ? { columnSpan: pos.span } : {}), ...(pos.rowSpan > 1 ? { verticalMerge: continuation ? VerticalMergeType.CONTINUE : VerticalMergeType.RESTART } : {}), margins: { top: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeTopTwips, right: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeRightTwips, bottom: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeBottomTwips, left: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeLeftTwips }, ...(fill ? { shading: { fill } } : {}) }));
                 col += pos.span;
             }
-            rows.push(new TableRow({ children: cells, tableHeader: n.props.repeatHeaderRows && row < n.props.headerRowCount, cantSplit: !nodes[rid].props.allowBreak, keepNext: plan.keptRows[nodeId]?.includes(rid) ?? false }));
+            rows.push(new TableRow({ children: cells, tableHeader: n.props.repeatHeaderRows && row < n.props.headerRowCount, cantSplit: inBand||!nodes[rid].props.allowBreak, keepNext: plan?.keptRows[nodeId]?.includes(rid) ?? false }));
         }
         const table = new Table({ rows, columnWidths: [...grid], width: { type: WidthType.DXA, size: grid.reduce((a, b) => a + b, 0) }, layout: TableLayoutType.FIXED, indent: { type: WidthType.DXA, size: 0 }, borders: { top: sides.top, right: sides.right, bottom: sides.bottom, left: sides.left, insideHorizontal: sides.insideHorizontal, insideVertical: sides.insideVertical } });
-        return { table, receipt: { spacePolicy, nodeId, logicalCellIds, continuationCells, structuralEmptyParagraphs, keptRowIds: plan.keptRows[nodeId] ?? [], groupEdges: plan.edges.length, wordLayoutVerified: false } };
+        return { table, receipt: { spacePolicy, nodeId, logicalCellIds, continuationCells, structuralEmptyParagraphs, keptRowIds: plan?.keptRows[nodeId] ?? [], groupEdges: plan?.edges.length??0, wordLayoutVerified: false } };
     });
 }
 export function buildBodyFlow(intent: ExportIntent, options: {

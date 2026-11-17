@@ -1,6 +1,7 @@
 import type { Issue } from '../result.js';
 import {FormatStop,formatCursor,formatWarning,instanceForNode} from './formatLayout.js';
 import type {FormatInstance} from '../composition/resolvedDocument.js';
+import {hasBandTables} from '../template/pageBands.js';
 import { measureRule } from './line.js';
 import type { PageFieldSlot } from '../pdf/drawContract.js';
 import { assignSystemPageNumbers } from './systemPageCounting.js';
@@ -83,7 +84,9 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         const probeBottom=runtime.spacingProbe?.bodyBottomPt?.(sectionId);
         if(probeBottom!==undefined&&(!Number.isFinite(probeBottom)||probeBottom<=nt||probeBottom>heightPt))throw new LayoutError(activeNode,'Invalid spacing probe body bottom');
         const nb = Math.min(f ? Math.min(innerBottom, fy - fg) : innerBottom,probeBottom??heightPt);
-        if (Math.max((h ? h.heightPt + hg : 0) + (f ? f.heightPt + fg : 0), nt - innerTop + innerBottom - nb) > (innerBottom - innerTop) * .4 + epsilon)
+        const withTables=!!(h&&hasBandTables(activeBands.header)||f&&hasBandTables(activeBands.footer));
+        if(nb<=nt+epsilon)throw new LayoutError(activeNode,'Page bands leave no body space',sectionId);
+        if (!withTables&&Math.max((h ? h.heightPt + hg : 0) + (f ? f.heightPt + fg : 0), nt - innerTop + innerBottom - nb) > (innerBottom - innerTop) * .4 + epsilon)
             throw new LayoutError((h ? activeBands.header : activeBands.footer)?.rootIds[0] ?? activeNode, 'Page bands exceed 40 percent of inner page height', sectionId, (h ? 'header' : 'footer') + '.sizing');
         return { top: nt, bottom: nb, h, f, hy, fy };
     };
@@ -102,6 +105,10 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         for (const [kind, m, at] of [['header', g.h, g.hy], ['footer', g.f, g.fy]] as const) {
             if (!m)
                 continue;
+            if(m.fills.length){
+                current.fills??=[];
+                for(const f of m.fills)current.fills.push({...f,xPt:bandRegion(kind).left+f.xPt,yPt:at+f.yPt});
+            }
             if (m.borders.length) {
                 current.borders ??= [];
                 for (const b of m.borders)
@@ -185,7 +192,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                 let m = bandCache.get(key);
                 if (!m) {
                     try {
-                        m = await measurePageBand(b, d.styles, region.width, runtime, images);
+                        m = await measurePageBand(b, d.styles, region.width, runtime, images, heightPt);
                     }
                     catch (e) {
                         if (e instanceof LayoutError)

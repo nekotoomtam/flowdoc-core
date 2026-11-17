@@ -1,4 +1,5 @@
 import { collectContents } from '../composition/contents.js';
+import {hasBandTables} from '../template/pageBands.js';
 import { required } from './types.js';
 import { deriveHeaderSpace, deriveFooterSpace } from './geometry-policy.js';
 import { headerSpaceEligibility } from './header-space.js';
@@ -108,7 +109,8 @@ export function buildSections(intent: ExportIntent) {
         bandReceipt.footer.emptySpace = emptyFooterSpace;
         const capacity = (first: boolean) => { const visible = s.headerMode === 'all' || s.headerMode === (first ? 'first' : 'continuation'), top = dynamicHeader && visible ? estimated.top : margin.top; return { topTwips: top, bottomTwips: margin.bottom, headerVisible: bandReceipt.header.spacePolicy !== 'none' && bandReceipt.header.mode !== 'none' && visible, bodyHeightPt: (ph * 20 - top - margin.bottom) / 20, estimated: true, wordFootprintVerified: false }; };
         const capacityByPageType = { first: capacity(true), continuation: capacity(false) }, bodyHeight = Math.min(capacityByPageType.first.bodyHeightPt, capacityByPageType.continuation.bodyHeightPt), originalBody = (ph * 20 - sourceMargin.top - sourceMargin.bottom) / 20;
-        if (bodyHeight <= 0 || (estimated.top - sourceMargin.top + estimated.bottom - sourceMargin.bottom) / 20 > originalBody * .4 + 1e-6)
+        const withBandTables=(bandReceipt.header.mode!=='none'&&hasBandTables(s.header))||(bandReceipt.footer.mode!=='none'&&hasBandTables(s.footer));
+        if (bodyHeight <= 0 || !withBandTables&&(estimated.top - sourceMargin.top + estimated.bottom - sourceMargin.bottom) / 20 > originalBody * .4 + 1e-6)
             fail('DOCX_CAPABILITY_UNSUPPORTED', 'sections.' + index + '.page', 'Band reservations exceed body fit envelope');
         for (const block of intent.textBlocks.filter(t => t.scope === 'nodes' && (intent.document.sourceMap as any)[t.nodeId].sectionId === s.sectionId)) {
             const n = nodes[block.nodeId], style = required(intent.styles[block.styleId], 'styles'), intrinsic = n.props.heightMode === 'fixed' ? toPoints(n.props.height) : Math.max(style.line.twips / 20, concreteFontBounds(intent, style.font.id, style.sizeHalfPoints).maxHeight);
@@ -118,7 +120,7 @@ export function buildSections(intent: ExportIntent) {
         for (const n of Object.values(nodes) as any[])
             if (n.type === 'image' && (intent.document.sourceMap as any)[n.id].sectionId === s.sectionId) {
                 let padding = 0;
-                for (const t of intent.tables)
+                for (const t of intent.tables.filter(t=>t.scope==='nodes'))
                     for (const c of t.cells)
                         if (nodes[c.nodeId].childIds.includes(n.id))
                             padding = (c.paddingTwips.top + c.paddingTwips.bottom) / 20 + 1;

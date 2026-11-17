@@ -1,3 +1,4 @@
+import {sourceGraph} from './fields.js';
 import { required } from './types.js';
 import {readingMeasurementReceipt} from './reading-measurements.js';
 import {toPoints} from './units.js';
@@ -199,13 +200,13 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
         }
         const adaptations: any[] = [...receiptFacts.endingAreas,...baselineReceipts(intent),...sourceLayoutReceipts(intent), ...receiptFacts.omittedSections.map(s => ({kind: 'empty-section-omission', ...s})), ...receiptFacts.receipts.flatMap(s => s.tableSpaces.map((t: any) => ({ kind: 'table-space-policy', ...t })))], columnPaths = new Set<string | undefined>();
         for (const table of intent.tables) {
-            const source: any = (intent.document.nodes as any)[table.nodeId];
+            const source=sourceGraph(intent,table.scope)[table.nodeId];
             for (const group of source.rowGroups ?? []) if (group.groupLabel) {
                 // Native vertical merges keep one logical label, even if Word
                 // paginates its rows. No invented continuation text or keep-all.
                 adaptations.push({ kind: 'group-label-native-merge', nodeId: table.nodeId, groupId: group.groupId, groupIndex: group.groupIndex, cellId: group.groupLabel.cellId, memberCount: group.groupLabel.memberCount, policy: 'native-rowspan', continuationLabel: 'not-repeated', wordVerified: false });
             }
-            table.columnTwips.forEach((twips, i) => { const path = 'document.nodes.' + table.nodeId + '.columns.' + i + '.width', length = source.columns[i].width, pt = length.unit === 'pt' ? length.value : length.value * 72 / 25.4; columnPaths.add(path); if (twips / 20 !== pt)
+            table.columnTwips.forEach((twips, i) => { const path = 'document.'+table.scope+'.' + table.nodeId + '.columns.' + i + '.width', length = source.columns[i].width, pt = length.unit === 'pt' ? length.value : length.value * 72 / 25.4; columnPaths.add(path); if (twips / 20 !== pt)
                 adaptations.push({ kind: 'column-grid-quantization', path, source: length, twips, errorPt: twips / 20 - pt }); });
         }
         for (const [id, style] of Object.entries(intent.styles)) {

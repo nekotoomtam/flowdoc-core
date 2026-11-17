@@ -7,7 +7,8 @@ import { toPoints, toTwips, columnGrid } from './units.js';
 import { buildTextParagraph } from './text.js';
 import { buildImageParagraph } from './images.js';
 import { textEnvelope } from './font-envelope.js';
-import { structuralParagraph } from './tables.js';
+import { buildTable,structuralParagraph } from './tables.js';
+import {bandTableEnvelope} from './bandTableEnvelope.js';
 import type { NavigationContext } from './fields.js';
 const take = (r: any) => { if (!r.ok)
     fail(r.issues[0].code, r.issues[0].path, r.issues[0].message); return r.value; };
@@ -51,6 +52,18 @@ export function buildBand(intent: ExportIntent, band: any, scope: string, page: 
                 quantization.push({kind:'rule-thickness-quantization',scope,...r.quantization});
                 height += r.heightPt;
                 children.push(r.paragraph);
+            }
+            else if(n.type==='table'){
+                const measured=bandTableEnvelope(intent,scope,id);
+                height+=measured.height;
+                overhead+=measured.overhead;
+                imageReferences+=measured.imageReferences;
+                children.push(take(buildTable(intent,id,{...ctx,inBand:true},undefined,scope)).table);
+                if(id!==ids.at(-1)){
+                    children.push(structuralParagraph());
+                    height+=1;
+                    overhead+=1;
+                }
             }
             else if (n.type === 'columns') {
                 const gap = n.props.gap ? toPoints(n.props.gap) : 0, total = n.columns.reduce((s: number, c: any) => s + c.weight, 0), usable = available - gap * (n.columns.length - 1);

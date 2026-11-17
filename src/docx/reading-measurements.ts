@@ -24,7 +24,14 @@ export async function prepareReadingMeasurements(intent:ExportIntent,runtime:Tex
   for(const child of c.childIds)add('nodes',child,width);slot(c.childIds,width);
  }};
  const band=(scope:string,b:any,width:number)=>{
-  const walk=(ids:string[],available:number)=>{for(const id of ids){const n=b.nodes[id];if(n.type==='text-block')add(scope,id,available);else if(n.type==='columns'){
+  const walk=(ids:string[],available:number)=>{for(const id of ids){const n=b.nodes[id];if(n.type==='text-block')add(scope,id,available);else if(n.type==='table'){
+   const table=intent.tables.find(t=>t.scope===scope&&t.nodeId===id)!;
+   for(const rid of n.rowIds)for(const [i,cid]of b.nodes[rid].cellIds.entries()){
+    const c=b.nodes[cid],col=c.props.columnIndex??i,span=c.props.colSpan??1,pad=table.cells.find(c=>c.nodeId===cid)!.paddingTwips;
+    const width=(table.columnTwips.slice(col,col+span).reduce((sum,w)=>sum+w,0)-pad.left-pad.right)/20;
+    for(const child of c.childIds)add(scope,child,width);
+   }
+  }else if(n.type==='columns'){
    const gap=n.props.gap?toPoints(n.props.gap):0,total=n.columns.reduce((sum:number,c:any)=>sum+c.weight,0),usable=available-gap*(n.columns.length-1);
    for(const c of n.columns)walk(c.childIds,usable*c.weight/total);
   }}};walk(b.rootIds,width);
@@ -40,7 +47,7 @@ export async function prepareReadingMeasurements(intent:ExportIntent,runtime:Tex
   }
   for(const kind of ['header','footer']as const){const b=s[kind]??(intent.document as any)[kind];if(b){const bw=b.placement?(p.orientation==='portrait'?210:297)*72/25.4-toPoints(b.placement.left)-toPoints(b.placement.right):width;band(s[kind]?`sections.${index}.${kind}.nodes`:`${kind}.nodes`,b,bw);}}
  }
- for(const t of intent.tables){const n=nodes[t.nodeId];for(const rid of n.rowIds){if(hasCompoundTableStroke(n))row(n,rid);for(const cid of nodes[rid].cellIds){const c=nodes[cid],index=nodes[rid].cellIds.indexOf(cid),col=c.props.columnIndex??index,span=c.props.colSpan??1,pad=t.cells.find(v=>v.nodeId===cid)!.paddingTwips;slot(c.childIds,(t.columnTwips.slice(col,col+span).reduce((a,b)=>a+b,0)-pad.left-pad.right)/20);}}
+ for(const t of intent.tables){if(t.scope!=='nodes')continue;const n=nodes[t.nodeId];for(const rid of n.rowIds){if(hasCompoundTableStroke(n))row(n,rid);for(const cid of nodes[rid].cellIds){const c=nodes[cid],index=nodes[rid].cellIds.indexOf(cid),col=c.props.columnIndex??index,span=c.props.colSpan??1,pad=t.cells.find(v=>v.nodeId===cid)!.paddingTwips;slot(c.childIds,(t.columnTwips.slice(col,col+span).reduce((a,b)=>a+b,0)-pad.left-pad.right)/20);}}
   for(const g of n.rowGroups??[])if(g.keepStart&&g.prefixRowIds.length)for(const rid of [...n.rowIds.slice(0,n.props.repeatHeaderRows?n.props.headerRowCount:0),...g.prefixRowIds,g.firstMemberRowId])row(n,rid);
  }
  const result=new Map<string,Extent>();let units=0,calls=0;

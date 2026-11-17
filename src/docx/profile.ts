@@ -329,7 +329,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
             active.delete(id);
         }
         for (const root of roots)
-            visit(root, band ? ['text-block', 'image', 'line', 'columns'] : ['text-block', 'image', 'line', 'table', 'page-break', 'table-of-contents'], !band && path === 'nodes' ? (rootWidths.get(root) ?? width) : width);
+            visit(root, band ? ['text-block', 'image', 'line', 'columns', 'table'] : ['text-block', 'image', 'line', 'table', 'page-break', 'table-of-contents'], !band && path === 'nodes' ? (rootWidths.get(root) ?? width) : width);
         requireValue(visited.size === Object.keys(nodes).length, path, 'Unreachable nodes must not be silently dropped');
         sourceMap(map, nodes, path + '.sourceMap', knownInline);
         for (const id of roots)

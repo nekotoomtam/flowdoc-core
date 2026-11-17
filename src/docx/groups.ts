@@ -5,6 +5,7 @@ import { requireGenuineIntent, intentResourceBytes } from './profile.js';
 import { toPoints,toTwips } from './units.js';
 import { ownsPoint } from './text-intent.js';
 import {measuredReadingExtent,hasReadingMeasurements} from './reading-measurements.js';
+import {bandTableEnvelope} from './bandTableEnvelope.js';
 import {textEnvelope} from './font-envelope.js';
 export interface Fragment {
     nodeId: string;
@@ -88,6 +89,7 @@ export function deriveReadingPlan(intent: ExportIntent): Result<ReadingPlan> {
                     if(n.type==='text-block')sum+=n.props.heightMode==='fixed'?toPoints(n.props.height):textEnvelope(intent,id,scope,width);
                     else if(n.type==='image')sum+=toPoints(n.props.height)+1;
                     else if(n.type==='line')sum+=1+Math.round((n.props.thickness?toPoints(n.props.thickness):.5)*8)/8+((n.props.spaceBefore?toTwips(n.props.spaceBefore):0)+(n.props.spaceAfter?toTwips(n.props.spaceAfter):0))/20;
+                    else if(n.type==='table')sum+=bandTableEnvelope(intent,scope,id).height+1;
                     else if(n.type==='columns'){const gap=n.props.gap?toPoints(n.props.gap):0,total=n.columns.reduce((v:number,c:any)=>v+c.weight,0);sum+=Math.max(1,...n.columns.map((c:any)=>stack(c.childIds,(width-gap*(n.columns.length-1))*c.weight/total)));}
                     else return Infinity;
                 }if(ids.length&&b.nodes[ids.at(-1)!].type==='columns')sum+=1;return sum;};
@@ -97,7 +99,7 @@ export function deriveReadingPlan(intent: ExportIntent): Result<ReadingPlan> {
             return Math.max(0,(pg.orientation==='portrait'?297:210)*72/25.4-reservation('header')-reservation('footer'));
         }
         const widths = new Map<string, number>();
-        for (const t of intent.tables) {
+        for (const t of intent.tables.filter(t=>t.scope==='nodes')) {
             const n = nodes[t.nodeId];
             for (const rid of n.rowIds)
                 nodes[rid].cellIds.forEach((cid: string, index: number) => { const c = nodes[cid], col = c.props.columnIndex ?? index, span = c.props.colSpan ?? 1, pad = t.cells.find(c => c.nodeId === cid)!.paddingTwips; widths.set(cid, (t.columnTwips.slice(col, col + span).reduce((a, b) => a + b, 0) - pad.left - pad.right) / 20); });
@@ -138,7 +140,7 @@ export function deriveReadingPlan(intent: ExportIntent): Result<ReadingPlan> {
                 }
             }
         }
-        for (const t of intent.tables) {
+        for (const t of intent.tables.filter(t=>t.scope==='nodes')) {
             const n = nodes[t.nodeId], used = new Set<string>();
             plan.keptRows[t.nodeId] = [];
             for (const g of n.rowGroups ?? []) {
