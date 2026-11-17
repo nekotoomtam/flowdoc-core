@@ -1,7 +1,7 @@
 import {assemblyKey,instanceSectionId,coverOrder} from './prepareAssembly.js';
 import type {ValidatedTemplate,ObjectSchema,AreaField,ArrayField,StringField,NumberField,ImageField,LinkField} from '../template/types.js';
 import type {Result,Issue} from '../result.js';
-import {formulaSource, NumericSum, validNumber} from './numericValues.js';
+import {ExactLookup, formulaSource, NumericSum, validNumber} from './numericValues.js';
 import {calculateComputedText} from './computedValues.js';
 import {validateField} from './validateValues.js';
 import {TemplateAccess} from '../template/taskAccess.js';
@@ -13,7 +13,7 @@ export type TaskImageResource={kind:'task-image';version:1;availability:'availab
 export interface TaskInputLimits {recordBytes:number;maxRecords:number;maxImagePlacements:number}
 export interface TaskInputOptions {templateAccess?:boolean;limits?:Partial<TaskInputLimits>;write:(chunk:string)=>Promise<void>;images:{collect:(value:TaskValue|undefined,context:TaskImageContext)=>Promise<void>;seal:()=>Promise<void>;resolve:(context:TaskImageContext)=>Promise<TaskImageResource>};onWarning?:(issue:Issue)=>Promise<void>;signal?:AbortSignal}
 export interface TaskInputSummary {contract:'flowdoc-task-input/2';imagePlacements:number;omittedPlacements:number;warningCount:number}
-class InputFailure extends Error {constructor(readonly code:string,readonly path:string){super('Invalid task input');}}
+class InputFailure extends Error {constructor(readonly code:string,readonly path:string,message='Invalid task input'){super(message);}}
 const esc=(k:string)=>k.replaceAll('~','~0').replaceAll('/','~1');
 const memory=(v:any):TaskValue=>({async byteLength(){return Buffer.byteLength(JSON.stringify(v));},async kind(){return Array.isArray(v)?'array':v!==null&&typeof v==='object'?'object':'scalar';},async scalar(){return v;},async *properties(){for(const [k,x] of Object.entries(v))yield [k,memory(x)] as const;},async *elements(){for(const x of v)yield memory(x);}});
 const get=async(v:TaskValue,k:string)=>{for await(const [name,value] of v.properties())if(name===k)return value;return undefined;};
@@ -25,7 +25,7 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
  if(template.definition.nodeModelVersion!==20)return {ok:false,issues:[{code:'INVALID_DATA',path:'nodeModelVersion',message:'Only model20 documents are supported'}],warnings:[]};
  const access=sharedAccess??new TemplateAccess(template,options.templateAccess!==false);const t=template.definition,index=access.areaIndex,summary:TaskInputSummary={contract:'flowdoc-task-input/2',imagePlacements:0,omittedPlacements:0,warningCount:0};let collecting=true,records=0,collectedPlacements=0;const defaults:TaskInputLimits={recordBytes:256*1024,maxRecords:100000,maxImagePlacements:10000},limits={...defaults,...options.limits};
  for(const key of Object.keys(defaults) as (keyof TaskInputLimits)[])if(!Number.isSafeInteger(limits[key])||limits[key]<1||limits[key]>defaults[key])return {ok:false,issues:[{code:'LIMIT_EXCEEDED',path:'/limits',message:'Unsupported task bounds'}],warnings:[]};
- const fail=(code:string,path:string):never=>{throw new InputFailure(code,path);};
+ const fail=(code:string,path:string,message?:string):never=>{throw new InputFailure(code,path,message);};
  const check=()=>options.signal?.throwIfAborted();
  const write=async(s:string)=>{check();if(!collecting)await options.write(s);};
  const scalar=async(v:TaskValue|undefined,path:string)=>{if(!v||await v.kind()!=='scalar')return fail('TYPE_MISMATCH',path);const raw=await v.scalar();if(typeof raw==='string'&&Buffer.byteLength(raw)>65536)fail('LIMIT_EXCEEDED',path);return raw;};
@@ -66,11 +66,33 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
  async function taskSum(f:NumberField,schema:ObjectSchema,source:TaskValue,path:string){
   const config=formulaSource(f.formula,schema,index);
   if(!config)return fail('INVALID_TEMPLATE',path);
-  const {area,formatKey,arrayField,valueField,field:input}=config;
+  const {area,formatKey,arrayField,valueField,field:input,array}=config;
   const sum=new NumericSum(), areaPath=path+'/'+esc(area.key);
   const entries=await get(source,area.key)??memory(area.field.default??[]);
   if(await entries.kind()!=='array')return fail('TYPE_MISMATCH',areaPath);
-  const array=area.formatsByKey.get(formatKey)!.format.inputSchema.fields[arrayField] as ArrayField;
+  const lookup=config.lookup&&new ExactLookup();
+  if(config.lookup&&lookup){
+   const {tableKey,nameKey,numberKey,table,key,number}=config.lookup;
+   const tablePath=path+'/'+esc(tableKey),raw=await get(source,tableKey);
+   if(!raw&&table.required)return fail('MISSING_REQUIRED',tablePath);
+   const rows=raw??memory(table.default??[]);
+   if(await rows.kind()!=='array')return fail('TYPE_MISMATCH',tablePath);
+   let i=0;
+   for await(const row of rows.elements()){
+    check();const rowPath=tablePath+'/'+i++;
+    if(i>limits.maxRecords)return fail('LIMIT_EXCEEDED',tablePath);
+    await record(row,rowPath,false);
+    if(await row.kind()!=='object')return fail('TYPE_MISMATCH',rowPath);
+    const namePath=rowPath+'/'+esc(nameKey),numberPath=rowPath+'/'+esc(numberKey);
+    const name=await get(row,nameKey),value=await get(row,numberKey);
+    if(!name&&key.required)return fail('MISSING_REQUIRED',namePath);
+    if(!value&&(number.required||number.default===undefined))return fail('MISSING_REQUIRED',numberPath);
+    const amount=value?await scalar(value,numberPath):number.default??0;
+    if(!validNumber(amount))return fail('TYPE_MISMATCH',numberPath);
+    const message=lookup.add(name?await scalar(name,namePath):key.default??'',amount);
+    if(message)return fail('INVALID_DATA',namePath,message);
+   }
+  }
   let i=0;
   for await(const entry of entries.elements()){
    check();const entryPath=areaPath+'/'+i++;
@@ -91,8 +113,9 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
      if(await row.kind()!=='object')return fail('TYPE_MISMATCH',rowPath);
      const numberPath=rowPath+'/'+esc(valueField),v=await get(row,valueField);
      if(!v&&input.required)return fail('MISSING_REQUIRED',numberPath);
-     const value=v?await scalar(v,numberPath):input.default??0;
-     if(!validNumber(value))return fail('TYPE_MISMATCH',numberPath);
+     const raw=v?await scalar(v,numberPath):input.default??(input.type==='number'?0:'');
+     const value=lookup?lookup.get(raw):raw;
+     if(!validNumber(value))return fail(lookup?'INVALID_DATA':'TYPE_MISMATCH',numberPath,lookup?'Lookup name not found':undefined);
      sum.add(value);
     }
    }finally{lease.release();}
@@ -140,5 +163,5 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
   for(const [instance,e]of entries){if(i++)await write(',');const key=await scalar(await get(e.value,'sectionKey'),e.path+'/sectionKey') as string;const s=t.sections.find(s=>s.sectionKey===key)!;await section(s,e.value,e.path,{sectionKey:key,instanceKey:instance});}await write(']}');
  }
  try{await walk();await options.images.seal();collecting=false;await walk();return {ok:true,value:summary,warnings:[]};}
- catch(e){if(e instanceof InputFailure)return {ok:false,issues:[{code:e.code,path:e.path,message:'Invalid task input'}],warnings:[]};throw e;}finally{if(!sharedAccess)access.clear();}
+ catch(e){if(e instanceof InputFailure)return {ok:false,issues:[{code:e.code,path:e.path,message:e.message}],warnings:[]};throw e;}finally{if(!sharedAccess)access.clear();}
 }

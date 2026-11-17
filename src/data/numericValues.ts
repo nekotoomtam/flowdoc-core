@@ -6,7 +6,7 @@ export const validNumber = (value: unknown): value is number =>
  typeof value === 'number' && Number.isFinite(value) && Number.isSafeInteger(Math.trunc(value));
 
 export function formulaSource(value: unknown, schema: ObjectSchema, index: AreaIndex) {
- if (!object(value) || !keys(value, ['operation', 'source']) || value.operation !== 'sum') return;
+ if (!object(value) || !keys(value, ['operation', 'source', 'lookup']) || value.operation !== 'sum') return;
  const source = value.source;
  if (!object(source) || !keys(source, ['areaId', 'formatKey', 'arrayField', 'valueField'])) return;
  const { areaId, formatKey, arrayField, valueField } = source;
@@ -17,8 +17,30 @@ export function formulaSource(value: unknown, schema: ObjectSchema, index: AreaI
  const array = fields && own(fields, arrayField) ? fields[arrayField] : undefined;
  if (array?.type !== 'array' || !object(array.items?.fields) || !own(array.items.fields, valueField)) return;
  const field = array.items.fields[valueField];
- if (field?.type !== 'number' || field.formula) return;
- return { area, formatKey, arrayField, valueField, field };
+ const context = { area, formatKey, arrayField, valueField, array };
+ if (!own(value, 'lookup')) return field?.type === 'number' && !field.formula ? { ...context, field, lookup: undefined } : undefined;
+ const lookup = value.lookup;
+ if (field?.type !== 'string' || field.computed || !object(lookup) || !keys(lookup, ['arrayField', 'keyField', 'valueField'])) return;
+ const { arrayField: tableKey, keyField: nameKey, valueField: numberKey } = lookup;
+ if (!name(tableKey) || !name(nameKey) || !name(numberKey) || !own(schema.fields, tableKey)) return;
+ const table = schema.fields[tableKey];
+ if (table?.type !== 'array' || !object(table.items?.fields) || !own(table.items.fields, nameKey) || !own(table.items.fields, numberKey)) return;
+ const key = table.items.fields[nameKey], number = table.items.fields[numberKey];
+ if (key?.type !== 'string' || key.computed || number?.type !== 'number' || number.formula) return;
+ return { ...context, field, lookup: { tableKey, nameKey, numberKey, table, key, number } };
+}
+
+export class ExactLookup {
+ private readonly values = new Map<string, number>();
+ add(key: unknown, value: unknown): string | undefined {
+  if (typeof key !== 'string' || !key.trim()) return 'Lookup name is empty';
+  if (!validNumber(value)) return 'Lookup value must be a Number';
+  if (this.values.has(key)) return 'Duplicate Lookup name: '+key;
+  this.values.set(key, value);
+ }
+ get(key: unknown): number | undefined {
+  return typeof key === 'string' ? this.values.get(key) : undefined;
+ }
 }
 
 export function numberParts(value: number) {

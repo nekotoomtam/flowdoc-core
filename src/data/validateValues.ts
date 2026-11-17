@@ -5,7 +5,7 @@ import type {Issue} from '../result.js';
 import type {ObjectSchema,StringField,NumberField,ArrayField,ImageField,LinkField,AreaField} from '../template/types.js';
 import type {PreparedData,PreparedItem} from './types.js';
 import {object,own,text,issue} from '../template/checks.js';
-import {formulaSource, NumericSum, validNumber} from './numericValues.js';
+import {ExactLookup, formulaSource, NumericSum, validNumber} from './numericValues.js';
 import {calculateComputedText} from './computedValues.js';
 export type ValueMode='request'|'prepared';
 export const actualType=(v:unknown)=>v===null?'null':Array.isArray(v)?'array':typeof v==='undefined'?'null':typeof v as 'string'|'number'|'boolean'|'object'|'array'|'null';
@@ -37,11 +37,28 @@ export function validateValues(schema:ObjectSchema,input:unknown,path:string,iss
    const area:unknown=source&&out[source.area.key];
    if(!source||!object(area)||area.kind!=='area'||!Array.isArray(area.entries)){issues.push(issue('INVALID_DATA',p));continue;}
    const sum=new NumericSum();
+   const lookup=source.lookup&&new ExactLookup();
+   if(source.lookup&&lookup){
+    const {tableKey,nameKey,numberKey,number,table}=source.lookup,rows=out[tableKey];
+    const original=mode==='request'?(own(data,tableKey)?data[tableKey]:table.default):rows;
+    if(Array.isArray(rows))for(const [i,row] of rows.entries()){
+     const raw=Array.isArray(original)?original[i]:undefined;
+     if((!object(raw)||!own(raw,numberKey))&&number.default===undefined){
+      issues.push(issue('MISSING_REQUIRED',path+'.'+tableKey+'['+i+'].'+numberKey));continue;
+     }
+     const message=lookup.add(row?.[nameKey],row?.[numberKey]);
+     if(message)issues.push(issue('INVALID_DATA',path+'.'+tableKey+'['+i+'].'+nameKey,message));
+    }
+   }
    for(const entry of area.entries){
     if(entry?.format!==source.formatKey)continue;
     const rows=entry.data?.[source.arrayField];
     if(!Array.isArray(rows))continue; // Source validation reports malformed prepared rows.
-    for(const row of rows){const value=row?.[source.valueField];if(validNumber(value))sum.add(value);}
+    for(const [i,row] of rows.entries()){
+     const raw=row?.[source.valueField],value=lookup?lookup.get(raw):raw;
+     if(validNumber(value))sum.add(value);
+     else if(lookup)issues.push(issue('INVALID_DATA',path+'.'+source.area.key+'['+entry.originalIndex+'].data.'+source.arrayField+'['+i+'].'+source.valueField,'Lookup name not found'));
+    }
    }
    const result=sum.value();
    if(!validNumber(result)||mode==='prepared'&&(!own(data,key)||data[key]!==result))issues.push(issue('INVALID_DATA',p));

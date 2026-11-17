@@ -1,7 +1,7 @@
 import type {BoundLink} from '../composition/linkContract.js';
 import type {ResolvedDocument,TextBlock,TextInline,Table,TableRow,TableCell,PageBreak,ImageBlock,ContentsBlock,LineBlock} from '../composition/resolvedDocument.js';
 export interface ComputedText {calculation:'packageQuantityInWords';inputs:{quantity:string;unit:string}}
-export interface NumberFormula {operation:'sum';source:{areaId:string;formatKey:string;arrayField:string;valueField:string}}
+export interface NumberFormula {operation:'sum';source:{areaId:string;formatKey:string;arrayField:string;valueField:string};lookup?:{arrayField:string;keyField:string;valueField:string}}
 export interface NumberField {type:'number';required?:boolean;default?:number;formula?:NumberFormula;label?:string;description?:string}
 export type NumberDisplay='digits'|'words-th'|'words-en';
 export interface StringField {type:'string';required?:boolean;default?:string;allowEmpty?:boolean;computed?:ComputedText;label?:string;description?:string}

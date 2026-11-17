@@ -81,3 +81,38 @@ it('sums decimal Number values per Section in both preparation paths and binds t
  part.inputSchema.fields.total.formula.source.valueField='missing';
  expect(validateTemplate(t).ok).toBe(false);
 });
+
+it('looks up exact names per Section before summing in preview and task input',async()=>{
+ const t=areaCover(),s=t.sections.find((s:any)=>s.sectionKey==='document');
+ const areaId=s.inputSchema.fields.parts.areaId;
+ s.inputSchema.fields.total={type:'number',formula:{operation:'sum',source:{areaId,formatKey:'panel',arrayField:'rows',valueField:'code'},
+  lookup:{arrayField:'prices',keyField:'name',valueField:'amount'}}};
+ s.inputSchema.fields.prices={type:'array',items:{type:'object',fields:{name:{type:'string',required:true},amount:{type:'number',required:true}}}};
+ t.areaFormats.panel.inputSchema.fields.rows={type:'array',items:{type:'object',fields:{code:{type:'string',required:true}}}};
+ const sections=[['first',1.25],['second',3.5]].map(([instanceKey,amount])=>({
+  sectionKey:'document',instanceKey,data:{prices:[{name:'BOX',amount},{name:'box',amount:100}],parts:[{format:'panel',data:{rows:[{code:'BOX'},{code:'BOX'}]}}]},
+ }));
+ const template=valid(t),request={data:{},sections};
+ const prepared=prepareGeneration(template,{docKey:t.docKey,...request});
+ expect(prepared.ok,JSON.stringify(prepared)).toBe(true);
+ if(!prepared.ok)throw Error('prepare failed');
+ expect(prepared.value.sections.map(section=>section.data.total)).toEqual([2.5,7]);
+ const {r,raw}=await run(t,request);
+ expect(r.ok,JSON.stringify(r)).toBe(true);
+ expect(JSON.parse(raw).sections.map((section:any)=>section.data.total)).toEqual([2.5,7]);
+ const document=await api.composeTaskDocument(template,value(JSON.parse(raw)));
+ expect(document).toEqual(api.composeDocument(template,prepared.value));
+ for(const [kind,modify] of [
+  ['missing',(q:any)=>{q.sections[0].data.parts[0].data.rows[1].code='BOX ';}],
+  ['duplicate',(q:any)=>{q.sections[0].data.prices.push({name:'BOX',amount:1});}],
+  ['no-value',(q:any)=>{delete q.sections[0].data.prices[0].amount;}],
+ ] as const){
+  const bad=structuredClone(request);modify(bad);
+  const result=prepareGeneration(template,{docKey:t.docKey,...bad});
+  const task=(await run(t,bad)).r;
+  expect(result.ok).toBe(false);expect(task.ok).toBe(false);
+  expect(task.issues[0].path).toContain(kind==='missing'?'/rows/1/code':kind==='duplicate'?'/prices/2/name':'/prices/0/amount');
+ }
+ s.inputSchema.fields.total.formula.lookup.valueField='name';
+ expect(validateTemplate(t).ok).toBe(false);
+});
