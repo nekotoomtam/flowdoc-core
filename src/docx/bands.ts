@@ -1,3 +1,4 @@
+import {paperSizePt} from '../composition/paperSize.js';
 import { required } from './types.js';
 import {resolveLineStroke,strokeEnvelope} from '../composition/strokeStyle.js';
 import {nativeStroke} from './borders.js';
@@ -20,7 +21,7 @@ export function buildBand(intent: ExportIntent, band: any, scope: string, page: 
 } = {}) {
     if (band.sizing?.mode === 'content' && (band.sizing.minHeight !== undefined || band.sizing.maxHeight !== undefined))
         fail('DOCX_CAPABILITY_UNSUPPORTED', scope + '.sizing', 'Min/max band fit awaits Word acceptance');
-    const physicalWidth = (page.orientation === 'portrait' ? 210 : 297) * 72 / 25.4, left = band.placement ? toPoints(band.placement.left) : toPoints(page.margin.left), right = band.placement ? toPoints(band.placement.right) : toPoints(page.margin.right), width = physicalWidth - left - right;
+    const physicalWidth = paperSizePt(page)[0], left = band.placement ? toPoints(band.placement.left) : toPoints(page.margin.left), right = band.placement ? toPoints(band.placement.right) : toPoints(page.margin.right), width = physicalWidth - left - right;
     let imageReferences = 0;
     const quantization: any[] = [];
     function stack(ids: string[], available: number, afterTwips = 0): {

@@ -1,3 +1,4 @@
+import {paperSizePt} from '../composition/paperSize.js';
 import {measureText} from './measureText.js';
 import { toPt } from '../composition/resolvedDocument.js';
 import type { ResolvedDocument } from '../composition/resolvedDocument.js';
@@ -29,8 +30,7 @@ export class LayoutError extends Error {
 }
 export async function textFlow(document:ResolvedDocument,runtime:TextRuntime):Promise<DrawDocument>{
  const page=document.book.page;
- const [w,h]=page.orientation==='portrait'?[210,297]:[297,210];
- const widthPt=w!*72/25.4,heightPt=h!*72/25.4;
+ const [widthPt,heightPt]=paperSizePt(page);
  const left=toPt(page.margin.left),right=widthPt-toPt(page.margin.right),top=toPt(page.margin.top),bottom=heightPt-toPt(page.margin.bottom);
  const available=right-left, epsilon=1e-6;
  const pages:DrawPage[]=[];

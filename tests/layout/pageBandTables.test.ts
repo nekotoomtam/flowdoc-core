@@ -92,3 +92,15 @@ it('draws opt-in body sides through the reserved space between the bands on ever
   expect(sides[0]!.y1Pt).toBeLessThan(sides[0]!.y2Pt-300);
  }
 });
+it.each([['portrait',612,792],['landscape',792,612]])('uses Letter dimensions in layout and native DOCX for %s',async(orientation,width,height)=>{
+ const t=fixture(),s=t.sections[0],page=t.pageLayouts[s.pageLayoutId??t.book.defaultPageLayoutId].page;
+ page.size='Letter';page.orientation=orientation;
+ for(const band of ['header','footer'])s[band].fragment.nodes.label.children.shift();
+ const v=take(validateTemplate(t)),d=take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:[{sectionKey:'A',instanceKey:'bill-0',data:{name:'A'}}]}))));
+ const draw=await documentFlow(d,fakeRuntime);
+ expect(draw.pages.every(p=>p.widthPt===width&&p.heightPt===height)).toBe(true);
+ const e=take(await createDocxEngine(fonts())),sink=staged();
+ take(await e.generateDocxTo(d,noImages,sink.output,{textLayout:'native'}));
+ const zip=await JSZip.loadAsync(Buffer.concat(sink.chunks)),xml=await zip.file('word/document.xml')!.async('string');
+ expect(xml).toContain(`<w:pgSz w:w="${width*20}" w:h="${height*20}" w:orient="${orientation}"/>`);
+});

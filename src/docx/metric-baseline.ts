@@ -1,3 +1,4 @@
+import {paperSizePt} from '../composition/paperSize.js';
 import {mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,dirname,isAbsolute} from 'node:path';
@@ -156,7 +157,7 @@ export async function prepareMetricBaselines(intent:ExportIntent,shaperPath:stri
       const graphemes=new Set([...new Intl.Segmenter('th',{granularity:'grapheme'}).segment(block.text)].map(g=>g.index));
       const clusters=new Set(wholeRaw.glyphs.map((g:any)=>g.cluster));
       const boundaries=words.map(g=>g.index);
-      const page=section.page,pw=(page.orientation==='portrait'?210:297)*72/25.4;
+      const page=section.page,pw=paperSizePt(page)[0];
       const available=Math.min(pw-toPoints(page.margin.left)-toPoints(page.margin.right),
        (Math.round(pw*20)-toTwips(page.margin.left)-toTwips(page.margin.right))/20)-1.5;
       const envelope=concreteFontBounds(intent,style.font.id,style.sizeHalfPoints).maxWidth;
@@ -196,7 +197,7 @@ export async function prepareMetricBaselines(intent:ExportIntent,shaperPath:stri
     let tokenBounded=false;
     const section=(intent.document.sections as any[]).find(s=>s.rootIds.includes(block.nodeId));
     if(!Number.isFinite(maxWidth)&&section){
-     const page=section.page,pw=(page.orientation==='portrait'?210:297)*72/25.4;
+     const page=section.page,pw=paperSizePt(page)[0];
      const available=Math.min(pw-toPoints(page.margin.left)-toPoints(page.margin.right),
       (Math.round(pw*20)-toTwips(page.margin.left)-toTwips(page.margin.right))/20)-1.5;
      const envelope=concreteFontBounds(intent,style.font.id,style.sizeHalfPoints).maxWidth;

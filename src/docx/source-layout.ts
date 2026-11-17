@@ -1,3 +1,4 @@
+import {paperSizePt} from '../composition/paperSize.js';
 import {sourceWordBoundaries} from './source-word-boundaries.js';
 import {legacyTableStrokeGeometry} from '../composition/strokeStyle.js';
 import {mkdtemp,writeFile,rm} from 'node:fs/promises';
@@ -81,7 +82,7 @@ export async function prepareSourceLayout(intent:ExportIntent,resources:Pick<Exp
    const section=d.sections?.find(s=>s.rootIds.includes(owner));
    if(d.sections?.length&&!section){retain('native-nested-or-unresolved-section-width');continue;}
    const page=section?.page??d.book.page;
-   width??=(page.orientation==='landscape'?297:210)*72/25.4-toPoints(page.margin.left)-toPoints(page.margin.right);
+   width??=paperSizePt(page)[0]-toPoints(page.margin.left)-toPoints(page.margin.right);
    const style=d.styles[node.props.textStyleId]!,effective=intent.styles[block.styleId]!;
    let font=fontMetrics.get(effective.font.id);if(!font){font=new SourceFontMetrics(intentResourceBytes(intent,'font',effective.font.id));fontMetrics.set(effective.font.id,font);}
    remaining-=block.text.length;let blockUnits=0,blockRequests=0;

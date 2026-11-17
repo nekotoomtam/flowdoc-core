@@ -1,3 +1,4 @@
+import {isPaperSize,paperSizePt} from './paperSize.js';
 import { validateRowGroupMetadata } from './validateRowGroupMetadata.js';
 import {validateFormatInstances} from './validateFormatInstances.js';
 import type {ResolvedDocument} from './resolvedDocument.js';
@@ -75,7 +76,7 @@ export function validateBookStyles(d: Record<string, any>): Issue[] {
     const issues: Issue[] = [];
     const fail = (path: string) => issues.push({ code: "LAYOUT_FAILED", path, message: "Invalid page or text style" });
     const page = d.book?.page;
-    if (!object(d.book) || !keys(d.book, ['contentSlot', 'page']) || d.book.contentSlot !== 'body' || !object(page) || !keys(page, ['size', 'orientation', 'margin']) || page.size !== 'A4' || !['portrait', 'landscape'].includes(page.orientation) || !object(page.margin))
+    if (!object(d.book) || !keys(d.book, ['contentSlot', 'page']) || d.book.contentSlot !== 'body' || !object(page) || !keys(page, ['size', 'orientation', 'margin']) || !isPaperSize(page.size) || !['portrait', 'landscape'].includes(page.orientation) || !object(page.margin))
         fail('book');
     else {
         if (!keys(page.margin, ['top', 'right', 'bottom', 'left']))
@@ -88,8 +89,8 @@ export function validateBookStyles(d: Record<string, any>): Issue[] {
             else
                 values[side] = v.value * (v.unit === 'mm' ? 72 / 25.4 : 1);
         }
-        const [w, h] = page.orientation === 'portrait' ? [210, 297] : [297, 210];
-        if ((values.left ?? Infinity) + (values.right ?? Infinity) >= w! * 72 / 25.4 || (values.top ?? Infinity) + (values.bottom ?? Infinity) >= h! * 72 / 25.4)
+        const [w,h]=paperSizePt({size:page.size,orientation:page.orientation});
+        if ((values.left ?? Infinity) + (values.right ?? Infinity) >= w || (values.top ?? Infinity) + (values.bottom ?? Infinity) >= h)
             fail('book.page.margin');
     }
     if (!object(d.styles)) {

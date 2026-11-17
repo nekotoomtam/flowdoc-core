@@ -1,3 +1,4 @@
+import {paperSizePt} from '../composition/paperSize.js';
 import { required } from './types.js';
 import type { ExportIntent, Result } from './types.js';
 import { capture, fail, freeze } from './types.js';
@@ -77,10 +78,10 @@ export function deriveReadingPlan(intent: ExportIntent): Result<ReadingPlan> {
             return lines.length * Math.max(style.line.twips / 20, metric.height * size);
         }
         function section(id: string) { const sid = (intent.document.sourceMap as any)[id].sectionId; return (intent.document.sections as any[]).find(s => s.sectionId === sid); }
-        function height(id: string) { const pg = section(id).page; return (pg.orientation === 'portrait' ? 297 : 210) * 72 / 25.4 - toPoints(pg.margin.top) - toPoints(pg.margin.bottom); }
+        function height(id: string) { const pg = section(id).page; return paperSizePt(pg)[1] - toPoints(pg.margin.top) - toPoints(pg.margin.bottom); }
         function budget(id: string) {
             if(!hasReadingMeasurements(intent))return Math.min(120,height(id)/3);
-            const s=section(id),index=intent.document.sections!.indexOf(s),pg=s.page,pw=(pg.orientation==='portrait'?210:297)*72/25.4;
+            const s=section(id),index=intent.document.sections!.indexOf(s),pg=s.page,pw=paperSizePt(pg)[0];
             const reservation=(kind:'header'|'footer')=>{
                 const b=s[kind]??(intent.document as any)[kind],edge=kind==='header'?'top':'bottom',margin=toPoints(pg.margin[edge]);
                 if(!b||s.role!=='body'||s.sourceKind==='blank'||s[kind+'Mode']==='none')return margin;
@@ -96,7 +97,7 @@ export function deriveReadingPlan(intent: ExportIntent): Result<ReadingPlan> {
                 const extent=stack(b.rootIds,pw-left-right)+(left!==toPoints(pg.margin.left)||right!==toPoints(pg.margin.right)?1:0);
                 return Math.max(margin,(b.placement?toPoints(b.placement.offset):margin)+extent+(b.gap?toPoints(b.gap):0));
             };
-            return Math.max(0,(pg.orientation==='portrait'?297:210)*72/25.4-reservation('header')-reservation('footer'));
+            return Math.max(0,paperSizePt(pg)[1]-reservation('header')-reservation('footer'));
         }
         const widths = new Map<string, number>();
         for (const t of intent.tables.filter(t=>t.scope==='nodes')) {
@@ -116,7 +117,7 @@ export function deriveReadingPlan(intent: ExportIntent): Result<ReadingPlan> {
             height = Math.max(height, extent);
         } return height; }
         for (const s of intent.document.sections as any[]) {
-            const pg = s.page, width = (pg.orientation === 'portrait' ? 210 : 297) * 72 / 25.4 - toPoints(pg.margin.left) - toPoints(pg.margin.right);
+            const pg = s.page, width = paperSizePt(pg)[0] - toPoints(pg.margin.left) - toPoints(pg.margin.right);
             for (let i = 0; i < s.rootIds.length; i++) {
                 const id = s.rootIds[i], n = nodes[id];
                 if (n.type !== 'text-block' || !n.props.toc)

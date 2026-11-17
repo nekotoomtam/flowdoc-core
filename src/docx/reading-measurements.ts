@@ -1,3 +1,4 @@
+import {paperSizePt} from '../composition/paperSize.js';
 import {measureText} from '../layout/measureText.js';
 import type {TextRuntime} from '../layout/textFlow.js';
 import {requireGenuineIntent} from './profile.js';
@@ -37,7 +38,7 @@ export async function prepareReadingMeasurements(intent:ExportIntent,runtime:Tex
   }}};walk(b.rootIds,width);
  };
  for(const [index,s]of intent.document.sections!.entries()){
-  const p=s.page,width=(p.orientation==='portrait'?210:297)*72/25.4-toPoints(p.margin.left)-toPoints(p.margin.right);slot(s.rootIds,width);
+  const p=s.page,width=paperSizePt(p)[0]-toPoints(p.margin.left)-toPoints(p.margin.right);slot(s.rootIds,width);
   if(s.endingArea)for(const id of s.endingArea.rootIds){const n=nodes[id];if(n.type==='text-block')add('nodes',id,width);else if(n.type==='table')for(const rid of n.rowIds)row(n,rid);}
   if(s.role==='cover')for(const id of s.rootIds){const n=nodes[id];if(n.type==='text-block')add('nodes',id,width);else if(n.type==='table')for(const rid of n.rowIds)row(n,rid);}
   for(let i=0;i<s.rootIds.length;i++){
@@ -45,7 +46,7 @@ export async function prepareReadingMeasurements(intent:ExportIntent,runtime:Tex
    const a=nodes[s.rootIds[i+1]!],b=nodes[s.rootIds[i+2]!],t=a?.type==='table'?a:a?.type==='text-block'&&!a.props.toc&&b?.type==='table'?b:undefined;
    if(t){add('nodes',id,width);if(a!==t)add('nodes',a.id,width);row(t,t.rowIds[0]);}
   }
-  for(const kind of ['header','footer']as const){const b=s[kind]??(intent.document as any)[kind];if(b){const bw=b.placement?(p.orientation==='portrait'?210:297)*72/25.4-toPoints(b.placement.left)-toPoints(b.placement.right):width;band(s[kind]?`sections.${index}.${kind}.nodes`:`${kind}.nodes`,b,bw);}}
+  for(const kind of ['header','footer']as const){const b=s[kind]??(intent.document as any)[kind];if(b){const bw=b.placement?paperSizePt(p)[0]-toPoints(b.placement.left)-toPoints(b.placement.right):width;band(s[kind]?`sections.${index}.${kind}.nodes`:`${kind}.nodes`,b,bw);}}
  }
  for(const t of intent.tables){if(t.scope!=='nodes')continue;const n=nodes[t.nodeId];for(const rid of n.rowIds){if(hasCompoundTableStroke(n))row(n,rid);for(const cid of nodes[rid].cellIds){const c=nodes[cid],index=nodes[rid].cellIds.indexOf(cid),col=c.props.columnIndex??index,span=c.props.colSpan??1,pad=t.cells.find(v=>v.nodeId===cid)!.paddingTwips;slot(c.childIds,(t.columnTwips.slice(col,col+span).reduce((a,b)=>a+b,0)-pad.left-pad.right)/20);}}
   for(const g of n.rowGroups??[])if(g.keepStart&&g.prefixRowIds.length)for(const rid of [...n.rowIds.slice(0,n.props.repeatHeaderRows?n.props.headerRowCount:0),...g.prefixRowIds,g.firstMemberRowId])row(n,rid);

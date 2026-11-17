@@ -1,3 +1,4 @@
+import {paperSizePt} from '../composition/paperSize.js';
 import type { Issue } from '../result.js';
 import {FormatStop,formatCursor,formatWarning,instanceForNode} from './formatLayout.js';
 import type {FormatInstance} from '../composition/resolvedDocument.js';
@@ -38,9 +39,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     let activeBands: Partial<Record<'header' | 'footer', ResolvedBand>> = {};
     const bandCache = new Map<string, MeasuredBand>();
     const setPage = (page: ResolvedDocument['book']['page']) => {
-        const [w, h] = page.orientation === 'portrait' ? [210, 297] : [297, 210];
-        widthPt = w! * 72 / 25.4;
-        heightPt = h! * 72 / 25.4;
+        [widthPt,heightPt]=paperSizePt(page);
         left = toPt(page.margin.left);
         top = toPt(page.margin.top);
         bottom = heightPt - toPt(page.margin.bottom);

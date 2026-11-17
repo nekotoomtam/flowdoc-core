@@ -1,3 +1,4 @@
+import {isPaperSize,paperSizePt} from '../composition/paperSize.js';
 import { required } from './types.js';
 import {lineStrokeErrors,tableStrokeErrors} from '../composition/strokeStyle.js';
 import {validEndingArea} from '../composition/endingArea.js';
@@ -57,8 +58,8 @@ function jsonSnapshot(input: unknown, max: number): any {
 }
 function validateProfile(p: DocxProfile) { keys(p, ['id', 'stage', 'limits'], 'profile'); requireValue(p.id === defaultProfile.id && p.stage === 'intent-only', 'profile', 'Only the U1 intent-only profile is enabled'); keys(p.limits, ['maxNodes', 'maxResourceBytes', 'maxImagePixels'], 'profile.limits'); for (const k of Object.keys(defaultProfile.limits) as (keyof DocxProfile['limits'])[])
     requireValue(Number.isSafeInteger(p.limits[k]) && p.limits[k] > 0 && p.limits[k] <= defaultProfile.limits[k], 'profile.limits.' + k, 'Invalid U1 budget'); }
-function page(p: any, path: string) { keys(p, ['size', 'orientation', 'margin'], path); requireValue(p.size === 'A4' && ['portrait', 'landscape'].includes(p.orientation), path, 'Unsupported page geometry'); keys(p.margin, ['top', 'right', 'bottom', 'left'], path + '.margin'); for (const side of ['top', 'right', 'bottom', 'left'] as const)
-    toTwips(p.margin[side], path + '.margin.' + side); const width = (p.orientation === 'portrait' ? 210 : 297) * 72 / 25.4, height = (p.orientation === 'portrait' ? 297 : 210) * 72 / 25.4; requireValue(toPoints(p.margin.left) + toPoints(p.margin.right) < width && toPoints(p.margin.top) + toPoints(p.margin.bottom) < height, path, 'Margins leave no page body'); return width - toPoints(p.margin.left) - toPoints(p.margin.right); }
+function page(p: any, path: string) { keys(p, ['size', 'orientation', 'margin'], path); requireValue(isPaperSize(p.size) && ['portrait', 'landscape'].includes(p.orientation), path, 'Unsupported page geometry'); keys(p.margin, ['top', 'right', 'bottom', 'left'], path + '.margin'); for (const side of ['top', 'right', 'bottom', 'left'] as const)
+    toTwips(p.margin[side], path + '.margin.' + side); const [width,height]=paperSizePt(p); requireValue(toPoints(p.margin.left) + toPoints(p.margin.right) < width && toPoints(p.margin.top) + toPoints(p.margin.bottom) < height, path, 'Margins leave no page body'); return width - toPoints(p.margin.left) - toPoints(p.margin.right); }
 function validUrl(v: any) { if (typeof v !== 'string' || !/^https?:\/\//i.test(v) || /[\s\x00-\x1f\x7f\\]/u.test(v))
     return false; try {
     const u = new URL(v);
@@ -335,12 +336,12 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
         for (const id of roots)
             requireValue(own(map, id), path + '.sourceMap.' + id, 'Root provenance missing');
     }
-    function band(b: any, path: string, pg: any) { keys(b, ['rootIds', 'nodes', 'sourceMap', 'baseTextStyleId', 'sizing', 'gap', 'placement'], path); requireValue(own(styles, b.baseTextStyleId), path + '.baseTextStyleId', 'Missing band style'); let width = (pg.orientation === 'portrait' ? 210 : 297) * 72 / 25.4 - toPoints(pg.margin.left) - toPoints(pg.margin.right); if (b.placement) {
+    function band(b: any, path: string, pg: any) { keys(b, ['rootIds', 'nodes', 'sourceMap', 'baseTextStyleId', 'sizing', 'gap', 'placement'], path); requireValue(own(styles, b.baseTextStyleId), path + '.baseTextStyleId', 'Missing band style'); let width = paperSizePt(pg)[0] - toPoints(pg.margin.left) - toPoints(pg.margin.right); if (b.placement) {
         keys(b.placement, ['mode', 'left', 'right', 'offset'], path + '.placement');
         requireValue(b.placement.mode === 'page', path + '.placement', 'Invalid placement mode');
         for (const k of ['left', 'right', 'offset'])
             toTwips(b.placement[k], path + '.placement.' + k);
-        width = (pg.orientation === 'portrait' ? 210 : 297) * 72 / 25.4 - toPoints(b.placement.left) - toPoints(b.placement.right);
+        width = paperSizePt(pg)[0] - toPoints(b.placement.left) - toPoints(b.placement.right);
     } requireValue(width > 0, path, 'Band leaves no width'); if (b.gap)
         toTwips(b.gap, path + '.gap'); if (b.sizing) {
         keys(b.sizing, b.sizing.mode === 'fixed' ? ['mode', 'height'] : ['mode', 'minHeight', 'maxHeight'], path + '.sizing');

@@ -1,3 +1,4 @@
+import {paperSizePt} from '../composition/paperSize.js';
 import { collectContents } from '../composition/contents.js';
 import {hasBandTables} from '../template/pageBands.js';
 import { required } from './types.js';
@@ -36,7 +37,7 @@ export function buildSections(intent: ExportIntent) {
     const hasScopedToc = sourceSections.some(s => s.rootIds.some((id: string) => nodes[id].type === 'table-of-contents' && !emptyContents.has(id) && nodes[id].props.scope?.kind === 'section'));
     for (const [index, s] of sourceSections.entries()) {
         if (!visibleSections.has(s)) continue;
-        const numbering = s.numbering ?? { mode: s.role === 'cover' ? 'exclude' : 'continue' }, mode = numbering.mode, hideNumbers = s.role === 'cover' || s.sourceKind === 'blank' || numbering.visibility === 'hide' || mode === 'exclude', page = s.page, pw = (page.orientation === 'portrait' ? 210 : 297) * 72 / 25.4, ph = (page.orientation === 'portrait' ? 297 : 210) * 72 / 25.4, sourceMargin = { top: toTwips(page.margin.top), right: toTwips(page.margin.right), bottom: toTwips(page.margin.bottom), left: toTwips(page.margin.left) }, margin: any = { ...sourceMargin, header: sourceMargin.top, footer: sourceMargin.bottom }, ctx: NavigationContext = { anchors, sectionName: bookmarkName('s', s.sectionId), leadingExcluded, hideNumbers, inBand: false };
+        const numbering = s.numbering ?? { mode: s.role === 'cover' ? 'exclude' : 'continue' }, mode = numbering.mode, hideNumbers = s.role === 'cover' || s.sourceKind === 'blank' || numbering.visibility === 'hide' || mode === 'exclude', page = s.page, [pw,ph]=paperSizePt(page), sourceMargin = { top: toTwips(page.margin.top), right: toTwips(page.margin.right), bottom: toTwips(page.margin.bottom), left: toTwips(page.margin.left) }, margin: any = { ...sourceMargin, header: sourceMargin.top, footer: sourceMargin.bottom }, ctx: NavigationContext = { anchors, sectionName: bookmarkName('s', s.sectionId), leadingExcluded, hideNumbers, inBand: false };
         if (s.role === 'cover') {
             let used = 0;
             const coverText=(id:string,width:number)=>{const n=nodes[id];if(n.props.heightMode==='fixed')return toPoints(n.props.height);const m=measuredReadingExtent(intent,'nodes',id,width);return m?Math.ceil(m.height*20)/20+m.lines:textEnvelope(intent,id,'nodes',width);};
@@ -162,7 +163,8 @@ export function buildSections(intent: ExportIntent) {
         if (mode !== 'exclude')
             firstIncluded = false;
         const bodyBorder={style:'single',color:'000000',size:4,space:0} as const;
-        sections.push({ properties: { type: SectionType.NEXT_PAGE, titlePage: true, page: { size: { width: Math.round(210 * 72 / 25.4 * 20), height: Math.round(297 * 72 / 25.4 * 20), orientation: page.orientation === 'portrait' ? PageOrientation.PORTRAIT : PageOrientation.LANDSCAPE }, margin, ...(s.bodySideBorders?{borders:{pageBorders:{offsetFrom:'text' as const},pageBorderLeft:bodyBorder,pageBorderRight:bodyBorder}}:{}), pageNumbers: startAt === undefined ? {} : { start: startAt } } }, headers: groups.header, footers: groups.footer, children });
+        const [portraitWidth,portraitHeight]=paperSizePt({...page,orientation:'portrait'});
+        sections.push({ properties: { type: SectionType.NEXT_PAGE, titlePage: true, page: { size: { width:Math.round(portraitWidth*20), height:Math.round(portraitHeight*20), orientation: page.orientation === 'portrait' ? PageOrientation.PORTRAIT : PageOrientation.LANDSCAPE }, margin, ...(s.bodySideBorders?{borders:{pageBorders:{offsetFrom:'text' as const},pageBorderLeft:bodyBorder,pageBorderRight:bodyBorder}}:{}), pageNumbers: startAt === undefined ? {} : { start: startAt } } }, headers: groups.header, footers: groups.footer, children });
         receipts.push({ sectionId: s.sectionId, role: s.role, sourceKind: s.sourceKind, numbering: { ...numbering, visibility: hideNumbers ? 'hide' : 'show', nativeStart: startAt }, header: bandReceipt.header, footer: bandReceipt.footer, sourceMarginTwips: sourceMargin, reservedMarginTwips: margin, nativeMarginTwips: { ...margin }, estimatedMaximumMarginTwips: { ...estimated }, capacityByPageType, maximumBandReservation: !dynamicHeader, bodyHeightBasis: 'minimum-estimated-page-type', bodyHeightPt: bodyHeight, structuralScopeParagraphs: hasScopedToc ? 2 : 0, tableSpaces: flow.receipt.tableSpaces, tableSeparators: flow.receipt.tableSeparators, wordPaginationVerified: false });
     }
     return { sections, receipts, omittedSections, footnotes,endingAreas,anchors: [...anchors].map(([source]) => ({ source, name: bookmarkName('a', source) })), leadingExcluded, imageReferences };
