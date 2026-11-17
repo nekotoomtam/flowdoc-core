@@ -40,7 +40,7 @@ export function validateOwnedTemplate(input: unknown): Result<ValidatedTemplate>
         issues.push(...validateNumbering(s, p));
         if ((s.source?.kind === 'content' || own(s,'formats') || own(s,'key')))
             fail(p + '.source');
-        validateSchemas(s.inputSchema, p + '.inputSchema', issues, false, true, true, true, true, 2);
+        validateSchemas(s.inputSchema, p + '.inputSchema', issues, false, true, true, true, true, 2, 0, true);
         schemas.push(s.inputSchema);
         for (const k of ['header', 'footer'])
             if (own(s, k) && !issues.length)

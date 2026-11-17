@@ -82,3 +82,25 @@ it('keeps Section TOCs use-local and rejects a duplicated document TOC after exp
  t.sections[0].source.fragment.nodes.toc.props.scope.kind='document';delete t.sections[1].source.fragment.nodes.toc;t.sections[1].source.fragment.rootIds=t.sections[1].source.fragment.rootIds.filter((s:string)=>s!=='toc');
  const x=take(validateTemplate(t));expect(composeDocument(x,take(prepareGeneration(x,assemblyRequest(t)))).ok).toBe(false);
 });
+it('derives Winner SAY text independently and identically for direct and task assembly',async()=>{
+ const t=assemblyTemplate();t.sections=t.sections.slice(0,1);
+ const section=t.sections[0];
+ Object.assign(section.inputSchema.fields,{unit:{type:'string'},sayText:{type:'string',computed:{calculation:'packageQuantityInWords',inputs:{quantity:'name',unit:'unit'}}}});
+ section.source.fragment.nodes.text.children=[{id:'say',type:'field-ref',scope:'section',key:'sayText'}];
+ const q=assemblyRequest(t);q.sections=[{sectionKey:'A',instanceKey:'bl-a',data:{name:'1',unit:' tank '}},{sectionKey:'A',instanceKey:'bl-b',data:{name:'3',unit:'box'}}];
+ const v=take(validateTemplate(t)),p=take(prepareGeneration(v,q)),d=take(composeDocument(v,p));
+ expect(d.rootIds.map((id:string)=>d.nodes[id].children[0].text)).toEqual(['SAY 1 : ONE TANK ONLY.','SAY 1 : THREE BOX ONLY.']);
+ let normalized='';
+ const task=(raw:unknown)=>normalizeTaskInput(v,value(raw),{write:async c=>{normalized+=c},images:{collect:async()=>{},seal:async()=>{},resolve:async()=>{throw Error('no image')}}});
+ take(await task({data:q.data,sections:q.sections}));
+ const stored=JSON.parse(normalized);
+ expect(await composeTaskDocument(v,value(stored))).toEqual({ok:true,value:d,warnings:[]});
+ stored.sections[0].data.sayText='forged';
+ expect((await composeTaskDocument(v,value(stored))).ok).toBe(false);
+ const spoof=structuredClone(q);Object.assign(spoof.sections[0].data,{sayText:'forged'});
+ expect(prepareGeneration(v,spoof).ok).toBe(false);
+ expect((await task({data:spoof.data,sections:spoof.sections})).ok).toBe(false);
+ q.sections[0].data.name='1.5';
+ expect(prepareGeneration(v,q).ok).toBe(false);
+ expect((await task({data:q.data,sections:q.sections})).ok).toBe(false);
+});

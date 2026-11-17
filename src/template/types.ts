@@ -1,6 +1,7 @@
 import type {BoundLink} from '../composition/linkContract.js';
 import type {ResolvedDocument,TextBlock,TextInline,Table,TableRow,TableCell,PageBreak,ImageBlock,ContentsBlock,LineBlock} from '../composition/resolvedDocument.js';
-export interface StringField {type:'string';required?:boolean;default?:string;allowEmpty?:boolean;label?:string;description?:string}
+export interface ComputedText {calculation:'packageQuantityInWords';inputs:{quantity:string;unit:string}}
+export interface StringField {type:'string';required?:boolean;default?:string;allowEmpty?:boolean;computed?:ComputedText;label?:string;description?:string}
 export interface ImageField {type:'image';required?:boolean;default?:string;label?:string;description?:string}
 export interface LinkField {type:'link';required?:boolean;default?:BoundLink;label?:string;description?:string}
 export type BindingScope='global'|'section'|'header'|'footer'|'local'|'group'|'item';

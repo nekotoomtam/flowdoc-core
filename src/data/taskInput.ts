@@ -1,6 +1,7 @@
 import {assemblyKey,instanceSectionId,coverOrder} from './prepareAssembly.js';
 import type {ValidatedTemplate,ObjectSchema,AreaField,ArrayField,StringField,ImageField,LinkField} from '../template/types.js';
 import type {Result,Issue} from '../result.js';
+import {calculateComputedText} from './computedValues.js';
 import {validateField} from './validateValues.js';
 import {TemplateAccess} from '../template/taskAccess.js';
 import {retainTaskRecord} from './taskRecord.js';
@@ -42,7 +43,18 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
  async function dataBody(schema:ObjectSchema,v:TaskValue|undefined,path:string,sectionId:string|null){
   const source=v??memory({}),plan=access.schema(schema);await keys(source,path,plan.keys,true);await write('{');let first=true;
   for(const [k,f] of plan.entries){check();if(!first)await write(',');first=false;await write(JSON.stringify(k)+':');const value=await get(source,k),p=path+'/'+esc(k);
-   await field(f,value,p,sectionId);
+   if(f.type==='string'&&f.computed){
+    if(value&&!normalized)fail('INVALID_DATA',p);
+    const {quantity,unit}=f.computed.inputs;
+    async function input(key:string){
+     const raw=await get(source,key);
+     return raw?scalar(raw,path+'/'+esc(key)):(schema.fields[key] as StringField).default??'';
+    }
+    const result=calculateComputedText(await input(quantity),await input(unit));
+    if(result===undefined)fail('INVALID_DATA',path+'/'+esc(quantity));
+    if(normalized&&(!value||await scalar(value,p)!==result))fail('INVALID_DATA',p);
+    await write(JSON.stringify(result));
+   }else await field(f,value,p,sectionId);
   }await write('}');
  }
  type Field=StringField|ArrayField|ImageField|LinkField|AreaField;

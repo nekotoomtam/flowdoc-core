@@ -5,6 +5,7 @@ import type {Issue} from '../result.js';
 import type {ObjectSchema,StringField,ArrayField,ImageField,LinkField,AreaField} from '../template/types.js';
 import type {PreparedData,PreparedItem} from './types.js';
 import {object,own,text,issue} from '../template/checks.js';
+import {calculateComputedText} from './computedValues.js';
 export type ValueMode='request'|'prepared';
 export const actualType=(v:unknown)=>v===null?'null':Array.isArray(v)?'array':typeof v==='undefined'?'null':typeof v as 'string'|'number'|'boolean'|'object'|'array'|'null';
 export function validateValues(schema:ObjectSchema,input:unknown,path:string,issues:Issue[],warnings:Issue[],mode:ValueMode='request',missing=false,areaIndex?:AreaIndex):PreparedData {
@@ -20,12 +21,22 @@ export function validateValues(schema:ObjectSchema,input:unknown,path:string,iss
  }
  for(const [key,field] of Object.entries(schema.fields)){
   const p=path+'.'+key;
+  if(field.type==='string'&&field.computed)continue;
   if(field.type==='area'){if(!areaIndex)issues.push(issue('INVALID_DATA',p));else store(key,prepareAreaValue(areaIndex,field.areaId,data[key],p,issues,warnings,!own(data,key),mode));continue;}
   if(!own(data,key)){
    if(mode==='prepared'||field.required){issues.push(issue(mode==='prepared'?'INVALID_DATA':'MISSING_REQUIRED',p));continue;}
    if(own(field,'default'))store(key,validateField(field,structuredClone(field.default),p,issues,warnings,mode));
    else store(key,field.type==='array'?[]:'');
   }else store(key,validateField(field,data[key],p,issues,warnings,mode));
+ }
+ for(const [key,field] of Object.entries(schema.fields)){
+  if(field.type!=='string'||!field.computed)continue;
+  const p=path+'.'+key,{quantity,unit}=field.computed.inputs;
+  if(mode==='request'&&own(data,key)){issues.push(issue('INVALID_DATA',p,'Computed variable is read-only'));continue;}
+  const result=calculateComputedText(out[quantity],out[unit]);
+  if(result===undefined){issues.push(issue('INVALID_DATA',path+'.'+quantity,'Enter a non-negative whole package quantity'));continue;}
+  if(mode==='prepared'&&(!own(data,key)||data[key]!==result))issues.push(issue('INVALID_DATA',p));
+  else store(key,result);
  }
  return out;
 }
