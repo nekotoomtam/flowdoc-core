@@ -22,6 +22,8 @@ it('keeps the final Area once in editable native page-bottom content without a v
  const z=await JSZip.loadAsync(Buffer.concat(sink.chunks)),body=await z.file('word/document.xml')!.async('string'),notes=await z.file('word/footnotes.xml')!.async('string');
  expect(body).toContain('>BODY</w:t>');expect(body).not.toContain('>SIGN</w:t>');expect(notes.match(/>SIGN<\/w:t>/g)).toHaveLength(1);
  expect(body).toContain('w:customMarkFollows="1"');expect(notes).not.toContain('<w:footnoteRef');expect(notes).not.toContain('<w:separator');expect(notes).not.toContain('<w:continuationSeparator');
+ const settings=await z.file('word/settings.xml')!.async('string');
+ expect(settings).toContain('<w:footnotePr><w:pos w:val="pageBottom"/><w:footnote w:id="-1"/><w:footnote w:id="0"/></w:footnotePr>');
  expect(body).not.toContain('w:txbxContent');expect((body.match(/<w:sectPr/g)??[])).toHaveLength(1);expect(JSON.stringify(d)).toBe(before);
  expect(r.value.adaptations).toContainEqual(expect.objectContaining({kind:'ending-area',storage:'native-page-bottom-note',wordVerified:false}));
 });

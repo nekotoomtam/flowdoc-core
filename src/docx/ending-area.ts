@@ -36,7 +36,13 @@ export async function finishEndingAreas(zip:any,areas:{keepTogether:boolean}[]){
  const notes=zip.file('word/footnotes.xml');if(!notes)throw Error('Missing ending Area note part');
  const empty='<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="1" w:lineRule="exact"/></w:pPr></w:p>';
  let xml=await notes.async('string');
- xml=xml.replace(/(<w:footnote\b[^>]*w:type="(?:separator|continuationSeparator)"[^>]*>)[\s\S]*?<\/w:footnote>/g,(_m:string,open:string)=>open+empty+'</w:footnote>');
+ const separators:string[]=[];
+ xml=xml.replace(/(<w:footnote\b[^>]*w:type="(?:separator|continuationSeparator)"[^>]*>)[\s\S]*?<\/w:footnote>/g,(_m:string,open:string)=>{
+  const id=/\bw:id="(-?\d+)"/.exec(open)?.[1];
+  if(id===undefined)throw Error('Missing ending Area separator ID');
+  separators.push('<w:footnote w:id="'+id+'"/>');
+  return open+empty+'</w:footnote>';
+ });
  xml=xml.replace(/<w:footnoteRef\s*\/>/g,'');zip.file('word/footnotes.xml',xml);
  xml=xml.replace(/(<w:footnote\b[^>]*w:id="(\d+)"[^>]*>)([\s\S]*?)<\/w:footnote>/g,(whole:string,open:string,id:string,content:string)=>{
   if(!areas[Number(id)-1]?.keepTogether)return whole;
@@ -49,5 +55,10 @@ export async function finishEndingAreas(zip:any,areas:{keepTogether:boolean}[]){
  });zip.file('word/footnotes.xml',xml);
  const settings=zip.file('word/settings.xml'),original=await settings.async('string');
  const pos='<w:pos w:val="pageBottom"/>';
- zip.file('word/settings.xml',original.includes('<w:footnotePr>')?original.replace('<w:footnotePr>','<w:footnotePr>'+pos):original.replace('</w:settings>','<w:footnotePr>'+pos+'</w:footnotePr></w:settings>'));
+ // Word synthesizes its stock separator unless settings reference the blank ones.
+ const refs=separators.join('');
+ const updated=original.includes('<w:footnotePr>')
+  ?original.replace('<w:footnotePr>','<w:footnotePr>'+pos).replace('</w:footnotePr>',refs+'</w:footnotePr>')
+  :original.replace(/<w:compat>|<\/w:settings>/,'<w:footnotePr>'+pos+refs+'</w:footnotePr>$&');
+ zip.file('word/settings.xml',updated);
 }
