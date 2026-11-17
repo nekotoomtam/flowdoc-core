@@ -17,7 +17,7 @@ export interface PageBreak {id:string;type:'page-break'}
 export interface LineBlock {id:string;type:'line';props:{lineStyle?:import('./strokeStyle.js').StrokeKind;align?:'left'|'center'|'right';width?:Length;thickness?:Length;color?:string;spaceBefore?:Length;spaceAfter?:Length}}
 export interface ResolvedGroupLabel {cellId:string;sourceCellId:string;memberCount:number}
 export interface ResolvedRowGroup {groupId:string;groupIndex:number;rowIds:string[];prefixRowIds:string[];firstMemberRowId:string;empty:boolean;keepStart:boolean;groupLabel?:ResolvedGroupLabel}
-export interface Table {rowGroups?:ResolvedRowGroup[];id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean;headerFillColor?:string;borderColor?:string;borderStyle?:import('./strokeStyle.js').StrokeKind;borderWidth?:Length;borders?:Partial<Record<import('./strokeStyle.js').TableBorderSide,import('./strokeStyle.js').BorderStroke>>};columns:{width:Length}[];rowIds:string[]}
+export interface Table {rowGroups?:ResolvedRowGroup[];id:string;type:'table';props:{headerRowCount:number;repeatHeaderRows:boolean;extendVerticalBordersToBodyEnd?:boolean;headerFillColor?:string;borderColor?:string;borderStyle?:import('./strokeStyle.js').StrokeKind;borderWidth?:Length;borders?:Partial<Record<import('./strokeStyle.js').TableBorderSide,import('./strokeStyle.js').BorderStroke>>};columns:{width:Length}[];rowIds:string[]}
 export interface TableRow {id:string;type:'table-row';props:{allowBreak:boolean};cellIds:string[]}
 export type CellPadding=Partial<Record<'top'|'right'|'bottom'|'left',Length>>;
 export interface TableCell {id:string;type:'table-cell';props:{fillColor?:string;columnIndex?:number;rowSpan?:number;colSpan?:number;padding?:CellPadding};childIds:string[]}

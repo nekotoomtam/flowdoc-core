@@ -249,7 +249,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
             }
             else if (n.type === 'table') {
                 keys(n, ['id', 'type', 'props', 'columns', 'rowIds', 'rowGroups'], at);
-                keys(p, ['headerRowCount', 'repeatHeaderRows', 'headerFillColor', 'borderColor', 'borderStyle','borderWidth','borders'], at + '.props');
+                keys(p, ['headerRowCount', 'repeatHeaderRows', 'headerFillColor', 'borderColor', 'borderStyle','borderWidth','borders','extendVerticalBordersToBodyEnd'], at + '.props');
                 requireValue(tableStrokeErrors(p).length===0,at+'.props','Invalid shared table border style');
                 idList(n.rowIds, at + '.rowIds');
                 requireValue(Array.isArray(n.columns) && n.columns.length > 0 && Number.isSafeInteger(p.headerRowCount) && p.headerRowCount >= 0 && p.headerRowCount <= n.rowIds.length && typeof p.repeatHeaderRows === 'boolean', at + '.props', 'Invalid table/header');

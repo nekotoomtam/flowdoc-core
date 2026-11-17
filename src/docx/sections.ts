@@ -4,15 +4,18 @@ import {continuationBand,hasBandTables} from '../template/pageBands.js';
 import { required } from './types.js';
 import { deriveHeaderSpace, deriveFooterSpace } from './geometry-policy.js';
 import { headerSpaceEligibility } from './header-space.js';
-import { Header, Footer, Paragraph, PageBreak, TableOfContents, Bookmark, SectionType, PageOrientation, type ISectionOptions, type FileChild } from 'docx';
+import { Header, Footer, Paragraph, PageBreak, TableOfContents, Bookmark, SectionType, PageOrientation, Run, docPropertiesUniqueNumericId, type ISectionOptions, type FileChild } from 'docx';
 import { fail, type ExportIntent } from './types.js';
-import { toPoints, toTwips } from './units.js';
+import { columnGrid, toPoints, toTwips } from './units.js';
 import { buildBodyFlow, structuralParagraph } from './tables.js';
 import { anchorBookmarks, bookmarkName, type NavigationContext } from './fields.js';
 import { buildBand, nativeRule } from './bands.js';
 import { textEnvelope, concreteFontBounds } from './font-envelope.js';
 import {hasReadingMeasurements,measuredReadingExtent} from './reading-measurements.js';
 import {endingAreaAnchor,endingAreaEnvelope} from './ending-area.js';
+import {columnRuleTable} from '../composition/columnRules.js';
+import {resolveTableStroke} from '../composition/strokeStyle.js';
+import {compoundDrawing} from './compound-drawing.js';
 const take = (r: any) => { if (!r.ok)
     fail(r.issues[0].code, r.issues[0].path, r.issues[0].message); return r.value; };
 export function buildSections(intent: ExportIntent) {
@@ -70,6 +73,7 @@ export function buildSections(intent: ExportIntent) {
         }
         const bandReceipt: any = {}, groups: any = {}, estimated: any = { ...sourceMargin };
         let dynamicHeader = false, dynamicFooter = false;
+        const ruleTable=columnRuleTable(s,intent.document);
         const reservations={header:{first:sourceMargin.top,continuation:sourceMargin.top},footer:{first:sourceMargin.bottom,continuation:sourceMargin.bottom}};
         for (const kind of ['header', 'footer'] as const) {
             const b = s[kind], requested = s[kind + 'Mode'], effective = s.role === 'body' && s.sourceKind !== 'blank' ? requested : 'none';
@@ -86,8 +90,8 @@ export function buildSections(intent: ExportIntent) {
                 if (kind === 'header') dynamicHeader = mapHeaderGap || nativeTableFlow;
                 else dynamicFooter = nativeTableFlow;
                 const options={mapHeaderGap,bandCellOffsets:nativeTableFlow};
-                const first = effective === 'continuation' ? undefined : buildBand(intent, b, scope, page, ctx, options);
-                const later = effective === 'first' ? undefined : buildBand(intent, continuation, scope, page, ctx, options);
+                let first = effective === 'continuation' ? undefined : buildBand(intent, b, scope, page, ctx, options);
+                let later = effective === 'first' ? undefined : buildBand(intent, continuation, scope, page, ctx, options);
                 prepared = first ?? later;
                 prepared.spacePolicy = kind==='header'&&dynamicHeader ? 'native-visible-header' : dynamicFooter ? 'native-visible-footer' : 'maximum-reservation';
                 prepared.shape = nativeTableFlow?'content-table-band':eligibility.shape;
@@ -99,6 +103,25 @@ export function buildSections(intent: ExportIntent) {
                 reservations[kind]={first:reserve(first),continuation:reserve(later)};
                 estimated[edge] = Math.max(reservations[kind].first,reservations[kind].continuation);
                 if (!(kind==='header'?dynamicHeader:dynamicFooter)) margin[edge]=estimated[edge];
+                if(kind==='footer'&&ruleTable){
+                    const grid=columnGrid(ruleTable.columns.map(c=>c.width));
+                    const widthTwips=grid.reduce((total,w)=>total+w,0);
+                    const heightTwips=Math.round(ph*20)-estimated.top-estimated.bottom;
+                    if(heightTwips<=0)fail('DOCX_CAPABILITY_UNSUPPORTED',scope,'Column continuation needs a positive body height');
+                    const height=heightTwips/20,stroke=resolveTableStroke(ruleTable,'insideVertical');
+                    let x=0;
+                    const edges=grid.slice(0,-1).map(w=>{
+                        x+=w/20;
+                        return {x0:x,y0:0,x1:x,y1:height};
+                    });
+                    const firstTableCellRun=(topTwips:number)=>new Run({children:[compoundDrawing(docPropertiesUniqueNumericId(),
+                        widthTwips/20,height,0,heightTwips+topTwips,stroke,edges,
+                        'FlowDoc column continuation')]});
+                    // The drawing is attached to the first existing footer cell, so it
+                    // follows Word's actual footer position and adds no flow paragraph.
+                    first=buildBand(intent,b,scope,page,ctx,{...options,firstTableCellRun});
+                    later=buildBand(intent,continuation,scope,page,ctx,{...options,firstTableCellRun});
+                }
                 real = (firstPage: boolean) => {
                     const content = (firstPage ? first : later)!;
                     imageReferences += content.imageReferences;

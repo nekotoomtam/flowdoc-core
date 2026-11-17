@@ -3,7 +3,7 @@ import {resolveTableStroke,legacyTableStrokeGeometry} from '../composition/strok
 import {nativeStroke} from './borders.js';
 import { toPoints } from './units.js';
 import { deriveTableSpace, type TableSpaceDecision } from './geometry-policy.js';
-import { Table, TableRow, TableCell, Paragraph, WidthType, TableLayoutType, BorderStyle, VerticalMergeType, LineRuleType, type FileChild } from 'docx';
+import { Table, TableRow, TableCell, Paragraph, WidthType, TableLayoutType, BorderStyle, VerticalMergeType, LineRuleType, type FileChild, type Run } from 'docx';
 import { capture, fail, type ExportIntent, type Result } from './types.js';
 import { requireGenuineIntent } from './profile.js';
 import { deriveReadingPlan, type ReadingPlan } from './groups.js';
@@ -52,7 +52,7 @@ function textParts(intent: ExportIntent, id: string, plan: ReadingPlan, forceKee
  const fragments=plan.fragments.filter(f=>f.nodeId===id).sort((a,b)=>a.start-b.start);
  return fragments.map((f,i)=>take(buildTextParagraph(intent,id,{...f,keepNext:forceKeep||f.keepNext,ordinaryBodyOrCell:!protectedFlow&&!plan.edges.some(e=>e.from===id||e.to===id),...(navigation?{navigation}:{}),...(offsets?{spaceBeforeTwips:i===0?offsets.before:0,spaceAfterTwips:i===fragments.length-1?offsets.after:0}:{})})).paragraph);
 }
-export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext,bodyHeightPt?:number,scope='nodes',bandCellOffsets=false): Result<{
+export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext,bodyHeightPt?:number,scope='nodes',bandCellOffsets=false,firstCellRun?:(topTwips:number)=>Run): Result<{
     table: Table;
     receipt: {
         spacePolicy: TableSpaceReceipt;
@@ -196,6 +196,8 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                     structuralEmptyParagraphs++;
                 }
                 const fill = c.props.fillColor ?? (pos.row < n.props.headerRowCount ? n.props.headerFillColor : undefined);
+                if(firstCellRun&&row===0&&col===0)
+                    children[0]!.addRunToFront(firstCellRun(space.nativeTopTwips));
                 if(compound&&col===0){if(children.length!==1)fail('DOCX_CAPABILITY_UNSUPPORTED','nodes.'+nodeId,'B DOCX rows require one native paragraph per cell');for(const run of compound.draw(row))children[0]!.addRunToFront(run);}
                 // Make the perimeter explicit on each physical cell. A native
                 // vertical merge has no horizontal edge between its members.

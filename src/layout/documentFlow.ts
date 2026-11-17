@@ -1,4 +1,5 @@
 import {paperSizePt} from '../composition/paperSize.js';
+import {columnRuleTable} from '../composition/columnRules.js';
 import type { Issue } from '../result.js';
 import {FormatStop,formatCursor,formatWarning,instanceForNode} from './formatLayout.js';
 import type {FormatInstance} from '../composition/resolvedDocument.js';
@@ -38,6 +39,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     } = {}, bands: Partial<Record<'header' | 'footer', MeasuredBand>> = {};
     let continuationBands: typeof bands = {};
     let bodySideBorders=false;
+    let columnRules:{table:Table;xs:number[]}|undefined;
     let activeBands: Partial<Record<'header' | 'footer', ResolvedBand>> = {};
     const bandCache = new Map<string, MeasuredBand>();
     const setPage = (page: ResolvedDocument['book']['page']) => {
@@ -112,6 +114,13 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
             if(y2Pt>y1Pt)current.borders=[left,left+available].map(x=>({
                 nodeId:sectionId!,x1Pt:x,x2Pt:x,y1Pt,y2Pt,widthPt:.5,color:'000000',
             }));
+        }
+        if(columnRules){
+            const {table,xs}=columnRules,stroke=resolveTableStroke(table,'insideVertical');
+            current.borders??=[];
+            for(const x of xs)current.borders.push({
+                nodeId:table.id,x1Pt:x,x2Pt:x,y1Pt:g.top,y2Pt:g.bottom,...strokePaintProps(stroke),
+            });
         }
         for (const [kind, m, at] of [['header', g.h, g.hy], ['footer', g.f, g.fy]] as const) {
             if (!m)
@@ -193,6 +202,12 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         continuationBands = {};
         activeBands = section;
         bodySideBorders=section.bodySideBorders===true;
+        const ruleTable=columnRuleTable(section,d);
+        columnRules=undefined;
+        if(ruleTable){
+            let x=left;
+            columnRules={table:ruleTable,xs:ruleTable.columns.slice(0,-1).map(({width})=>(x+=toPt(width)))};
+        }
         if (pageRole === 'body')
             for (const k of ['header', 'footer'] as const) {
                 const b = activeBands[k];

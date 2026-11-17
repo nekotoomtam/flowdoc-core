@@ -28,6 +28,35 @@ function fixture(){
 function take<T>(result:{ok:true;value:T}|{ok:false;issues:unknown}):T{
  if(!result.ok)throw Error(JSON.stringify(result.issues));return result.value;
 }
+it('extends the first body table column rules to the repeated footer without adding flow content',async()=>{
+ const t=fixture(),s=t.sections[0],f=s.source.fragment;
+ const width={unit:'pt',value:150};
+ f.rootIds=['cargo'];
+ f.nodes={cargo:{id:'cargo',type:'table',props:{headerRowCount:0,repeatHeaderRows:false,extendVerticalBordersToBodyEnd:true},
+  columns:[{width},{width}],rowIds:['row']},row:{id:'row',type:'table-row',props:{allowBreak:false},cellIds:['a','b']},
+  a:{id:'a',type:'table-cell',props:{},childIds:[]},b:{id:'b',type:'table-cell',props:{},childIds:[]}};
+ const v=take(validateTemplate(t));
+ const d=take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:[{sectionKey:'A',instanceKey:'bill',data:{name:'A'}}]}))));
+ const [page]= (await documentFlow(d,fakeRuntime)).pages;
+ const line=page!.borders!.find(b=>b.nodeId.endsWith('cargo')&&b.x1Pt===b.x2Pt&&b.y2Pt-b.y1Pt>400)!;
+ expect(line).toBeDefined();
+ const engine=take(await createDocxEngine(fonts())),sink=staged();
+ take(await engine.generateDocxTo(d,noImages,sink.output,{textLayout:'native'}));
+ const zip=await JSZip.loadAsync(Buffer.concat(sink.chunks));
+ const footer=await zip.file('word/footer1.xml')!.async('string');
+ expect(footer).toMatch(/<wp:anchor[^>]*behindDoc="1"[^>]*layoutInCell="0"/);
+ expect(footer).toContain('<wp:wrapNone/>');
+ expect(footer).toContain('FlowDoc column continuation');
+ const body=await zip.file('word/document.xml')!.async('string');
+ expect(body.match(/<w:tr>/g)).toHaveLength(1);
+ const withoutFooter=structuredClone(t);
+ delete withoutFooter.sections[0].footer;
+ const unsupported=take(validateTemplate(withoutFooter));
+ const input=take(prepareGeneration(unsupported,{docKey:t.docKey,sections:[{sectionKey:'A',instanceKey:'bill',data:{name:'A'}}]}));
+ const rejected=composeDocument(unsupported,input);
+ expect(rejected.ok).toBe(false);
+ if(!rejected.ok)expect(rejected.issues[0]?.message).toContain('repeating table footer');
+});
 it('repeats merged header and footer tables with each Section use and reserves their body space',async()=>{
  const template=fixture(),v=take(validateTemplate(template));
  const sections=['Alpha','Beta'].map((name,i)=>({sectionKey:'A',instanceKey:'bill-'+i,data:{name}}));

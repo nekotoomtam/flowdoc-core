@@ -2,7 +2,7 @@ import {paperSizePt} from '../composition/paperSize.js';
 import { required } from './types.js';
 import {resolveLineStroke,strokeEnvelope} from '../composition/strokeStyle.js';
 import {nativeStroke} from './borders.js';
-import { Paragraph, Table, TableRow, TableCell, WidthType, TableLayoutType, BorderStyle, LineRuleType, type FileChild } from 'docx';
+import { Paragraph, Table, TableRow, TableCell, WidthType, TableLayoutType, BorderStyle, LineRuleType, type FileChild, type Run } from 'docx';
 import { fail, type ExportIntent } from './types.js';
 import { toPoints, toTwips, columnGrid } from './units.js';
 import { buildTextParagraph } from './text.js';
@@ -19,6 +19,7 @@ export function nativeRule(node: any, width: number) { const p = node.props, w =
 export function buildBand(intent: ExportIntent, band: any, scope: string, page: any, ctx: NavigationContext, options: {
     mapHeaderGap?: boolean;
     bandCellOffsets?: boolean;
+    firstTableCellRun?: (topTwips:number)=>Run;
 } = {}) {
     if (band.sizing?.mode === 'content' && (band.sizing.minHeight !== undefined || band.sizing.maxHeight !== undefined))
         fail('DOCX_CAPABILITY_UNSUPPORTED', scope + '.sizing', 'Min/max band fit awaits Word acceptance');
@@ -60,7 +61,8 @@ export function buildBand(intent: ExportIntent, band: any, scope: string, page: 
                 height+=measured.height;
                 overhead+=measured.overhead;
                 imageReferences+=measured.imageReferences;
-                children.push(take(buildTable(intent,id,{...ctx,inBand:true},undefined,scope,options.bandCellOffsets)).table);
+                children.push(take(buildTable(intent,id,{...ctx,inBand:true},undefined,scope,options.bandCellOffsets,
+                    id===band.rootIds[0]?options.firstTableCellRun:undefined)).table);
                 if(id!==ids.at(-1)){
                     children.push(structuralParagraph());
                     height+=1;

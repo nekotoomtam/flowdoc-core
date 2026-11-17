@@ -10,6 +10,7 @@ import { isJson } from '../template/checks.js';
 import {isFontSelection} from '../fonts/validateSelection.js';
 import type { Issue } from '../result.js';
 import {validEndingArea} from './endingArea.js';
+import {validColumnRuleScope} from './columnRules.js';
 const object = (v: unknown): v is Record<string, any> => !!v && typeof v === 'object' && !Array.isArray(v);
 const number = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v > 0;
 const name = (v: unknown) => typeof v === 'string' && v.length > 0;
@@ -54,6 +55,12 @@ export function validateResolvedDocument(input: unknown): Issue[] {
     }
     validateSections(d, issues);
     if(!issues.length)issues.push(...validateFormatInstances(d as ResolvedDocument));
+    if(!issues.length){
+        const document=d as ResolvedDocument;
+        for(const [index,section] of document.sections!.entries())
+            if(!validColumnRuleScope(section,document))issues.push({code:'LAYOUT_FAILED',
+                path:`sections[${index}].rootIds`,message:'Column continuation requires one unmerged body grid and a repeating table footer'});
+    }
     if(!issues.length){
         const scopes=new Set<string>();
         for(const node of Object.values(d.nodes) as any[])if(node.type==='table-of-contents'){
