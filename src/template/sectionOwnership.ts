@@ -1,3 +1,4 @@
+import {formulaSource} from '../data/numericValues.js';
 import { validateNumbering } from './pageNumbering.js';
 import {normalizeOutputName} from './outputName.js';
 import {isFormatSizing} from './formatSizing.js';
@@ -122,6 +123,9 @@ function validateOwnedAreas(t: import('./types.js').TemplateDefinition): Issue[]
             fail(p + '.repeats');
         else if (valid)
             issues.push(...validateOwnedGraph(t, place.section, f, p, false, place.topLevel ? f.fragment.rootIds : []));
+    }
+    for (const [i,s] of t.sections.entries()) for (const [key,f] of Object.entries(s?.inputSchema?.fields??{})) {
+        if (f?.type==='number' && own(f,'formula') && !formulaSource(f.formula,s.inputSchema,index)) fail('sections.'+i+'.inputSchema.fields.'+key+'.formula');
     }
     for (const [id, a] of index.byId) {
         if (placements.get(id)?.count !== 1 || !a.formatsByKey.size)

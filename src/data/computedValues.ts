@@ -12,7 +12,7 @@ export function isComputedText(value: unknown, schema: ObjectSchema): value is C
 
 const small=['ZERO','ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE','TEN','ELEVEN','TWELVE','THIRTEEN','FOURTEEN','FIFTEEN','SIXTEEN','SEVENTEEN','EIGHTEEN','NINETEEN'];
 const tens=['','','TWENTY','THIRTY','FORTY','FIFTY','SIXTY','SEVENTY','EIGHTY','NINETY'];
-const scales=['','THOUSAND','MILLION','BILLION','TRILLION'];
+const scales=['','THOUSAND','MILLION','BILLION','TRILLION','QUADRILLION'];
 
 function groupWords(group:number):string {
  const parts:string[]=[];
@@ -30,11 +30,15 @@ export function calculateComputedText(quantity:unknown,unit:unknown):string|unde
  const digits=quantity.trim().replaceAll(',','').replace(/^0+(?=\d)/,'');
  if(!digits)return quantity.trim()===''?'':undefined;
  if(!/^\d{1,15}$/.test(digits))return undefined;
+ const label=unit.trim().replace(/\s+/g,' ').toUpperCase();
+ return 'SAY 1 : '+englishInteger(digits)+(label?' '+label:'')+' ONLY.';
+}
+
+export function englishInteger(digits:string):string {
  const parts:string[]=[];
  for(let end=digits.length,scale=0;end>0;end-=3,scale++){
   const group=Number(digits.slice(Math.max(0,end-3),end));
   if(group)parts.unshift([groupWords(group),scales[scale]].filter(Boolean).join(' '));
  }
- const label=unit.trim().replace(/\s+/g,' ').toUpperCase();
- return 'SAY 1 : '+(parts.join(' ')||small[0])+(label?' '+label:'')+' ONLY.';
+ return parts.join(' ')||small[0]!;
 }

@@ -1,8 +1,8 @@
 import type {BoundLink} from '../composition/linkContract.js';
-export interface PreparedItem {[key:string]:string|BoundLink|PreparedItem[]}
+export interface PreparedItem {[key:string]:string|number|BoundLink|PreparedItem[]}
 import type {Issue} from '../result.js';
 export interface PreparedAreaValue {kind:'area';originalCount:number;entries:{originalIndex:number;format:string;formatId:string;data:PreparedData}[];skippedIndices:number[]}
-export type PreparedData=Record<string,string|BoundLink|PreparedItem[]|PreparedAreaValue>;
+export type PreparedData=Record<string,string|number|BoundLink|PreparedItem[]|PreparedAreaValue>;
 export interface PreparedInput {
  schemaVersion:3;template:{templateId:string;docKey:string;version:number;fingerprint:string;nodeModelVersion:20};
  sections:PreparedSection20[];

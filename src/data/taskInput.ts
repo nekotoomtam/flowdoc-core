@@ -1,6 +1,7 @@
 import {assemblyKey,instanceSectionId,coverOrder} from './prepareAssembly.js';
-import type {ValidatedTemplate,ObjectSchema,AreaField,ArrayField,StringField,ImageField,LinkField} from '../template/types.js';
+import type {ValidatedTemplate,ObjectSchema,AreaField,ArrayField,StringField,NumberField,ImageField,LinkField} from '../template/types.js';
 import type {Result,Issue} from '../result.js';
+import {formulaSource, NumericSum, validNumber} from './numericValues.js';
 import {calculateComputedText} from './computedValues.js';
 import {validateField} from './validateValues.js';
 import {TemplateAccess} from '../template/taskAccess.js';
@@ -43,7 +44,12 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
  async function dataBody(schema:ObjectSchema,v:TaskValue|undefined,path:string,sectionId:string|null){
   const source=v??memory({}),plan=access.schema(schema);await keys(source,path,plan.keys,true);await write('{');let first=true;
   for(const [k,f] of plan.entries){check();if(!first)await write(',');first=false;await write(JSON.stringify(k)+':');const value=await get(source,k),p=path+'/'+esc(k);
-   if(f.type==='string'&&f.computed){
+   if(f.type==='number'&&f.formula){
+    if(value&&!normalized)fail('INVALID_DATA',p);
+    const result=await taskSum(f,schema,source,path);
+    if(normalized&&(!value||await scalar(value,p)!==result))fail('INVALID_DATA',p);
+    await write(JSON.stringify(result));
+   }else if(f.type==='string'&&f.computed){
     if(value&&!normalized)fail('INVALID_DATA',p);
     const {quantity,unit}=f.computed.inputs;
     async function input(key:string){
@@ -57,7 +63,45 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
    }else await field(f,value,p,sectionId);
   }await write('}');
  }
- type Field=StringField|ArrayField|ImageField|LinkField|AreaField;
+ async function taskSum(f:NumberField,schema:ObjectSchema,source:TaskValue,path:string){
+  const config=formulaSource(f.formula,schema,index);
+  if(!config)return fail('INVALID_TEMPLATE',path);
+  const {area,formatKey,arrayField,valueField,field:input}=config;
+  const sum=new NumericSum(), areaPath=path+'/'+esc(area.key);
+  const entries=await get(source,area.key)??memory(area.field.default??[]);
+  if(await entries.kind()!=='array')return fail('TYPE_MISMATCH',areaPath);
+  const array=area.formatsByKey.get(formatKey)!.format.inputSchema.fields[arrayField] as ArrayField;
+  let i=0;
+  for await(const entry of entries.elements()){
+   check();const entryPath=areaPath+'/'+i++;
+   if(await entry.kind()!=='object')return fail('TYPE_MISMATCH',entryPath);
+   const lease=await retainTaskRecord(entry);
+   try{
+    if(await scalar(await get(lease.value,'format'),entryPath+'/format')!==formatKey)continue;
+    const data=await get(lease.value,'data');
+    if(!data||await data.kind()!=='object')return fail('TYPE_MISMATCH',entryPath+'/data');
+    const rowsPath=entryPath+'/data/'+esc(arrayField);
+    const raw=await get(data,arrayField);
+    if(!raw&&array.required)return fail('MISSING_REQUIRED',rowsPath);
+    const rows=raw??memory(array.default??[]);
+    if(await rows.kind()!=='array')return fail('TYPE_MISMATCH',rowsPath);
+    let j=0;
+    for await(const row of rows.elements()){
+     check();const rowPath=rowsPath+'/'+j++;
+     if(await row.kind()!=='object')return fail('TYPE_MISMATCH',rowPath);
+     const numberPath=rowPath+'/'+esc(valueField),v=await get(row,valueField);
+     if(!v&&input.required)return fail('MISSING_REQUIRED',numberPath);
+     const value=v?await scalar(v,numberPath):input.default??0;
+     if(!validNumber(value))return fail('TYPE_MISMATCH',numberPath);
+     sum.add(value);
+    }
+   }finally{lease.release();}
+  }
+  const result=sum.value();
+  if(!validNumber(result))return fail('INVALID_DATA',areaPath);
+  return result;
+ }
+ type Field=StringField|NumberField|ArrayField|ImageField|LinkField|AreaField;
  async function field(f:Field,v:TaskValue|undefined,path:string,sectionId:string|null){
   check();if(f.type==='image'){
    const context={sectionId,pointer:path,assetDefinition:false};if(v&&await v.kind()!=='scalar')await record(v,path,false);if(collecting){if(++collectedPlacements>limits.maxImagePlacements)fail('LIMIT_EXCEEDED',path);await options.images.collect(v,context);return;}
@@ -65,7 +109,7 @@ async function walkTaskInput(template:ValidatedTemplate,input:TaskValue,options:
    if(r.kind!=='task-image'||r.version!==1||(r.availability==='available'?!uuid.test(r.assetId):r.availability!=='unavailable'||!/^IMAGE_(SOURCE_MISSING|KEY_NOT_FOUND|UNUSABLE|LIMIT|SOURCE_CONFLICT)$/.test(r.reason)||!uuid.test(r.findingId)))throw Error('Invalid task image adapter result');
    summary.imagePlacements++;if(r.availability==='unavailable')summary.omittedPlacements++;await write(JSON.stringify(r));return;
   }
-  if(!v){if(f.required)fail('MISSING_REQUIRED',path);if('default' in f)v=memory(f.default);else if(f.type==='array'||f.type==='area')v=memory([]);else{await write('""');return;}}
+  if(!v){if(f.required)fail('MISSING_REQUIRED',path);if('default' in f)v=memory(f.default);else if(f.type==='array'||f.type==='area')v=memory([]);else if(f.type==='number')v=memory(0);else{await write('""');return;}}
   if(f.type==='array'){
    if(await v.kind()!=='array')fail('TYPE_MISMATCH',path);await write('[');let i=0;for await(const x of v.elements()){check();await record(x,path+'/'+i);if(i)await write(',');await data(f.items,x,path+'/'+i++,sectionId);}await write(']');return;
   }

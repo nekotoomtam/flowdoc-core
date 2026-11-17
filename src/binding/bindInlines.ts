@@ -1,3 +1,4 @@
+import { displayNumber } from './numberDisplay.js';
 import type {BoundLink} from '../composition/linkContract.js';
 import type {TextInline,SourceEntry,SourceOrigin} from '../composition/resolvedDocument.js';
 import type {TemplateInline,ScalarBinding} from '../template/types.js';
@@ -16,7 +17,8 @@ export function bindInlines(children:TemplateInline[],scopes:BindingScopes,prefi
    const command=Object.fromEntries(Object.entries(child).map(([key,value])=>[key,key==='id'?base:key==='type'?value:resolveScalar(value as ScalarBinding,scopes)]));
    add(command as TextInline);continue;
   }
-  const value=child.type==='text'?child.text:scopes[child.scope]![child.key];
+  const raw=child.type==='text'?child.text:scopes[child.scope]![child.key];
+  const value=typeof raw==='number'?displayNumber(raw,child.type==='field-ref'?child.numberDisplay:undefined):raw;
   if(typeof value!=='string'){add({id:base,...structuredClone(value as BoundLink)});continue;}
   const parts=value.replace(/\r\n?/g,'\n').split('\n');let serial=0;
   const expanded=child.type==='field-ref'||parts.length>1;

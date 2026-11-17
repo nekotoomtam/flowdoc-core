@@ -22,7 +22,7 @@ export function validatePageBand(b:any,styles:any,path:string,resolved=false,sco
  if(own(b,'gap')&&!bandLength(b.gap))fail(path+'.gap');
  if(own(b,'sizing')){const s=b.sizing;if(!object(s)||!['content','fixed'].includes(s.mode))fail(path+'.sizing');else if(s.mode==='fixed'){if(!keys(s,['mode','height'])||!bandLength(s.height)||toPt(s.height)<minimum)fail(path+'.sizing.height');}else{if(!keys(s,['mode','minHeight','maxHeight']))fail(path+'.sizing');for(const k of ['minHeight','maxHeight'])if(own(s,k)&&(!bandLength(s[k])||toPt(s[k])<minimum))fail(path+'.sizing.'+k);if(bandLength(s.minHeight)&&bandLength(s.maxHeight)&&toPt(s.minHeight)>toPt(s.maxHeight))fail(path+'.sizing');}}
  const empty={type:'object' as const,fields:{}};
- if(!resolved){validateSchemas(b.inputSchema,path+'.inputSchema',issues,false,true,true);if(object(b.inputSchema?.fields))for(const [key,f] of Object.entries(b.inputSchema.fields))if(!object(f)||!['string','image','link'].includes(f.type))fail(path+'.inputSchema.fields.'+key);}
+ if(!resolved){validateSchemas(b.inputSchema,path+'.inputSchema',issues,false,true,true);if(object(b.inputSchema?.fields))for(const [key,f] of Object.entries(b.inputSchema.fields))if(!object(f)||!['string','number','image','link'].includes(f.type))fail(path+'.inputSchema.fields.'+key);}
  const f=resolved?{rootIds:b.rootIds,nodes:b.nodes}:b.fragment;
  if(!object(f)||!keys(f,['rootIds','nodes'])||!Array.isArray(f.rootIds)||!object(f.nodes)){fail(path+'.fragment');return issues;}
  if(own(b,'firstPageOnly')&&(!Array.isArray(b.firstPageOnly)||new Set(b.firstPageOnly).size!==b.firstPageOnly.length||b.firstPageOnly.some((id:unknown)=>typeof id!=='string'||!f.rootIds.includes(id))))fail(path+'.firstPageOnly');

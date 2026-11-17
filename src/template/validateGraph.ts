@@ -82,7 +82,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
     if(c.type==='text'){if(!keys(c,['id','type','text'])||!text(c.text)||!c.text.length)fail(cp);}
     else if(c.type==='system-page-field'){if(!ctx.pageFields||!keys(c,['id','type','field','width'])||!['current','total','sectionTotal'].includes(c.field)||!object(c.width)||!keys(c.width,['value','unit'])||!['mm','pt'].includes(c.width.unit)||typeof c.width.value!=='number'||!Number.isFinite(c.width.value)||c.width.value<=0||!Number.isFinite(toPt(c.width as any)))fail(cp);}
     else if(c.type==='line-break'){if(!keys(c,['id','type']))fail(cp);}
-    else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.'))fail(cp);}
+    else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key','numberDisplay'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.')||(own(c,'numberDisplay')&&!['digits','words-th','words-en'].includes(c.numberDisplay)))fail(cp);}
     else if(ctx.links&&['url','link','reference'].includes(c.type)){
      const {id:_,targetInstanceKey,...command}=c;
      if(targetInstanceKey!==undefined&&(!ctx.assembly||c.type!=='reference'||typeof targetInstanceKey!=='string'||! /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(targetInstanceKey)))fail(cp+'.targetInstanceKey');
@@ -155,7 +155,7 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    if(n?.type==='text-block'&&Array.isArray(n.children)&&!ctx.resolved){
     const checkRef=(v:any,link=false)=>{const schema=v.scope==='item'?item:v.scope==='group'?group:scopes[v.scope];
      const type=schema&&typeof v.key==='string'&&own(schema.fields,v.key)?schema.fields[v.key]?.type:undefined;
-     if(type!=='string'&&!(link&&ctx.links&&type==='link'))fail(path+'.nodes.'+id+'.bindings',id);
+     if((own(v,'numberDisplay')&&type!=='number')||(type!=='string'&&!(link&&(type==='number'||ctx.links&&type==='link'))))fail(path+'.nodes.'+id+'.bindings',id);
     };
     if(scalarRef(n.props?.anchorId))checkRef(n.props.anchorId);
     for(const c of n.children){if(c?.type==='field-ref')checkRef(c,true);else if(c&&['url','link','reference'].includes(c.type))for(const v of Object.values(c))if(scalarRef(v))checkRef(v);}

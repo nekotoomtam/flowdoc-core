@@ -1,5 +1,5 @@
 import type {Issue} from '../result.js';
-import type {ObjectSchema,StringField,ArrayField,ImageField,LinkField} from './types.js';
+import type {ObjectSchema,StringField,NumberField,ArrayField,ImageField,LinkField} from './types.js';
 import {object,keys,own,name,issue} from './checks.js';
 import {validateField} from '../data/validateValues.js';
 import {isComputedText} from '../data/computedValues.js';
@@ -10,16 +10,17 @@ export function validateSchemas(input:unknown,path:string,issues:Issue[],item=fa
  for(const [key,f] of Object.entries(input.fields)){
   const p=path+'.fields.'+key,before=issues.length;
   if(!name(key)||key.includes('.')||!object(f)){fail(p);continue;}
-  if(!keys(f,f.type==='area'?['type','areaId','required','default','label','description']:(f.type==='image'||f.type==='link')?['type','required','default','label','description']:f.type==='string'?['type','required','default','allowEmpty','label','description',...(sectionComputed?['computed']:[])]:['type','required','default','items','label','description']))fail(p);
+  if(!keys(f,f.type==='area'?['type','areaId','required','default','label','description']:f.type==='number'?['type','required','default','label','description',...(sectionComputed?['formula']:[]) ]:(f.type==='image'||f.type==='link')?['type','required','default','label','description']:f.type==='string'?['type','required','default','allowEmpty','label','description',...(sectionComputed?['computed']:[])]:['type','required','default','items','label','description']))fail(p);
   for(const k of ['required','allowEmpty'])if(own(f,k)&&typeof f[k]!=='boolean')fail(p+'.'+k);
   for(const k of ['label','description'])if(own(f,k)&&typeof f[k]!=='string')fail(p+'.'+k);
+  if(own(f,'formula')&&(!sectionComputed||f.type!=='number'||own(f,'required')||own(f,'default')))fail(p+'.formula');
   if(own(f,'computed')&&(!sectionComputed||f.type!=='string'||!isComputedText(f.computed,input as unknown as ObjectSchema)
    ||['required','default','allowEmpty'].some(key=>own(f,key))))fail(p+'.computed');
   if(f.type==='area'&&areas&&!item){if(!name(f.areaId)||f.areaId.includes('~'))fail(p+'.areaId');}
   else if(f.type==='array'&&arrayDepth<maxArrayDepth)validateSchemas(f.items,p+'.items',issues,true,images,links,itemImages,false,maxArrayDepth,arrayDepth+1);
-  else if(f.type!=='string'&&!(f.type==='image'&&images&&(!item||itemImages))&&!(f.type==='link'&&links))fail(p+'.type');
+  else if(f.type!=='number'&&f.type!=='string'&&!(f.type==='image'&&images&&(!item||itemImages))&&!(f.type==='link'&&links))fail(p+'.type');
   if(f.type!=='area'&&issues.length===before&&own(f,'default')){
-   const errors:Issue[]=[],warnings:Issue[]=[];validateField(f as StringField|ArrayField|ImageField|LinkField,f.default,p+'.default',errors,warnings);
+   const errors:Issue[]=[],warnings:Issue[]=[];validateField(f as StringField|NumberField|ArrayField|ImageField|LinkField,f.default,p+'.default',errors,warnings);
    issues.push(...[...errors,...warnings].map(e=>({...e,code:'INVALID_TEMPLATE'})));
   }
  }

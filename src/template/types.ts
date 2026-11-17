@@ -1,6 +1,9 @@
 import type {BoundLink} from '../composition/linkContract.js';
 import type {ResolvedDocument,TextBlock,TextInline,Table,TableRow,TableCell,PageBreak,ImageBlock,ContentsBlock,LineBlock} from '../composition/resolvedDocument.js';
 export interface ComputedText {calculation:'packageQuantityInWords';inputs:{quantity:string;unit:string}}
+export interface NumberFormula {operation:'sum';source:{areaId:string;formatKey:string;arrayField:string;valueField:string}}
+export interface NumberField {type:'number';required?:boolean;default?:number;formula?:NumberFormula;label?:string;description?:string}
+export type NumberDisplay='digits'|'words-th'|'words-en';
 export interface StringField {type:'string';required?:boolean;default?:string;allowEmpty?:boolean;computed?:ComputedText;label?:string;description?:string}
 export interface ImageField {type:'image';required?:boolean;default?:string;label?:string;description?:string}
 export interface LinkField {type:'link';required?:boolean;default?:BoundLink;label?:string;description?:string}
@@ -8,9 +11,9 @@ export type BindingScope='global'|'section'|'header'|'footer'|'local'|'group'|'i
 export type ScalarBinding=string|{scope:BindingScope;key:string};
 export type TemplateLink={id:string}&({type:'url';value:ScalarBinding}|{type:'link';text:ScalarBinding;url:ScalarBinding}|{type:'reference';text:ScalarBinding;target:ScalarBinding;targetInstanceKey?:string});
 export type TemplateInline=Exclude<TextInline,{type:'url'|'link'|'reference'}>|FieldRef|TemplateLink;
-export interface ArrayField {type:'array';required?:boolean;default?:import('../data/types.js').PreparedItem[];items:ObjectSchema<StringField|LinkField|ImageField|ArrayField>;label?:string;description?:string}
-export interface ObjectSchema<F=StringField|ArrayField|ImageField|LinkField|AreaField> {type:'object';fields:Record<string,F>}
-export interface FieldRef {id:string;type:'field-ref';scope:BindingScope;key:string}
+export interface ArrayField {type:'array';required?:boolean;default?:import('../data/types.js').PreparedItem[];items:ObjectSchema<StringField|NumberField|LinkField|ImageField|ArrayField>;label?:string;description?:string}
+export interface ObjectSchema<F=StringField|NumberField|ArrayField|ImageField|LinkField|AreaField> {type:'object';fields:Record<string,F>}
+export interface FieldRef {id:string;type:'field-ref';scope:BindingScope;key:string;numberDisplay?:NumberDisplay}
 export type TemplateTextBlock=Omit<TextBlock,'children'|'props'>&{props:Omit<TextBlock['props'],'anchorId'>&{anchorId?:ScalarBinding};children:TemplateInline[]};
 export type TemplateImageBlock=Omit<ImageBlock,'props'>&{props:{width:ImageBlock['props']['width'];height:ImageBlock['props']['height'];align?:ImageBlock['props']['align'];source:{scope:BindingScope;key:string}}};
 export interface AreaEntry {format:string;data:Record<string,unknown>}
@@ -38,7 +41,7 @@ export type BandMode='all'|'first'|'continuation'|'none';
 export type BandSizing={mode:'content';minHeight?:import('../composition/resolvedDocument.js').Length;maxHeight?:import('../composition/resolvedDocument.js').Length}|{mode:'fixed';height:import('../composition/resolvedDocument.js').Length};
 export interface BandColumns {id:string;type:'columns';props:{gap?:import('../composition/resolvedDocument.js').Length};columns:{weight:number;childIds:string[]}[]}
 export interface BandPlacement {mode:"page";left:import("../composition/resolvedDocument.js").Length;right:import("../composition/resolvedDocument.js").Length;offset:import("../composition/resolvedDocument.js").Length}
-export interface PageBandDefinition {firstPageOnly?:string[];placement?:BandPlacement;inputSchema:ObjectSchema<StringField|ImageField|LinkField>;fragment:{rootIds:string[];nodes:Record<string,LineBlock|TemplateTextBlock|TemplateImageBlock|BandColumns|Table|TableRow|TableCell>};baseTextStyleId:string;sizing?:BandSizing;gap?:import('../composition/resolvedDocument.js').Length}
+export interface PageBandDefinition {firstPageOnly?:string[];placement?:BandPlacement;inputSchema:ObjectSchema<StringField|NumberField|ImageField|LinkField>;fragment:{rootIds:string[];nodes:Record<string,LineBlock|TemplateTextBlock|TemplateImageBlock|BandColumns|Table|TableRow|TableCell>};baseTextStyleId:string;sizing?:BandSizing;gap?:import('../composition/resolvedDocument.js').Length}
 
 export interface SectionDefinition extends TemplateSection {sectionKey:string;label:string;nameBase:string;origin?:{templateId:string;revision:number;sectionId:string};inputSchema:ObjectSchema;header?:PageBandDefinition;footer?:PageBandDefinition;numbering?:PageNumbering}
 export type Template20=TemplateBase&{nodeModelVersion:20;book:{contentSlot:'body';defaultPageLayoutId:string};pageLayouts:Record<string,PageLayout>;sections:SectionDefinition[]};

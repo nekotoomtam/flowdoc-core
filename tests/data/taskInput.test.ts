@@ -42,3 +42,42 @@ it('rejects a complete oversized parent Format record before collecting its nest
 it('enforces a separate image-placement limit before resolution/output',async()=>{
  const t=areaCover();t.areaFormats.panel.inputSchema.fields.rows={type:'array',required:true,items:{type:'object',fields:{photo:{type:'image'}}}};let raw='',collected=0;const r=await api.normalizeTaskInput(valid(t),value({data:{},sections:[{sectionKey:'document',instanceKey:'document',data:{parts:[{format:'panel',data:{rows:[{}, {}, {}]}}]}}]}),{limits:{maxImagePlacements:2},write:async s=>{raw+=s;},images:{collect:async()=>{collected++;},seal:async()=>{},resolve:async()=>available}});expect(r.ok).toBe(false);expect(r.issues[0].code).toBe('LIMIT_EXCEEDED');expect(collected).toBe(2);expect(raw).toBe('');
 });
+
+it('sums decimal Number values per Section in both preparation paths and binds the display separately',async()=>{
+ const t=areaCover();
+ const part=t.sections.find((s:any)=>s.sectionKey==='document');
+ const areaId=part.inputSchema.fields.parts.areaId;
+ part.inputSchema.fields.total={type:'number',formula:{operation:'sum',source:{areaId,formatKey:'panel',arrayField:'rows',valueField:'quantity'}}};
+ t.areaFormats.panel.inputSchema.fields.rows={type:'array',items:{type:'object',fields:{quantity:{type:'number',required:true}}}};
+ const block=Object.values(t.areaFormats.panel.fragment.nodes).find((n:any)=>n.type==='text-block') as any;
+ block.children=[
+  {id:'number',type:'field-ref',scope:'section',key:'total'},
+  {id:'thai',type:'field-ref',scope:'section',key:'total',numberDisplay:'words-th'},
+  {id:'english',type:'field-ref',scope:'section',key:'total',numberDisplay:'words-en'},
+ ];
+ const sections=[['first',[0.1,0.2]],['second',[32.50]],['empty',[]]].map(([instanceKey,nums]:any)=>({
+  sectionKey:'document',instanceKey,data:{parts:[{format:'panel',data:{rows:nums.map((quantity:number)=>({quantity}))}}]},
+ }));
+ const q={data:{},sections};
+ const template=valid(t),prepared=prepareGeneration(template,{docKey:t.docKey,...q});
+ expect(prepared.ok,JSON.stringify(prepared)).toBe(true);
+ if(!prepared.ok)throw Error('preview prepare failed');
+ expect(prepared.value.sections.map(s=>s.data.total)).toEqual([0.3,32.5,0]);
+ const {r,raw}=await run(t,q);
+ expect(r.ok,JSON.stringify(r)).toBe(true);
+ expect(JSON.parse(raw).sections.map((s:any)=>s.data.total)).toEqual([0.3,32.5,0]);
+ const composed=api.composeDocument(template,prepared.value);
+ expect(composed.ok,JSON.stringify(composed)).toBe(true);
+ const task=await api.composeTaskDocument(template,value(JSON.parse(raw)));
+ expect(task.ok,JSON.stringify(task)).toBe(true);
+ expect(task.value).toEqual(composed.value);
+ const printed=Object.values(composed.value.nodes).flatMap((n:any)=>n.children?.map((c:any)=>c.text)??[]);
+ expect(printed).toEqual(expect.arrayContaining(['0.3','ศูนย์จุดสาม','ZERO POINT THREE','สามสิบสองจุดห้า','THIRTY TWO POINT FIVE']));
+ const tampered=JSON.parse(raw);tampered.sections[0].data.total=1;
+ expect((await api.composeTaskDocument(template,value(tampered))).ok).toBe(false);
+ const override=structuredClone(q);override.sections[0].data.total=1;
+ expect((await run(t,override)).r.ok).toBe(false);
+ expect(prepareGeneration(template,{docKey:t.docKey,...override}).ok).toBe(false);
+ part.inputSchema.fields.total.formula.source.valueField='missing';
+ expect(validateTemplate(t).ok).toBe(false);
+});

@@ -2,9 +2,10 @@ import type {AreaIndex} from '../template/areas.js';
 import {prepareAreaValue} from './prepareAreas.js';
 import {validateLink} from '../composition/linkContract.js';
 import type {Issue} from '../result.js';
-import type {ObjectSchema,StringField,ArrayField,ImageField,LinkField,AreaField} from '../template/types.js';
+import type {ObjectSchema,StringField,NumberField,ArrayField,ImageField,LinkField,AreaField} from '../template/types.js';
 import type {PreparedData,PreparedItem} from './types.js';
 import {object,own,text,issue} from '../template/checks.js';
+import {formulaSource, NumericSum, validNumber} from './numericValues.js';
 import {calculateComputedText} from './computedValues.js';
 export type ValueMode='request'|'prepared';
 export const actualType=(v:unknown)=>v===null?'null':Array.isArray(v)?'array':typeof v==='undefined'?'null':typeof v as 'string'|'number'|'boolean'|'object'|'array'|'null';
@@ -21,15 +22,32 @@ export function validateValues(schema:ObjectSchema,input:unknown,path:string,iss
  }
  for(const [key,field] of Object.entries(schema.fields)){
   const p=path+'.'+key;
-  if(field.type==='string'&&field.computed)continue;
+  if(field.type==='string'&&field.computed||field.type==='number'&&field.formula)continue;
   if(field.type==='area'){if(!areaIndex)issues.push(issue('INVALID_DATA',p));else store(key,prepareAreaValue(areaIndex,field.areaId,data[key],p,issues,warnings,!own(data,key),mode));continue;}
   if(!own(data,key)){
    if(mode==='prepared'||field.required){issues.push(issue(mode==='prepared'?'INVALID_DATA':'MISSING_REQUIRED',p));continue;}
    if(own(field,'default'))store(key,validateField(field,structuredClone(field.default),p,issues,warnings,mode));
-   else store(key,field.type==='array'?[]:'');
+   else store(key,field.type==='array'?[]:field.type==='number'?0:'');
   }else store(key,validateField(field,data[key],p,issues,warnings,mode));
  }
  for(const [key,field] of Object.entries(schema.fields)){
+  if(field.type==='number'&&field.formula){
+   const p=path+'.'+key, source=areaIndex&&formulaSource(field.formula,schema,areaIndex);
+   if(mode==='request'&&own(data,key)){issues.push(issue('INVALID_DATA',p,'Formula variable is read-only'));continue;}
+   const area:unknown=source&&out[source.area.key];
+   if(!source||!object(area)||area.kind!=='area'||!Array.isArray(area.entries)){issues.push(issue('INVALID_DATA',p));continue;}
+   const sum=new NumericSum();
+   for(const entry of area.entries){
+    if(entry?.format!==source.formatKey)continue;
+    const rows=entry.data?.[source.arrayField];
+    if(!Array.isArray(rows))continue; // Source validation reports malformed prepared rows.
+    for(const row of rows){const value=row?.[source.valueField];if(validNumber(value))sum.add(value);}
+   }
+   const result=sum.value();
+   if(!validNumber(result)||mode==='prepared'&&(!own(data,key)||data[key]!==result))issues.push(issue('INVALID_DATA',p));
+   else store(key,result);
+   continue;
+  }
   if(field.type!=='string'||!field.computed)continue;
   const p=path+'.'+key,{quantity,unit}=field.computed.inputs;
   if(mode==='request'&&own(data,key)){issues.push(issue('INVALID_DATA',p,'Computed variable is read-only'));continue;}
@@ -40,7 +58,7 @@ export function validateValues(schema:ObjectSchema,input:unknown,path:string,iss
  }
  return out;
 }
-export function validateField(field:StringField|ArrayField|ImageField|LinkField|AreaField,value:unknown,path:string,issues:Issue[],warnings:Issue[],mode:ValueMode='request'):PreparedData[string] {
+export function validateField(field:StringField|NumberField|ArrayField|ImageField|LinkField|AreaField,value:unknown,path:string,issues:Issue[],warnings:Issue[],mode:ValueMode='request'):PreparedData[string] {
  if(field.type==='area'){issues.push(issue('INVALID_DATA',path));return [];}
  if(field.type==='link'){
   if(mode==='prepared'&&value===''&&!field.required&&!own(field,'default'))return '';
@@ -50,6 +68,10 @@ export function validateField(field:StringField|ArrayField|ImageField|LinkField|
  if(field.type==='image'){
   if(typeof value!=='string'){issues.push({...issue('TYPE_MISMATCH',path),expectedType:'image',actualType:actualType(value)});return '';}
   if(!(value===''&&!field.required)&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value))issues.push(issue('INVALID_DATA',path));
+  return value;
+ }
+ if(field.type==='number'){
+  if(!validNumber(value)){issues.push({...issue('TYPE_MISMATCH',path),expectedType:'number',actualType:actualType(value)});return 0;}
   return value;
  }
  if(field.type==='string'){
