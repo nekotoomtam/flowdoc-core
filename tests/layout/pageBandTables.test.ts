@@ -58,7 +58,10 @@ it('emits editable native tables including merged cells in both DOCX page bands'
  const v=take(validateTemplate(t));
  const d=take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:[{sectionKey:'A',instanceKey:'bill-0',data:{name:'A'}}]}))));
  const e=take(await createDocxEngine(fonts())),sink=staged();
- take(await e.generateDocxTo(d,noImages,sink.output,{textLayout:'native'}));
+ const receipt=take(await e.generateDocxTo(d,noImages,sink.output,{textLayout:'native'}));
+ const [footerSpace]=receipt.adaptations.filter((item:any)=>item.kind==='native-visible-footer-space') as any[];
+ expect(footerSpace).toBeDefined();
+ expect(footerSpace.capacityByPageType.first.bottomTwips).toBe(footerSpace.capacityByPageType.continuation.bottomTwips);
  const zip=await JSZip.loadAsync(Buffer.concat(sink.chunks));
  const document=await zip.file('word/document.xml')!.async('string');
  expect(document).toMatch(/<w:pgBorders[^>]*w:offsetFrom="text"[^>]*>.*<w:left [^>]*w:val="single"/);

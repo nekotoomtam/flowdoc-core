@@ -79,8 +79,9 @@ export function buildSections(intent: ExportIntent) {
                 const scope = 'sections.' + index + '.' + kind + '.nodes';
                 const eligibility = kind === 'header' ? headerSpaceEligibility(b) : { eligible: false };
                 const continuation = continuationBand(b);
+                // A repeated content-sized footer can also reserve its visible height in Word.
                 const nativeTableFlow = hasBandTables(b) && !b.placement && b.sizing?.mode!=='fixed' &&
-                    (!b.gap || toPoints(b.gap)===0) && (kind==='header' || effective==='all' && continuation!==b);
+                    (!b.gap || toPoints(b.gap)===0) && (kind==='header' || effective==='all');
                 const mapHeaderGap = kind === 'header' && eligibility.eligible;
                 if (kind === 'header') dynamicHeader = mapHeaderGap || nativeTableFlow;
                 else dynamicFooter = nativeTableFlow;
