@@ -4,11 +4,16 @@ import {measureText} from './measureText.js';
 import {toPt,type TextInline} from '../composition/resolvedDocument.js';
 import {measureNumber} from './fillContentsNumbers.js';
 export async function fillPageFields(draw:DrawDocument,runtime:TextRuntime):Promise<void>{
+ const sectionTotals=new Map<string,number>();
+ for(const {sectionId} of draw.pages)if(sectionId!==undefined)
+  sectionTotals.set(sectionId,(sectionTotals.get(sectionId)??0)+1);
+ const valueOf=(field:import('../composition/resolvedDocument.js').SystemPageField['field'],sectionId:string,n:NonNullable<DrawDocument['pages'][number]['pageNumbering']>)=>
+  field==='sectionTotal'?sectionTotals.get(sectionId)??null:n[field];
  for(const [i,slot] of (draw.pageFieldSlots??[]).entries()){
   const page=draw.pages[slot.pageIndex],n=page?.pageNumbering;
   if(!n)throw new LayoutError(slot.nodeId,'Missing system page metadata',slot.sectionId,'children.'+slot.fieldId);
   if(n.visibility==='hide')continue;
-  const value=n[slot.field];if(value===null)throw new LayoutError(slot.nodeId,'Current number is undefined on excluded page',slot.sectionId,'children.'+slot.fieldId);
+  const value=valueOf(slot.field,slot.sectionId,n);if(value===null)throw new LayoutError(slot.nodeId,'Current number is undefined on excluded page',slot.sectionId,'children.'+slot.fieldId);
   try{const run=await measureNumber(slot.nodeId,String(value),slot.style,slot.widthPt,runtime);page.commands.push({...run,id:`system-page-${i}`,bounds:{...run.bounds,xPt:slot.xPt+run.bounds.xPt,yPt:slot.yPt}});}catch(e){if(e instanceof LayoutError)throw new LayoutError(slot.nodeId,e.message,slot.sectionId,'children.'+slot.fieldId);throw e;}
  }
  // Compact fields reserve one line during pagination, then shape their final text.
@@ -20,7 +25,7 @@ export async function fillPageFields(draw:DrawDocument,runtime:TextRuntime):Prom
   const children:TextInline[]=[];
   for(const c of t.node.children){
    if(c.type!=='system-page-field'){children.push(c);continue;}
-   const value=n[c.field];
+   const value=valueOf(c.field,t.sectionId,n);
    if(value===null)throw new LayoutError(t.node.id,'Current number is undefined on excluded page',t.sectionId,'children.'+c.id);
    try{await measureNumber(t.node.id,String(value),t.style,toPt(c.width),runtime);}
    catch(e){if(e instanceof LayoutError)throw new LayoutError(t.node.id,e.message,t.sectionId,'children.'+c.id);throw e;}

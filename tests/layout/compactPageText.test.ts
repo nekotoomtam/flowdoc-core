@@ -47,3 +47,26 @@ it('rejects invalid options, ambiguous fixed alignment and use outside bands',()
  }
  const t=ownedTemplate();t.nodeModelVersion=20;const n=node();delete n.props.pageFieldLayout;n.children=[{id:'label',type:'text',text:'text'}];const s=t.sections[0];s.source={kind:'authored',fragment:{rootIds:['a'],nodes:{a:n}}};expect(validateTemplate(t).ok).toBe(false);
 });
+it('counts pages by Section instance for compact and reserved-slot page fields',async()=>{
+ const t=ownedTemplate();t.nodeModelVersion=20;
+ const section=t.sections[0];
+ section.numbering={mode:'restart',startAt:1};
+ const compact=node(),slots=node();
+ compact.children.at(-1).field='sectionTotal';
+ slots.children=[{id:'slot-total',type:'system-page-field',field:'sectionTotal',width:{unit:'pt',value:24}}];
+ slots.id='slot-block';slots.props={textStyleId:'body'};
+ section.header.fragment={rootIds:['a','slot-block'],nodes:{a:compact,'slot-block':slots}};
+ section.header.baseTextStyleId='body';
+ t.sections=[section];
+ const v=ok(validateTemplate(t)),q=ownedRequest(t);
+ const original=q.sections[0];
+ q.sections=[original,{...original,instanceKey:'new-bill'}];
+ const resolved=ok(composeDocument(v,ok(prepareGeneration(v,q))));
+ const flow=await documentFlow(resolved,fakeRuntime);
+ expect(flow.pages).toHaveLength(2);
+ await fillPageFields(flow,fakeRuntime);
+ for(const page of flow.pages){
+  expect(page.commands.filter(c=>c.id.startsWith('system-page-text')).map(c=>c.text)).toEqual(['Page 1 of 1']);
+  expect(page.commands.filter(c=>/^system-page-\d+$/.test(c.id)).map(c=>c.text)).toEqual(['1']);
+ }
+});

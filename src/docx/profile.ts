@@ -182,7 +182,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
                         keys(c, ['id', 'type'], cp);
                     else if (c.type === 'system-page-field') {
                         keys(c, ['id', 'type', 'field', 'width'], cp);
-                        requireValue(['current', 'total'].includes(c.field) && toPoints(c.width) > 0, cp, 'Invalid system field');
+                        requireValue(['current', 'total', 'sectionTotal'].includes(c.field) && toPoints(c.width) > 0, cp, 'Invalid system field');
                     }
                     else if (['url', 'link', 'reference'].includes(c.type)) {
                         keys(c, c.type === 'url' ? ['id', 'type', 'value'] : c.type === 'link' ? ['id', 'type', 'text', 'url'] : ['id', 'type', 'text', 'target'], cp);

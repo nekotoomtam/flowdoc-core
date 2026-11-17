@@ -21,6 +21,8 @@ export function pageField(field: string, run: IRunStylePropertiesOptions, ctx: N
     const positioned:IRunStylePropertiesOptions=positionHalfPoints===undefined?run:{...run,position:`${positionHalfPoints/2}pt`};
     if (field === 'current')
         return new Run({ ...positioned, children: [PageNumber.CURRENT] });
+    if(field==='sectionTotal')
+        return new Run({...positioned,children:[PageNumber.TOTAL_PAGES_IN_SECTION]});
     if (!ctx.leadingExcluded)
         return new Run({ ...positioned, children: [PageNumber.TOTAL_PAGES] });
     return new Run({ ...positioned, children: [mark('begin'), new StringContainer('w:instrText', '= '), PageNumber.TOTAL_PAGES, new StringContainer('w:instrText', ' - ' + ctx.leadingExcluded + ' '), mark('separate'), mark('end')] });

@@ -1,7 +1,7 @@
 import type {TextStyle} from '../composition/resolvedDocument.js';
 export interface PageText {pageIndex:number;sectionId:string;node:import('../composition/resolvedDocument.js').TextBlock;xPt:number;yPt:number;widthPt:number;style:TextStyle}
 export interface ContentsSlot {nodeId:string;anchorId:string;pageIndex:number;xPt:number;yPt:number;widthPt:number;style:TextStyle}
-export interface PageFieldSlot {pageIndex:number;sectionId:string;nodeId:string;fieldId:string;field:'current'|'total';xPt:number;yPt:number;widthPt:number;style:TextStyle}
+export interface PageFieldSlot {pageIndex:number;sectionId:string;nodeId:string;fieldId:string;field:import('../composition/resolvedDocument.js').SystemPageField['field'];xPt:number;yPt:number;widthPt:number;style:TextStyle}
 import type {BoundLink} from '../composition/linkContract.js';
 export interface LinkSpan {id:string;start:number;end:number;link:BoundLink}
 export interface LinkAnnotation {nodeId:string;linkId:string;rect:{xPt:number;yPt:number;widthPt:number;heightPt:number};destination:{type:'external';url:string}|{type:'internal';target:string}}
