@@ -69,7 +69,8 @@ export function buildSections(intent: ExportIntent) {
                 fail('DOCX_CAPABILITY_UNSUPPORTED', 'sections.' + index, 'Cover exceeds provisional one-page envelope');
         }
         const bandReceipt: any = {}, groups: any = {}, estimated: any = { ...sourceMargin };
-        let dynamicHeader = false;
+        let dynamicHeader = false, dynamicFooter = false;
+        const reservations={header:{first:sourceMargin.top,continuation:sourceMargin.top},footer:{first:sourceMargin.bottom,continuation:sourceMargin.bottom}};
         for (const kind of ['header', 'footer'] as const) {
             const b = s[kind], requested = s[kind + 'Mode'], effective = s.role === 'body' && s.sourceKind !== 'blank' ? requested : 'none';
             const makeEmpty = () => kind === 'header' ? new Header({ children: [structuralParagraph()] }) : new Footer({ children: [structuralParagraph()] });
@@ -77,23 +78,28 @@ export function buildSections(intent: ExportIntent) {
             if (b && effective !== 'none') {
                 const scope = 'sections.' + index + '.' + kind + '.nodes';
                 const eligibility = kind === 'header' ? headerSpaceEligibility(b) : { eligible: false };
-                const mapHeaderGap = kind === 'header' && eligibility.eligible;
-                if (kind === 'header')
-                    dynamicHeader = mapHeaderGap;
                 const continuation = continuationBand(b);
-                const first = effective === 'continuation' ? undefined : buildBand(intent, b, scope, page, ctx, { mapHeaderGap });
-                prepared = first ?? buildBand(intent, continuation, scope, page, ctx, { mapHeaderGap });
-                prepared.spacePolicy = mapHeaderGap ? 'native-visible-header' : 'maximum-reservation';
-                prepared.shape = eligibility.shape;
-                prepared.fallbackReason = kind === 'header' && !mapHeaderGap ? eligibility.reason : undefined;
+                const nativeTableFlow = hasBandTables(b) && !b.placement && b.sizing?.mode!=='fixed' &&
+                    (!b.gap || toPoints(b.gap)===0) && (kind==='header' || effective==='all' && continuation!==b);
+                const mapHeaderGap = kind === 'header' && eligibility.eligible;
+                if (kind === 'header') dynamicHeader = mapHeaderGap || nativeTableFlow;
+                else dynamicFooter = nativeTableFlow;
+                const options={mapHeaderGap,bandCellOffsets:nativeTableFlow};
+                const first = effective === 'continuation' ? undefined : buildBand(intent, b, scope, page, ctx, options);
+                const later = effective === 'first' ? undefined : buildBand(intent, continuation, scope, page, ctx, options);
+                prepared = first ?? later;
+                prepared.spacePolicy = kind==='header'&&dynamicHeader ? 'native-visible-header' : dynamicFooter ? 'native-visible-footer' : 'maximum-reservation';
+                prepared.shape = nativeTableFlow?'content-table-band':eligibility.shape;
+                prepared.fallbackReason = kind === 'header' && !dynamicHeader ? eligibility.reason : undefined;
                 const offset = prepared.offsetTwips ?? sourceMargin[kind === 'header' ? 'top' : 'bottom'];
                 margin[kind] = offset;
                 const edge = kind === 'header' ? 'top' : 'bottom';
-                estimated[edge] = Math.max(sourceMargin[edge], offset + prepared.reservedHeightTwips + prepared.gapTwips);
-                if (kind !== 'header' || !dynamicHeader)
-                    margin[edge] = estimated[edge];
+                const reserve=(band:typeof first)=>band?Math.max(sourceMargin[edge],offset+band.reservedHeightTwips+band.gapTwips):sourceMargin[edge];
+                reservations[kind]={first:reserve(first),continuation:reserve(later)};
+                estimated[edge] = Math.max(reservations[kind].first,reservations[kind].continuation);
+                if (!(kind==='header'?dynamicHeader:dynamicFooter)) margin[edge]=estimated[edge];
                 real = (firstPage: boolean) => {
-                    const content = firstPage || effective === 'continuation' ? prepared : buildBand(intent, continuation, scope, page, ctx, { mapHeaderGap });
+                    const content = (firstPage ? first : later)!;
                     imageReferences += content.imageReferences;
                     return kind === 'header' ? new Header({ children: content.children }) : new Footer({ children: content.children });
                 };
@@ -112,7 +118,13 @@ export function buildSections(intent: ExportIntent) {
         margin.footer = emptyFooterSpace.nativeDistanceTwips;
         bandReceipt.footer.nativeDistanceTwips = margin.footer;
         bandReceipt.footer.emptySpace = emptyFooterSpace;
-        const capacity = (first: boolean) => { const visible = s.headerMode === 'all' || s.headerMode === (first ? 'first' : 'continuation'), top = dynamicHeader && visible ? estimated.top : margin.top; return { topTwips: top, bottomTwips: margin.bottom, headerVisible: bandReceipt.header.spacePolicy !== 'none' && bandReceipt.header.mode !== 'none' && visible, bodyHeightPt: (ph * 20 - top - margin.bottom) / 20, estimated: true, wordFootprintVerified: false }; };
+        const capacity = (first: boolean) => {
+            const variant=first?'first':'continuation';
+            const visible=s.headerMode==='all'||s.headerMode===variant;
+            const top=dynamicHeader?reservations.header[variant]:margin.top;
+            const bottom=dynamicFooter?reservations.footer[variant]:margin.bottom;
+            return {topTwips:top,bottomTwips:bottom,headerVisible:bandReceipt.header.spacePolicy!=='none'&&bandReceipt.header.mode!=='none'&&visible,bodyHeightPt:(ph*20-top-bottom)/20,estimated:true,wordFootprintVerified:false};
+        };
         const capacityByPageType = { first: capacity(true), continuation: capacity(false) }, bodyHeight = Math.min(capacityByPageType.first.bodyHeightPt, capacityByPageType.continuation.bodyHeightPt), originalBody = (ph * 20 - sourceMargin.top - sourceMargin.bottom) / 20;
         const withBandTables=(bandReceipt.header.mode!=='none'&&hasBandTables(s.header))||(bandReceipt.footer.mode!=='none'&&hasBandTables(s.footer));
         if (bodyHeight <= 0 || !withBandTables&&(estimated.top - sourceMargin.top + estimated.bottom - sourceMargin.bottom) / 20 > originalBody * .4 + 1e-6)
@@ -169,7 +181,7 @@ export function buildSections(intent: ExportIntent) {
         const bodyBorder={style:'single',color:'000000',size:4,space:0} as const;
         const [portraitWidth,portraitHeight]=paperSizePt({...page,orientation:'portrait'});
         sections.push({ properties: { type: SectionType.NEXT_PAGE, titlePage: true, page: { size: { width:Math.round(portraitWidth*20), height:Math.round(portraitHeight*20), orientation: page.orientation === 'portrait' ? PageOrientation.PORTRAIT : PageOrientation.LANDSCAPE }, margin, ...(s.bodySideBorders?{borders:{pageBorders:{offsetFrom:'text' as const},pageBorderLeft:bodyBorder,pageBorderRight:bodyBorder}}:{}), pageNumbers: startAt === undefined ? {} : { start: startAt } } }, headers: groups.header, footers: groups.footer, children });
-        receipts.push({ sectionId: s.sectionId, role: s.role, sourceKind: s.sourceKind, numbering: { ...numbering, visibility: hideNumbers ? 'hide' : 'show', nativeStart: startAt }, header: bandReceipt.header, footer: bandReceipt.footer, sourceMarginTwips: sourceMargin, reservedMarginTwips: margin, nativeMarginTwips: { ...margin }, estimatedMaximumMarginTwips: { ...estimated }, capacityByPageType, maximumBandReservation: !dynamicHeader, bodyHeightBasis: 'minimum-estimated-page-type', bodyHeightPt: bodyHeight, structuralScopeParagraphs: hasScopedToc ? 2 : 0, tableSpaces: flow.receipt.tableSpaces, tableSeparators: flow.receipt.tableSeparators, wordPaginationVerified: false });
+        receipts.push({ sectionId: s.sectionId, role: s.role, sourceKind: s.sourceKind, numbering: { ...numbering, visibility: hideNumbers ? 'hide' : 'show', nativeStart: startAt }, header: bandReceipt.header, footer: bandReceipt.footer, sourceMarginTwips: sourceMargin, reservedMarginTwips: margin, nativeMarginTwips: { ...margin }, estimatedMaximumMarginTwips: { ...estimated }, capacityByPageType, maximumBandReservation: !dynamicHeader&&!dynamicFooter, bodyHeightBasis: 'minimum-estimated-page-type', bodyHeightPt: bodyHeight, structuralScopeParagraphs: hasScopedToc ? 2 : 0, tableSpaces: flow.receipt.tableSpaces, tableSeparators: flow.receipt.tableSeparators, wordPaginationVerified: false });
     }
     return { sections, receipts, omittedSections, footnotes,endingAreas,anchors: [...anchors].map(([source]) => ({ source, name: bookmarkName('a', source) })), leadingExcluded, imageReferences };
 }

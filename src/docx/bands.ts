@@ -18,6 +18,7 @@ export function nativeRule(node: any, width: number) { const p = node.props, w =
     fail('DOCX_GEOMETRY_UNREPRESENTABLE', 'nodes.' + node.id, 'Rule geometry cannot be represented'); const dx = p.align === 'right' ? width - w : p.align === 'center' ? (width - w) / 2 : 0,stroke={...resolveLineStroke(node),widthPt:t},envelope=strokeEnvelope(stroke); return { paragraph: new Paragraph({ run: { size: 2, sizeComplexScript: 2, bold: false, italics: false }, indent: { left: Math.round(dx * 20), right: Math.round((width - w - dx) * 20) }, spacing: { before, after:after+(stroke.style==='none'?Math.round(envelope*20):0), line: 20, lineRule: LineRuleType.EXACT }, border: { bottom: { ...nativeStroke(stroke), space: 0 } } }), heightPt: 1 + envelope + (before + after) / 20,quantization:{nodeId:node.id,sourceThicknessPt:sourceThickness,nativeThicknessPt:t,deltaPt:t-sourceThickness} }; }
 export function buildBand(intent: ExportIntent, band: any, scope: string, page: any, ctx: NavigationContext, options: {
     mapHeaderGap?: boolean;
+    bandCellOffsets?: boolean;
 } = {}) {
     if (band.sizing?.mode === 'content' && (band.sizing.minHeight !== undefined || band.sizing.maxHeight !== undefined))
         fail('DOCX_CAPABILITY_UNSUPPORTED', scope + '.sizing', 'Min/max band fit awaits Word acceptance');
@@ -59,7 +60,7 @@ export function buildBand(intent: ExportIntent, band: any, scope: string, page: 
                 height+=measured.height;
                 overhead+=measured.overhead;
                 imageReferences+=measured.imageReferences;
-                children.push(take(buildTable(intent,id,{...ctx,inBand:true},undefined,scope)).table);
+                children.push(take(buildTable(intent,id,{...ctx,inBand:true},undefined,scope,options.bandCellOffsets)).table);
                 if(id!==ids.at(-1)){
                     children.push(structuralParagraph());
                     height+=1;

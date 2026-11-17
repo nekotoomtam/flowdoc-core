@@ -22,7 +22,7 @@ export type TableSpaceReceipt = {
     policy: TableSpaceDecision['policy'];
     reason: string;
     horizontalPolicy: 'border-centre-inset' | 'border-centre-inset-preserve-width' | 'retain-native';
-    verticalOffsetPolicy:'row-minimum-margins-and-paragraph-offsets'|'retain-native';
+    verticalOffsetPolicy:'row-minimum-margins-and-paragraph-offsets'|'band-cell-paragraph-offsets'|'retain-native';
     mergedCellTopInsets:MergedCellTopInsetDecision[];
     cells: {
         nodeId: string;
@@ -47,12 +47,12 @@ const take = <T>(r: Result<T>): T => { if (!r.ok) {
     const e = required(r.issues[0], 'issues');
     fail(e.code, e.path ?? 'nodes', e.message);
 } return r.value; };
-export function structuralParagraph(afterTwips = 0) { return new Paragraph({ run: { size: 2, sizeComplexScript: 2, bold: false, italics: false }, spacing: { before: 0, after: afterTwips, line: 20, lineRule: LineRuleType.EXACT } }); }
+export function structuralParagraph(afterTwips = 0,beforeTwips = 0) { return new Paragraph({ run: { size: 2, sizeComplexScript: 2, bold: false, italics: false }, spacing: { before: beforeTwips, after: afterTwips, line: 20, lineRule: LineRuleType.EXACT } }); }
 function textParts(intent: ExportIntent, id: string, plan: ReadingPlan, forceKeep = false, navigation?: NavigationContext, protectedFlow = false,offsets?:{before:number;after:number}) {
  const fragments=plan.fragments.filter(f=>f.nodeId===id).sort((a,b)=>a.start-b.start);
  return fragments.map((f,i)=>take(buildTextParagraph(intent,id,{...f,keepNext:forceKeep||f.keepNext,ordinaryBodyOrCell:!protectedFlow&&!plan.edges.some(e=>e.from===id||e.to===id),...(navigation?{navigation}:{}),...(offsets?{spaceBeforeTwips:i===0?offsets.before:0,spaceAfterTwips:i===fragments.length-1?offsets.after:0}:{})})).paragraph);
 }
-export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext,bodyHeightPt?:number,scope='nodes'): Result<{
+export function buildTable(intent: ExportIntent, nodeId: string, navigation?: NavigationContext,bodyHeightPt?:number,scope='nodes',bandCellOffsets=false): Result<{
     table: Table;
     receipt: {
         spacePolicy: TableSpaceReceipt;
@@ -110,6 +110,14 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
         const spacePolicy: TableSpaceReceipt = { nodeId, scope, cellBorderPolicy: 'explicit-merged-cell-perimeter', terminalStrokeCompensationPt, policy: adapted ? 'border-centre-inset' : 'retain-native', horizontalPolicy: horizontal?(preserveWidth?'border-centre-inset-preserve-width':'border-centre-inset'):'retain-native',verticalOffsetPolicy:'retain-native', mergedCellTopInsets:[], reason: !plainTextGrid ? 'unverified-grid-or-content' : !allPadding ? 'unverified-vertical-padding' : 'bounded-half-stroke-inset', cells: mapped.cells.map((cell, i) => ({ nodeId: cell.nodeId, ...required(sourcePoints[i], 'table.padding'), sourceTopTwips: cell.paddingTwips.top, sourceBottomTwips: cell.paddingTwips.bottom, nativeTopTwips: adapted ? required(decisions[i], 'table.decision').nativeTopTwips : cell.paddingTwips.top, nativeBottomTwips: (adapted ? required(decisions[i], 'table.decision').nativeBottomTwips : cell.paddingTwips.bottom)-(terminalCells.has(cell.nodeId)?Math.round(terminalStrokeCompensationPt*20):0),paragraphBeforeTwips:0,paragraphAfterTwips:0,
             sourceLeftTwips:cell.paddingTwips.left,sourceRightTwips:cell.paddingTwips.right,
             nativeLeftTwips:cell.paddingTwips.left-(horizontal?5:0),nativeRightTwips:cell.paddingTwips.right+(horizontal?(preserveWidth?5:-5):0) })), baselinePolicy: metricParagraphs?'per-paragraph-metric-or-native':'native-at-least-unmatched', baselineMatchVerified: false };
+        if(inBand&&bandCellOffsets){
+            // Word shares vertical cell margins across a row, including vMerge continuations.
+            spacePolicy.verticalOffsetPolicy='band-cell-paragraph-offsets';
+            for(const cell of spacePolicy.cells){
+                cell.paragraphBeforeTwips=cell.nativeTopTwips;cell.nativeTopTwips=0;
+                cell.paragraphAfterTwips=cell.nativeBottomTwips;cell.nativeBottomTwips=0;
+            }
+        }
         const plan=inBand?undefined:take(deriveReadingPlan(intent));
         const hasVerticalMerge=mapped.cells.some(cell=>(nodes[cell.nodeId].props.rowSpan??1)>1);
         const isEndingArea=intent.document.sections?.some(s=>s.endingArea?.rootIds.includes(nodeId));
@@ -167,22 +175,24 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                 const pos = occupancy.get(row + ':' + col)!;
                 if (!pos || pos.col !== col)
                     fail('DOCX_INPUT_INVALID', 'nodes.' + nodeId, 'Invalid verified cell placement');
-                const c = nodes[pos.id], pad = mapped.cells.find(cell => cell.nodeId === pos.id)!.paddingTwips, continuation = pos.row !== row, children: Paragraph[] = [];
+                const c = nodes[pos.id], space=required(spacePolicy.cells.find(cell=>cell.nodeId===pos.id),'table.cell.space');
+                const continuation = pos.row !== row, children: Paragraph[] = [];
                 if (!continuation)
                     for (const child of c.childIds) {
+                        const offsets={before:child===c.childIds[0]?space.paragraphBeforeTwips:0,after:child===c.childIds.at(-1)?space.paragraphAfterTwips:0};
                         if(nodes[child].type==='text-block'&&inBand)
-                            children.push(take(buildTextParagraph(intent,child,{scope,...(navigation?{navigation}:{})})).paragraph);
+                            children.push(take(buildTextParagraph(intent,child,{scope,spaceBeforeTwips:offsets.before,spaceAfterTwips:offsets.after,...(navigation?{navigation}:{})})).paragraph);
                         else if (nodes[child].type === 'text-block'&&plan)
-                            children.push(...textParts(intent, child, plan, plan.keptRows[nodeId]?.includes(rid), navigation, row < n.props.headerRowCount || !nodes[rid].props.allowBreak || (n.rowGroups ?? []).some((g: any) => g.keepStart && g.prefixRowIds.length > 0 && g.rowIds.includes(rid)) || (c.props.rowSpan ?? 1) > 1 || (c.props.colSpan ?? 1) > 1 || plan.edges.some(e => e.from === nodeId || e.to === nodeId),{before:child===c.childIds[0]?spacePolicy.cells.find(v=>v.nodeId===pos.id)!.paragraphBeforeTwips:0,after:child===c.childIds.at(-1)?spacePolicy.cells.find(v=>v.nodeId===pos.id)!.paragraphAfterTwips:0}));
+                            children.push(...textParts(intent, child, plan, plan.keptRows[nodeId]?.includes(rid), navigation, row < n.props.headerRowCount || !nodes[rid].props.allowBreak || (n.rowGroups ?? []).some((g: any) => g.keepStart && g.prefixRowIds.length > 0 && g.rowIds.includes(rid)) || (c.props.rowSpan ?? 1) > 1 || (c.props.colSpan ?? 1) > 1 || plan.edges.some(e => e.from === nodeId || e.to === nodeId),offsets));
                         else if (nodes[child].type === 'image')
-                            children.push(take(buildImageParagraph(intent,child,scope)).paragraph);
+                            children.push(take(buildImageParagraph(intent,child,scope,inBand&&bandCellOffsets?offsets:undefined)).paragraph);
                         else
                             fail('DOCX_CAPABILITY_UNSUPPORTED', 'nodes.' + child, 'Unsupported cell content');
                     }
                 else
                     continuationCells++;
                 if (!children.length) {
-                    children.push(structuralParagraph());
+                    children.push(inBand&&bandCellOffsets&&!continuation?structuralParagraph(space.paragraphAfterTwips,space.paragraphBeforeTwips):structuralParagraph());
                     structuralEmptyParagraphs++;
                 }
                 const fill = c.props.fillColor ?? (pos.row < n.props.headerRowCount ? n.props.headerFillColor : undefined);
@@ -193,7 +203,7 @@ export function buildTable(intent: ExportIntent, nodeId: string, navigation?: Na
                 const topBorder=row===0?sides.top:row===n.props.headerRowCount?sides.headerBottom:sides.insideHorizontal;
                 const bottomBorder=row===n.rowIds.length-1?sides.bottom:row===n.props.headerRowCount-1?sides.headerBottom:sides.insideHorizontal;
                 const cellBorders = { ...(inheritOpenBodyEdges && row > n.props.headerRowCount ? {} : { top: continuation ? noBorder : topBorder }), ...(inheritOpenBodyEdges && row >= n.props.headerRowCount && row < n.rowIds.length - 1 ? {} : { bottom: row < pos.row + pos.rowSpan - 1 ? noBorder : bottomBorder }), left: col===0?sides.left:sides.insideVertical, right: col+pos.span===grid.length?sides.right:sides.insideVertical };
-                cells.push(new TableCell({ children, borders: cellBorders, width: { type: WidthType.DXA, size: grid.slice(col, col + pos.span).reduce((a, b) => a + b, 0) }, ...(pos.span > 1 ? { columnSpan: pos.span } : {}), ...(pos.rowSpan > 1 ? { verticalMerge: continuation ? VerticalMergeType.CONTINUE : VerticalMergeType.RESTART } : {}), margins: { top: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeTopTwips, right: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeRightTwips, bottom: spacePolicy.cells.find(c => c.nodeId === pos.id)!.nativeBottomTwips, left: spacePolicy.cells.find(c=>c.nodeId===pos.id)!.nativeLeftTwips }, ...(fill ? { shading: { fill } } : {}) }));
+                cells.push(new TableCell({ children, borders: cellBorders, width: { type: WidthType.DXA, size: grid.slice(col, col + pos.span).reduce((a, b) => a + b, 0) }, ...(pos.span > 1 ? { columnSpan: pos.span } : {}), ...(pos.rowSpan > 1 ? { verticalMerge: continuation ? VerticalMergeType.CONTINUE : VerticalMergeType.RESTART } : {}), margins: { top: space.nativeTopTwips, right: space.nativeRightTwips, bottom: space.nativeBottomTwips, left: space.nativeLeftTwips }, ...(fill ? { shading: { fill } } : {}) }));
                 col += pos.span;
             }
             rows.push(new TableRow({ children: cells, tableHeader: n.props.repeatHeaderRows && row < n.props.headerRowCount, cantSplit: inBand||!nodes[rid].props.allowBreak, keepNext: plan?.keptRows[nodeId]?.includes(rid) ?? false }));

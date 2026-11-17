@@ -108,6 +108,7 @@ it.each([['portrait',612,792],['landscape',792,612]])('uses Letter dimensions in
 it('outlines band-cell text and places selected footer roots on each Section first page',async()=>{
  const t=fixture(),s=t.sections[0];
  s.header.fragment.nodes.label.props.outline=true;
+ s.header.fragment.nodes.merged.props.padding={top:{unit:'pt',value:13},bottom:{unit:'pt',value:4}};
  s.header.fragment.nodes.label.children[0].text='H ';
  const footer=s.footer;
  footer.fragment.nodes.label.children[0].text='F ';
@@ -128,12 +129,19 @@ it('outlines band-cell text and places selected footer roots on each Section fir
   expect(bill.every(p=>p.borders!.filter(b=>b.nodeId.endsWith('band-header~label')).length===4)).toBe(true);
  }
  const engine=take(await createDocxEngine(fonts())),sink=staged();
- take(await engine.generateDocxTo(d,noImages,sink.output,{textLayout:'native'}));
+ const receipt=take(await engine.generateDocxTo(d,noImages,sink.output,{textLayout:'native'}));
+ const headersPolicy=receipt.adaptations.filter((item:any)=>item.kind==='native-visible-header-space');
+ const footersPolicy=receipt.adaptations.filter((item:any)=>item.kind==='native-visible-footer-space') as any[];
+ expect(headersPolicy).toHaveLength(2);
+ expect(footersPolicy).toHaveLength(2);
+ for(const item of footersPolicy)
+  expect(item.capacityByPageType.first.bottomTwips).toBeGreaterThan(item.capacityByPageType.continuation.bottomTwips);
  const zip=await JSZip.loadAsync(Buffer.concat(sink.chunks));
  const readBands=async (kind:string)=>Promise.all(Object.keys(zip.files).filter(file=>file.startsWith('word/'+kind)&&file.endsWith('.xml')).map(file=>zip.file(file)!.async('string')));
  const headers=await readBands('header'),footers=await readBands('footer');
  expect(headers).toHaveLength(4);
  expect(headers.every(xml=>xml.includes('<w:pBdr>'))).toBe(true);
+ expect(headers.every(xml=>xml.includes('w:before="260"')&&xml.includes('w:after="80"'))).toBe(true);
  expect(footers).toHaveLength(4);
  expect(footers.filter(xml=>xml.includes('>SAY </w:t>'))).toHaveLength(2);
 });

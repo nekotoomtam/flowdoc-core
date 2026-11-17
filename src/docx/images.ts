@@ -40,7 +40,7 @@ class ContainedImageRun extends Run {
     }
     prepForXml(context: IContext) { context.file.Media.addImage(this.fileName, { type: this.kind, fileName: this.fileName, data: this.bytes, transformation: createTransformation({ width: this.width / 9525, height: this.height / 9525 }) }); return super.prepForXml(context); }
 }
-export function buildImageParagraph(intent: ExportIntent, nodeId: string, scope = "nodes"): Result<{
+export function buildImageParagraph(intent: ExportIntent, nodeId: string, scope = "nodes", offsets?:{before:number;after:number}): Result<{
     paragraph: Paragraph;
     receipt: {
         nodeId: string;
@@ -69,7 +69,7 @@ export function buildImageParagraph(intent: ExportIntent, nodeId: string, scope 
         if (intentOmitsImage(intent, nodeId, scope)) {
             const widthTwips = toTwips(source.props.width, path + '.props.width'), heightTwips = toTwips(source.props.height, path + '.props.height');
             if (widthTwips < 1 || heightTwips < 1) fail('DOCX_GEOMETRY_UNREPRESENTABLE', path, 'Image frame quantizes to zero', nodeId);
-            const paragraph = new Paragraph({children:[new Run({size:2,sizeComplexScript:2,bold:false,italics:false,snapToGrid:false})],run:{size:2,sizeComplexScript:2,bold:false,italics:false},alignment:source.props.align??'left',spacing:{before:0,after:0,line:heightTwips,lineRule:LineRuleType.AT_LEAST}});
+            const paragraph = new Paragraph({children:[new Run({size:2,sizeComplexScript:2,bold:false,italics:false,snapToGrid:false})],run:{size:2,sizeComplexScript:2,bold:false,italics:false},alignment:source.props.align??'left',spacing:{before:offsets?.before??0,after:offsets?.after??0,line:heightTwips,lineRule:LineRuleType.AT_LEAST}});
             return {paragraph,receipt:{nodeId,resourceId:source.props.resourceId,sha256:null,frame:{widthTwips,heightTwips},picture:null,omitted:true,wrapper:{kind:'native-inline-drawing-paragraph',paragraphMarkSizeHalfPoints:2,minimumLineTwips:heightTwips,wordFootprintVerified:false},visualVerified:false}};
         }
         const meta: any = intent.resourceIdentities.find((r: any) => r.id === source.props.resourceId && r.width !== undefined);
@@ -81,7 +81,7 @@ export function buildImageParagraph(intent: ExportIntent, nodeId: string, scope 
         const fw = widthTwips * 635, fh = heightTwips * 635, ratio = Math.min(fw / meta.width, fh / meta.height), w = Math.round(meta.width * ratio), h = Math.round(meta.height * ratio);
         const picture = { widthEmu: w, heightEmu: h, xEmu: Math.round((fw - w) / 2), yEmu: Math.round((fh - h) / 2) };
         const bytes = intentResourceBytes(intent, 'image', meta.id);
-        const paragraph = new Paragraph({ children: [new ContainedImageRun(bytes, fw, fh, picture, meta.kind === 'jpeg' ? 'jpg' : 'png')], run: { size: 2, sizeComplexScript: 2, bold: false, italics: false }, alignment: source.props.align ?? 'left', spacing: { before: 0, after: 0, line: heightTwips, lineRule: LineRuleType.AT_LEAST } });
+        const paragraph = new Paragraph({ children: [new ContainedImageRun(bytes, fw, fh, picture, meta.kind === 'jpeg' ? 'jpg' : 'png')], run: { size: 2, sizeComplexScript: 2, bold: false, italics: false }, alignment: source.props.align ?? 'left', spacing: { before: offsets?.before??0, after: offsets?.after??0, line: heightTwips, lineRule: LineRuleType.AT_LEAST } });
         return { paragraph, receipt: { nodeId, resourceId: meta.id, sha256: meta.sha256, frame: { widthTwips, heightTwips }, picture, wrapper: { kind: 'native-inline-drawing-paragraph', paragraphMarkSizeHalfPoints: 2, minimumLineTwips: heightTwips, wordFootprintVerified: false }, visualVerified: false } };
     });
 }

@@ -245,6 +245,8 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
                 adaptations.push({ kind: 'native-visible-header-space', sectionId: s.sectionId, shape: s.header.shape, nativeTopTwips: s.nativeMarginTwips.top, gapTwips: s.header.gapTwips, capacityByPageType: s.capacityByPageType, estimated: true, wordVerified: false });
             else if (s.header.fallbackReason)
                 adaptations.push({ kind: 'maximum-header-space-fallback', sectionId: s.sectionId, reason: s.header.fallbackReason, nativeTopTwips: s.nativeMarginTwips.top });
+            if (s.footer.spacePolicy === 'native-visible-footer')
+                adaptations.push({ kind: 'native-visible-footer-space', sectionId: s.sectionId, nativeBottomTwips: s.nativeMarginTwips.bottom, capacityByPageType: s.capacityByPageType, estimated: true, wordVerified: false });
         }
         const receipt: DocxReceipt = freeze({ mediaType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', sha256: hash(bytes), bytes: bytes.length, sourceDigest: intent.sourceDigest, profileId: intent.profileId, fieldRefresh: 'required', wordVerified: false, resources: intent.resourceIdentities, autoFormats: intent.document.formatInstances ?? [], sections: receiptFacts.receipts, bookmarks: receiptFacts.anchors, numbering: { leadingExcludedSections: receiptFacts.leadingExcluded, fieldDigitEnvelope: fieldDigitBudget(intent) }, adaptations, buffered: true });
         cancelled(options);
