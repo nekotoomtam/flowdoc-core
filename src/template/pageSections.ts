@@ -31,11 +31,12 @@ export function validatePageSections(t: Record<string, any>): Issue[] {
     let content = 0;
     for (const [i, s] of t.sections.entries()) {
         const p = `sections[${i}]`;
-        if (!object(s) || !keys(s, ['id', 'label', 'pageLayoutId', 'source', ...(['numbering']), ...(['inputSchema', 'header', 'footer']), ...(['headerMode', 'footerMode']), ...(['role']),...(['nameBase','origin','sectionKey'])]) || !id(s.id) || seen.has(s.id)) {
+        if (!object(s) || !keys(s, ['id', 'label', 'pageLayoutId', 'source', 'bodySideBorders', ...(['numbering']), ...(['inputSchema', 'header', 'footer']), ...(['headerMode', 'footerMode']), ...(['role']),...(['nameBase','origin','sectionKey'])]) || !id(s.id) || seen.has(s.id)) {
             fail(p);
             continue;
         }
         seen.add(s.id);
+        if(own(s,'bodySideBorders')&&typeof s.bodySideBorders!=='boolean')fail(p+'.bodySideBorders');
         {if(typeof s.sectionKey!=='string'||! /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(s.sectionKey)||publicKeys.has(s.sectionKey))fail(p+'.sectionKey');publicKeys.add(s.sectionKey);}
         {
          if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.id)||!name(s.label)||!name(s.nameBase))fail(p);

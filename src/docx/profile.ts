@@ -357,7 +357,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
         const roots: string[] = [];
         for (const [i, s] of d.sections.entries()) {
             const p = 'sections.' + i;
-            keys(s, [...(['definitionId','instanceKey','sectionKey']),'endingArea','numbering', 'header', 'footer', 'headerMode', 'footerMode', 'role', 'sourceKind', 'sectionId', 'pageLayoutId', 'page', 'rootIds'], p);
+            keys(s, [...(['definitionId','instanceKey','sectionKey']),'endingArea','bodySideBorders','numbering', 'header', 'footer', 'headerMode', 'footerMode', 'role', 'sourceKind', 'sectionId', 'pageLayoutId', 'page', 'rootIds'], p);
             requireValue(name(s.definitionId)&&name(s.instanceKey)&&name(s.sectionKey)&&s.sectionId==='instance-'+s.instanceKey,p+'.instanceKey','Model20 definition and occurrence identity required');
             requireValue(name(s.pageLayoutId) && !s.pageLayoutId.includes('~') && ['body', 'cover'].includes(s.role) && ['authored', 'blank'].includes(s.sourceKind) && (s.role !== 'cover' || i === 0 && s.sourceKind === 'authored') && (s.sourceKind !== 'blank' || s.rootIds?.length === 0), p, 'Invalid section');
             const bodyWidth = page(s.page, p + '.page');
@@ -366,6 +366,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
             for (const root of s.rootIds)
                 rootWidths.set(root, bodyWidth);
             roots.push(...s.rootIds);
+            requireValue(s.bodySideBorders===undefined||typeof s.bodySideBorders==='boolean',p+'.bodySideBorders','Expected a boolean');
             for (const kind of ['header', 'footer']) {
                 requireValue(['all', 'first', 'continuation', 'none'].includes(s[kind + 'Mode']), p + '.' + kind + 'Mode', 'Invalid band mode');
                 if (s[kind])

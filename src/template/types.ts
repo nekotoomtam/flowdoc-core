@@ -31,7 +31,7 @@ interface TemplateBase {
  examples:{name:string;request:unknown}[];
 }
 export interface PageLayout {label?:string;page:ResolvedDocument['book']['page']}
-export interface TemplateSection {headerMode?:BandMode;footerMode?:BandMode;role?:'body'|'cover';id:string;label?:string;pageLayoutId?:string;source:{kind:'blank'}|({kind:'authored'}&Pick<Format,'fragment'|'repeats'|'cellRepeats'|'rowGroups'>)}
+export interface TemplateSection {bodySideBorders?:boolean;headerMode?:BandMode;footerMode?:BandMode;role?:'body'|'cover';id:string;label?:string;pageLayoutId?:string;source:{kind:'blank'}|({kind:'authored'}&Pick<Format,'fragment'|'repeats'|'cellRepeats'|'rowGroups'>)}
 export interface ValidatedTemplate {readonly definition:TemplateDefinition;readonly fingerprint:string}
 
 export type BandMode='all'|'first'|'continuation'|'none';

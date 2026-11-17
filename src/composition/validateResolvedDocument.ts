@@ -117,13 +117,14 @@ function validateSections(d: Record<string, any>, issues: Issue[]): void {
     const seen = new Set<string>(), roots: string[] = [], members = new Map<string, string>();
     for (const [i, s] of d.sections.entries()) {
         const p = `sections[${i}]`;
-        if (!object(s) || !keys(s, [...(['definitionId','instanceKey','sectionKey']),'endingArea','sectionId', 'pageLayoutId', 'page', 'rootIds', ...(['numbering']), ...(['headerMode', 'footerMode']), ...(['header', 'footer']), ...(['role', 'sourceKind'])]) || !name(s.sectionId) || s.sectionId.includes('~') || seen.has(s.sectionId) || !name(s.pageLayoutId) || s.pageLayoutId.includes('~') || !Array.isArray(s.rootIds) || !s.rootIds.every(name)) {
+        if (!object(s) || !keys(s, [...(['definitionId','instanceKey','sectionKey']),'endingArea','bodySideBorders','sectionId', 'pageLayoutId', 'page', 'rootIds', ...(['numbering']), ...(['headerMode', 'footerMode']), ...(['header', 'footer']), ...(['role', 'sourceKind'])]) || !name(s.sectionId) || s.sectionId.includes('~') || seen.has(s.sectionId) || !name(s.pageLayoutId) || s.pageLayoutId.includes('~') || !Array.isArray(s.rootIds) || !s.rootIds.every(name)) {
             fail(p);
             continue;
         }
         if ((!['body', 'cover'].includes(s.role) || !['authored', 'blank'].includes(s.sourceKind) || (s.role === 'cover' && (i !== 0 || s.sourceKind !== 'authored')) || (s.sourceKind === 'blank' && s.rootIds.length)))
             fail(p);
         if(!validEndingArea(s,d as ResolvedDocument))fail(p+'.endingArea');
+        if(Object.hasOwn(s,'bodySideBorders')&&typeof s.bodySideBorders!=='boolean')fail(p+'.bodySideBorders');
         for (const k of ['headerMode', 'footerMode'])
             if (!['all', 'first', 'continuation', 'none'].includes(s[k]))
                 fail(p + '.' + k);

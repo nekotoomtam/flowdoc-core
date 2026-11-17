@@ -53,12 +53,15 @@ it('still rejects Area and page-break anywhere inside a page band',()=>{
 
 it('emits editable native tables including merged cells in both DOCX page bands',async()=>{
  const t=fixture();
+ t.sections[0].bodySideBorders=true;
  for(const kind of ['header','footer'])t.sections[0][kind].fragment.nodes.label.children.shift();
  const v=take(validateTemplate(t));
  const d=take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:[{sectionKey:'A',instanceKey:'bill-0',data:{name:'A'}}]}))));
  const e=take(await createDocxEngine(fonts())),sink=staged();
  take(await e.generateDocxTo(d,noImages,sink.output,{textLayout:'native'}));
  const zip=await JSZip.loadAsync(Buffer.concat(sink.chunks));
+ const document=await zip.file('word/document.xml')!.async('string');
+ expect(document).toMatch(/<w:pgBorders[^>]*w:offsetFrom="text"[^>]*>.*<w:left [^>]*w:val="single"/);
  for(const band of ['header','footer']){
   const files=Object.keys(zip.files).filter(name=>name.startsWith('word/'+band)&&name.endsWith('.xml'));
   expect(files).toHaveLength(2);
@@ -75,4 +78,17 @@ it('rejects bands that consume the available body instead of clipping or repeati
  s.header.sizing={mode:'fixed',height:v1};s.footer.sizing={mode:'fixed',height:v1};
  const v=take(validateTemplate(t)),d=take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:[{sectionKey:'A',instanceKey:'bill-0',data:{name:'Alpha'}}]}))));
  await expect(documentFlow(d,fakeRuntime)).rejects.toThrow('Page bands leave no body space');
+});
+it('draws opt-in body sides through the reserved space between the bands on every page',async()=>{
+ const t=fixture();
+ t.sections[0].bodySideBorders=true;
+ const v=take(validateTemplate(t)),d=take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections:[{sectionKey:'A',instanceKey:'bill-0',data:{name:'Alpha'}}]}))));
+ const draw=await documentFlow(d,fakeRuntime);
+ expect(draw.pages.length).toBeGreaterThan(1);
+ for(const page of draw.pages){
+  const sides=page.borders!.filter(b=>b.nodeId===page.sectionId);
+  expect(sides).toHaveLength(2);
+  expect(sides.every(b=>b.x1Pt===b.x2Pt&&b.y1Pt<b.y2Pt)).toBe(true);
+  expect(sides[0]!.y1Pt).toBeLessThan(sides[0]!.y2Pt-300);
+ }
 });

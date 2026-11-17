@@ -34,6 +34,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         headerMode?: BandMode;
         footerMode?: BandMode;
     } = {}, bands: Partial<Record<'header' | 'footer', MeasuredBand>> = {};
+    let bodySideBorders=false;
     let activeBands: Partial<Record<'header' | 'footer', ResolvedBand>> = {};
     const bandCache = new Map<string, MeasuredBand>();
     const setPage = (page: ResolvedDocument['book']['page']) => {
@@ -102,6 +103,13 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         current = { ...({ pageRole }), widthPt, heightPt, backgroundColor: 'FFFFFF', commands: [], ...(sectionId === undefined ? {} : { sectionId, sectionPageIndex: sectionPageIndex++ }) };
         pages.push(current);
         y = top;
+        if(bodySideBorders&&sectionId){
+            const y1Pt=g.h?g.hy+g.h.heightPt:g.top;
+            const y2Pt=g.f?g.fy:g.bottom;
+            if(y2Pt>y1Pt)current.borders=[left,left+available].map(x=>({
+                nodeId:sectionId!,x1Pt:x,x2Pt:x,y1Pt,y2Pt,widthPt:.5,color:'000000',
+            }));
+        }
         for (const [kind, m, at] of [['header', g.h, g.hy], ['footer', g.f, g.fy]] as const) {
             if (!m)
                 continue;
@@ -180,6 +188,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         modes = section as typeof modes;
         bands = {};
         activeBands = section;
+        bodySideBorders=section.bodySideBorders===true;
         if (pageRole === 'body')
             for (const k of ['header', 'footer'] as const) {
                 const b = activeBands[k];
