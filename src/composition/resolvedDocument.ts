@@ -9,7 +9,7 @@ export interface SystemPageField {id:string;type:"system-page-field";field:"curr
 export type TextInline=SystemPageField|{id:string;type:'text';text:string}|{id:string;type:'line-break'}|({id:string}&BoundLink);
 export interface TextBlock {
   id:string;type:'text-block';role:{role:'paragraph'};
-  props:{textStyleId:string;textAlign?:'left'|'center'|'right';pageFieldLayout?:'compact';heightMode?:'content'|'fixed';height?:Length;verticalAlign?:'top'|'center'|'bottom';sizing?:{mode:'content'};anchorId?:string;toc?:{level:number}};children:TextInline[];
+  props:{textStyleId:string;outline?:boolean;textAlign?:'left'|'center'|'right';pageFieldLayout?:'compact';heightMode?:'content'|'fixed';height?:Length;verticalAlign?:'top'|'center'|'bottom';sizing?:{mode:'content'};anchorId?:string;toc?:{level:number}};children:TextInline[];
 }
 export type SourceOrigin={origin?:never;sectionId?:never;contentIndex:number;format:string}|{origin:'content';sectionId:string;contentIndex:number;format:string}|{origin:'authored';sectionId:string;contentIndex?:never;format?:never};
 export type SourceEntry=SourceOrigin&{sourceId:string;groupId?:string;groupIndex?:number;itemIndex?:number;repeatId?:string;areaId?:string;areaEntryIndex?:number;areaFormatId?:string}
@@ -36,4 +36,4 @@ export interface ResolvedDocument {
 }
 export function toPt(length:Length):number {return length.unit==='mm'?length.value*72/25.4:length.value;}
 
-export interface ResolvedBand {placement?:import("../template/types.js").BandPlacement;rootIds:string[];nodes:Record<string,LineBlock|TextBlock|ImageBlock|Table|TableRow|TableCell|import('../template/types.js').BandColumns>;sourceMap:Record<string,SourceEntry>;baseTextStyleId:string;sizing?:import('../template/types.js').BandSizing;gap?:Length}
+export interface ResolvedBand {firstPageOnly?:string[];placement?:import("../template/types.js").BandPlacement;rootIds:string[];nodes:Record<string,LineBlock|TextBlock|ImageBlock|Table|TableRow|TableCell|import('../template/types.js').BandColumns>;sourceMap:Record<string,SourceEntry>;baseTextStyleId:string;sizing?:import('../template/types.js').BandSizing;gap?:Length}

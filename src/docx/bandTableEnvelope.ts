@@ -19,7 +19,7 @@ export function bandTableEnvelope(intent:ExportIntent,scope:string,id:string){
    for(const child of cell.childIds){
     const n=nodes[child];
     if(n.type==='image'){imageReferences++;content+=toPoints(n.props.height)+1;}
-    else content+=textEnvelope(intent,child,scope,width);
+    else content+=n.props.outline?textEnvelope(intent,child,scope,width-4)+3:textEnvelope(intent,child,scope,width);
    }
    const extent=(pad.top+pad.bottom)/20+Math.max(content,1);
    if(rowSpan===1)heights[row]=Math.max(heights[row]!,extent);

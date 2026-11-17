@@ -37,6 +37,7 @@ export async function measurePageBand(b:ResolvedBand,styles:Record<string,TextSt
    // Reuse the body grid with a single physical-page budget.
    const tableDocument={nodes:b.nodes,styles,sourceMap:b.sourceMap} as ResolvedDocument;
    const start=at;
+   const outlines=new Map<string,{left:number;right:number;top:number;bottom:number}>();
    await cellTableFlow(tableDocument,n,runtime,{
     top:start,bottom:pageHeightPt,left:x,availableWidth:width,get y(){return at;},set y(value){at=value;},
     nextPage(){throw new LayoutError(id,'Table exceeds available page band height');},
@@ -44,11 +45,21 @@ export async function measurePageBand(b:ResolvedBand,styles:Record<string,TextSt
     border(x1Pt,y1Pt,x2Pt,y2Pt,nodeId,stroke){if(stroke)out.borders.push({x1Pt,y1Pt,x2Pt,y2Pt,nodeId,...strokePaintProps(stroke)});},
     emitItem(item,left,y,available){
      if(item.kind==='text-line'){
+      const node=b.nodes[item.nodeId];
+      if(node?.type==='text-block'&&node.props.outline){
+       const box=outlines.get(node.id),bottom=y+item.heightPt-.25;
+       if(box)box.bottom=bottom;
+       else outlines.set(node.id,{left:left+.25,right:left+available-.25,top:y+.25,bottom});
+      }
       const run=item.line.run;
       if(run)out.commands.push({...run,id:`band-run-${serial++}`,bounds:{...run.bounds,xPt:left+run.bounds.xPt,yPt:y}});
      }else emitImage(item.nodeId,item.resourceId,item.align,item.frameWidth,item.heightPt,left,y,available);
     }
    });
+   for(const [nodeId,{left,right,top,bottom}] of outlines){
+    for(const [x1Pt,y1Pt,x2Pt,y2Pt] of [[left,top,right,top],[right,top,right,bottom],[left,bottom,right,bottom],[left,top,left,bottom]] as const)
+     out.borders.push({nodeId,x1Pt,y1Pt,x2Pt,y2Pt,...strokePaintProps({style:'single',widthPt:.5,color:'000000'})});
+   }
   }
   else if(n.type==='image'){const fw=toPt(n.props.width),fh=toPt(n.props.height);if(fw>width+1e-6)throw new LayoutError(id,'Image frame exceeds page band width');emitImage(id,n.props.resourceId,n.props.align,fw,fh,x,at,width);at+=fh;}
   else throw new LayoutError(id,'Unsupported page band root');

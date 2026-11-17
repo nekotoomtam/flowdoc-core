@@ -1,6 +1,6 @@
 import {paperSizePt} from '../composition/paperSize.js';
 import { collectContents } from '../composition/contents.js';
-import {hasBandTables} from '../template/pageBands.js';
+import {continuationBand,hasBandTables} from '../template/pageBands.js';
 import { required } from './types.js';
 import { deriveHeaderSpace, deriveFooterSpace } from './geometry-policy.js';
 import { headerSpaceEligibility } from './header-space.js';
@@ -80,7 +80,9 @@ export function buildSections(intent: ExportIntent) {
                 const mapHeaderGap = kind === 'header' && eligibility.eligible;
                 if (kind === 'header')
                     dynamicHeader = mapHeaderGap;
-                prepared = buildBand(intent, b, scope, page, ctx, { mapHeaderGap });
+                const continuation = continuationBand(b);
+                const first = effective === 'continuation' ? undefined : buildBand(intent, b, scope, page, ctx, { mapHeaderGap });
+                prepared = first ?? buildBand(intent, continuation, scope, page, ctx, { mapHeaderGap });
                 prepared.spacePolicy = mapHeaderGap ? 'native-visible-header' : 'maximum-reservation';
                 prepared.shape = eligibility.shape;
                 prepared.fallbackReason = kind === 'header' && !mapHeaderGap ? eligibility.reason : undefined;
@@ -90,11 +92,13 @@ export function buildSections(intent: ExportIntent) {
                 estimated[edge] = Math.max(sourceMargin[edge], offset + prepared.reservedHeightTwips + prepared.gapTwips);
                 if (kind !== 'header' || !dynamicHeader)
                     margin[edge] = estimated[edge];
-                let used = false;
-                real = () => { const content = used ? buildBand(intent, b, scope, page, ctx, { mapHeaderGap }) : prepared; used = true; return kind === 'header' ? new Header({ children: content.children }) : new Footer({ children: content.children }); };
-                imageReferences += prepared.imageReferences * (effective === 'all' ? 2 : 1);
+                real = (firstPage: boolean) => {
+                    const content = firstPage || effective === 'continuation' ? prepared : buildBand(intent, continuation, scope, page, ctx, { mapHeaderGap });
+                    imageReferences += content.imageReferences;
+                    return kind === 'header' ? new Header({ children: content.children }) : new Footer({ children: content.children });
+                };
             }
-            groups[kind] = { default: b && ['all', 'continuation'].includes(effective) ? real() : makeEmpty(), first: b && ['all', 'first'].includes(effective) ? real() : makeEmpty() };
+            groups[kind] = { default: b && ['all', 'continuation'].includes(effective) ? real(false) : makeEmpty(), first: b && ['all', 'first'].includes(effective) ? real(true) : makeEmpty() };
             bandReceipt[kind] = { mode: effective, sourceMode: requested, reservedHeightTwips: prepared?.reservedHeightTwips ?? 0, offsetTwips: prepared?.offsetTwips ?? sourceMargin[kind === 'header' ? 'top' : 'bottom'], spacePolicy: prepared?.spacePolicy ?? 'none', shape: prepared?.shape, fallbackReason: prepared?.fallbackReason, gapTwips: prepared?.gapTwips ?? 0, wordFootprintVerified: false, quantization: prepared?.quantization ?? [] };
         }
         const headerBand = s.header, headerMode = bandReceipt.header.mode;

@@ -6,6 +6,7 @@ import {hasBandTables} from '../template/pageBands.js';
 import { measureRule } from './line.js';
 import type { PageFieldSlot } from '../pdf/drawContract.js';
 import { assignSystemPageNumbers } from './systemPageCounting.js';
+import { continuationBand } from '../template/pageBands.js';
 import { measurePageBand, selectPageBands, type MeasuredBand } from './pageBands.js';
 import type { BandMode } from '../template/types.js';
 import { measureFixedTextBlock } from './fixedTextBlock.js';
@@ -35,6 +36,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         headerMode?: BandMode;
         footerMode?: BandMode;
     } = {}, bands: Partial<Record<'header' | 'footer', MeasuredBand>> = {};
+    let continuationBands: typeof bands = {};
     let bodySideBorders=false;
     let activeBands: Partial<Record<'header' | 'footer', ResolvedBand>> = {};
     const bandCache = new Map<string, MeasuredBand>();
@@ -72,7 +74,9 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     };
     const bandRegion = (kind: 'header' | 'footer') => { const p = activeBands[kind]?.placement; return p ? { left: toPt(p.left), width: widthPt - toPt(p.left) - toPt(p.right), edge: kind === 'header' ? toPt(p.offset) : heightPt - toPt(p.offset) } : { left, width: available, edge: kind === 'header' ? innerTop : innerBottom }; };
     const geometry = (index: number) => {
-        const shown = selectPageBands(modes, pageRole, index), h = shown.header ? bands.header : undefined, f = shown.footer ? bands.footer : undefined;
+        const shown = selectPageBands(modes, pageRole, index);
+        const h = shown.header ? (index === 0 ? bands.header : continuationBands.header) : undefined;
+        const f = shown.footer ? (index === 0 ? bands.footer : continuationBands.footer) : undefined;
         const hy = bandRegion('header').edge, fy = bandRegion('footer').edge - (f?.heightPt ?? 0);
         for (const [kind, m, at] of [['header', h, hy], ['footer', f, fy]] as const)
             if (m && (at < 0 || at + m.heightPt > heightPt + epsilon))
@@ -186,6 +190,7 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
         innerBottom = bottom;
         modes = section as typeof modes;
         bands = {};
+        continuationBands = {};
         activeBands = section;
         bodySideBorders=section.bodySideBorders===true;
         if (pageRole === 'body')
@@ -196,11 +201,13 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                 const region = bandRegion(k);
                 if (region.width <= 0)
                     throw new LayoutError(b.rootIds[0] ?? 'page-band', 'Page band has no available width', sectionId, k + '.placement');
-                const key = (sectionId + ':') + k + ':' + region.width;
-                let m = bandCache.get(key);
-                if (!m) {
+                const measure = async (band: ResolvedBand, variant: string) => {
+                    const key = `${sectionId}:${k}:${region.width}:${variant}`;
+                    const cached = bandCache.get(key);
+                    if (cached) return cached;
+                    let m: MeasuredBand;
                     try {
-                        m = await measurePageBand(b, d.styles, region.width, runtime, images, heightPt);
+                        m = await measurePageBand(band, d.styles, region.width, runtime, images, heightPt);
                     }
                     catch (e) {
                         if (e instanceof LayoutError)
@@ -208,8 +215,11 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                         throw e;
                     }
                     bandCache.set(key, m);
-                }
-                bands[k] = m;
+                    return m;
+                };
+                const continuation = continuationBand(b);
+                if (modes[`${k}Mode`] !== 'continuation') bands[k] = await measure(b, 'first');
+                if (modes[`${k}Mode`] !== 'first') continuationBands[k] = continuation === b && bands[k] ? bands[k] : await measure(continuation, 'continuation');
             }
         nextPage();
         let pendingBreak = false;

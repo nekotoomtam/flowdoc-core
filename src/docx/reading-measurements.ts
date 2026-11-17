@@ -30,7 +30,7 @@ export async function prepareReadingMeasurements(intent:ExportIntent,runtime:Tex
    for(const rid of n.rowIds)for(const [i,cid]of b.nodes[rid].cellIds.entries()){
     const c=b.nodes[cid],col=c.props.columnIndex??i,span=c.props.colSpan??1,pad=table.cells.find(c=>c.nodeId===cid)!.paddingTwips;
     const width=(table.columnTwips.slice(col,col+span).reduce((sum,w)=>sum+w,0)-pad.left-pad.right)/20;
-    for(const child of c.childIds)add(scope,child,width);
+    for(const child of c.childIds)add(scope,child,width-(b.nodes[child].props.outline?4:0));
    }
   }else if(n.type==='columns'){
    const gap=n.props.gap?toPoints(n.props.gap):0,total=n.columns.reduce((sum:number,c:any)=>sum+c.weight,0),usable=available-gap*(n.columns.length-1);

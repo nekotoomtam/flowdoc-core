@@ -145,7 +145,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
         keys(nodes, Object.keys(nodes ?? {}), path);
         idList(roots, path + '.rootIds');
         const visited = new Set<string>(), active = new Set<string>(), knownInline = new Set<string>(), cellWidths = new Map<string, number>();
-        function visit(id: string, expected: string[] | undefined, available: number) {
+        function visit(id: string, expected: string[] | undefined, available: number, inCell = false) {
             const at = path + '.' + id, n = nodes[id];
             requireValue(own(nodes, id) && obj(n) && n.id === id && name(n.id), at, 'Missing or inconsistent node identity');
             requireValue(!active.has(id) && !visited.has(id), at, 'Cycle or multiply-owned node');
@@ -159,7 +159,8 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
                 keys(n, ['id', 'type', 'role', 'props', 'children'], at);
                 keys(n.role, ['role'], at + '.role');
                 requireValue(n.role.role === 'paragraph', at + '.role', 'Invalid text role');
-                keys(p, ['textStyleId', 'textAlign', 'pageFieldLayout', 'heightMode', 'height', 'verticalAlign', 'sizing', 'anchorId', 'toc'], at + '.props');
+                keys(p, ['textStyleId', 'textAlign', 'pageFieldLayout', 'heightMode', 'height', 'verticalAlign', 'sizing', 'anchorId', 'toc', ...(band && inCell ? ['outline'] : [])], at + '.props');
+                requireValue(p.outline === undefined || typeof p.outline === 'boolean', at + '.props.outline', 'Invalid text outline');
                 requireValue(own(styles, p.textStyleId), at + '.props.textStyleId', 'Missing style');
                 requireValue([undefined, 'left', 'center', 'right'].includes(p.textAlign) && [undefined, 'content', 'fixed'].includes(p.heightMode), at + '.props', 'Invalid text alignment/height mode');
                 if (p.sizing) {
@@ -308,7 +309,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
                     requireValue(/^[0-9a-fA-F]{6}$/.test(p.fillColor), at + '.props.fillColor', 'Invalid RGB');
                 idList(n.childIds, at + '.childIds');
                 for (const cid of n.childIds)
-                    visit(cid, ['text-block', 'image'], available);
+                    visit(cid, ['text-block', 'image'], available, true);
             }
             else if (n.type === 'columns' && band) {
                 keys(n, ['id', 'type', 'props', 'columns'], at);
@@ -336,7 +337,8 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
         for (const id of roots)
             requireValue(own(map, id), path + '.sourceMap.' + id, 'Root provenance missing');
     }
-    function band(b: any, path: string, pg: any) { keys(b, ['rootIds', 'nodes', 'sourceMap', 'baseTextStyleId', 'sizing', 'gap', 'placement'], path); requireValue(own(styles, b.baseTextStyleId), path + '.baseTextStyleId', 'Missing band style'); let width = paperSizePt(pg)[0] - toPoints(pg.margin.left) - toPoints(pg.margin.right); if (b.placement) {
+    function band(b: any, path: string, pg: any) { keys(b, ['rootIds', 'nodes', 'sourceMap', 'baseTextStyleId', 'sizing', 'gap', 'placement', 'firstPageOnly'], path);
+        if (b.firstPageOnly !== undefined) requireValue(Array.isArray(b.firstPageOnly) && new Set(b.firstPageOnly).size === b.firstPageOnly.length && b.firstPageOnly.every((id:unknown) => typeof id === 'string' && Array.isArray(b.rootIds) && b.rootIds.includes(id)), path + '.firstPageOnly', 'Expected unique band root IDs'); requireValue(own(styles, b.baseTextStyleId), path + '.baseTextStyleId', 'Missing band style'); let width = paperSizePt(pg)[0] - toPoints(pg.margin.left) - toPoints(pg.margin.right); if (b.placement) {
         keys(b.placement, ['mode', 'left', 'right', 'offset'], path + '.placement');
         requireValue(b.placement.mode === 'page', path + '.placement', 'Invalid placement mode');
         for (const k of ['left', 'right', 'offset'])

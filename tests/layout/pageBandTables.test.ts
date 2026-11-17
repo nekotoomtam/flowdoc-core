@@ -104,3 +104,36 @@ it.each([['portrait',612,792],['landscape',792,612]])('uses Letter dimensions in
  const zip=await JSZip.loadAsync(Buffer.concat(sink.chunks)),xml=await zip.file('word/document.xml')!.async('string');
  expect(xml).toContain(`<w:pgSz w:w="${width*20}" w:h="${height*20}" w:orient="${orientation}"/>`);
 });
+
+it('outlines band-cell text and places selected footer roots on each Section first page',async()=>{
+ const t=fixture(),s=t.sections[0];
+ s.header.fragment.nodes.label.props.outline=true;
+ s.header.fragment.nodes.label.children[0].text='H ';
+ const footer=s.footer;
+ footer.fragment.nodes.label.children[0].text='F ';
+ footer.fragment.rootIds.unshift('say');
+ footer.fragment.nodes.say={id:'say',type:'text-block',role:{role:'paragraph'},props:{textStyleId:'body'},children:[{id:'say-prefix',type:'text',text:'SAY '},{id:'say-name',type:'field-ref',scope:'section',key:'name'}]};
+ footer.firstPageOnly=['missing'];
+ expect(validateTemplate(t).ok).toBe(false);
+ footer.firstPageOnly=['say'];
+ const v=take(validateTemplate(t));
+ const sections=['A','B'].map((name,i)=>({sectionKey:'A',instanceKey:'bill-'+i,data:{name}}));
+ const d=take(composeDocument(v,take(prepareGeneration(v,{docKey:t.docKey,sections}))));
+ const {pages}=await documentFlow(d,fakeRuntime);
+ for(const [i,name] of ['A','B'].entries()){
+  const bill=pages.filter(p=>p.sectionId==='instance-bill-'+i);
+  expect(bill.length).toBeGreaterThan(1);
+  expect(bill[0]!.commands.find(c=>c.text==='SAY '+name)!.bounds.yPt).toBeLessThan(bill[0]!.commands.find(c=>c.text==='F '+name)!.bounds.yPt);
+  expect(bill.slice(1).every(p=>!p.commands.some(c=>c.text.startsWith('SAY ')))).toBe(true);
+  expect(bill.every(p=>p.borders!.filter(b=>b.nodeId.endsWith('band-header~label')).length===4)).toBe(true);
+ }
+ const engine=take(await createDocxEngine(fonts())),sink=staged();
+ take(await engine.generateDocxTo(d,noImages,sink.output,{textLayout:'native'}));
+ const zip=await JSZip.loadAsync(Buffer.concat(sink.chunks));
+ const readBands=async (kind:string)=>Promise.all(Object.keys(zip.files).filter(file=>file.startsWith('word/'+kind)&&file.endsWith('.xml')).map(file=>zip.file(file)!.async('string')));
+ const headers=await readBands('header'),footers=await readBands('footer');
+ expect(headers).toHaveLength(4);
+ expect(headers.every(xml=>xml.includes('<w:pBdr>'))).toBe(true);
+ expect(footers).toHaveLength(4);
+ expect(footers.filter(xml=>xml.includes('>SAY </w:t>'))).toHaveLength(2);
+});

@@ -8,9 +8,13 @@ export const bandLength=(v:any)=>object(v)&&keys(v,['value','unit'])&&['mm','pt'
 export function flatBandFragment(b:any):any {return {rootIds:b.fragment.rootIds.flatMap((id:string)=>{const n=b.fragment.nodes[id];return n?.type==='columns'?n.columns.flatMap((c:any)=>c.childIds):[id];}),nodes:Object.fromEntries(Object.entries(b.fragment.nodes).filter(([,n]:any)=>n.type!=='columns'))};}
 export const hasBandTables=(band:import('../composition/resolvedDocument.js').ResolvedBand|undefined)=>
  band?.rootIds.some(id=>band.nodes[id]?.type==='table')??false;
+export function continuationBand<T extends {rootIds:string[];firstPageOnly?:string[]}>(band:T):T {
+ const excluded=new Set(band.firstPageOnly);
+ return excluded.size?{...band,rootIds:band.rootIds.filter(id=>!excluded.has(id))}:band;
+}
 export function validatePageBand(b:any,styles:any,path:string,resolved=false,scopeSchemas?:Record<string,import('./types.js').ObjectSchema>,sourceSectionId=path,pageFields=false,assembly=false):Issue[]{
  const issues:Issue[]=[],fail=(p:string)=>issues.push(issue('INVALID_TEMPLATE',p));
- const allowed=resolved?['rootIds','nodes','sourceMap','baseTextStyleId','sizing','gap','placement']:['inputSchema','fragment','baseTextStyleId','sizing','gap','placement'];
+ const allowed=resolved?['rootIds','nodes','sourceMap','baseTextStyleId','sizing','gap','placement','firstPageOnly']:['inputSchema','fragment','baseTextStyleId','sizing','gap','placement','firstPageOnly'];
  if(!object(b)||!keys(b,allowed)||!object(styles)||!own(styles,b.baseTextStyleId)){fail(path);return issues;}
  const minimum=styles[b.baseTextStyleId]?.lineHeightPt;
  if(typeof minimum!=='number'||!Number.isFinite(minimum)||minimum<=0){fail(path+'.baseTextStyleId');return issues;}
@@ -21,6 +25,7 @@ export function validatePageBand(b:any,styles:any,path:string,resolved=false,sco
  if(!resolved){validateSchemas(b.inputSchema,path+'.inputSchema',issues,false,true,true);if(object(b.inputSchema?.fields))for(const [key,f] of Object.entries(b.inputSchema.fields))if(!object(f)||!['string','image','link'].includes(f.type))fail(path+'.inputSchema.fields.'+key);}
  const f=resolved?{rootIds:b.rootIds,nodes:b.nodes}:b.fragment;
  if(!object(f)||!keys(f,['rootIds','nodes'])||!Array.isArray(f.rootIds)||!object(f.nodes)){fail(path+'.fragment');return issues;}
+ if(own(b,'firstPageOnly')&&(!Array.isArray(b.firstPageOnly)||new Set(b.firstPageOnly).size!==b.firstPageOnly.length||b.firstPageOnly.some((id:unknown)=>typeof id!=='string'||!f.rootIds.includes(id))))fail(path+'.firstPageOnly');
  const referenced=new Set<string>(),cellChildren=new Set<string>();
  for(const n of Object.values(f.nodes))if(object(n)&&n.type==='table-cell'&&Array.isArray(n.childIds))for(const id of n.childIds)cellChildren.add(id);
  for(const [id,n] of Object.entries(f.nodes)){
