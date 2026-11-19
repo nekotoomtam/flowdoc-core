@@ -15,6 +15,18 @@ storage, credentials, streaming delivery and process supervision.
 Height adjustment does not keep text width, wrapping, or line clearance constant.
 Release identity is established by the matching snapshot/tag after the release gates.
 
+### Oracle Lab overlays
+
+The active 0.5.5 archive was built from `0dd25d3`. The files in
+`deploy/oracle-lab/background-runtime/` preserve the Lab overlays for that
+archive. `sections.js` replaces `dist/docx/sections.js` in the installed copy.
+The Eagletainer API also binds `createPdfEngine.js`, `writePdf.js`, and
+`writePdfTo.js` over their `dist/pdf/` counterparts and `writer.js` over
+`dist/docx/writer.js`. The background helper lives at
+`/lab/background-runtime/section-background.mjs` in that container and reads
+the corresponding Lab assets and publication bindings. The template-specific
+pagination allowance and background files are Lab configuration.
+
 ### 0.5.5 merged group-label inset boundary
 
 M1 maps eligible merged group-label source top padding to uniform peer-cell

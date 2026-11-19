@@ -1,0 +1,112 @@
+import {orderSectionBackground} from '/lab/background-runtime/section-background.mjs';
+import { validateExternalUrl } from '../composition/linkContract.js';
+import { createHash } from 'node:crypto';
+import { formatNumber, parseSfnt, unicodeAssignments, buildPageContent, assemblePdf } from './primitives.js';
+import { deflateSync } from 'node:zlib';
+import { validateImageResources } from './imageResources.js';
+// DrawDocument is internal plain data. Keep JSON.stringify's property order and
+// escaping, but release each page/metadata item before serializing the next one.
+// The hash consumes exactly the same UTF-8 JSON bytes as the former whole draw.
+export function drawIdentity(draw) {
+    const hash = createHash('sha256');
+    hash.update('{');
+    let separator = '';
+    for (const key of Object.keys(draw)) {
+        const value = draw[key];
+        if (Array.isArray(value)) {
+            hash.update(separator + JSON.stringify(key) + ':[');
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0)
+                    hash.update(',');
+                hash.update(JSON.stringify(value[i]) ?? 'null');
+            }
+            hash.update(']');
+        }
+        else {
+            const json = JSON.stringify(value);
+            if (json === undefined)
+                continue;
+            hash.update(separator + JSON.stringify(key) + ':');
+            hash.update(json);
+        }
+        separator = ',';
+    }
+    return hash.update('}');
+}
+export function writePdf(draw, resources, images = {}) {
+    validateImageResources(images);
+    validatePdfDraw(draw);
+    const imageIds = [...new Set(draw.pages.flatMap(p => (p.images ?? []).map(i => i.resourceId)))];
+    const imageUsages = imageIds.map((id, index) => { const r = Object.hasOwn(images, id) ? images[id] : undefined; if (!r)
+        throw Error('Missing image resource'); return { id, name: `Im${index + 1}`, width: r.width, height: r.height, filter: r.kind === 'jpeg' ? 'DCTDecode' : 'FlateDecode', bytes: r.kind === 'jpeg' ? r.bytes : deflateSync(r.bytes), alpha: r.kind === 'rgb' && r.alpha ? deflateSync(r.alpha) : undefined }; });
+    const { usages, runs } = resolvePdfFonts(draw, resources);
+    const identity = drawIdentity(draw);
+    for (const image of imageUsages) {
+        identity.update(image.bytes);
+        if (image.alpha)
+            identity.update(image.alpha);
+    }
+    const fingerprint = 'sha256:' + identity.digest('hex');
+    return assemblePdf({ ...draw, fingerprint }, usages, imageUsages, draw.pages.map(p => {
+        const renderImage = i => { if (![i.xPt, i.yPt, i.widthPt, i.heightPt].every(Number.isFinite) || i.widthPt <= 0 || i.heightPt <= 0)
+            throw Error('Invalid image geometry'); return `q ${formatNumber(i.widthPt)} 0 0 ${formatNumber(i.heightPt)} ${formatNumber(i.xPt)} ${formatNumber(p.heightPt - i.yPt - i.heightPt)} cm /${imageUsages.find(r => r.id === i.resourceId).name} Do Q\n`; };
+        return orderSectionBackground(p,buildPageContent(p,usages,runs),renderImage);
+    }));
+}
+export function validatePdfDraw(draw) {
+    for (const anchor of Object.values(draw.anchors ?? {})) {
+        const page = draw.pages[anchor.pageIndex];
+        if (!Number.isInteger(anchor.pageIndex) || !page || ![anchor.xPt, anchor.yPt].every(Number.isFinite) || anchor.xPt < 0 || anchor.yPt < 0 || anchor.xPt > page.widthPt || anchor.yPt > page.heightPt)
+            throw Error('Invalid PDF destination');
+    }
+    for (const page of draw.pages)
+        for (const a of page.annotations ?? []) {
+            const r = a.rect;
+            if (![r.xPt, r.yPt, r.widthPt, r.heightPt].every(Number.isFinite) || r.widthPt <= 0 || r.heightPt <= 0 || r.xPt < 0 || r.yPt < 0 || r.xPt + r.widthPt > page.widthPt + 1e-6 || r.yPt + r.heightPt > page.heightPt + 1e-6)
+                throw Error('Invalid link geometry');
+            const d = a.destination;
+            if (d.type === 'external') {
+                if (!validateExternalUrl(d.url))
+                    throw Error('Invalid external action');
+            }
+            else if (d.type !== 'internal' || !Object.hasOwn(draw.anchors ?? {}, d.target))
+                throw Error('Invalid internal action');
+        }
+}
+export function resolvePdfFonts(draw, resources) {
+    const used = new Set(draw.pages.flatMap(p => p.commands.map(c => c.fontId)));
+    if (new Set(resources.map(r => r.fontId)).size !== resources.length)
+        throw Error('Duplicate font');
+    const usages = [...used].map((fontId, index) => {
+        const resource = resources.find(r => r.fontId === fontId);
+        if (!resource || !/^[A-Z]{6}$/.test(resource.subsetPrefix) || !/^[A-Za-z][A-Za-z0-9-]*$/.test(resource.postScriptName))
+            throw Error('Invalid font resource');
+        return { asset: { fontId }, resource, metrics: parseSfnt(resource.subsetBytes), pdfResourceName: `F${index + 1}`, pdfBaseFontName: `${resource.subsetPrefix}+${resource.postScriptName}`, glyphs: [], cids: new Map() };
+    });
+    const runs = new Map();
+    for (const page of draw.pages)
+        for (const command of page.commands) {
+            const usage = usages.find(u => u.asset.fontId === command.fontId);
+            const assignments = unicodeAssignments(command, true);
+            if (!assignments)
+                throw Error('Unmappable glyph cluster');
+            const resolved = command.glyphs.map((g, index) => {
+                if (!Number.isInteger(g.glyphId) || g.glyphId <= 0 || g.glyphId >= usage.metrics.numGlyphs)
+                    throw Error('Invalid subset glyph');
+                const glyph = { cid: usage.glyphs.length + 1, glyphId: g.glyphId, width: Math.round(g.advancePt / command.fontSizePt * 1000), unicode: assignments[index], offsetX: g.offsetXPt / command.fontSizePt * 1000 };
+                // CID mappings belong to the font; positioning belongs to each occurrence.
+                // Different Unicode clusters or PDF advances must never share a mapping.
+                const key = JSON.stringify([glyph.glyphId, glyph.width, glyph.unicode]);
+                const existing = usage.cids.get(key);
+                if (existing)
+                    return { ...existing, offsetX: glyph.offsetX };
+                if (glyph.cid > 65535)
+                    throw Error('Font CID capacity exceeded');
+                usage.glyphs.push(glyph);
+                usage.cids.set(key, glyph);
+                return glyph;
+            });
+            runs.set(command.id, resolved);
+        }
+    return { usages, runs };
+}

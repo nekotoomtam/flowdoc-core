@@ -2,7 +2,12 @@
 
 > **Candidate 0.5.5 — 2026-11-06:** Owner selected Core/Service 0.5.5 for the retained model20-only runtime. This is local Git/package preparation; no publication or installation. The withdrawn v0.6.0 history and the existing v0.5.2 release remain unchanged.
 
-This development candidate adds opt-in placement-scoped DOCX image omissions.
+The Oracle Lab baseline adds numeric Section formulas and lookups, static
+page-band tables, per-instance page totals and native Word table pagination.
+The Lab binds additional rendering files from `deploy/oracle-lab` over the
+0dd25d3 package. The default package keeps the regular rendering path.
+
+This development candidate includes opt-in placement-scoped DOCX image omissions.
 `DocxOptions.imageOmissions` uses the exported `DOCX_IMAGE_OMISSIONS_CONTRACT`
 and existing body image node IDs. Selected pictures retain their native empty
 paragraph frames; unselected resources remain mandatory. See the template guide
