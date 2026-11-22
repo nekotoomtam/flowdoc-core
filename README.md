@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-The Core package version on the default branch is `0.0.1`.
+The Core package version on the default branch is `0.5.6`.
 
 The Oracle Lab baseline adds numeric Section formulas and lookups, static
 page-band tables, per-instance page totals and native Word table pagination.
