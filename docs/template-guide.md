@@ -1,12 +1,10 @@
-# FlowDoc Core 0.5.5 template entrypoint
+# FlowDoc Core 0.0.1 template entrypoint
 
 ## Authority Boundary
 
 Owner: flowdoc-core. This file locates this package's implemented contract and runnable examples. Project Control owns the complete cross-repository authoring documentation and release acceptance; this guide does not publish templates or certify visual output.
 
-This describes package0.5.5; the earlier v0.5.2 release remains frozen. Identify
-the exact source and archive checksum and verify the matching v0.5.5 snapshot/tag,
-not version number alone. It includes optional
+Package 0.0.1 includes optional
 output base-name metadata, model20-only assembly, opt-in font-height
 calculation, model20 Sections, group-label continuation and streamed task input/PDF.
 Ordinary pt rendering is unchanged. See the root README for the exact native

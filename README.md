@@ -1,6 +1,6 @@
 # FlowDoc Core
 
-> **Candidate 0.5.5 — 2026-11-06:** Owner selected Core/Service 0.5.5 for the retained model20-only runtime. This is local Git/package preparation; no publication or installation. The withdrawn v0.6.0 history and the existing v0.5.2 release remain unchanged.
+The Core package version on the default branch is `0.0.1`.
 
 The Oracle Lab baseline adds numeric Section formulas and lookups, static
 page-band tables, per-instance page totals and native Word table pagination.
