@@ -62,7 +62,9 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    if(own(n.props,'color')&&(typeof n.props.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props.color)))fail(p+'.props.color');
    for(const key of ['width','thickness','spaceBefore','spaceAfter'])if(own(n.props,key)){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<0||(['width','thickness'].includes(key)&&v.value===0)||!Number.isFinite(toPt(v as any)))fail(p+'.props.'+key);}
   }else if(n.type==='text-block'){
-   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing',...(ctx.heightModes?['heightMode','height','verticalAlign']:[]),'anchorId',...(ctx.contents?['toc']:[]),...(ctx.bandText||cellTextIds.has(id)?['textAlign']:[]),...(ctx.bandText?['pageFieldLayout']:[]),...(ctx.bandText&&cellTextIds.has(id)?['outline']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
+   const flowingParagraph=(ctx.assembly||ctx.resolved)&&!ctx.bandText&&object(n.props)&&n.props.heightMode!=='fixed';
+   const inlineStyleAllowed=!ctx.bandText&&(cellTextIds.has(id)||(flowingParagraph&&Array.isArray(n.children)&&n.children.every((child:any)=>['text','field-ref','line-break'].includes(child?.type))));
+   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing',...(ctx.heightModes?['heightMode','height','verticalAlign']:[]),'anchorId',...(ctx.contents?['toc']:[]),...(ctx.bandText||cellTextIds.has(id)||flowingParagraph?['textAlign']:[]),...(ctx.bandText?['pageFieldLayout']:[]),...(ctx.bandText&&cellTextIds.has(id)?['outline']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
    if(own(n.props,'outline')&&typeof n.props.outline!=='boolean')fail(p+'.props.outline');
    if(own(n.props,'textAlign')&&!['left','center','right'].includes(n.props.textAlign))fail(p+'.props.textAlign');
    if(own(n.props,'pageFieldLayout')&&(n.props.pageFieldLayout!=='compact'||!n.children.some((c:any)=>c?.type==='system-page-field')))fail(p+'.props.pageFieldLayout');
@@ -79,10 +81,10 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    if(own(n.props,'toc')&&(!ctx.contents||!object(n.props.toc)||!keys(n.props.toc,['level'])||!Number.isInteger(n.props.toc.level)||n.props.toc.level<1||n.props.toc.level>MAX_CONTENTS_LEVEL||!own(n.props,'anchorId')))fail(p+'.props.toc');
    for(const [i,c] of n.children.entries()){
     const cp=p+`.children[${i}]`;if(!object(c)){fail(cp);continue;}unique(c.id,cp+'.id');
-    if(own(c,'textStyleId')&&(!cellTextIds.has(id)||ctx.bandText||!name(c.textStyleId)||!own(ctx.styles,c.textStyleId)))fail(cp+'.textStyleId');
+    if(own(c,'textStyleId')&&(!inlineStyleAllowed||!name(c.textStyleId)||!own(ctx.styles,c.textStyleId)))fail(cp+'.textStyleId');
     if(own(c,'styleOverride')){
      const override=c.styleOverride;
-     if(!cellTextIds.has(id)||ctx.bandText||own(c,'textStyleId')||!object(override)||
+     if(!inlineStyleAllowed||own(c,'textStyleId')||!object(override)||
         !keys(override,['bold','fontSizePt','italic','color','underline'])||
         (['bold','italic','underline'].some(key=>own(override,key)&&typeof override[key]!=='boolean'))||
         (own(override,'color')&&(typeof override.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(override.color)))||
