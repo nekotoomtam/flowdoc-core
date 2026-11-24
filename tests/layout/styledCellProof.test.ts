@@ -24,3 +24,13 @@ it.each([16,18])('inherits size from a %i pt parent and clears only the selected
  const [line]=await measureStyledCell(node,d.styles,300,fakeRuntime);
  expect(line!.runs!.map(run=>[run.fontSizePt,run.fontId])).toEqual([[size,'font-bold'],[22,'font-bold'],[size,'font-regular']]);
 });
+
+it('keeps paint and italic selection local to each run',async()=>{
+ const d=document('');const node=d.nodes.t!;
+ node.children=[{id:'a',type:'text',text:'A',styleOverride:{italic:true,color:'0066cc',underline:true}},
+                {id:'b',type:'text',text:'B'}];
+ const [line]=await measureStyledCell(node,d.styles,300,fakeRuntime);
+ expect(line!.runs!.map(r=>[r.fontId,r.color,!!r.underline])).toEqual([
+  ['font-italic','0066CC',true],['font-regular','000000',false],
+ ]);
+});

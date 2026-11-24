@@ -83,8 +83,9 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
     if(own(c,'styleOverride')){
      const override=c.styleOverride;
      if(!cellTextIds.has(id)||ctx.bandText||own(c,'textStyleId')||!object(override)||
-        !keys(override,['bold','fontSizePt'])||
-        (own(override,'bold')&&typeof override.bold!=='boolean')||
+        !keys(override,['bold','fontSizePt','italic','color','underline'])||
+        (['bold','italic','underline'].some(key=>own(override,key)&&typeof override[key]!=='boolean'))||
+        (own(override,'color')&&(typeof override.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(override.color)))||
         (own(override,'fontSizePt')&&(typeof override.fontSizePt!=='number'||!Number.isFinite(override.fontSizePt)||override.fontSizePt<=0)))fail(cp+'.styleOverride');
     }
     if(c.type==='text'){if(!keys(c,['id','type','text','textStyleId','styleOverride'])||!text(c.text)||!c.text.length)fail(cp);}

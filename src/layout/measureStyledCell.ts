@@ -5,19 +5,19 @@ import {LayoutError,type TextRuntime} from './textFlow.js';
 function resolveInlineStyle(base:TextStyle,override?:InlineStyleOverride):TextStyle {
  let result=base;
  if(override?.fontSizePt!==undefined)result={...result,fontSize:{unit:'pt',value:override.fontSizePt}};
- if(override?.bold===undefined)return result;
+ if(override?.bold===undefined && override?.italic===undefined)return result;
  if('font' in result){
   if(result.font.kind==='unselected')return result;
-  return {...result,font:{...result.font,weight:override.bold?700:400}};
+  return {...result,font:{...result.font,weight:override.bold===undefined?result.font.weight:(override.bold?700:400),style:override.italic===undefined?result.font.style:(override.italic?'italic':'normal')}};
  }
- return {...result,fontWeight:override.bold?'bold':'normal'};
+ return {...result,fontWeight:override.bold===undefined?result.fontWeight:(override.bold?'bold':'normal'),...(override.italic===undefined?{}:{fontStyle:override.italic?'italic':'normal'})};
 }
 
 // Trial scope: body table cells containing static text and string fields.
 export async function measureStyledCell(node:TextBlock,styles:ResolvedDocument['styles'],width:number,runtime:TextRuntime):Promise<MeasuredLine[]> {
  const base=node.props.textStyleId;
  const effectiveStyles=new Map<string,TextStyle>();
- const spans:{start:number;end:number;style:string}[]=[];
+ const spans:{start:number;end:number;style:string;color:string;underline:boolean}[]=[];
  let text='';
  for(const child of node.children){
   if(child.type==='line-break'){text+='\n';continue;}
@@ -27,9 +27,11 @@ export async function measureStyledCell(node:TextBlock,styles:ResolvedDocument['
   const resolved=resolveInlineStyle(styles[child.textStyleId??base]!,child.styleOverride);
   const style=JSON.stringify(resolved);
   effectiveStyles.set(style,resolved);
+  const color=child.styleOverride?.color?.toUpperCase()??'000000';
+  const underline=child.styleOverride?.underline??false;
   const last=spans.at(-1);
-  if(last?.style===style && last.end===start)last.end=text.length;
-  else spans.push({start,end:text.length,style});
+  if(last?.style===style && last.color===color && last.underline===underline && last.end===start)last.end=text.length;
+  else spans.push({start,end:text.length,style,color,underline});
  }
  const cache=new Map<string,MeasuredLine>();
  async function line(start:number,end:number):Promise<MeasuredLine>{
@@ -49,7 +51,7 @@ export async function measureStyledCell(node:TextBlock,styles:ResolvedDocument['
    const shift=run.bounds.xPt;
    left=Math.min(left,advance-shift);
    right=Math.max(right,advance-shift+piece!.occupiedWidthPt!);
-   runs.push({...run,bounds:{...run.bounds,xPt:advance}});
+   runs.push({...run,color:span.color,...(span.underline?{underline:true}:{}),bounds:{...run.bounds,xPt:advance}});
    advance+=run.bounds.widthPt;
    const baseline=run.baselineOffsetPt!;
    above=Math.max(above,baseline);

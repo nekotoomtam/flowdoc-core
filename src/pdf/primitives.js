@@ -265,8 +265,17 @@ function buildPageContent(page, usages, resolvedRuns) {
             `${formatNumber(border.x1Pt)} ${formatNumber(page.heightPt-border.y1Pt)} m`,
             `${formatNumber(border.x2Pt)} ${formatNumber(page.heightPt-border.y2Pt)} l S`, 'Q');
     }
-    for (const command of page.commands)
+    for (const command of page.commands) {
         appendText(content, page, command, usages, resolvedRuns);
+        if (command.underline && command.bounds.widthPt > 0) {
+            const start = command.bounds.xPt;
+            const y = page.heightPt - command.bounds.yPt - command.baselineOffsetPt - command.fontSizePt * .1;
+            content.push('/Artifact BMC', 'q', '0 J', '[] 0 d', `${colorOperands(command.color)} RG`,
+                `${formatNumber(command.fontSizePt / 20)} w`,
+                `${formatNumber(start)} ${formatNumber(y)} m`,
+                `${formatNumber(start + command.bounds.widthPt)} ${formatNumber(y)} l S`, 'Q', 'EMC');
+        }
+    }
     return Buffer.from(content.join('\n')+'\n', 'ascii');
 }
 function planPdfObjects(contract, usages, imageUsages, pageContents) {
