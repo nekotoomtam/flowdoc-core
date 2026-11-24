@@ -79,10 +79,11 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    if(own(n.props,'toc')&&(!ctx.contents||!object(n.props.toc)||!keys(n.props.toc,['level'])||!Number.isInteger(n.props.toc.level)||n.props.toc.level<1||n.props.toc.level>MAX_CONTENTS_LEVEL||!own(n.props,'anchorId')))fail(p+'.props.toc');
    for(const [i,c] of n.children.entries()){
     const cp=p+`.children[${i}]`;if(!object(c)){fail(cp);continue;}unique(c.id,cp+'.id');
-    if(c.type==='text'){if(!keys(c,['id','type','text'])||!text(c.text)||!c.text.length)fail(cp);}
+    if(own(c,'textStyleId')&&(!cellTextIds.has(id)||ctx.bandText||!name(c.textStyleId)||!own(ctx.styles,c.textStyleId)))fail(cp+'.textStyleId');
+    if(c.type==='text'){if(!keys(c,['id','type','text','textStyleId'])||!text(c.text)||!c.text.length)fail(cp);}
     else if(c.type==='system-page-field'){if(!ctx.pageFields||!keys(c,['id','type','field','width'])||!['current','total','sectionTotal'].includes(c.field)||!object(c.width)||!keys(c.width,['value','unit'])||!['mm','pt'].includes(c.width.unit)||typeof c.width.value!=='number'||!Number.isFinite(c.width.value)||c.width.value<=0||!Number.isFinite(toPt(c.width as any)))fail(cp);}
     else if(c.type==='line-break'){if(!keys(c,['id','type']))fail(cp);}
-    else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key','numberDisplay'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.')||(own(c,'numberDisplay')&&!['digits','words-th','words-en'].includes(c.numberDisplay)))fail(cp);}
+    else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key','numberDisplay','textStyleId'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.')||(own(c,'numberDisplay')&&!['digits','words-th','words-en'].includes(c.numberDisplay)))fail(cp);}
     else if(ctx.links&&['url','link','reference'].includes(c.type)){
      const {id:_,targetInstanceKey,...command}=c;
      if(targetInstanceKey!==undefined&&(!ctx.assembly||c.type!=='reference'||typeof targetInstanceKey!=='string'||! /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(targetInstanceKey)))fail(cp+'.targetInstanceKey');

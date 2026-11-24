@@ -6,7 +6,7 @@ import type {GlyphRun} from '../pdf/drawContract.js';
 import type {TextRuntime,ShapedText} from './textFlow.js';
 import {LayoutError} from './textFlow.js';
 import {tryPrefixFit} from '../runtime/prefixFit.js';
-export interface MeasuredLine {heightPt:number;occupiedWidthPt?:number;run?:Omit<GlyphRun,'id'>}
+export interface MeasuredLine {heightPt:number;occupiedWidthPt?:number;runs?:Omit<GlyphRun,'id'>[];run?:Omit<GlyphRun,'id'>}
 export async function measureText(node:TextBlock,style:TextStyle,available:number,runtime:TextRuntime,firstLineWidth=available):Promise<MeasuredLine[]>{
  let lineWidth=firstLineWidth;
  let raw='',rawSpans:LinkSpan[]=[];

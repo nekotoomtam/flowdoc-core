@@ -152,8 +152,8 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     const ensureHeight = (height: number, id: string, cursor= pending(id,'node',{nodeType:d.nodes[id]?.type??'text-block'})) => { if(fixed&&y+height>limit()+epsilon)throw new FormatStop(cursor.kind==='image'?'image-does-not-fit':'height-limit',[cursor]); if (y + height > bottom + epsilon)
         nextPage(); if (height > bottom - top + epsilon)
         throw new LayoutError(id, 'Item exceeds page content height'); };
-    const emitLine = (line: MeasuredLine, x: number, at: number) => { if (line.run)
-        current.commands.push({ ...line.run, id: `run-${serial++}`, bounds: { ...line.run.bounds, xPt: x + line.run.bounds.xPt, yPt: at } }); };
+    const emitLine = (line: MeasuredLine, x: number, at: number) => { for(const run of line.runs??(line.run?[line.run]:[]))
+        current.commands.push({ ...run, id: `run-${serial++}`, bounds: { ...run.bounds, xPt: x + run.bounds.xPt, yPt: at } }); };
     const measureBlock = async (id: string, width: number) => { const n = d.nodes[id]; if (n?.type !== 'text-block')
         throw new LayoutError(id, 'Expected a TextBlock'); return measureText(n, d.styles[n.props.textStyleId]!, width, runtime); };
     const table = async (t: Table) => {

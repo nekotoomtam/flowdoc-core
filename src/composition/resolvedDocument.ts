@@ -6,7 +6,7 @@ export interface LegacyTextStyle {
 }
 export type TextStyle=LegacyTextStyle|import('../fonts/types.js').LibraryTextStyle;
 export interface SystemPageField {id:string;type:"system-page-field";field:"current"|"total"|"sectionTotal";width:Length}
-export type TextInline=SystemPageField|{id:string;type:'text';text:string}|{id:string;type:'line-break'}|({id:string}&BoundLink);
+export type TextInline=SystemPageField|{id:string;type:'text';text:string;textStyleId?:string}|{id:string;type:'line-break'}|({id:string}&BoundLink);
 export interface TextBlock {
   id:string;type:'text-block';role:{role:'paragraph'};
   props:{textStyleId:string;outline?:boolean;textAlign?:'left'|'center'|'right';pageFieldLayout?:'compact';heightMode?:'content'|'fixed';height?:Length;verticalAlign?:'top'|'center'|'bottom';sizing?:{mode:'content'};anchorId?:string;toc?:{level:number}};children:TextInline[];

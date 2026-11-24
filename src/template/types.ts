@@ -13,7 +13,7 @@ export type TemplateLink={id:string}&({type:'url';value:ScalarBinding}|{type:'li
 export type TemplateInline=Exclude<TextInline,{type:'url'|'link'|'reference'}>|FieldRef|TemplateLink;
 export interface ArrayField {type:'array';required?:boolean;default?:import('../data/types.js').PreparedItem[];items:ObjectSchema<StringField|NumberField|LinkField|ImageField|ArrayField>;label?:string;description?:string}
 export interface ObjectSchema<F=StringField|NumberField|ArrayField|ImageField|LinkField|AreaField> {type:'object';fields:Record<string,F>}
-export interface FieldRef {id:string;type:'field-ref';scope:BindingScope;key:string;numberDisplay?:NumberDisplay}
+export interface FieldRef {id:string;type:'field-ref';textStyleId?:string;scope:BindingScope;key:string;numberDisplay?:NumberDisplay}
 export type TemplateTextBlock=Omit<TextBlock,'children'|'props'>&{props:Omit<TextBlock['props'],'anchorId'>&{anchorId?:ScalarBinding};children:TemplateInline[]};
 export type TemplateImageBlock=Omit<ImageBlock,'props'>&{props:{width:ImageBlock['props']['width'];height:ImageBlock['props']['height'];align?:ImageBlock['props']['align'];source:{scope:BindingScope;key:string}}};
 export interface AreaEntry {format:string;data:Record<string,unknown>}
