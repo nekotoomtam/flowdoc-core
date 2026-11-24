@@ -1,3 +1,4 @@
+import {resolveInlineStyle} from '../composition/resolveInlineStyle.js';
 import {isPaperSize,paperSizePt} from '../composition/paperSize.js';
 import { required } from './types.js';
 import {lineStrokeErrors,tableStrokeErrors} from '../composition/strokeStyle.js';
@@ -112,6 +113,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
         target: string;
         path: string;
     }[] = [];
+    const inlineStyles = new Map<string,string>();
     let nodeCount = 0;
     requireValue(Array.isArray(d.sections) && d.sections.length > 0, 'sections', 'Explicit authored sections required');
     const rootWidths = new Map<string, number>();
@@ -177,7 +179,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
                     knownInline.add(c.id);
                     const cp = at + '.children.' + c.id;
                     if (c.type === 'text') {
-                        keys(c, ['id', 'type', 'text'], cp);
+                        keys(c, ['id', 'type', 'text', 'textStyleId', 'styleOverride'], cp);
                         requireValue(typeof c.text === 'string' && !/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/u.test(c.text), cp, 'Invalid source text');
                     }
                     else if (c.type === 'line-break')
@@ -210,10 +212,29 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
                     keys(p.toc, ['level'], at + '.props.toc');
                     requireValue(Number.isInteger(p.toc.level) && p.toc.level >= 1 && p.toc.level <= 3 && !band, at + '.props.toc', 'Invalid heading level');
                 }
-                const t = normalizeBlock(n, at, path, r.language), font = r.fonts.find(f => f.identity.id === required(styles[p.textStyleId], 'styles').font.id)!;
-                for (const ch of t.text)
-                    if (ch !== '\n' && !/\p{Default_Ignorable_Code_Point}/u.test(ch) && !font.glyph(ch.codePointAt(0)!))
-                        fail('FONT_GLYPH_MISSING', at + '.children', 'Concrete source face has no glyph for U+' + ch.codePointAt(0)!.toString(16), id);
+                const t = normalizeBlock(n, at, path, r.language);
+                for (const [index, span] of t.spans.entries()) {
+                    const child = n.children[index];
+                    let styleId = child.textStyleId ?? p.textStyleId;
+                    if (child.styleOverride) {
+                        const resolved = resolveInlineStyle(d.styles[styleId], child.styleOverride);
+                        const key = JSON.stringify(resolved);
+                        let id = inlineStyles.get(key);
+                        if (!id) {
+                            id = '~inline-' + inlineStyles.size;
+                            while (own(styles, id)) id += '~';
+                            Object.assign(styles, deriveStyles({schemaVersion:d.schemaVersion, styles:{[id]:resolved}}, r));
+                            inlineStyles.set(key, id);
+                        }
+                        styleId = id;
+                    }
+                    if (child.textStyleId || child.styleOverride) span.inlineStyleId = styleId;
+                    const fontId = required(styles[styleId], 'styles').font.id;
+                    const font = r.fonts.find(f => f.identity.id === fontId)!;
+                    for (const ch of t.text.slice(...span.range))
+                        if (ch !== '\n' && !/\p{Default_Ignorable_Code_Point}/u.test(ch) && !font.glyph(ch.codePointAt(0)!))
+                            fail('FONT_GLYPH_MISSING', at + '.children', 'Concrete source face has no glyph for U+' + ch.codePointAt(0)!.toString(16), id);
+                }
                 texts.push(t);
             }
             else if (n.type === 'image') {

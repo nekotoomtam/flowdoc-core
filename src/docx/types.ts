@@ -66,6 +66,9 @@ export interface NormalizedText {
     text: string;
     sourceToNormalized: readonly number[];
     spans: readonly {
+        inlineStyleId?: string;
+        color?: string;
+        underline?: boolean;
         id: string;
         type: string;
         range: readonly [

@@ -211,7 +211,9 @@ export async function writeDocx(intent: ExportIntent, sink: DocxSink, options: W
         }
         for (const [id, style] of Object.entries(intent.styles)) {
             if (style.font.nativeFamily) adaptations.push({kind:'native-weight-family',styleId:id,sourceFamily:style.font.family,nativeFamily:style.font.nativeFamily,weight:style.font.weight,fontSha256:style.font.sha256,bytesChanged:false,wordVerified:false});
-            const sourcePt = (intent.document.styles as any)[id].lineHeightPt;
+            const source = intent.document.styles[id];
+            if (!source) continue; // Inline styles do not define paragraph spacing.
+            const sourcePt = source.lineHeightPt;
             if (style.line.twips / 20 !== sourcePt)
                 adaptations.push({ kind: 'minimum-line-quantization', path: 'document.styles.' + id + '.lineHeightPt', sourcePt, twips: style.line.twips, errorPt: style.line.twips / 20 - sourcePt });
         }

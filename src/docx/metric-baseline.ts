@@ -83,6 +83,7 @@ export async function prepareMetricBaselines(intent:ExportIntent,shaperPath:stri
    const decision:BaselineDecision={kind:'text-baseline-policy',nodeId:block.nodeId,scope:block.scope,
     fontSha256:style.font.sha256,policy:'retain-native',reason:'unverified-content',wordVerified:false};
    const retain=(reason:string)=>{decision.reason=reason;decisions.set(key(block.scope,block.nodeId),Object.freeze(decision));};
+   if(block.spans.some(span=>span.inlineStyleId)){retain('mixed-inline-style');continue;}
    const size=style.sizeHalfPoints/2,height=style.line.twips/20;
    const band=block.scope!=='nodes',hasPageFields=block.spans.some(s=>s.type==='system-page-field');
    if(node.props.heightMode==='fixed'||hasPageFields&&(!band||node.props.pageFieldLayout!=='compact')||band&&block.spans.some(s=>s.type!=='text'&&s.type!=='system-page-field')){retain('fixed-or-unbounded-generated-content');continue;}

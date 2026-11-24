@@ -45,7 +45,7 @@ export function normalizeBlock(node: any, path: string, scope: string, language?
             segments.push({ text: g.segment, start: g.index, end: g.index + g.segment.length, script });
     }
     const spans = ranges.map(({ c, start, end }) => { const a = required(map[start], 'text.range.start'), b = required(map[end], 'text.range.end'); if (!boundaries.has(a) || !boundaries.has(b))
-        fail('DOCX_CAPABILITY_UNSUPPORTED', path + '.children.' + c.id, 'Inline boundary splits a grapheme cluster', node.id); return { id: c.id, type: c.type, range: [a, b] as const, ...(c.target ? { target: c.target } : {}), ...(c.url || c.type === 'url' ? { url: c.url ?? c.value } : {}), ...(c.field ? { field: c.field } : {}) }; });
+        fail('DOCX_CAPABILITY_UNSUPPORTED', path + '.children.' + c.id, 'Inline boundary splits a grapheme cluster', node.id); return { id: c.id, type: c.type, ...(c.styleOverride?.color ? {color:c.styleOverride.color} : {}), ...(c.styleOverride?.underline !== undefined ? {underline:c.styleOverride.underline} : {}), range: [a, b] as const, ...(c.target ? { target: c.target } : {}), ...(c.url || c.type === 'url' ? { url: c.url ?? c.value } : {}), ...(c.field ? { field: c.field } : {}) }; });
     return { nodeId: node.id, path, scope, styleId: node.props.textStyleId, text, sourceToNormalized: map, spans, segments, ...(language ? { language } : {}) };
 }
 export function ownsPoint(text: string, start: number, end: number, point: number) { return point >= start && (point < end || point === end && (end === text.length || text[end] === '\n')); }

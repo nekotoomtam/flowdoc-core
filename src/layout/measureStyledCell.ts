@@ -1,17 +1,7 @@
+import {resolveInlineStyle} from '../composition/resolveInlineStyle.js';
 import {measureText,type MeasuredLine} from './measureText.js';
-import type {ResolvedDocument,TextBlock,TextStyle,InlineStyleOverride} from '../composition/resolvedDocument.js';
+import type {ResolvedDocument,TextBlock,TextStyle} from '../composition/resolvedDocument.js';
 import {LayoutError,type TextRuntime} from './textFlow.js';
-
-function resolveInlineStyle(base:TextStyle,override?:InlineStyleOverride):TextStyle {
- let result=base;
- if(override?.fontSizePt!==undefined)result={...result,fontSize:{unit:'pt',value:override.fontSizePt}};
- if(override?.bold===undefined && override?.italic===undefined)return result;
- if('font' in result){
-  if(result.font.kind==='unselected')return result;
-  return {...result,font:{...result.font,weight:override.bold===undefined?result.font.weight:(override.bold?700:400),style:override.italic===undefined?result.font.style:(override.italic?'italic':'normal')}};
- }
- return {...result,fontWeight:override.bold===undefined?result.fontWeight:(override.bold?'bold':'normal'),...(override.italic===undefined?{}:{fontStyle:override.italic?'italic':'normal'})};
-}
 
 // Trial scope: body table cells containing static text and string fields.
 export async function measureStyledCell(node:TextBlock,styles:ResolvedDocument['styles'],width:number,runtime:TextRuntime):Promise<MeasuredLine[]> {
