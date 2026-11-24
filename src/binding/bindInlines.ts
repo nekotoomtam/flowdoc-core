@@ -24,7 +24,7 @@ export function bindInlines(children:TemplateInline[],scopes:BindingScopes,prefi
   const expanded=child.type==='field-ref'||parts.length>1;
   for(const [i,part] of parts.entries()){
    if(i>0)add({id:base+`~part-${serial++}`,type:'line-break'});
-   if(part)add({id:base+(expanded?`~part-${serial++}`:''),type:'text',text:part,...(child.textStyleId?{textStyleId:child.textStyleId}:{})});
+   if(part)add({id:base+(expanded?`~part-${serial++}`:''),type:'text',text:part,...(child.textStyleId?{textStyleId:child.textStyleId}:{}),...(child.styleOverride?{styleOverride:{...child.styleOverride}}:{})});
   }
  }
  return out;

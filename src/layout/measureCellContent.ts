@@ -19,7 +19,7 @@ export async function measureCellContent(d:ResolvedDocument,childIds:string[],co
   if(n?.type==='text-block'){
    const inset=n.props.outline?2:0,width=contentWidth-2*inset;
    if(inset&&width<=0)throw new LayoutError(id,'Text outline exceeds cell content width');
-   const lines=n.children.some(c=>c.type==='text'&&c.textStyleId)?await measureStyledCell(n,d.styles,width,runtime):await measureText(n,d.styles[n.props.textStyleId]!,width,runtime);
+   const lines=n.children.some(c=>c.type==='text'&&(c.textStyleId||c.styleOverride))?await measureStyledCell(n,d.styles,width,runtime):await measureText(n,d.styles[n.props.textStyleId]!,width,runtime);
    for(const measured of lines){
     // Align within the padded cell, using ink bounds rather than character count.
     const remaining=width-(measured.occupiedWidthPt??0),offset=inset+(n.props.textAlign==='center'?remaining/2:n.props.textAlign==='right'?remaining:0);

@@ -80,10 +80,17 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    for(const [i,c] of n.children.entries()){
     const cp=p+`.children[${i}]`;if(!object(c)){fail(cp);continue;}unique(c.id,cp+'.id');
     if(own(c,'textStyleId')&&(!cellTextIds.has(id)||ctx.bandText||!name(c.textStyleId)||!own(ctx.styles,c.textStyleId)))fail(cp+'.textStyleId');
-    if(c.type==='text'){if(!keys(c,['id','type','text','textStyleId'])||!text(c.text)||!c.text.length)fail(cp);}
+    if(own(c,'styleOverride')){
+     const override=c.styleOverride;
+     if(!cellTextIds.has(id)||ctx.bandText||own(c,'textStyleId')||!object(override)||
+        !keys(override,['bold','fontSizePt'])||
+        (own(override,'bold')&&typeof override.bold!=='boolean')||
+        (own(override,'fontSizePt')&&(typeof override.fontSizePt!=='number'||!Number.isFinite(override.fontSizePt)||override.fontSizePt<=0)))fail(cp+'.styleOverride');
+    }
+    if(c.type==='text'){if(!keys(c,['id','type','text','textStyleId','styleOverride'])||!text(c.text)||!c.text.length)fail(cp);}
     else if(c.type==='system-page-field'){if(!ctx.pageFields||!keys(c,['id','type','field','width'])||!['current','total','sectionTotal'].includes(c.field)||!object(c.width)||!keys(c.width,['value','unit'])||!['mm','pt'].includes(c.width.unit)||typeof c.width.value!=='number'||!Number.isFinite(c.width.value)||c.width.value<=0||!Number.isFinite(toPt(c.width as any)))fail(cp);}
     else if(c.type==='line-break'){if(!keys(c,['id','type']))fail(cp);}
-    else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key','numberDisplay','textStyleId'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.')||(own(c,'numberDisplay')&&!['digits','words-th','words-en'].includes(c.numberDisplay)))fail(cp);}
+    else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key','numberDisplay','textStyleId','styleOverride'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.')||(own(c,'numberDisplay')&&!['digits','words-th','words-en'].includes(c.numberDisplay)))fail(cp);}
     else if(ctx.links&&['url','link','reference'].includes(c.type)){
      const {id:_,targetInstanceKey,...command}=c;
      if(targetInstanceKey!==undefined&&(!ctx.assembly||c.type!=='reference'||typeof targetInstanceKey!=='string'||! /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(targetInstanceKey)))fail(cp+'.targetInstanceKey');

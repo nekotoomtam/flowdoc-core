@@ -1,10 +1,22 @@
 import {measureText,type MeasuredLine} from './measureText.js';
-import type {ResolvedDocument,TextBlock} from '../composition/resolvedDocument.js';
+import type {ResolvedDocument,TextBlock,TextStyle,InlineStyleOverride} from '../composition/resolvedDocument.js';
 import {LayoutError,type TextRuntime} from './textFlow.js';
+
+function resolveInlineStyle(base:TextStyle,override?:InlineStyleOverride):TextStyle {
+ let result=base;
+ if(override?.fontSizePt!==undefined)result={...result,fontSize:{unit:'pt',value:override.fontSizePt}};
+ if(override?.bold===undefined)return result;
+ if('font' in result){
+  if(result.font.kind==='unselected')return result;
+  return {...result,font:{...result.font,weight:override.bold?700:400}};
+ }
+ return {...result,fontWeight:override.bold?'bold':'normal'};
+}
 
 // Trial scope: body table cells containing static text and string fields.
 export async function measureStyledCell(node:TextBlock,styles:ResolvedDocument['styles'],width:number,runtime:TextRuntime):Promise<MeasuredLine[]> {
  const base=node.props.textStyleId;
+ const effectiveStyles=new Map<string,TextStyle>();
  const spans:{start:number;end:number;style:string}[]=[];
  let text='';
  for(const child of node.children){
@@ -12,7 +24,9 @@ export async function measureStyledCell(node:TextBlock,styles:ResolvedDocument['
   if(child.type!=='text')throw new LayoutError(node.id,'Unsupported inline in styled cell');
   const start=text.length;
   text+=child.text.replace(/\r\n?/g,'\n').replace(/\t/g,' ');
-  const style=child.textStyleId??base;
+  const resolved=resolveInlineStyle(styles[child.textStyleId??base]!,child.styleOverride);
+  const style=JSON.stringify(resolved);
+  effectiveStyles.set(style,resolved);
   const last=spans.at(-1);
   if(last?.style===style && last.end===start)last.end=text.length;
   else spans.push({start,end:text.length,style});
@@ -28,7 +42,7 @@ export async function measureStyledCell(node:TextBlock,styles:ResolvedDocument['
    let piece=cache.get(key);
    if(!piece){
     const part={...node,children:[{id:node.id,type:'text' as const,text:text.slice(a,b)}]};
-    [piece]=await measureText(part,styles[span.style]!,1e8,runtime);
+    [piece]=await measureText(part,effectiveStyles.get(span.style)!,1e8,runtime);
     cache.set(key,piece!);
    }
    const run=piece!.run!;
