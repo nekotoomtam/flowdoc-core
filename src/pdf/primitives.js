@@ -199,7 +199,7 @@ function appendText(content, page, command, usages, resolvedRuns) {
             textArray.push(`<${glyph.cid.toString(16).padStart(4, "0").toUpperCase()}>`);
             currentOffset = glyph.offsetX;
         });
-        content.push(`/Span << /ActualText <${actualTextHex(command.text)}> >> BDC`, "BT", `/${usage.pdfResourceName} ${formatNumber(command.fontSizePt)} Tf`, `${colorOperands(command.color)} rg`, `1 0 0 1 ${formatNumber(command.bounds.xPt)} ${formatNumber(page.heightPt - command.bounds.yPt - command.baselineOffsetPt)} Tm`, `[${textArray.join(" ")}] TJ`, "ET", "EMC");
+        content.push(`/Span << /ActualText <${actualTextHex(command.text)}> >> BDC`, "BT", `/${usage.pdfResourceName} ${formatNumber(command.fontSizePt)} Tf`, `${colorOperands(command.color)} rg`, `1 0 0 1 ${formatNumber(command.bounds.xPt)} ${formatNumber(page.heightPt - command.bounds.yPt - command.baselineOffsetPt)} Tm`, `[${textArray.join(" ")}] TJ`, "ET");
         const overlayOperators = [];
         let cursorXPt = 0;
         glyphs.forEach((glyph, glyphIndex) => {
@@ -210,8 +210,9 @@ function appendText(content, page, command, usages, resolvedRuns) {
             cursorXPt += measured.advancePt;
         });
         if (overlayOperators.length > 0) {
-            content.push("/Artifact BMC", "BT", `/${usage.pdfResourceName} ${formatNumber(command.fontSizePt)} Tf`, `${colorOperands(command.color)} rg`, ...overlayOperators, "ET", "EMC");
+            content.push("BT", `/${usage.pdfResourceName} ${formatNumber(command.fontSizePt)} Tf`, `${colorOperands(command.color)} rg`, ...overlayOperators, "ET");
         }
+        content.push("EMC");
     }
     else {
         const textArray = [];

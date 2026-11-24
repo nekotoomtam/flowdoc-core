@@ -34,3 +34,12 @@ it('keeps paint and italic selection local to each run',async()=>{
   ['font-italic','0066CC',true],['font-regular','000000',false],
  ]);
 });
+it.each([['พื','้นที่','พื้'],['ก','ุ้งสด','กุ้'],['น','้ำดื่ม','น้ำ']])('keeps combining marks with the base style across inline boundaries',async(prefix,value,cluster)=>{
+ const d=document();const node=d.nodes.t!;
+ node.children=[{id:'prefix',type:'text',text:prefix},{id:'value',type:'text',text:value,styleOverride:{bold:true}}];
+ const lines=await measureStyledCell(node,d.styles,25,fakeRuntime);
+ const runs=lines.flatMap(line=>line.runs!);
+ expect(runs[0]!.text).toBe(cluster);
+ expect(runs[0]!.fontId).toBe('font-regular');
+ expect(runs.map(run=>run.text).join('')).toBe(prefix+value);
+});

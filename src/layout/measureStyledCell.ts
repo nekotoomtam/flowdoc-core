@@ -33,6 +33,17 @@ export async function measureStyledCell(node:TextBlock,styles:ResolvedDocument['
   if(last?.style===style && last.color===color && last.underline===underline && last.end===start)last.end=text.length;
   else spans.push({start,end:text.length,style,color,underline});
  }
+ // A style boundary inside a grapheme follows its base character to the end
+ // of that grapheme. Shape the base and combining marks in the same run.
+ const boundaries=[...new Intl.Segmenter('th',{granularity:'grapheme'}).segment(text)].map(g=>g.index);
+ boundaries.push(text.length);
+ let index=0;
+ for(const span of spans){
+  while(boundaries[index]!<span.start)index++;
+  span.start=boundaries[index]!;
+  while(boundaries[index]!<span.end)index++;
+  span.end=boundaries[index]!;
+ }
  const cache=new Map<string,MeasuredLine>();
  async function line(start:number,end:number):Promise<MeasuredLine>{
   let advance=0,left=0,right=0,above=0,below=0;
