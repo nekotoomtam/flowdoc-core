@@ -14,7 +14,7 @@ export async function measureStyledCell(node:TextBlock,styles:ResolvedDocument['
   if(child.type!=='text')throw new LayoutError(node.id,'Unsupported inline in styled cell');
   const start=text.length;
   text+=child.text.replace(/\r\n?/g,'\n').replace(/\t/g,' ');
-  const resolved=resolveInlineStyle(styles[child.textStyleId??base]!,child.styleOverride);
+  const resolved=resolveInlineStyle(styles[child.textStyleId??base]!,child.styleOverride,styles);
   const style=JSON.stringify(resolved);
   effectiveStyles.set(style,resolved);
   const color=resolved.color?.toUpperCase()??'000000';

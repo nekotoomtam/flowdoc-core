@@ -217,7 +217,7 @@ function inspect(d: any, r: PrivateResources, profile: DocxProfile, omitted: Rea
                     const child = n.children[index];
                     let styleId = child.textStyleId ?? p.textStyleId;
                     if (child.styleOverride) {
-                        const resolved = resolveInlineStyle(d.styles[styleId], child.styleOverride);
+                        const resolved = resolveInlineStyle(d.styles[styleId], child.styleOverride,d.styles);
                         const key = JSON.stringify(resolved);
                         let id = inlineStyles.get(key);
                         if (!id) {
