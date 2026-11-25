@@ -17,8 +17,8 @@ export async function measureStyledCell(node:TextBlock,styles:ResolvedDocument['
   const resolved=resolveInlineStyle(styles[child.textStyleId??base]!,child.styleOverride);
   const style=JSON.stringify(resolved);
   effectiveStyles.set(style,resolved);
-  const color=child.styleOverride?.color?.toUpperCase()??'000000';
-  const underline=child.styleOverride?.underline??false;
+  const color=resolved.color?.toUpperCase()??'000000';
+  const underline=resolved.underline??false;
   const last=spans.at(-1);
   if(last?.style===style && last.color===color && last.underline===underline && last.end===start)last.end=text.length;
   else spans.push({start,end:text.length,style,color,underline});

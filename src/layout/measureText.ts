@@ -30,7 +30,7 @@ export async function measureText(node:TextBlock,style:TextStyle,available:numbe
    const actualHeight=Math.max(lineHeight,shaped.ascentPt+shaped.descentPt,probe?.heightPt??0);
    const baseline=runtime.spacingProbe?.baselineOffsetPt?.(id,style,actualHeight,shaped);
    if(baseline!==undefined&&(!Number.isFinite(baseline)||baseline<0||baseline>actualHeight))throw new LayoutError(id,'Invalid spacing probe baseline');
-   lines.push({heightPt:actualHeight,occupiedWidthPt:extent(shaped),run:{nodeId:id,kind:'glyph-run',text,fontId,fontSizePt:size,lineHeightPt:actualHeight,baselineOffsetPt:baseline??probe?.baselineOffsetPt??shaped.ascentPt+(actualHeight-shaped.ascentPt-shaped.descentPt)/2,color:'000000',bounds:{xPt:-Math.min(0,shaped.inkLeftPt??0),yPt:0,widthPt:advance,heightPt:actualHeight},glyphs:shaped.glyphs,...(spans.length?{sourceStart,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{}),links:spans.filter(s=>s.start<sourceStart+text.length&&s.end>sourceStart)}:{})}});
+   lines.push({heightPt:actualHeight,occupiedWidthPt:extent(shaped),run:{nodeId:id,kind:'glyph-run',text,fontId,fontSizePt:size,lineHeightPt:actualHeight,baselineOffsetPt:baseline??probe?.baselineOffsetPt??shaped.ascentPt+(actualHeight-shaped.ascentPt-shaped.descentPt)/2,color:style.color?.toUpperCase()??'000000',...(style.underline?{underline:true}:{}),bounds:{xPt:-Math.min(0,shaped.inkLeftPt??0),yPt:0,widthPt:advance,heightPt:actualHeight},glyphs:shaped.glyphs,...(spans.length?{sourceStart,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{}),links:spans.filter(s=>s.start<sourceStart+text.length&&s.end>sourceStart)}:{})}});
    lineWidth=available;
   };
   // Tabs are display spaces, not tab stops. One UTF-16 unit remains one unit,

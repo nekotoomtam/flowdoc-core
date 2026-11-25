@@ -4,7 +4,7 @@ export interface LegacyTextStyle {
   fontFamilyKey:'sarabun';fontWeight:'normal'|'bold';fontStyle?:'normal'|'italic';
   fontSize:{value:number;unit:'pt'};lineHeightPt:number;
 }
-export type TextStyle=LegacyTextStyle|import('../fonts/types.js').LibraryTextStyle;
+export type TextStyle=(LegacyTextStyle|import('../fonts/types.js').LibraryTextStyle)&{color?:string;underline?:boolean};
 export interface SystemPageField {id:string;type:"system-page-field";field:"current"|"total"|"sectionTotal";width:Length}
 export interface InlineStyleOverride {bold?:boolean;italic?:boolean;color?:string;underline?:boolean;fontSizePt?:number}
 export type TextInline=SystemPageField|{id:string;type:'text';text:string;textStyleId?:string;styleOverride?:InlineStyleOverride}|{id:string;type:'line-break'}|({id:string}&BoundLink);

@@ -75,7 +75,7 @@ function deriveStyles(d: any, r: PrivateResources) {
     const styles: Record<string, EffectiveStyle> = Object.create(null);
     for (const [id, value] of Object.entries(d.styles)) {
         const s: any = value, p = 'styles.' + id;
-        keys(s, d.schemaVersion === 1 ? ['fontFamilyKey', 'fontWeight', 'fontStyle', 'fontSize', 'lineHeightPt'] : ['font', 'fontSize', 'lineHeightPt'], p);
+        keys(s, d.schemaVersion === 1 ? ['fontFamilyKey', 'fontWeight', 'fontStyle', 'fontSize', 'lineHeightPt', 'color', 'underline'] : ['font', 'fontSize', 'lineHeightPt', 'color', 'underline'], p);
         requireValue(Number.isFinite(s.lineHeightPt) && s.lineHeightPt > 0, p + '.lineHeightPt', 'Expected positive minimum line height');
         keys(s.fontSize, ['unit', 'value'], p + '.fontSize');
         requireValue(s.fontSize.unit === 'pt' && Number.isFinite(s.fontSize.value) && s.fontSize.value > 0, p + '.fontSize', 'Invalid font size');
@@ -97,7 +97,7 @@ function deriveStyles(d: any, r: PrivateResources) {
         if (matches.length !== 1)
             fail('FONT_FACE_UNAVAILABLE', p + '.font', 'Expected exactly one concrete source face');
         const identity = required(matches[0], p + '.font').identity;
-        styles[id] = { font: identity, sizeHalfPoints: s.fontSize.value * 2, bold: !identity.nativeFamily && (d.schemaVersion === 1 ? s.fontWeight === 'bold' : identity.weight >= 700), italic: identity.style === 'italic', line: { rule: 'atLeast', twips: toTwips({ unit: 'pt', value: s.lineHeightPt }, p + '.lineHeightPt') } };
+        styles[id] = { ...(s.color?{color:s.color}:{}), ...(s.underline?{underline:true}:{}), font: identity, sizeHalfPoints: s.fontSize.value * 2, bold: !identity.nativeFamily && (d.schemaVersion === 1 ? s.fontWeight === 'bold' : identity.weight >= 700), italic: identity.style === 'italic', line: { rule: 'atLeast', twips: toTwips({ unit: 'pt', value: s.lineHeightPt }, p + '.lineHeightPt') } };
     }
     return styles;
 }

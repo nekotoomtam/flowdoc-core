@@ -2,6 +2,8 @@ import type {TextStyle,InlineStyleOverride} from './resolvedDocument.js';
 
 export function resolveInlineStyle(base:TextStyle,override?:InlineStyleOverride):TextStyle {
  let result=base;
+ if(override?.color!==undefined)result={...result,color:override.color};
+ if(override?.underline!==undefined)result={...result,underline:override.underline};
  if(override?.fontSizePt!==undefined)result={...result,fontSize:{unit:'pt',value:override.fontSizePt}};
  if(override?.bold===undefined && override?.italic===undefined)return result;
  if('font' in result){

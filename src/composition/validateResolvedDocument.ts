@@ -105,13 +105,15 @@ export function validateBookStyles(d: Record<string, any>): Issue[] {
         return issues;
     }
     for (const [id, s] of Object.entries(d.styles)) {
+        if(object(s)&&((s.color!==undefined&&(typeof s.color!=='string'||!/^[0-9a-f]{6}$/i.test(s.color)))||
+            (s.underline!==undefined&&typeof s.underline!=='boolean')))fail('styles.'+id);
         if(d.schemaVersion===2){
-            if(!object(s)||!keys(s,['font','fontSize','lineHeightPt'])||!isFontSelection(s.font))
+            if(!object(s)||!keys(s,['font','fontSize','lineHeightPt', 'color', 'underline'])||!isFontSelection(s.font))
                 issues.push({code:'INVALID_FONT_SELECTION',path:'/styles/'+id.replaceAll('~','~0').replaceAll('/','~1')+'/font',message:'Invalid font selection'});
             if(!object(s)||!object(s.fontSize)||!keys(s.fontSize,['value','unit'])||s.fontSize.unit!=='pt'||!number(s.fontSize.value)||!number(s.lineHeightPt))fail('styles.'+id);
             continue;
         }
-        if (!object(s) || !keys(s, ['fontFamilyKey', 'fontWeight', 'fontStyle', 'fontSize', 'lineHeightPt']) || s.fontFamilyKey !== 'sarabun' || !['normal', 'bold'].includes(s.fontWeight) || (s.fontStyle !== undefined && !['normal', 'italic'].includes(s.fontStyle)) || !object(s.fontSize) || !keys(s.fontSize, ['value', 'unit']) || s.fontSize.unit !== 'pt' || !number(s.fontSize.value) || !number(s.lineHeightPt))
+        if (!object(s) || !keys(s, ['fontFamilyKey', 'fontWeight', 'fontStyle', 'fontSize', 'lineHeightPt', 'color', 'underline']) || s.fontFamilyKey !== 'sarabun' || !['normal', 'bold'].includes(s.fontWeight) || (s.fontStyle !== undefined && !['normal', 'italic'].includes(s.fontStyle)) || !object(s.fontSize) || !keys(s.fontSize, ['value', 'unit']) || s.fontSize.unit !== 'pt' || !number(s.fontSize.value) || !number(s.lineHeightPt))
             fail('styles.' + id);
     }
     return issues;
