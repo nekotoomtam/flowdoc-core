@@ -62,7 +62,9 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    if(own(n.props,'color')&&(typeof n.props.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(n.props.color)))fail(p+'.props.color');
    for(const key of ['width','thickness','spaceBefore','spaceAfter'])if(own(n.props,key)){const v=n.props[key];if(!object(v)||!keys(v,['value','unit'])||!['pt','mm'].includes(v.unit)||typeof v.value!=='number'||!Number.isFinite(v.value)||v.value<0||(['width','thickness'].includes(key)&&v.value===0)||!Number.isFinite(toPt(v as any)))fail(p+'.props.'+key);}
   }else if(n.type==='text-block'){
-   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing',...(ctx.heightModes?['heightMode','height','verticalAlign']:[]),'anchorId',...(ctx.contents?['toc']:[]),...(ctx.bandText||cellTextIds.has(id)?['textAlign']:[]),...(ctx.bandText?['pageFieldLayout']:[]),...(ctx.bandText&&cellTextIds.has(id)?['outline']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
+   const flowingParagraph=(ctx.assembly||ctx.resolved)&&!ctx.bandText&&object(n.props)&&n.props.heightMode!=='fixed';
+   const inlineStyleAllowed=!ctx.bandText&&(cellTextIds.has(id)||(flowingParagraph&&Array.isArray(n.children)&&n.children.every((child:any)=>['text','field-ref','line-break'].includes(child?.type))));
+   if(!keys(n,['id','type','role','props','children'])||!object(n.role)||!keys(n.role,['role'])||n.role.role!=='paragraph'||!object(n.props)||!keys(n.props,ctx.links?['textStyleId','sizing',...(ctx.heightModes?['heightMode','height','verticalAlign']:[]),'anchorId',...(ctx.contents?['toc']:[]),...(ctx.bandText||cellTextIds.has(id)||flowingParagraph?['textAlign']:[]),...(ctx.bandText?['pageFieldLayout']:[]),...(ctx.bandText&&cellTextIds.has(id)?['outline']:[])]:['textStyleId','sizing'])||!name(n.props.textStyleId)||!own(ctx.styles,n.props.textStyleId)||!Array.isArray(n.children)){fail(p);continue;}
    if(own(n.props,'outline')&&typeof n.props.outline!=='boolean')fail(p+'.props.outline');
    if(own(n.props,'textAlign')&&!['left','center','right'].includes(n.props.textAlign))fail(p+'.props.textAlign');
    if(own(n.props,'pageFieldLayout')&&(n.props.pageFieldLayout!=='compact'||!n.children.some((c:any)=>c?.type==='system-page-field')))fail(p+'.props.pageFieldLayout');
@@ -79,10 +81,19 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
    if(own(n.props,'toc')&&(!ctx.contents||!object(n.props.toc)||!keys(n.props.toc,['level'])||!Number.isInteger(n.props.toc.level)||n.props.toc.level<1||n.props.toc.level>MAX_CONTENTS_LEVEL||!own(n.props,'anchorId')))fail(p+'.props.toc');
    for(const [i,c] of n.children.entries()){
     const cp=p+`.children[${i}]`;if(!object(c)){fail(cp);continue;}unique(c.id,cp+'.id');
-    if(c.type==='text'){if(!keys(c,['id','type','text'])||!text(c.text)||!c.text.length)fail(cp);}
+    if(own(c,'textStyleId')&&(!inlineStyleAllowed||!name(c.textStyleId)||!own(ctx.styles,c.textStyleId)))fail(cp+'.textStyleId');
+    if(own(c,'styleOverride')){
+     const override=c.styleOverride;
+     if(!inlineStyleAllowed||own(c,'textStyleId')||!object(override)||
+        !keys(override,['bold','fontSizePt','italic','color','underline'])||
+        (['bold','italic','underline'].some(key=>own(override,key)&&typeof override[key]!=='boolean'))||
+        (own(override,'color')&&(typeof override.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(override.color)))||
+        (own(override,'fontSizePt')&&(typeof override.fontSizePt!=='number'||!Number.isFinite(override.fontSizePt)||override.fontSizePt<=0)))fail(cp+'.styleOverride');
+    }
+    if(c.type==='text'){if(!keys(c,['id','type','text','textStyleId','styleOverride'])||!text(c.text)||!c.text.length)fail(cp);}
     else if(c.type==='system-page-field'){if(!ctx.pageFields||!keys(c,['id','type','field','width'])||!['current','total','sectionTotal'].includes(c.field)||!object(c.width)||!keys(c.width,['value','unit'])||!['mm','pt'].includes(c.width.unit)||typeof c.width.value!=='number'||!Number.isFinite(c.width.value)||c.width.value<=0||!Number.isFinite(toPt(c.width as any)))fail(cp);}
     else if(c.type==='line-break'){if(!keys(c,['id','type']))fail(cp);}
-    else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key','numberDisplay'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.')||(own(c,'numberDisplay')&&!['digits','words-th','words-en'].includes(c.numberDisplay)))fail(cp);}
+    else if(c.type==='field-ref'&&!ctx.resolved){if(!keys(c,['id','type','scope','key','numberDisplay','textStyleId','styleOverride'])||!scopeNames.includes(c.scope)||!name(c.key)||c.key.includes('.')||(own(c,'numberDisplay')&&!['digits','words-th','words-en'].includes(c.numberDisplay)))fail(cp);}
     else if(ctx.links&&['url','link','reference'].includes(c.type)){
      const {id:_,targetInstanceKey,...command}=c;
      if(targetInstanceKey!==undefined&&(!ctx.assembly||c.type!=='reference'||typeof targetInstanceKey!=='string'||! /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(targetInstanceKey)))fail(cp+'.targetInstanceKey');

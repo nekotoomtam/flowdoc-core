@@ -199,7 +199,7 @@ function appendText(content, page, command, usages, resolvedRuns) {
             textArray.push(`<${glyph.cid.toString(16).padStart(4, "0").toUpperCase()}>`);
             currentOffset = glyph.offsetX;
         });
-        content.push(`/Span << /ActualText <${actualTextHex(command.text)}> >> BDC`, "BT", `/${usage.pdfResourceName} ${formatNumber(command.fontSizePt)} Tf`, `${colorOperands(command.color)} rg`, `1 0 0 1 ${formatNumber(command.bounds.xPt)} ${formatNumber(page.heightPt - command.bounds.yPt - command.baselineOffsetPt)} Tm`, `[${textArray.join(" ")}] TJ`, "ET", "EMC");
+        content.push(`/Span << /ActualText <${actualTextHex(command.text)}> >> BDC`, "BT", `/${usage.pdfResourceName} ${formatNumber(command.fontSizePt)} Tf`, `${colorOperands(command.color)} rg`, `1 0 0 1 ${formatNumber(command.bounds.xPt)} ${formatNumber(page.heightPt - command.bounds.yPt - command.baselineOffsetPt)} Tm`, `[${textArray.join(" ")}] TJ`, "ET");
         const overlayOperators = [];
         let cursorXPt = 0;
         glyphs.forEach((glyph, glyphIndex) => {
@@ -210,8 +210,9 @@ function appendText(content, page, command, usages, resolvedRuns) {
             cursorXPt += measured.advancePt;
         });
         if (overlayOperators.length > 0) {
-            content.push("/Artifact BMC", "BT", `/${usage.pdfResourceName} ${formatNumber(command.fontSizePt)} Tf`, `${colorOperands(command.color)} rg`, ...overlayOperators, "ET", "EMC");
+            content.push("BT", `/${usage.pdfResourceName} ${formatNumber(command.fontSizePt)} Tf`, `${colorOperands(command.color)} rg`, ...overlayOperators, "ET");
         }
+        content.push("EMC");
     }
     else {
         const textArray = [];
@@ -265,8 +266,17 @@ function buildPageContent(page, usages, resolvedRuns) {
             `${formatNumber(border.x1Pt)} ${formatNumber(page.heightPt-border.y1Pt)} m`,
             `${formatNumber(border.x2Pt)} ${formatNumber(page.heightPt-border.y2Pt)} l S`, 'Q');
     }
-    for (const command of page.commands)
+    for (const command of page.commands) {
         appendText(content, page, command, usages, resolvedRuns);
+        if (command.underline && command.bounds.widthPt > 0) {
+            const start = command.bounds.xPt;
+            const y = page.heightPt - command.bounds.yPt - command.baselineOffsetPt - command.fontSizePt * .1;
+            content.push('/Artifact BMC', 'q', '0 J', '[] 0 d', `${colorOperands(command.color)} RG`,
+                `${formatNumber(command.fontSizePt / 20)} w`,
+                `${formatNumber(start)} ${formatNumber(y)} m`,
+                `${formatNumber(start + command.bounds.widthPt)} ${formatNumber(y)} l S`, 'Q', 'EMC');
+        }
+    }
     return Buffer.from(content.join('\n')+'\n', 'ascii');
 }
 function planPdfObjects(contract, usages, imageUsages, pageContents) {

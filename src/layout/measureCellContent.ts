@@ -1,5 +1,6 @@
 import {toPt} from '../composition/resolvedDocument.js';
 import type {ResolvedDocument,CellPadding} from '../composition/resolvedDocument.js';
+import {measureStyledCell} from './measureStyledCell.js';
 import {measureText} from './measureText.js';
 import type {MeasuredLine} from './measureText.js';
 import {LayoutError} from './textFlow.js';
@@ -18,9 +19,11 @@ export async function measureCellContent(d:ResolvedDocument,childIds:string[],co
   if(n?.type==='text-block'){
    const inset=n.props.outline?2:0,width=contentWidth-2*inset;
    if(inset&&width<=0)throw new LayoutError(id,'Text outline exceeds cell content width');
-   for(const measured of await measureText(n,d.styles[n.props.textStyleId]!,width,runtime)){
+   const lines=n.children.some(c=>c.type==='text'&&(c.textStyleId||c.styleOverride))?await measureStyledCell(n,d.styles,width,runtime):await measureText(n,d.styles[n.props.textStyleId]!,width,runtime);
+   for(const measured of lines){
     // Align within the padded cell, using ink bounds rather than character count.
     const remaining=width-(measured.occupiedWidthPt??0),offset=inset+(n.props.textAlign==='center'?remaining/2:n.props.textAlign==='right'?remaining:0);
+    if(offset && measured.runs)for(const run of measured.runs)run.bounds.xPt+=offset;
     const line=offset&&measured.run?{...measured,run:{...measured.run,bounds:{...measured.run.bounds,xPt:measured.run.bounds.xPt+offset}}}:measured;
     items.push({kind:'text-line',nodeId:id,heightPt:line.heightPt,line});
    }

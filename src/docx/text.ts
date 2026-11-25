@@ -62,7 +62,7 @@ export function buildTextParagraph(intent: ExportIntent, nodeId: string, options
         const style = required(intent.styles[block.styleId], 'styles'), run = nativeRunStyle(style, block.language), children: ParagraphChild[] = [];
         const baseline=baselineDecision(intent,scope,nodeId),exact=baseline?.policy==='font-metric-exact';
         const thaiEnds=thaiWordBoundaries(intent,scope,nodeId);
-        function runs(a: number, b: number) {
+        function runs(a: number, b: number, run: IRunStylePropertiesOptions) {
             const out: TextRun[] = [], plain: string[] = [];
             // This call owns one authored span with constant run style/language
             // and baseline. Latin/Common with no explicit tracking therefore
@@ -120,7 +120,8 @@ export function buildTextParagraph(intent: ExportIntent, nodeId: string, options
                 const a = Math.max(start, span.range[0]), b = Math.min(end, span.range[1]);
                 if (a >= b)
                     continue;
-                const content = runs(a, b);
+                const spanRun = span.inlineStyleId ? nativeRunStyle(required(intent.styles[span.inlineStyleId], 'styles'), block.language) : run;
+                const content = runs(a, b, {...spanRun, ...(span.color ? {color:span.color} : {}), ...(span.underline ? {underline:{}} : {})});
                 if (span.type === 'reference' && nav) {
                     const target = nav.anchors.get(span.target!);
                     if (!target)

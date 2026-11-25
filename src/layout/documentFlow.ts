@@ -21,6 +21,7 @@ import type { ResolvedDocument, ResolvedBand, Table } from '../composition/resol
 import type { DrawDocument, DrawPage, DrawImage } from '../pdf/drawContract.js';
 import { LayoutError } from './textFlow.js';
 import type { TextRuntime } from './textFlow.js';
+import { measureStyledCell } from './measureStyledCell.js';
 import { measureText } from './measureText.js';
 import type { MeasuredLine } from './measureText.js';
 import type { PdfImageMetadata } from '../pdf/streamResources.js';
@@ -152,10 +153,12 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
     const ensureHeight = (height: number, id: string, cursor= pending(id,'node',{nodeType:d.nodes[id]?.type??'text-block'})) => { if(fixed&&y+height>limit()+epsilon)throw new FormatStop(cursor.kind==='image'?'image-does-not-fit':'height-limit',[cursor]); if (y + height > bottom + epsilon)
         nextPage(); if (height > bottom - top + epsilon)
         throw new LayoutError(id, 'Item exceeds page content height'); };
-    const emitLine = (line: MeasuredLine, x: number, at: number) => { if (line.run)
-        current.commands.push({ ...line.run, id: `run-${serial++}`, bounds: { ...line.run.bounds, xPt: x + line.run.bounds.xPt, yPt: at } }); };
+    const emitLine = (line: MeasuredLine, x: number, at: number) => { for(const run of line.runs??(line.run?[line.run]:[]))
+        current.commands.push({ ...run, id: `run-${serial++}`, bounds: { ...run.bounds, xPt: x + run.bounds.xPt, yPt: at } }); };
     const measureBlock = async (id: string, width: number) => { const n = d.nodes[id]; if (n?.type !== 'text-block')
-        throw new LayoutError(id, 'Expected a TextBlock'); return measureText(n, d.styles[n.props.textStyleId]!, width, runtime); };
+        throw new LayoutError(id, 'Expected a TextBlock'); return n.children.some(child => child.type === 'text' && (child.textStyleId || child.styleOverride))
+            ? measureStyledCell(n, d.styles, width, runtime)
+            : measureText(n, d.styles[n.props.textStyleId]!, width, runtime); };
     const table = async (t: Table) => {
         const bounded=!!fixed; if(bounded)y+=.25;
         {
@@ -299,7 +302,9 @@ export async function documentFlow(d: ResolvedDocument, runtime: TextRuntime, im
                 let lineIndex=0;
                 for (const line of await measureBlock(id, available)) {
                     ensureHeight(line.heightPt, id,pending(id,'text',{lineIndex, ...(line.run?.sourceStart===undefined?{}:{sourceOffset:line.run.sourceStart})}));
-                    emitLine(line, left, y);
+                    const remaining = available - (line.occupiedWidthPt ?? 0);
+                    const offset = n.props.textAlign === 'center' ? remaining / 2 : n.props.textAlign === 'right' ? remaining : 0;
+                    emitLine(line, left + offset, y);
                     y += line.heightPt;
                     lineIndex++;
                 }
