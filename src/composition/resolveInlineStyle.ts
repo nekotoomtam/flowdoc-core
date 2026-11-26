@@ -1,7 +1,13 @@
 import type {TextStyle,InlineStyleOverride} from './resolvedDocument.js';
 
-export function resolveInlineStyle(base:TextStyle,override?:InlineStyleOverride):TextStyle {
+export function resolveInlineStyle(base:TextStyle,override?:InlineStyleOverride,styles?:Record<string,TextStyle>):TextStyle {
  let result=base;
+ const family=override?.familyStyleId&&styles?.[override.familyStyleId];
+ if(family&&'font' in base&&'font' in family&&base.font.kind==='library'&&family.font.kind==='library'){
+  result={...base,font:{...base.font,releaseId:family.font.releaseId}};
+ }
+ if(override?.color!==undefined)result={...result,color:override.color};
+ if(override?.underline!==undefined)result={...result,underline:override.underline};
  if(override?.fontSizePt!==undefined)result={...result,fontSize:{unit:'pt',value:override.fontSizePt}};
  if(override?.bold===undefined && override?.italic===undefined)return result;
  if('font' in result){

@@ -14,11 +14,11 @@ export async function measureStyledCell(node:TextBlock,styles:ResolvedDocument['
   if(child.type!=='text')throw new LayoutError(node.id,'Unsupported inline in styled cell');
   const start=text.length;
   text+=child.text.replace(/\r\n?/g,'\n').replace(/\t/g,' ');
-  const resolved=resolveInlineStyle(styles[child.textStyleId??base]!,child.styleOverride);
+  const resolved=resolveInlineStyle(styles[child.textStyleId??base]!,child.styleOverride,styles);
   const style=JSON.stringify(resolved);
   effectiveStyles.set(style,resolved);
-  const color=child.styleOverride?.color?.toUpperCase()??'000000';
-  const underline=child.styleOverride?.underline??false;
+  const color=resolved.color?.toUpperCase()??'000000';
+  const underline=resolved.underline??false;
   const last=spans.at(-1);
   if(last?.style===style && last.color===color && last.underline===underline && last.end===start)last.end=text.length;
   else spans.push({start,end:text.length,style,color,underline});

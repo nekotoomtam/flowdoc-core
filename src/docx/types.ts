@@ -49,6 +49,8 @@ export interface FontIdentity {
     embedding: 'full';
 }
 export interface EffectiveStyle {
+    color?:string;
+    underline?:boolean;
     font: FontIdentity;
     sizeHalfPoints: number;
     bold: boolean;

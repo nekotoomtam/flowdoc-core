@@ -84,8 +84,10 @@ export function validateGraph(input:unknown,ctx:GraphContext,path='fragment'):Is
     if(own(c,'textStyleId')&&(!inlineStyleAllowed||!name(c.textStyleId)||!own(ctx.styles,c.textStyleId)))fail(cp+'.textStyleId');
     if(own(c,'styleOverride')){
      const override=c.styleOverride;
+     const libraryFamily=(id:unknown)=>{const style=name(id)&&own(ctx.styles,id)?ctx.styles[id]:undefined;return object(style)&&style.font?.kind==="library";};
      if(!inlineStyleAllowed||own(c,'textStyleId')||!object(override)||
-        !keys(override,['bold','fontSizePt','italic','color','underline'])||
+        !keys(override,['bold','fontSizePt','italic','color','underline','familyStyleId'])||
+        (own(override,'familyStyleId')&&(!libraryFamily(override.familyStyleId)||!libraryFamily(n.props?.textStyleId)))||
         (['bold','italic','underline'].some(key=>own(override,key)&&typeof override[key]!=='boolean'))||
         (own(override,'color')&&(typeof override.color!=='string'||!/^([0-9a-fA-F]{6})$/.test(override.color)))||
         (own(override,'fontSizePt')&&(typeof override.fontSizePt!=='number'||!Number.isFinite(override.fontSizePt)||override.fontSizePt<=0)))fail(cp+'.styleOverride');

@@ -7,7 +7,7 @@ export async function measureNumber(nodeId:string,text:string,style:TextStyle,wi
  const fontId=fontIdForStyle(style,runtime);
  const shaped=await runtime.shape(text,fontId,style.fontSize.value),advance=shaped.glyphs.reduce((sum,g)=>sum+g.advancePt,0),left=Math.min(0,shaped.inkLeftPt??0),right=Math.max(advance,shaped.inkRightPt??0);
  if(right-left>widthPt+1e-6||shaped.ascentPt+shaped.descentPt>style.lineHeightPt+1e-6)throw new LayoutError(nodeId,'Page number ink does not fit the reserved slot');
- return {nodeId,kind:'glyph-run',text,fontId,fontSizePt:style.fontSize.value,lineHeightPt:style.lineHeightPt,baselineOffsetPt:shaped.ascentPt+(style.lineHeightPt-shaped.ascentPt-shaped.descentPt)/2,color:'000000',bounds:{xPt:widthPt-right,yPt:0,widthPt:advance,heightPt:style.lineHeightPt},glyphs:shaped.glyphs,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{})};
+ return {nodeId,kind:'glyph-run',text,fontId,fontSizePt:style.fontSize.value,lineHeightPt:style.lineHeightPt,baselineOffsetPt:shaped.ascentPt+(style.lineHeightPt-shaped.ascentPt-shaped.descentPt)/2,color:style.color?.toUpperCase()??'000000',...(style.underline?{underline:true}:{}),bounds:{xPt:widthPt-right,yPt:0,widthPt:advance,heightPt:style.lineHeightPt},glyphs:shaped.glyphs,...(shaped.glyphInkBoundsPt?{glyphInkBoundsPt:shaped.glyphInkBoundsPt}:{})};
 }
 export async function fillContentsNumbers(draw:DrawDocument,anchors:NonNullable<DrawDocument['anchors']>,runtime:TextRuntime,systemNumbers=false):Promise<void>{
  for(const [i,slot] of (draw.contentsSlots??[]).entries()){

@@ -11,7 +11,7 @@ import {sourceParagraph} from './source-layout-xml.js';
 // Undefined CS emphasis lets docx copy ordinary true AND false, overriding inheritance.
 export function nativeRunStyle(style: EffectiveStyle, language?: string): IRunStylePropertiesOptions {
     const family = style.font.nativeFamily ?? style.font.family;
-    return { font: { ascii: family, hAnsi: family, cs: family, eastAsia: family }, size: style.sizeHalfPoints, sizeComplexScript: style.sizeHalfPoints, bold: style.font.nativeFamily ? false : style.bold, italics: style.italic, snapToGrid: false, ...(language ? { language: { value: language, bidirectional: language } } : {}) };
+    return { ...(style.color?{color:style.color}:{}), ...(style.underline?{underline:{}}:{}), font: { ascii: family, hAnsi: family, cs: family, eastAsia: family }, size: style.sizeHalfPoints, sizeComplexScript: style.sizeHalfPoints, bold: style.font.nativeFamily ? false : style.bold, italics: style.italic, snapToGrid: false, ...(language ? { language: { value: language, bidirectional: language } } : {}) };
 }
 class PositionAttributes extends XmlAttributeComponent<{val:number}>{protected readonly xmlKeys={val:'w:val'};}
 class NativePosition extends XmlComponent{constructor(val:number){super('w:position');this.root.push(new PositionAttributes({val}));}}
